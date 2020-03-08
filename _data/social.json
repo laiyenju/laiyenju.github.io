@@ -1,0 +1,14 @@
+{
+  "links": [
+    {
+      "title": "Twitter",
+      "icon": "fa-twitter",
+      "url": "https://github.com/laiyenju"
+    },
+    {
+      "title": "GitHub",
+      "icon": "fa-github",
+      "url": "https://twitter.com/theYenLai"
+    }
+  ]
+}
