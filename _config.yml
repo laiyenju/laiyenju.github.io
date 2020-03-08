@@ -12,7 +12,7 @@ lang: zh-TW
 title: "Tinker's Backchannel"
 
 # A description of your site for meta tag, search engine results.
-description: "exploring by designing, programming, and writing"
+description: ""
 
 # The subpath of your site, e.g. /blog, for generating urls.
 baseurl: ""
@@ -37,7 +37,7 @@ navigation:
 
 
 # The shortname for your Disqus site to enable comments.
-disqus: justgoodthemes
+disqus:
 
 # Colors
 accent_color: '#2d72d9'
