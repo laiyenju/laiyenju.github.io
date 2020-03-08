@@ -1,6 +1,7 @@
 ---
 layout: page
 title: About
+permalink: /about/
 description: An optional about page for Scriptor Jekyll theme
 ---
 
