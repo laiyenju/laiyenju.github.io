@@ -1,0 +1,47 @@
+---
+layout: post
+title: 設計關聯性資料庫 Relational Database Management System
+slug: concept-RDBMS
+date: 2019-11-20
+status: publish
+author: Lai Yen Ju
+categories: 
+  - Database
+tags:
+  - Note
+excerpt: 此為政治大學黃瀚萱助理教授開設的「資料庫應用」課程筆記
+---
+
+💡 此為政治大學黃瀚萱助理教授開設的「資料庫應用」課程筆記
+
+<!--more-->
+
+**基本流程**
+- Spesification 確認使用者需求（與使用者、專業領域的專家討論）
+- Conceptual Design 思考如何讓資料庫的設計符合需求（選擇合適的 data model、將使用者的需求轉換成 schema）
+
+**抽象到實體概念的轉換**
+- 邏輯設計階段 Logical-design phase
+    - Mapping the high-level conceptual scheme onto the implementation data model.
+- 實體設計階段 Physical-design phase
+    - Specify physical features of the database.
+
+## Normalization
+
+
+## ACID of Transaction
+### [A]tomicity
+All or nothing execution of transactions
+> 在資料庫的每一筆交易中只有兩種可能發生，第一種是**全部完成(commit)**，第二種是**全部不完成(rollback)**，不會因為某個環節出錯，而終止在那個環節，在出錯之後會恢復至交易之前的狀態，如同還沒執行此筆交易。
+
+### [C]onsistency
+The state of the whole database is consistent
+> 在交易中會產生資料或者驗證狀態，然而當錯誤發生，所有已更改的資料或狀態將會恢復至交易之前。
+
+### [I]solation
+No other transaction is executing at the same time
+> 資料庫允許多筆交易同時進行，交易進行時未完成的交易資料並不會被其他交易使用，直到此筆交易完成。
+
+### [D]urability
+The effect on the database of a transaction never be lost once the transaction is complete
+> 交易完成後對資料的修改是永久性的，資料不會因為系統重啟或錯誤而改變。
