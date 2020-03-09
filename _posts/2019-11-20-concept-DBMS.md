@@ -5,11 +5,8 @@ slug: concept-DBMS
 date: 2019-11-20
 status: publish
 author: Lai Yen Ju
-categories: 
-  - Database
 tags:
-  - SQL
-  - Note
+  - Coding
 excerpt: MacOS系統的 Git 操作指令與方法
 ---
 
