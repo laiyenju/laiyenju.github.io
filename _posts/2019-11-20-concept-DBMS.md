@@ -6,7 +6,7 @@ date: 2019-11-20
 status: publish
 author: Lai Yen Ju
 tags:
-  - Coding
+  - Note
 excerpt: MacOS系統的 Git 操作指令與方法
 ---
 
