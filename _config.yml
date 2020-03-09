@@ -9,13 +9,13 @@
 lang: zh-TW
 
 # Site title
-title: "Tinker's Backchannel"
+title: "Lai Yen Ju"
 
 # A description of your site for meta tag, search engine results.
 description: ""
 
 # The subpath of your site, e.g. /blog, for generating urls.
-baseurl: ""
+baseurl: "/blog"
 
 # The base hostname & protocol of your site for where absolute urls are needed.
 url: "https://laiyenju.github.io"
