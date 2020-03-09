@@ -5,10 +5,8 @@ slug: python-starter
 date: 2019-12-15
 status: publish
 author: Lai Yen Ju
-categories: 
-  - Note
 tags:
-  - Coding
+  - Programing
 excerpt: 親測有效的高 CP 值 Python 初學者學習資源
 ---
 
