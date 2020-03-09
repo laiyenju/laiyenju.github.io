@@ -8,8 +8,7 @@ author: Lai Yen Ju
 categories: 
   - Note
 tags:
-  - NCCU
-  - Class
+  - Note
 excerpt: 政治大學數位內容與科技研究所 2020 年「人機互動設計」課程筆記與心得。
 ---
 
