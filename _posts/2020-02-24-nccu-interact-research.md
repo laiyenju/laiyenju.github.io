@@ -8,8 +8,7 @@ author: Lai Yen Ju
 categories: 
   - Note
 tags:
-  - NCCU
-  - Class
+  - Note
 excerpt: 政治大學數位內容與科技研究所 2020 年「互動科技研究討論」課程筆記。與心得。
 ---
 
