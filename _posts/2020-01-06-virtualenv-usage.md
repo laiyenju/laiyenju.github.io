@@ -8,10 +8,7 @@ author: Lai Yen Ju
 categories: 
   - Programing
 tags:
-  - Python
-  - Virtualenv
-  - Anaconda
-  - tutorial
+  - Programing
 excerpt: virtualenv 與 anaconda 操作虛擬環境的常用指令。
 ---
 
