@@ -8,8 +8,7 @@ author: Lai Yen Ju
 categories: 
   - Note
 tags:
-  - Python
-  - Class
+  - Coding
 excerpt: 親測有效的高 CP 值 Python 初學者學習資源
 ---
 
