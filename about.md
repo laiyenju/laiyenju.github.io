@@ -10,16 +10,9 @@ description: An optional about page for Scriptor Jekyll theme
 
 A Python freshman studying in User Research and Design.
 
-A graduate student, struggling in natural language processing, studying in Digital Content & Technology, National Chengchi University.
+A graduate student at National Chengchi University studying in Digital Content & Technology. Recently, I decided to dive into natural language processing to complete my master's thesis. 
 
-I'll write about news media, design and programming learning stuff.
-
-### Why called Tinker's Backchannel?
-
-- **Tinker** is especially to repair, adjust, or work with something in an unskilled or experimental manner. 
-- **Backchannel** is, in linguistics, a backchannel during a conversation occurs when one participant is speaking and another participant interjects responses to the speaker.
-
-*Thank You for reading!*
+I have great enthusiasm for **news media**, **design** and **programming**. Previously, I interned at [Daodu.tech](https://daodu.tech), [The News Lens](https://www.thenewslens.com) and [TEDx Taipei](https://tedxtaipei.org).
 
 ***
 
