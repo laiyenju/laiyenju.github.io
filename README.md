@@ -8,6 +8,12 @@ Lai Yen Ju is my full name. This website is powered by Jekyll Theme [Scriptor](h
 - Blog
 - Newsletter
 
+### Here I am
+
+[Twitter](https://twitter.com/theYenLai)｜[GitHub](https://github.com/laiyenju)｜[Website](https://laiyenju.github.io/)
+
+Email: laiyenju@outlook.com
+
 ## Take a look to my website
 
 ### About Me
