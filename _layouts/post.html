@@ -52,7 +52,7 @@ layout: default
   {% endif %} -->
   
   <div align = "center">
-    <iframe scrolling="no" src="https://button.like.co/in/embed/yenjulai/button/?referrer={{ site.url }}{{ page.url }}" frameborder= "0"></iframe>
+    <iframe scrolling="no" src="https://button.like.co/in/embed/yenjulai/{{site.liker_id}}/button?referrer={{ page.url | absolute_url | cgi_escape }}" frameborder= "0"></iframe>
   </div>
 
   {% if site.disqus and site.disqus != "" %}
