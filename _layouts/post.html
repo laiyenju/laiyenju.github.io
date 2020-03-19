@@ -2,6 +2,26 @@
 layout: default
 ---
 
+<style>
+.likecoin-button {
+    position: relative;
+    width: 100%;
+    max-width: 485px;
+    max-height: 240px;
+    margin: 0 auto;
+  }
+.likecoin-button > div {
+    padding-top: 49.48454%;
+  }
+.likecoin-button > iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
 <main class="main-content fadeInDown delay_075s">
 
   <article class="post">
@@ -44,16 +64,18 @@ layout: default
     </div><!-- .author-box -->
   </article><!-- .post -->
   
- {% if site.liker_id %}
+<!--  {% if site.liker_id %}
     <iframe
       style="width: 100%; max-width: 485px; height: 240px; margin: auto; overflow: hidden; display: block; border: 0;"
       src="https://button.like.co/in/embed/{{site.liker_id}}/button?referrer={{ page.url | absolute_url | cgi_escape }}">
     </iframe>
-  {% endif %}
+  {% endif %} -->
   
-<!--   <div align = "center">
-    <iframe scrolling="no" src="https://button.like.co/in/embed/yenjulai/{{site.liker_id}}/button?referrer={{ site.url }}{{ page.url }}{{ absolute_url }} {{ cgi_escape }}" frameborder= "0"></iframe>
-  </div> -->
+  <div class="likecoin-embed likecoin-button" style="position: relative; width: 100%; max-width: 485px;max-height: 240px; margin: 0 auto;">
+    <div style="padding-top: 49.48454%;"></div>
+    <iframe scrolling="no" frameborder="0" src="https://button.like.co/in/embed/{{site.liker_id}}/button?referrer={{ page.url | absolute_url | cgi_escape }}">
+    </iframe>
+  </div>
 
   {% if site.disqus and site.disqus != "" %}
     {% include disqus.html %}
