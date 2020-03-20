@@ -9,7 +9,7 @@
 lang: zh-TW
 
 # Site title
-title: "Lai Yen Ju"
+title: "LAI YEN JU"
 
 # A description of your site for meta tag, search engine results.
 description: ""
@@ -31,11 +31,11 @@ liker_id: yenjulai
 
 # Site navigation - each item must have a title and a url.
 navigation:
-  - text: Portfolio
+  - text: Home
     url: /
   - text: About
     url: /about/
-  - text: Blog
+  - text: Articles
     url: /tags/
   - text: Newsletter
     url: /newsletter/
