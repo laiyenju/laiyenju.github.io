@@ -16,18 +16,23 @@ Email: laiyenju@outlook.com
 
 ## Take a look to my website
 
-### About Me
+### Homepage
+![](https://i.imgur.com/UEE0sIu.png) 
 
-![](https://i.imgur.com/GX2qnow.png)
+### About Me
+![](https://i.imgur.com/lZlMYGp.png) 
 
 ### My Articles
 
-![](https://i.imgur.com/OqDTghY.png)
+![](https://i.imgur.com/ZYLNTuT.png) 
 
 ### I write a newsletter
-My newsletter is called tinker's backchannel, based on substack, sharing topics about design, programming and news media.
 
-![](https://i.imgur.com/4WVpB9y.png)
+My newsletter is called tinker's backchannel, based on substack, sharing topics about design, programming and news media. 
+
+![](https://i.imgur.com/35BybDz.png)
+
+
 
 ***
 
