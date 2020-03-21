@@ -1,6 +1,6 @@
 ---
 layout: tags
 title: Tags
-permalink: /tags/
+permalink: /articles/
 description: A tags page for Scriptor Jekyll theme
 ---
