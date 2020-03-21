@@ -21,7 +21,7 @@ baseurl: "/"
 url: "https://laiyenju.github.io"
 
 # Favicon
-favicon: images/favicon.svg
+favicon: images/favicon.png
 
 # Google Analytics id, e.g. "UA-NNNNNNNN-N"
 google_analytics: ""
