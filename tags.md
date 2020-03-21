@@ -1,6 +1,6 @@
 ---
 layout: tags
-title: Articles｜Lai Yen Ju
+title: Articles｜LAI YEN JU
 permalink: /articles/
 description: A tags page for Scriptor Jekyll theme
 ---
