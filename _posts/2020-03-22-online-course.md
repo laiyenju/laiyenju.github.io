@@ -58,6 +58,6 @@ Christopher Wiggins 是《紐約時報》數據分析團隊首領，我前幾天
 
 在學 Processing 跟 D3.js 途中還分心看了[愷開寫程式 / Kalan Coding](https://www.youtube.com/channel/UClRBL3rMRZ-THDYxH4rqVWA)，教大家使用 Sonic Pi 以程式碼寫音樂的[教學影片](https://www.youtube.com/watch?v=aTA5wWhvKAQ&t=3s)，最後愷開用 Sonic Pi 寫一小段 Why Not 的無法度按捺，帶我認識了這個復古台味樂團。
 
-<iframe src="https://open.spotify.com/embed/album/6YuFvARWPO3tb1ZvbH9hkD" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+<iframe src="https://open.spotify.com/embed/track/5gm0rhCcCDHmW904wG36sC" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
 
 好，下週末的計畫是邊聽歌邊用 Sonic Pi 寫個小 demo。
