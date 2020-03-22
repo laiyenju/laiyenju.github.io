@@ -24,7 +24,7 @@ Christopher Wiggins 是《紐約時報》數據分析團隊首領，我前幾天
 > 
 > 👉 [chrishwiggins](https://github.com/chrishwiggins)：CW 的 GitHub 帳號，更新的非常勤快（因為哥大教材就放在 GitHub 上）
 
-<iframe src="https://youtu.be/ffwYAqqGaj8" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ffwYAqqGaj8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 #### 隨手 takeaway
 
