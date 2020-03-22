@@ -55,7 +55,9 @@ Christopher Wiggins 是《紐約時報》數據分析團隊首領，我前幾天
 再來是難的。只要是接觸資料視覺化的人，大概多少都要碰點以 JavaScript 為基礎的 D3.js 。由於我不小心看了 [The Hitchhiker’s Guide to d3.js](https://medium.com/@enjalot/the-hitchhikers-guide-to-d3-js-a8552174733a) 這篇經典文章，內容將 D3.js 學習路徑與目標說明的很清楚，讓我重燃提升 D3.js 技能的動力。因為內容提供了眾多資源，我一時之間也無法全部消化完，所以決定從最經濟實惠的路徑著手：FreeCodeCamp。互動式的程式教學，且完成後能獲得資料視覺化證書，嗯，非常完美。我在週日的凌晨一口氣上完，剩最後的專案實作囉。
 
 > 👉 [FreeCodeCamp Data Visualization](https://www.freecodecamp.org/learn)：就是這門課程，共分為三大部分，第一部分是基本語法，再來是 JSON 與 API 的操作，最後一部分就要自己實作各種圖表。
+> 
 > 👉 [@mbostock](https://twitter.com/mbostock)：Mike Bostock 是 D3.js 的爸爸，這位生父對資料視覺化的狂熱，讓他後來生出了 Observable 這款 JavaScript 版本的 Jupyter Notebook。
+> 
 > 👉 [List of Graphics People in Newsrooms](https://github.com/OpenNewsLabs/news-graphics-team)與[Awesome Interactive Journalism](https://github.com/wbkd/awesome-interactive-journalism)：這兩個清單分別是各個資料視覺化記者的 twitter 帳號與數據新聞作品，大部分都是以 D3.js 呈現，看看就知道 D3.js 的強大。
 
 ***
