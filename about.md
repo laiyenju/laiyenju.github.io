@@ -18,32 +18,35 @@ I have great enthusiasm for **news media**, **design** and **programming**. Prev
 
 ## Education
 
-**M.S | Digital Content & Technology | National Chengchi University** <br>
-Now <br>
-Specializations: User Research, Computer and Human Interaction <br>
+**M.S | Digital Content & Technology | National Chengchi University**  
+Now  
+Specializations: User Research, Computer and Human Interaction  
 Taipei, Taiwan
 
-**B.A | Political Science | National Cheng Kung University** <br>
-2010-2014 <br>
-Specializations: International Relationship, Political Economics <br>
+**B.A | Political Science | National Cheng Kung University**  
+2010-2014  
+Specializations: International Relationship, Political Economics  
 Tainan, Taiwan
 
 
 ## Tools I use 
 
-**Data Visualization**<br>
+**Data Visualization**  
 Python | D3.js | NodeBox | Processing | Google Sheet
 
-**Front-end**<br>
+**UI and Prototype**  
+Figma | AdobeXD
+
+**Front-end**  
 HTML5 | CSS | JavaScript
 
-**Back-end**<br>
+**Back-end**  
 Python | Django | Flask | SQL
 
-**Hardware**<br>
+**Hardware**  
 Arduino
 
-## Community I participated
+## Communities I participated
 
 - [Hacks/Hackers Taipei](https://hackshackers.taipei/) - as a GitHub organization member
 - [Woman Who Code Taipei](https://www.womenwhocode.com/taipei)
