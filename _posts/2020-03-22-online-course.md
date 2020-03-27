@@ -10,11 +10,11 @@ tags:
 excerpt: 週末在家但不寫論文，那就來點 CP 值高的線上課程
 ---
 
-> 週末在家但不寫論文，那就來點 CP 值高的線上課程
+> 研究生週末在家不寫論文，那就來點 CP 值高的線上課程
 
 我最喜歡週末宅在家、不出門社交的生活。作為這麼宅，但偏偏又不想寫論文的研究生，在線上課程的學習進度卻很快。如果能分點能量給自己寫論文就好了⋯⋯如果你 也在寫論文、WFH，看完我分享的線上課程，請忍住學習衝動，先做完正事。
 
-## 紐時首席數據科學家解密心法
+## 紐時首席數據科學家解密 NYT 分析心法
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/ffwYAqqGaj8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
