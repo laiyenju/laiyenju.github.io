@@ -32,10 +32,17 @@ Christopher Wiggins 是《紐約時報》數據分析團隊首領，我前幾天
 
 #### MORE
 
-- [Data Science at The New York Times](https://www.slideshare.net/chrishwiggins/data-science-at-the-new-york-times-152727126)：這場演講的完整簡報。一直沒找到最新版，但這份是 2019 年 1 月上傳的，所以內容差異不大。
-- [data: past, present and future](https://data-ppf.github.io)：CW 在哥大開的數據分析課，2020 年的講義與程式碼練習題都放在線上，自由取用。我決定這學期要將他的課看完
-- [@chrishwiggins](https://twitter.com/chrishwiggins)：CW 的推特帳號，雖然都沒更新，但抱著朝聖心態仍要追起來～
-- [chrishwiggins](https://github.com/chrishwiggins)：CW 的 GitHub 帳號，更新的非常勤快（因為哥大教材就放在 GitHub 上）
+- [Data Science at The New York Times](https://www.slideshare.net/chrishwiggins/data-science-at-the-new-york-times-152727126)  
+這場演講的完整簡報。一直沒找到最新版，但這份是 2019 年 1 月上傳的，所以內容差異不大。
+
+- [data: past, present and future](https://data-ppf.github.io)  
+CW 在哥大開的數據分析課，2020 年的講義與程式碼練習題都放在線上，自由取用。我決定這學期要將他的課看完
+
+- [@chrishwiggins](https://twitter.com/chrishwiggins)  
+CW 的推特帳號，雖然都沒更新，但抱著朝聖心態仍要追起來～
+
+- [chrishwiggins](https://github.com/chrishwiggins)  
+CW 的 GitHub 帳號，更新的非常勤快（因為哥大教材就放在 GitHub 上）
 
 ***
 
@@ -50,10 +57,17 @@ Christopher Wiggins 是《紐約時報》數據分析團隊首領，我前幾天
 
 #### MORE
 
-- [Creative Coding Essentials](https://timrodenbroeker.de/courses)：Tim 的 Processing 教學影片，共 27 堂課，依我之前看的內容，大概只缺少 5 堂而已。
-- [tim rodenbröker creative coding](https://www.youtube.com/channel/UCPwg5nDMQWzkAfb56_GvGpA)：Tim 的 YouTube 頻道，真的是對教學很有熱忱的人，且不愧是藝術家＋設計師，影片精美程度技壓其他程式教學影片。
-- [@timrodenbroeker](https://twitter.com/timrodenbroeker)：Tim 的推特帳號，這麼多產的藝術設計師，當然是要來觀摩視覺化作品。
-- [Processing.py 語法參考](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwj5uYeGq67oAhX3yosBHeovDBkQFjAAegQIBhAC&url=https%3A%2F%2Fpy.processing.org%2F&usg=AOvVaw0DwzoYf-g62WSSRuoUzHUX)：跟我一樣習慣寫 Python 的話，推薦 Processing.py，在 Processing 內下載 Python 套件，在編輯頁更改成 Python 模式，就能少打很多 { } 
+- [Creative Coding Essentials](https://timrodenbroeker.de/courses)  
+Tim 的 Processing 教學影片，共 27 堂課，依我之前看的內容，大概只缺少 5 堂而已。
+
+- [tim rodenbröker creative coding](https://www.youtube.com/channel/UCPwg5nDMQWzkAfb56_GvGpA)  
+Tim 的 YouTube 頻道，真的是對教學很有熱忱的人，且不愧是藝術家＋設計師，影片精美程度技壓其他程式教學影片。
+
+- [@timrodenbroeker](https://twitter.com/timrodenbroeker)  
+Tim 的推特帳號，這麼多產的藝術設計師，當然是要來觀摩視覺化作品。
+
+- [Processing.py 語法參考](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwj5uYeGq67oAhX3yosBHeovDBkQFjAAegQIBhAC&url=https%3A%2F%2Fpy.processing.org%2F&usg=AOvVaw0DwzoYf-g62WSSRuoUzHUX)  
+跟我一樣習慣寫 Python 的話，推薦 Processing.py，在 Processing 內下載 Python 套件，在編輯頁更改成 Python 模式，就能少打很多 { } 
 
 ***
 
@@ -65,9 +79,14 @@ Christopher Wiggins 是《紐約時報》數據分析團隊首領，我前幾天
 
 #### MORE
 
-- [FreeCodeCamp Data Visualization](https://www.freecodecamp.org/learn)：就是這門課程，共分為三大部分，第一部分是基本語法，再來是 JSON 與 API 的操作，最後一部分就要自己實作各種圖表。
-- [@mbostock](https://twitter.com/mbostock)：Mike Bostock 是 D3.js 的爸爸，這位生父對資料視覺化的狂熱，讓他後來生出了 Observable 這款 JavaScript 版本的 Jupyter Notebook。
-- [List of Graphics People in Newsrooms](https://github.com/OpenNewsLabs/news-graphics-team)與[Awesome Interactive Journalism](https://github.com/wbkd/awesome-interactive-journalism)：這兩個清單分別是各個資料視覺化記者的 twitter 帳號與數據新聞作品，大部分都是以 D3.js 呈現，看看就知道 D3.js 的強大。
+- [FreeCodeCamp Data Visualization](https://www.freecodecamp.org/learn)  
+就是這門課程，共分為三大部分，第一部分是基本語法，再來是 JSON 與 API 的操作，最後一部分就要自己實作各種圖表。
+
+- [@mbostock](https://twitter.com/mbostock)  
+Mike Bostock 是 D3.js 的爸爸，這位生父對資料視覺化的狂熱，讓他後來生出了 Observable 這款 JavaScript 版本的 Jupyter Notebook。
+
+- [List of Graphics People in Newsrooms](https://github.com/OpenNewsLabs/news-graphics-team)與[Awesome Interactive Journalism](https://github.com/wbkd/awesome-interactive-journalism)  
+這兩個清單分別是各個資料視覺化記者的 twitter 帳號與數據新聞作品，大部分都是以 D3.js 呈現，看看就知道 D3.js 的強大。
 
 ***
 
