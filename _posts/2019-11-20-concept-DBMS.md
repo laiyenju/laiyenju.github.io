@@ -16,6 +16,7 @@ excerpt: MacOS系統的 Git 操作指令與方法
 <!--more-->
 
 資料庫管理系統 DBMS，Database Management System，也是 Database System。
+
 > Database Management Systems，指的是用來管理資料庫的軟體，**為的是讓使用者方便且有效率的儲存、搜尋資料**，具有以下功能
 > - **Create** 建立資料庫
 > - **Query** 搜尋
@@ -27,23 +28,38 @@ Q：資料庫管理系統（DBMS）與資料庫的差別是什麼？
 
 
 ### DBMS 的關鍵特色
+
+1. Reliability 可信賴性
+2. Scalability 可擴充性
+3. Maintainability 可維護性
+
 沒有一種資料庫管理系統同時具備三種關鍵特色（有一好沒兩好），因此要看使用的情境去選擇合適的資料庫。
+
 #### Reliability 可信賴
-目標：安全性 for safety
+
+目標：安全性（safety）
+
 - Hardware faults
 - Software faults
 - Human errors
+
 #### Scalability 可擴充
-目標：處理龐大資料量與讀寫次數多 for large data and high traffic
+
+目標：處理龐大資料量與讀寫次數多（for large data and high traffic）
+
 - Load
 - Performance
+
 #### Maintainability 可維護
+
 目標：update/debug/migration
+
 - Operability
 - Simplicity
 - Evolvability
 
 ### DBMS 的發展趨勢
+
 由關聯性資料庫的 SQL 朝向非關聯性的 NoSQL
 
 |  |   SQL   | NoSQL |
@@ -57,13 +73,15 @@ Q：資料庫管理系統（DBMS）與資料庫的差別是什麼？
 | examples   | MsSQL, MySQL, Postgresql     | MongoDB, Redis    |
 
 ### Data Models
+
 - Relational Models
     - 大部分的 SQL DBS 都屬於此種類型，利用各種表格來呈現資料內容與資料間的關係。
 - Entity-relationship(E-R) Model
-    - Knowledge Based
+    - Ex: Knowledge Based
 - Object-based data model
 - Semistructured data model
-    - XML
+    - Ex: XML
+
 #### Database Languages
 - Data-defintion language
     - 用來定義資料庫的 schema
