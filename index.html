@@ -33,6 +33,10 @@ layout: default
           <a href="{{ site.baseurl }}{{ post.url }}">
             <div class="card" style="padding-left: 0.5em;">
               {% if post.feature_image and post.feature_image != "" %}
+              <figure class="post-thumbnail image-card width-wide">
+                <a href="{{site.baseurl}}{{post.url}}"><img src="{{ post.feature_image | relative_url }}"
+                    alt="{{ post.title }}"></a>
+              </figure><!-- .post-thumbnail -->
                   <div style="display: block;">
                     <img src=""{{ post.feature_image | relative_url }}" alt="{{ post.title }}">
                   </div>                                                                           
