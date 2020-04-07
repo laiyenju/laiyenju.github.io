@@ -18,15 +18,19 @@
   <!--OpenGraph-->
   {% if post.feature_image %}
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ post.feature_image }}">
   <meta name="twitter:site" content="@theYenLai">
+  <meta name="twitter:creator" content="@theYenLai" />
   <meta property="og:site_name" content="{{ site.name }}">
   <meta property="og:title" content="{{ post.title }}">
   <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ post.url }}">
   <meta property="og:image" content="{{ post.feature_image }}">
   <meta property="og:description" content="{{ post.excerpt | strip_html | strip_newlines }}">
   {% else %}
-  <meta name="twitter:card" content="images/favicon.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="images/favicon.png">
   <meta name="twitter:site" content="@theYenLai">
+  <meta name="twitter:creator" content="@theYenLai" />
   <meta property="og:site_name" content="{{ site.name }}">
   <meta property="og:title" content="{{ post.title }}">
   <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ post.url }}">
