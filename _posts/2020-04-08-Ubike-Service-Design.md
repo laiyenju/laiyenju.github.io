@@ -5,7 +5,7 @@ slug: Ubike-Service-Design
 date: 2020-04-08
 status: publish
 author: Lai Yen Ju
-feature_image: images/Service Design for YouBike.jpg
+feature_image: images/YouBike.jpg
 tags:
   - Work
 excerpt: 以服務設計提供流暢的 YouBike 租借體驗。
