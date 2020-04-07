@@ -11,7 +11,6 @@ tags:
 excerpt: 以服務設計提供流暢的 YouBike 租借體驗。
 ---
 
-![](https://i.imgur.com/Xr9C6ig.jpg)
 ![](https://i.imgur.com/dqtGkuM.jpg)
 ![](https://i.imgur.com/miYGbsj.jpg)
 ![](https://i.imgur.com/QHkCBag.jpg)
