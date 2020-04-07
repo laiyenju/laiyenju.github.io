@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Service Design for YouBike Rental
-slug: Ubike-Service-Blueprint
+slug: Ubike-Service-Design
 date: 2020-04-08
 status: publish
 author: Lai Yen Ju
