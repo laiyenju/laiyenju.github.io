@@ -16,14 +16,14 @@
   <link href="{{ '/assets/css/style.css' | relative_url }}" rel="stylesheet">
   
   <!--OpenGraph-->
-  {% if page.feature_image %}
+  {% if post.feature_image %}{% else %}{{ post }}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@{{ site.author.twitter }}">
   <meta property="og:site_name" content="{{ site.name }}">
-  <meta property="og:title" content="{{ page.title }}">
-  <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ page.url }}">
-  <meta property="og:image" content="{{ page.feature_image }}">
-  <meta property="og:description" content="{{ page.excerpt | strip_html | strip_newlines }}">
+  <meta property="og:title" content="{{ post.title }}">
+  <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ post.url }}">
+  <meta property="og:image" content="{{ post.feature_image }}">
+  <meta property="og:description" content="{{ post.excerpt | strip_html | strip_newlines }}">
   {% endif %}
   
 </head>
