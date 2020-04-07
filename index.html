@@ -34,8 +34,7 @@ layout: default
             <div class="card" style="padding-left: 0.5em;">
               {% if post.feature_image and post.feature_image != "" %}
                 <figure class="post-thumbnail image-card width-wide">
-                  <a href="{{site.baseurl}}{{post.url}}"><img src="{{ post.feature_image | relative_url }}"
-                      alt="{{ post.title }}"></a>
+                  <img src="{{ post.feature_image | relative_url }}" alt="{{ post.title }}">
                 </figure><!-- .post-thumbnail -->                                                                
               {% endif %}                                                                             
               <div style="display: block; padding-top: 0.5em; padding-right: 0.8em; padding-left: 0.5em;">
