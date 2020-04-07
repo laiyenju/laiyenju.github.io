@@ -14,7 +14,7 @@ Lai Yen Ju is my full name. This website is powered by Jekyll Theme [Scriptor](h
 
 Email: laiyenju@outlook.com
 
-## Take a look to my website
+## Take a look at my website
 
 ### Homepage
 ![](https://i.imgur.com/UEE0sIu.png) 
