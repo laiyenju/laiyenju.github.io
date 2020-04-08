@@ -111,7 +111,7 @@ feature_image: images/image1
 
 ### 有些文章沒有圖，顯圖要用什麼？
 
-使用 `{% if page.feature_image %} ..{% endif %}` 條件式處理文章內有圖與沒圖的顯圖效果。當文章沒設定 feature_image 時，顯圖可以用網站的 favicon。
+使用 ``{% if page.feature_image %} ..{% endif %}`` 條件式處理文章內有圖與沒圖的顯圖效果。當文章沒設定 feature_image 時，顯圖可以用網站的 favicon。
 
 設定圖片連結時，要特別注意寫法。由於我的 feature_image 與 favicon 都是相對位置
 - feature_image 寫在文稿的 front matter 內：`feature_image:images/image1`
@@ -119,7 +119,7 @@ feature_image: images/image1
 
 因此feature_image 依附在 page 裡，favicon 依附在 site，但 meta data 的顯圖必須是完整網址，以我的網站為例，顯圖網址要寫成 `https://laiyenju.github.io/images/image1`，是由「網站首頁位置」加上「存放顯圖的位置」組合而成，所以 metadata 會寫成`<meta property="og:image" content="{{ site.url }}/{{ page.feature_image }}">`，favicon 的 metadata 寫法也是以此原理類推。
 
-```javascript
+```yml
 # 整合成條件式
 
 {% if page.feature_image %}
