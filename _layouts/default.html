@@ -18,9 +18,9 @@
   <!--OpenGraph with Twitter Card-->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@theYenLai">
-  <meta property="og:site_name" content="{{ site.title }}">
   {% if page.feature_image %}
 <!--   <meta name="twitter:image" content="{{ site.url }}/images/{{ page.feature_image }}"> -->
+  <meta property="og:site_name" content="{{ site.title }}">
   <meta property="og:title" content="{{ page.title }}">
   <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ page.url }}">
   <meta property="og:image" content="{{ site.url }}/{{ page.feature_image }}">
@@ -28,6 +28,7 @@
   {% else %}
   <meta name="twitter:site" content="@theYenLai">
 <!--   <meta name="twitter:image" content="{{ site.favicon }}"> -->
+  <meta property="og:site_name" content="{{ site.title }}">
   <meta property="og:title" content="{{ page.title }}">
   <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ page.url }}">
   <meta property="og:image" content="{{ site.favicon | relative_url }}">
