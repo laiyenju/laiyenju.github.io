@@ -73,33 +73,9 @@ feature_image: images/image1
 # 以下是文章內容
 ```
 
-```javascript
-# 完整的 metadata 寫法
+完整的網站 metadeta 寫法 👇
 
-<head>
-  <!--OpenGraph with Twitter Card-->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="@theYenLai">
-  
-  {% if page.feature_image %}
-  <meta property="og:site_name" content="{{ site.title }}">
-  <meta property="og:title" content="{{ page.title }}">
-  <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ page.url }}">
-  <meta property="og:image" content="{{ site.url }}/{{ page.feature_image }}">
-  <meta property="og:description" content="{{ page.excerpt | strip_html | strip_newlines }}">
-  {% else %}
-  <meta name="twitter:site" content="@theYenLai">
-  <meta property="og:site_name" content="{{ site.title }}">
-  <meta property="og:title" content="{{ page.title }}">
-  <meta property="og:url" content="http://{{ site.url }}{{ site.baseurl }}{{ page.url }}">
-  <meta property="og:image" content="{{ site.url }}/{{ site.favicon }}">
-  <meta property="og:description" content="{{ page.excerpt | strip_html | strip_newlines }}">
-  {% endif %}
-
-</head>
-
-<body>...</body>
-```
+<script src="https://gist.github.com/laiyenju/8fa4aaad9364085070160fa4da733a5c.js"></script>
 
 ### 成功！👏👏👏
 
