@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 我的部落格文章有顯圖了！
+title: Open Graph 搭配 Twitter Cards 實現部落格的社群平台顯圖效果
 slug: opengraph-with-twitter-card
 date: 2020-04-08
 status: publish
