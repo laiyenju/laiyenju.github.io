@@ -66,6 +66,9 @@ UX 工作最大的共通性：大家真的不知道 UX 在幹嘛 👇
 ## 🗞 還有餘力分享的其他事
 
 - 好奇使用者研究的詳細工作內容，可以收看**本週四（4／23）**的[集合啦！研究員～來聊聊研究路上的疑難雜症（直播）](https://www.facebook.com/events/842771466200026/)，這週會著重在量化研究，前一次的線上講座則較多通用的使用者研究分享，[重播影片已上線](https://www.podapalooza.org/)。
+
 - 最懂說重點、不浪費讀者時間的 AXIOS 電子報在上週發布 [App](https://apps.apple.com/tw/app/axios/id1464917429?l=en)，他們特闢了一個使用者回饋專區收集大家對 App 的建議。我覺得是個觀察讀者對新聞 App 看法的搖滾區🤘
+
 - 太刀川英輔的工作室發起的 [PANDAID 公益網站](https://www.pandaid.jp/TOP)，集結關於 COVID-19 的衛生知識、補貼申請與政府政策等資訊，現正招募網站運營、翻譯志工，有繁體中文的翻譯計畫可參加。
+
 - 另一項 COVID-19 公益活動，名為 [#Podapalooza](https://www.podapalooza.org/)（非常難唸）的 podcast 嘉年華募資活動，主辦方邀請了設計、商業科技、社會文化、孩童類別的 podcast 節目為此活動錄製特輯。大家到[活動網站](https://www.podapalooza.org/)隨喜樂捐後，就會收到 Podapalooza 的 podcast 頻道連結，訂閱頻道後，4／25 開始即可陸續收到許多特輯。
