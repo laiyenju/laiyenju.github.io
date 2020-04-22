@@ -24,7 +24,7 @@ url: "https://laiyenju.github.io"
 favicon: images/sky.png
 
 # Google Analytics id, e.g. "UA-NNNNNNNN-N"
-google_analytics: ""
+google_analytics: "UA-159080614-5"
 
 # LikeCoin
 liker_id: yenjulai
