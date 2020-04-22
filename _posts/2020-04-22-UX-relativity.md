@@ -5,7 +5,7 @@ slug: UX-relativity
 date: 2020-04-22
 status: publish
 author: Lai Yen Ju
-feature_image: https://cdn.substack.com/image/fetch/w_600,c_limit,f_auto,q_auto:good/https%3A%2F%2Fpbs.substack.com%2Fmedia%2FDQJJVG8X4AAqy8P.jpg
+feature_image: images/ux-relative.png
 tags:
   - Design
 excerpt: 從政治學系到新聞媒體，再回到學校涉入 UX 研究領域（還一股熱血地卡在自然語言處理的研究論文中），我真的很難跟爸媽說清楚自己在幹嘛。
