@@ -23,7 +23,7 @@ This is a team workshop project guided by [Gary Hsieh](https://www.hcde.washingt
 
 ## Persona
 
-Regi is a firsr-generation college student who wants to make their family proud. For Regi, debating and finding common ground is a life calling. He wants to get into politics, so it is key to stay updated with current events.
+Regi is a first-generation college student who wants to make their family proud. For Regi, debating and finding common ground is a life calling. He wants to get into politics, so it is key to stay updated with current events.
 
 more about Regi:
 
@@ -35,6 +35,7 @@ more about Regi:
 
 As Regi heads home after a day of classes, they think it is a good idea to read the news. **The UDN website is bookmarked on their browser**, and Regi clicks on the link to visit the site. He **opens up 5 articles aligning with his political views**, but after reading 2 of them, decides it is better to take a shower and proceed to study for next week's Art History exam. Regi closes the **laptop**.
 
+---
 
 ## Sprint Steps
 
