@@ -8,7 +8,7 @@ author: Lai Yen Ju
 feature_image: images/BCDS-Present.jpg
 tags:
   - Work
-excerpt: 嘗試以 sprint 方式進行 behavior change design 工作坊，改造聯合新聞網網站，提升讀者閱讀量、突破政治新聞議題同溫層。
+excerpt: 嘗試以 sprint 方式進行 behavior change design 工作坊，以提升讀者閱讀量、突破政治新聞議題同溫層為目標，為聯合新聞網頁面製作初期設計原型。
 ---
 
 ## Projection Introduction
