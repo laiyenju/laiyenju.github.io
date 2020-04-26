@@ -13,7 +13,7 @@ excerpt: 透過 behavior change design 工作坊，為聯合新聞網頁面製�
 
 ## Projection Introduction
 
-This is a team workshop project guided by [Gary Hsieh](https://www.hcde.washington.edu/hsieh). I'm one of the 4 team-members in this project. I participated in idea iterations through all steps, been in charge of dessigning the final prototype.
+This is a team workshop project guided by [Gary Hsieh](https://www.hcde.washington.edu/hsieh). I'm one of the 4 team members in this project. I participated in idea iterations through all steps, been in charged of dessigning the final prototype.
 
 
 | Designing Challenge            | Client                                 | Deliverable                                                                                               |
@@ -57,7 +57,7 @@ Goal setting theory and social engagement are our references. We focus on follow
 - The establishment of specific, difficult goals will lead to a higher performance and motivation users in a participatory creation process.
 - People are more likely to achieve their goal if it is broken down into smaller chunks.
 
-We decide to form a readers' chat group. In this group, every reader could join sub-group, with different political ideologies, to dicuss specific political issues based on UDN's news articles.
+We decide to form a chat group based on issues for readers with different political ideology. In this group, every reader could join in or form a sub-group, with different political ideologies, to dicuss specific political issues based on UDN's news articles.
 
 ![](https://i.imgur.com/uLA1i2h.jpg)
 
@@ -74,18 +74,19 @@ Readers are seperated into 3 groups, **first time user**, **6 months of use**, *
 
 ### Step 4: Prototype
 
-This prototype is inspired by YouTube Live chat interface, based on a rewarding gamification system. Readers in encourage to read more news articles in order to discuss with others on different issues or people with different political ideology.
+This prototype is inspired by YouTube Live chat interface, based on a rewarding gamification system. Readers are encouraged to read more news articles in order to discuss with others on different news issues or people with different political ideology.
 
 - **Home Page**
-    - Readers could immediately know the breaking news on the top section.
-    - There are also political news article listed below the breaking news section. Every piece of political news has a mission to encourage readers share and join related issue chat group.
+    - Readers could immediately notice the breaking news on the top section.
+    - There are also political news articles listed below the breaking news section. Every piece of political news has a mission to encourage readers to share and join related issue chat group.
 
 - **Article with issues**
-    - Issues are related to the article that reader click in. Those issues are vary in political ideology and perspectives.
+    - Issues are related to the article that reader clicked in. Those issues are vary in political ideology and perspectives.
     - There's also a premium group for readers who are the most actively disccussing the spesific issue. Readers who complete the daily mission could also has the access to enter the premium group.
 
 - **Article with chat**
     - Once reader enter in a issue group. There's a realtime chat user interface just like YouTube Live chat.
+    - Readers who are positively discuss and share news article with different perspectives in chat group, wiil gain their rewards.
 
 ![](https://i.imgur.com/WyYIJ0Y.jpg)
 
