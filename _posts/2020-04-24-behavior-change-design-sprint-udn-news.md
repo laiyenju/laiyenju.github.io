@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Behavior Change Design Sprint for UDN news website
+title: Behavior Change Design Sprint for UDN news live chat
 slug: behavior-change-design-sprint-udn-news
 date: 2020-04-24
 status: publish
@@ -73,3 +73,19 @@ Readers are seperated into 3 groups, **first time user**, **6 months of use**, *
 
 
 ### Step 4: Prototype
+
+This prototype is inspired by YouTube Live chat interface, based on a rewarding gamification system. Readers in encourage to read more news articles in order to discuss with others on different issues or people with different political ideology.
+
+- **Home Page**
+    - Readers could immediately know the breaking news on the top section.
+    - There are also political news article listed below the breaking news section. Every piece of political news has a mission to encourage readers share and join related issue chat group.
+
+- **Article with issues**
+    - Issues are related to the article that reader click in. Those issues are vary in political ideology and perspectives.
+    - There's also a premium group for readers who are the most actively disccussing the spesific issue. Readers who complete the daily mission could also has the access to enter the premium group.
+
+- **Article with chat**
+    - Once reader enter in a issue group. There's a realtime chat user interface just like YouTube Live chat.
+
+![](https://i.imgur.com/WyYIJ0Y.jpg)
+
