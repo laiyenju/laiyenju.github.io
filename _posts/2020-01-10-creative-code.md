@@ -11,6 +11,8 @@ tags:
 excerpt: I was selected to participated in a pre-test for p5.js online course. I sketched in p5.js, update this gallery often.
 ---
 
+Welcome to my [open processing](https://www.openprocessing.org/user/221211#sketches) to see more!
+
 <iframe src="https://editor.p5js.org/laiyenju/embed/JU8ntIIhk" width="500" height="500" frameborder="0"></iframe>
 
 <iframe src="https://editor.p5js.org/laiyenju/embed/21DHnJ7JS" width="500" height="500" frameborder="0"></iframe>
