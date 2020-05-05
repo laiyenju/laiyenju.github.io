@@ -15,4 +15,4 @@ excerpt: I was selected to participated in a pre-test for p5.js online course. I
 
 <iframe src="https://editor.p5js.org/laiyenju/embed/21DHnJ7JS" width="500" height="500" frameborder="0"></iframe>
 
-<iframe src="https://editor.p5js.org/laiyenju/embed/bDppjKFI3" height="500", width="500" frameborder="0"></iframe>
+<iframe src="https://editor.p5js.org/laiyenju/embed/bDppjKFI3" height="500" width="700" frameborder="0"></iframe>
