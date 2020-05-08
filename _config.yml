@@ -35,8 +35,8 @@ navigation:
     url: /
   - text: About
     url: /about/
-  - text: Articles
-    url: /articles/
+  - text: Blog
+    url: /blog/
   - text: Newsletter
     url: /newsletter/
 

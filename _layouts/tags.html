@@ -5,7 +5,7 @@ layout: default
 <main class="site-main fadeInDown delay_075s">
   <article class="post">
     <header class="post-header">
-      <h1 class="post-title">ARTICLES</h1>
+      <h1 class="post-title">BLOG</h1>
     </header><!-- .post-header -->
     <div class="post-content">
       <div class="archive-tags">
@@ -15,15 +15,13 @@ layout: default
         <a href="#{{ tag | cgi_escape }}">{{ tag }}</a>{% unless forloop.last %} {% endunless %}
         {% endfor %}
       </div><!-- .archive-tag-list -->
-      {% for tag in sortedTags %}
-        <h2 id="{{ tag | cgi_escape }}">{{ tag }}</h2>
+      <hr>
         <ul class="archive-post-list">
-        {% for post in site.tags[tag] %}
+        {% for post in site.posts %}
           <li><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a> <span class="archive-meta"> — <time class="archive-date" datetime="{{ post.date | date: "%Y-%m-%d" }}">{{ post.date | date: "%B %-d, %Y" }}</time></span></li>
         {% endfor %}
         </ul><!-- .archive-post-list -->
         <p><a href="#top" class="archive-top-link">Return to top &#8593;</a></p>
-      {% endfor %}
     </div><!-- .post-content -->
   </article><!-- .post -->
 </main><!-- .site-main -->

@@ -56,14 +56,13 @@ layout: default
         {% capture site_tags %}{% for tag in site.tags %}{{ tag | first }}{% unless forloop.last %},{% endunless %}{% endfor %}{% endcapture %}
         {% assign sortedTags = site_tags | split:',' | sort %}
       </div><!-- .archive-tag-list -->
-      {% for tag in sortedTags %}
-        <h4 id="{{ tag | cgi_escape }}" style="text-transform:uppercase">{{ tag }}</h4>
-        <ul class="archive-post-list">
-        {% for post in site.tags[tag] %}
-          <li><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a> <span class="archive-meta"> — <time class="archive-date" datetime="{{ post.date | date: "%Y-%m-%d" }}">{{ post.date | date: "%B %-d, %Y" }}</time></span></li>
+      <ul class="archive-post-list">
+        {% for post in site.posts limit: 5 %}
+            <li><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a> <span class="archive-meta"> — <time class="archive-date" datetime="{{ post.date | date: "%Y-%m-%d" }}">{{ post.date | date: "%B %-d, %Y" }}</time></span></li>
         {% endfor %}
         </ul><!-- .archive-post-list -->
-      {% endfor %}
+
+        <p><a href="#top" class="archive-top-link">read more</a></p><!-- .archive-post-list -->
     </div><!-- .post-content -->
   </article><!-- .post -->
 
