@@ -40,6 +40,31 @@ a {
   }
 }
 
+.card {
+  padding-top: 1.5em;
+  padding-left: 1em;
+  padding-right: 1em;
+  color: _palette(secondary);
+  &:hover {
+    color: _palette(accent);
+  }
+}
+
+.work-section a {
+  text-decoration: none;
+}
+
+.work-section h4 {
+  &:hover {
+   color: _palette(accent); 
+  } 
+}
+
+.work-section p {
+  color: _palette(secondary);
+  opacity: 0.6;
+}
+
 h1,
 h2,
 h3,
