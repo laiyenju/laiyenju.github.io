@@ -1,6 +1,6 @@
 ---
 layout: page
-title: About｜LAI YEN JU
+title: About
 permalink: /about/
 description: An optional about page for Scriptor Jekyll theme
 ---
