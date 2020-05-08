@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【人機互動設計】@NCCU
+title: 人機互動設計 @NCCU
 slug: nccu-hci-design
 date: 2020-02-24
 status: publish
