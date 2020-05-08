@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【互動科技研究討論】@NCCU
+title: 互動科技研究討論 @NCCU
 slug: nccu-interact-research
 date: 2020-02-24
 status: publish
