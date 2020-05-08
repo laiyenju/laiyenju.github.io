@@ -61,8 +61,11 @@ a {
 }
 
 .work-section p {
-  color: _palette(secondary);
+  color: _palette(primary);
   opacity: 0.6;
+  &:hover {
+   color: _palette(secondary); 
+  }
 }
 
 h1,
