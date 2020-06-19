@@ -1,3 +1,15 @@
+---
+layout: post
+title: 做菜與演算法、大歐與小歐
+slug: algorithm-complexity
+date: 2020-06-17
+status: publish
+author: Lai Yen Ju
+tags:
+  - Programing
+excerpt: 演算法的基本概念以及評估演算法好壞的複雜度們
+---
+
 # 演算法是什麼
 
 演算法是由能夠一步步解決問題的步驟所組成，就像是料理新手學習做一道菜時，通常會跟著食譜一步一步做出來，這時候「食譜」可以說是做出料理的演算法。
