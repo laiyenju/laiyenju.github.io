@@ -6,7 +6,7 @@ date: 2020-07-09
 status: publish
 author: Lai Yen Ju
 tags:
-  - Programing
+  - Design
   - PDIS
 excerpt: 92 天實習中的第一天
 ---
