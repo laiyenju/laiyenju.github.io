@@ -2,7 +2,7 @@
 layout: post
 title: PDIS 實習日誌：學習「團隊」
 slug: pdis-diary-first-day
-date: 2020-07-09
+date: 2020-07-03
 status: publish
 author: Lai Yen Ju
 tags:
