@@ -8,7 +8,8 @@ description: An optional about page for Scriptor Jekyll theme
 
 ## I’m Yen
 
-A Python freshman studying in User Research and Design.
+Now in internship at [Public Digital Innovation & Service](https://pdis.nat.gov.tw/en/) Ray4.0 project.
+Exploring in user research and web development.
 
 A graduate student at National Chengchi University studying in Digital Content & Technology. Recently, I decided to dive into natural language processing to complete my master's thesis. 
 
