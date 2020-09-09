@@ -15,8 +15,6 @@ A graduate student at National Chengchi University studying in Digital Content &
 
 I have great enthusiasm for **news media**, **design** and **programming**. Previously, I interned at [Daodu.tech](https://daodu.tech), [The News Lens](https://www.thenewslens.com) and [TEDx Taipei](https://tedxtaipei.org).
 
-**👉 [Download CV](https://drive.google.com/file/d/1Zh8Ubz9eQqYEs-chnoMmC2QoSfEpnH3J/view?usp=sharing)**
-
 ***
 
 ## Education
