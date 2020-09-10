@@ -46,9 +46,7 @@ In order to understand the whole procedure of government career service. We inte
 
 ### 2. Target User and User Flow
 
-
-
-![](https://i.imgur.com/D4Z8y7F.png)
+![](https://i.imgur.com/xVWAouv.png)
 
 ### 3. Framing Key Problems
 
@@ -78,7 +76,7 @@ such as
 
 #### 4.1 wireframe and low-fidelity prototype
 
-
+![](https://i.imgur.com/zBD07MF.jpg)
 
 #### 4.2 Re-position and Re-brand
 
