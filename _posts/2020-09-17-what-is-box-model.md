@@ -79,8 +79,6 @@ box 們會自動排成一列，且無法調整高度，只有寬度能透過 pad
 
 ## 參考資料
 
-## 參考資料
-
 - [學習 CSS 版面配置：關於 position 屬性](https://zh-tw.learnlayout.com/position.html)
 - [MDN: The box model](https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/The_box_model#What_is_the_CSS_box_model)
 - [MDN: box-sizing](https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing)
