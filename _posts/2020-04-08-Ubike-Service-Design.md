@@ -11,6 +11,14 @@ tags:
 excerpt: 以服務設計提供流暢的 YouBike 租借體驗。
 ---
 
+**My Role**
+
+I worked with a visual designer to finish this project. I'm reponsible for user research and plan.
+
+| Problems | Solution |
+| :------- | :------- |
+| YouBike is a co-shared public bicycle rental service in Taiwan. However, it's rental process and usually confused first-time user. And the error instruction cannot help users to figure out the rental problem by themselves. | We considered the limited budget for rebuilding the hardware user interface. Redesign the rental usage flow by simplify the instruction on the rental interface. |
+
 ![](https://i.imgur.com/dqtGkuM.jpg)
 ![](https://i.imgur.com/miYGbsj.jpg)
 ![](https://i.imgur.com/QHkCBag.jpg)
