@@ -1,6 +1,6 @@
 ---
 title: "242"
-subtitle: "is a personal emblem, born from my journey and inquisitive spirit. It merges the adventurous essence of the legendary Road No. 24 with the whimsical wisdom of '42' from The Hitchhiker's Guide to the Galaxy – the ultimate answer to life, the universe, and everything. This platform is my canvas, where wanderlust meets the wonder of the cosmos, each post a step in my quest for understanding. Join me at 242, where paths and ponderings intersect."
+subtitle: "is the spirit of Road No. 24's adventure melds with '42' from The Hitchhiker's Guide to the Galaxy – the cosmic answer to life's great mysteries. This site is where my journey and curiosity converge, exploring the universe's wonders one thought at a time."
 listing:
   contents: posts
   feed: true

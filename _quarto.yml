@@ -12,7 +12,7 @@ website:
   twitter-card:
     creator: "@laiyenju"
     site: "@242"
-  margin-header: | 
+  body-header: | 
     This site is brought to you by [Yen Lai](https://read.cv/yenlai)
 format:
   html:
