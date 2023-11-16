@@ -16,15 +16,15 @@
   {
     "objectID": "posts/post-with-code/index.html",
     "href": "posts/post-with-code/index.html",
-    "title": "Post With Code",
+    "title": "Welcome to My Website",
     "section": "",
-    "text": "This site is brought to you by Yen LaiThis is a post with executable code."
+    "text": "This site is brought to you by Yen Lai"
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "242",
-    "section": "",
-    "text": "This site is brought to you by Yen Lai\n\n\n\n\n\n\n\nDate\n\n\nTitle\n\n\nReading Time\n\n\n\n\n\n\nNov 16, 2023\n\n\nPost With Code\n\n\n1 min\n\n\n\n\nNov 13, 2023\n\n\nWelcome To My Blog\n\n\n1 min\n\n\n\n\n\n\nNo matching items"
+    "objectID": "posts/post-with-code/index.html#features",
+    "href": "posts/post-with-code/index.html#features",
+    "title": "Welcome to My Website",
+    "section": "Features",
+    "text": "Features\n\nBold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\nLists\n\nUnordered List\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\nOrdered List\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\nLinks and Images\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\nBlockquote\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.11 this is a footnote\n\n\n\nCode Block\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\n\nTable\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.2 this is a footnote"
   }
 ]

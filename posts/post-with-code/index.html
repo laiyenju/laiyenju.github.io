@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Harlow Malloc">
 <meta name="dcterms.date" content="2023-11-16">
+<meta name="description" content="Test if this subtitle can show something interesting!">
 
-<title>242 - Post With Code</title>
+<title>242 – index</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -22,16 +22,45 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
 <script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -41,12 +70,6 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 20,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -64,16 +87,6 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="../../styles.css">
-<meta property="og:title" content="242 - Post With Code">
-<meta property="og:description" content="">
-<meta property="og:image" content="https://laiyenju.github.io/posts/post-with-code/image.jpg">
-<meta property="og:site-name" content="242">
-<meta name="twitter:title" content="242 - Post With Code">
-<meta name="twitter:description" content="">
-<meta name="twitter:image" content="https://laiyenju.github.io/posts/post-with-code/image.jpg">
-<meta name="twitter:creator" content="@laiyenju">
-<meta name="twitter:site" content="@242">
-<meta name="twitter:card" content="summary_large_image">
 </head>
 
 <body class="nav-fixed">
@@ -89,7 +102,6 @@ ul.task-list li input[type="checkbox"] {
   </div>
         <div class="quarto-navbar-tools ms-auto">
 </div>
-          <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -97,24 +109,19 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Post With Code</h1>
-                                <div class="quarto-categories">
-                <div class="quarto-category">news</div>
-                <div class="quarto-category">code</div>
-                <div class="quarto-category">analysis</div>
-              </div>
-                  </div>
+      
+            <p class="subtitle lead">Post With Code</p>
+                  <div>
+        <div class="description">
+          Test if this subtitle can show something interesting!
+        </div>
+      </div>
+                </div>
   </div>
     
   
   <div class="quarto-title-meta">
 
-      <div>
-      <div class="quarto-title-meta-heading">Author</div>
-      <div class="quarto-title-meta-contents">
-               <p>Harlow Malloc </p>
-            </div>
-    </div>
       
       <div>
       <div class="quarto-title-meta-heading">Published</div>
@@ -131,16 +138,110 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#welcome-to-my-website" id="toc-welcome-to-my-website" class="nav-link active" data-scroll-target="#welcome-to-my-website">Welcome to My Website</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
-<main class="content quarto-banner-title-block" id="quarto-document-content">
+<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
 
 
 
+<p>This site is brought to you by <a href="https://read.cv/yenlai">Yen Lai</a></p>
+<section id="welcome-to-my-website" class="level1 page-columns page-full">
+<h1>Welcome to My Website</h1>
+<p>This is a <strong>Markdown</strong> test to check the rendering on your website.</p>
+<section id="features" class="level2 page-columns page-full">
+<h2 data-anchor-id="features">Features</h2>
+<ul>
+<li><strong>Bold</strong> text for emphasis</li>
+<li><em>Italic</em> text for subtlety</li>
+<li><code>Code</code> snippets for technical content</li>
+</ul>
+<section id="lists" class="level3">
+<h3 data-anchor-id="lists">Lists</h3>
+<section id="unordered-list" class="level4">
+<h4 data-anchor-id="unordered-list">Unordered List</h4>
+<ul>
+<li>Item One</li>
+<li>Item Two
+<ul>
+<li>Subitem A</li>
+<li>Subitem B</li>
+</ul></li>
+</ul>
+</section>
+<section id="ordered-list" class="level4">
+<h4 data-anchor-id="ordered-list">Ordered List</h4>
+<ol type="1">
+<li>First Step</li>
+<li>Second Step
+<ol type="1">
+<li>Detail A</li>
+<li>Detail B</li>
+</ol></li>
+</ol>
+</section>
+</section>
+<section id="links-and-images" class="level3">
+<h3 data-anchor-id="links-and-images">Links and Images</h3>
+<p><a href="https://github.com">Visit GitHub</a></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://via.placeholder.com/150.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Sample Image</figcaption>
+</figure>
+</div>
+</section>
+<section id="blockquote" class="level3 page-columns page-full">
+<h3 data-anchor-id="blockquote">Blockquote</h3>
+<blockquote class="blockquote page-columns page-full">
+<div class="page-columns page-full"><p>Markdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p><div class="no-row-height column-margin column-container"><li id="fn1"><p><sup>1</sup>&nbsp;this is a footnote</p></li></div></div>
+</blockquote>
+</section>
+<section id="code-block" class="level3">
+<h3 data-anchor-id="code-block">Code Block</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> hello_world():</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Hello, world!"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">"__main__"</span>:</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    hello_world()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="table" class="level3 page-columns page-full">
+<h3 data-anchor-id="table">Table</h3>
+<table class="table">
+<thead>
+<tr class="header">
+<th>header</th>
+<th>Content</th>
+<th>Website</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>test 1</td>
+<td>test 2</td>
+<td>test 3</td>
+</tr>
+<tr class="even">
+<td>test 1</td>
+<td>test 2</td>
+<td>test 3</td>
+</tr>
+</tbody>
+</table>
+<div class="page-columns page-full"><p>At the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No.&nbsp;24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.</p><div class="no-row-height column-margin column-container"><li id="fn2"><p><sup>2</sup>&nbsp;this is a footnote</p></li></div></div>
 
-<p>This site is brought to you by <a href="https://laiyenju.github.io">Yen Lai</a></p><p>This is a post with executable code.</p>
 
+</section>
+</section>
+</section>
 
 
 </main> <!-- /main -->
