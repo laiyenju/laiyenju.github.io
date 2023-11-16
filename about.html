@@ -64,11 +64,11 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="242 - About">
 <meta property="og:description" content="">
-<meta property="og:image" content="profile.jpg">
+<meta property="og:image" content="https://laiyenju.github.io/profile.jpg">
 <meta property="og:site-name" content="242">
 <meta name="twitter:title" content="242 - About">
 <meta name="twitter:description" content="">
-<meta name="twitter:image" content="profile.jpg">
+<meta name="twitter:image" content="https://laiyenju.github.io/profile.jpg">
 <meta name="twitter:creator" content="@laiyenju">
 <meta name="twitter:site" content="@242">
 <meta name="twitter:card" content="summary_large_image">
@@ -353,7 +353,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/laiyenju\.github\.io\/");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href);
     }
