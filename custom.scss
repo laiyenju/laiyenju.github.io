@@ -7,10 +7,18 @@ $font-family-sans-serif: 'Inter', 'Noto Sans TC', sans-serif !default;
 $font-family-monospace: 'JetBrains Mono', 'Noto Sans TC', monospace;
 $font-size-root: 16px !default;
 $h1-font-size: 4rem !default;
-$h2-font-size: 3.5rem !default;
+$h2-font-size: 3rem !default;
 
 $link-color: #ff38fc !default;
-$code-block-bg: #f2f2f2 !default;
+$link-color-hover: #ffffff !default;
+$selection-bg: #ffffff !default;
+$selection-color: #323232 !default;
+
+$code-color: #ffffff !default;
+$code-bg: #323232 !default;
+$code-block-bg: #323232 !default;
+
+$border-radius: 0px default;
 
 $headings-font-weight:  500 !default;
 
@@ -50,7 +58,7 @@ tbody > tr > td > a:hover {
     background-color: #000000;
 }
 
-.quarto-title {
+.quarto-title > .subtitle {
     width: 60%;
     font-family: $font-family-monospace;
     font-weight: 100;
@@ -80,3 +88,4 @@ tbody > tr > td > a:hover {
     transition: all linear 1s;
 }
 
+/*-- markdown format --*/

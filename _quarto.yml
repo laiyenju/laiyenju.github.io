@@ -3,15 +3,16 @@ project:
 
 website:
   title: "242"
+  search: false
   back-to-top-navigation: false
   open-graph: true
   navbar:
     background: black
-    search: true
+    pinned: true
   twitter-card:
     creator: "@laiyenju"
     site: "@242"
-  body-header: | 
+  margin-header: | 
     This site is brought to you by [Yen Lai](https://read.cv/yenlai)
 format:
   html:
@@ -29,6 +30,8 @@ format:
     footnotes-hover: true
     toc: true
     toc-depth: 1
+    reference-location: margin
+    citation-location: margin
 
 execute:
   freeze: auto
