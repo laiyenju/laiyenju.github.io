@@ -1,5 +1,5 @@
 /* css styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;400;700&family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+TC:wght@100;400;700&family=Permanent+Marker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;400;700&family=JetBrains+Mono:wght@400;700;800&family=Major+Mono+Display&family=Noto+Sans+TC:wght@100;400;700&family=Noto+Serif+TC:wght@200;400;700&family=Roboto+Serif:opsz,wght@8..144,200;8..144,400;8..144,700&display=swap');
 
 /*-- scss:defaults --*/
 $mainfont: 'Inter', 'Noto Sans TC', sans-serif !default;
@@ -8,8 +8,17 @@ $font-family-monospace: 'JetBrains Mono', 'Noto Sans TC', monospace;
 $font-size-root: 16px !default;
 $h1-font-size: 4rem !default;
 $h2-font-size: 3rem !default;
+$h3-font-size: 2.2rem !default;
+$h4-font-size: 1.4rem !default;
 
-$link-color: #ff38fc !default;
+$toc-font-size: 1rem !default;
+$toc-active-border: #ffffff !default;
+$toc-inactive-border: #ffffff30 !default;
+$toc-color: #ffffff !default;
+
+$footer-fg: #fff000 !default;
+
+$link-color: #00FFFF !default;
 $link-color-hover: #ffffff !default;
 $selection-bg: #ffffff !default;
 $selection-color: #323232 !default;
@@ -17,19 +26,32 @@ $selection-color: #323232 !default;
 $code-color: #ffffff !default;
 $code-bg: #323232 !default;
 $code-block-bg: #202020 !default;
+$btn-code-copy-color-active: $link-color !default;
+
+$popover-bg: #ffffff !default;
 
 $border-radius: 0px default;
 
-$headings-font-weight:  500 !default;
+$headings-font-weight:  400 !default;
 
 /*-- scss:rules --*/
 
-h1, h2, h3, h4 {
+h1 {
+    font-family: 'Major Mono Display', monospace;
+    word-spacing: 10%;
+}
+
+h2, h3, h4 {
     font-family: $font-family-sans-serif;
 }
 
 h5, h6 {
     font-family: 'Noto Sans TC', sans-serif;
+}
+
+body {
+    font-family: 'Roboto Serif', 'Noto Serif TC', serif;
+    font-weight: 200;
 }
 
 /*-- footer --*/
@@ -43,6 +65,10 @@ h5, h6 {
 }
 
 /*-- table --*/
+tbody {
+    font-family: $font-family-monospace;
+}
+
 tbody > tr:hover {
     background-color: #ffffff;
     color:#000000 !important;
@@ -58,12 +84,6 @@ tbody > tr > td > a:hover {
     background-color: #000000;
 }
 
-.quarto-title > .subtitle {
-    width: 60%;
-    font-family: $font-family-monospace;
-    font-weight: 100;
-}
-
 .quarto-title > .title {
     font-family: $font-family-monospace;
     font-size: 6rem !important;
@@ -72,6 +92,9 @@ tbody > tr > td > a:hover {
 .quarto-title > .subtitle {
     font-family: $font-family-monospace;
     font-weight: 100;
+    font-size: 100%;
+    width: 60%;
+    min-width: 300px;
 }
 
 /*-- navbar --*/
@@ -83,9 +106,22 @@ tbody > tr > td > a:hover {
 
 .navbar-title:hover::before {
     content: "cd ~/";
-    color: #ff38fc;
+    color: #00FFFF;
     font-weight: 100;
     transition: all linear 1s;
 }
 
-/*-- markdown format --*/
+strong {
+    color: #ffffff !important;
+}
+
+/*-- margin --*/
+#TOC {
+    font-family: $font-family-sans-serif;
+    font-weight: lighter;
+}
+
+.quarto-margin-header {
+    font-family: $font-family-sans-serif;
+    font-weight: lighter;
+}

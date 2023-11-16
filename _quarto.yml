@@ -21,7 +21,9 @@ format:
       - custom.scss
     css: styles.css
     code-copy: hover
+    code-overflow: wrap
     code-link: true
+    highlight-style: dracula
     anchor-sections: false
     smooth-scroll: true
     link-external-icon: true
@@ -29,7 +31,7 @@ format:
     citations-hover: true
     footnotes-hover: true
     toc: true
-    toc-depth: 1
+    toc-depth: 3
     reference-location: margin
     citation-location: margin
 

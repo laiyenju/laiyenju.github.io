@@ -1,9 +1,6 @@
 ---
-subtitle: "Post With Code"
-description: "Test if this subtitle can show something interesting!"
 date: "2023-11-16"
 image: "image.jpg"
-page-layout: article
 ---
 
 # Welcome to My Website
