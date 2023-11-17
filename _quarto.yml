@@ -6,7 +6,7 @@ website:
   favicon: favicon_io/favicon.ico
   search: false
   back-to-top-navigation: false
-  open-graph: true
+  open-graph: True
   navbar:
     background: black
     pinned: true

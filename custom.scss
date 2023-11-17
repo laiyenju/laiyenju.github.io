@@ -7,13 +7,13 @@ $backgroundcolor: #000000 !default;
 $mainfont: 'Inter', 'Noto Sans TC', sans-serif !default;
 $font-family-sans-serif: 'Inter', 'Noto Sans TC', sans-serif !default;
 $font-family-monospace: 'JetBrains Mono', 'Noto Sans TC', monospace;
-$font-size-root: 16px !default;
-$h1-font-size: 4rem !default;
-$h2-font-size: 3rem !default;
-$h3-font-size: 2.2rem !default;
-$h4-font-size: 1.4rem !default;
+$font-size-root: 18px !default;
+$h1-font-size: 3rem !default;
+$h2-font-size: 2rem !default;
+$h3-font-size: 1.6rem !default;
+$h4-font-size: 1.2rem !default;
 
-$toc-font-size: 1rem !default;
+$toc-font-size: 0.8rem !default;
 $toc-active-border: #ffffff !default;
 $toc-inactive-border: #ffffff30 !default;
 $toc-color: #ffffff !default;
@@ -43,6 +43,7 @@ h1 {
 
 h2, h3, h4 {
     font-family: $font-family-sans-serif;
+    font-weight: 100;
 }
 
 h5, h6 {
@@ -133,7 +134,7 @@ tbody > tr > td > a:hover {
 
 .quarto-title > .subtitle {
     font-family: $font-family-monospace;
-    font-weight: 100;
+    font-weight: 400;
     font-size: 100%;
     width: 60%;
     min-width: 300px;
@@ -163,4 +164,8 @@ strong {
 .quarto-margin-header {
     font-family: $mainfont;
     font-weight: 400;
+}
+
+.column-margin {
+    font-family: $mainfont;
 }
