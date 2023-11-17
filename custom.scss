@@ -18,14 +18,14 @@ $toc-active-border: #ffffff !default;
 $toc-inactive-border: #ffffff30 !default;
 $toc-color: #ffffff !default;
 
-$link-color: #2a9fd6 !default;
+$link-color: #00aeff !default;
 $link-color-hover: #ffffff !default;
 $selection-bg: #ffffff !default;
 $selection-color: #323232 !default;
 
 $code-color: #ffffff !default;
-$code-bg: #2a9fd695 !default;
-$code-block-bg: #202020 !default;
+$code-bg: #00aeff95 !default;
+$code-block-bg: #20202090 !default;
 $btn-code-copy-color-active: $link-color !default;
 
 $popover-bg: #ffffff !default;
@@ -164,8 +164,4 @@ strong {
 .quarto-margin-header {
     font-family: $mainfont;
     font-weight: 400;
-}
-
-.column-margin {
-    font-family: $mainfont;
 }

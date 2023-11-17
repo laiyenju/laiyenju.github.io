@@ -23,7 +23,7 @@ search: false
 
 ::: {.g-col-12 #signature}
 This site is brougt to you 
-by [Yen Lai](https://read.cv/yenlai)
+by [Yen Lai](https://www.linkedin.com/in/laiyenju/)
 :::
 
 :::
