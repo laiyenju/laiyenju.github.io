@@ -1,7 +1,9 @@
 /* css styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;400;700&family=JetBrains+Mono:wght@400;700;800&family=Major+Mono+Display&family=Noto+Sans+TC:wght@100;400;700&family=Noto+Serif+TC:wght@200;400;700&family=Roboto+Serif:opsz,wght@8..144,200;8..144,400;8..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;400;700&family=JetBrains+Mono:wght@100;400;700;800&family=Major+Mono+Display&family=Noto+Sans+TC:wght@100;400;700&family=Noto+Serif+TC:wght@200;400;700&display=swap');
 
 /*-- scss:defaults --*/
+$backgroundcolor: #000000 !default;
+
 $mainfont: 'Inter', 'Noto Sans TC', sans-serif !default;
 $font-family-sans-serif: 'Inter', 'Noto Sans TC', sans-serif !default;
 $font-family-monospace: 'JetBrains Mono', 'Noto Sans TC', monospace;
@@ -16,15 +18,13 @@ $toc-active-border: #ffffff !default;
 $toc-inactive-border: #ffffff30 !default;
 $toc-color: #ffffff !default;
 
-$footer-fg: #fff000 !default;
-
-$link-color: #00FFFF !default;
+$link-color: #2a9fd6 !default;
 $link-color-hover: #ffffff !default;
 $selection-bg: #ffffff !default;
 $selection-color: #323232 !default;
 
 $code-color: #ffffff !default;
-$code-bg: #323232 !default;
+$code-bg: #2a9fd695 !default;
 $code-block-bg: #202020 !default;
 $btn-code-copy-color-active: $link-color !default;
 
@@ -52,6 +52,46 @@ h5, h6 {
 body {
     font-family: 'Roboto Serif', 'Noto Serif TC', serif;
     font-weight: 200;
+    background-color: $backgroundcolor;
+}
+
+code {
+    border-radius: 5px;
+    background-color: $code-bg;
+    border: 0.15px solid $link-color;
+    font-weight: 400;
+}
+
+#signature {
+    font-family: $font-family-monospace;
+    font-weight: 400;
+}
+
+.sourceCode {
+    border: none;
+}
+
+.title {
+    font-family: $font-family-monospace;
+    font: 400;
+}
+
+.footnote-ref {
+    font-family: $font-family-monospace;
+    font-weight: 400;
+}
+
+/*-- navbar --*/
+.navbar-title {
+    font-family: $font-family-monospace;
+    font-weight: 700;
+    color: #ffffff !important;
+}
+
+.navbar-title:hover::before {
+    content: "cd ~/";
+    color: $link-color !important;
+    font-weight: 400;
 }
 
 /*-- footer --*/
@@ -67,6 +107,7 @@ body {
 /*-- table --*/
 tbody {
     font-family: $font-family-monospace;
+    font-weight: 400;
 }
 
 tbody > tr:hover {
@@ -87,6 +128,7 @@ tbody > tr > td > a:hover {
 .quarto-title > .title {
     font-family: $font-family-monospace;
     font-size: 6rem !important;
+    font-weight: 800;
 }
 
 .quarto-title > .subtitle {
@@ -97,22 +139,19 @@ tbody > tr > td > a:hover {
     min-width: 300px;
 }
 
-/*-- navbar --*/
-.navbar-title {
-    font-family: $font-family-monospace;
-    font-weight: 700;
-    color: #ffffff !important;
-}
-
-.navbar-title:hover::before {
-    content: "cd ~/";
-    color: #00FFFF;
-    font-weight: 100;
-    transition: all linear 1s;
-}
-
 strong {
     color: #ffffff !important;
+}
+
+.external {
+    padding: 0.3em;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.external:hover {
+    color: #ffffff !important;
+    border: 0.15px solid $link-color;
 }
 
 /*-- margin --*/
@@ -122,6 +161,6 @@ strong {
 }
 
 .quarto-margin-header {
-    font-family: $font-family-sans-serif;
-    font-weight: lighter;
+    font-family: $mainfont;
+    font-weight: 400;
 }

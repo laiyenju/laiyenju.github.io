@@ -51,6 +51,16 @@ if __name__ == "__main__":
     hello_world()
 ```
 
+::: {.panel-tabset group="language"}
+## R
+
+Tab content
+
+## Python
+
+Tab content
+:::
+
 ### Table
 | header | Content | Website |
 | ------ | ------- | ------- |

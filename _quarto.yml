@@ -3,6 +3,7 @@ project:
 
 website:
   title: "242"
+  favicon: favicon_io/favicon.ico
   search: false
   back-to-top-navigation: false
   open-graph: true
@@ -12,8 +13,6 @@ website:
   twitter-card:
     creator: "@laiyenju"
     site: "@242"
-  body-header: | 
-    This site is brought to you by [Yen Lai](https://read.cv/yenlai)
 format:
   html:
     theme: 
@@ -32,6 +31,7 @@ format:
     footnotes-hover: true
     toc: true
     toc-depth: 3
+    toc-location: right
     reference-location: margin
     citation-location: margin
 

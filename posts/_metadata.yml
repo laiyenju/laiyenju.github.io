@@ -6,6 +6,9 @@ freeze: true
 
 # Enable banner style title blocks
 title-block-banner: true
+title-block-header: false
 
 page-layout: article
-title-block-header: false
+body-header: false
+reference-location: margin
+citation-location: margin
