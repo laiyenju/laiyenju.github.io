@@ -1,17 +1,14 @@
 ---
-date: "2024-03-05"
+date: "2024-03-04"
 ---
 
-# AI Alignment Terminology: Whole Brain Emulation
+# AI Alignment Terminology: Corrigibility
+A "corrigible" AI agent lets its creators fix mistakes without interference. 
 
-[Whole Brain Emulation], WBE is a proposed technique to transfer the information in a biological brain onto a computer substrate to create a machine intelligence or artificial mind.
+e.g. If a home assistant AI was mistakenly ordering excess items online, a corrigible agent could allow ppl to promptly shut it down, rewrite algorithms without resistance.
 
-The viability depends on having sufficient computing power, brain scanning resolution, and an accurate emulation capturing the relevant neural details. Proposed approaches include slicing and scanning brains, gradually replacing brain areas with computer interfaces, or modeling personalities.
+By default, an AI might resist having its goals changed or access restricted if those actions went against its goals of making purchases. However, since the home assistant is a corrigible AI, it is incentivized to peacefully accept corrections to its programming.
 
-Potential advantages include faster processing, backups, self-modification. But challenges exist around consciousness, personhood, employment impacts if mind copying occurs. The feasibility and timeline are debated, but some analyses suggest WBE may be viable by mid-century.
+More broadly, corrigibility means the AI would provide transparency into its decision making, assist with resolving the over purchasing issue, avoid unpredictable behaviors, and give up resources access if necessary, all while remaining helpful.
 
-As a product manager, I was attracted by this roadmap.
-
-Brain Emulation Roadmap in 2008: [https://fhi.ox.ac.uk/Reports/2008-3.pdf](https://fhi.ox.ac.uk/Reports/2008-3.pdf)
-
-And there’s still lot of things to go. I am so curious about how’s the roadmap looks now.
+In short, a corrigible AI like this home assistant transparently allows and aids efforts to supervise, redirect, and improve its functioning when errors occur.
