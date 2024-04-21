@@ -1,12 +1,5 @@
 [
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this blog"
-  },
-  {
     "objectID": "posts/welcome/index.html",
     "href": "posts/welcome/index.html",
     "title": "Welcome To My Blog",
@@ -14,17 +7,24 @@
     "text": "This is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
   },
   {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this blog"
+  },
+  {
     "objectID": "posts/post-with-code/index.html",
     "href": "posts/post-with-code/index.html",
     "title": "Welcome to My Website",
     "section": "",
-    "text": "This is a Markdown test to check the rendering on your website.\n\n\n\nBold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.11 this is a footnote\n\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.2 this is a footnote"
+    "text": "This is a Markdown test to check the rendering on your website.\n\n\n\nBold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.1\n1 this is a footnote\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.\n\n\n2 this is a footnote"
   },
   {
     "objectID": "posts/post-with-code/index.html#features",
     "href": "posts/post-with-code/index.html#features",
     "title": "Welcome to My Website",
     "section": "",
-    "text": "Bold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.11 this is a footnote\n\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.2 this is a footnote"
+    "text": "Bold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.1\n1 this is a footnote\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.\n\n\n2 this is a footnote"
   }
 ]
