@@ -13,7 +13,7 @@
 <lastBuildDate>Tue, 05 Mar 2024 00:00:00 GMT</lastBuildDate>
 <item>
   <title></title>
-  <link>https://laiyenju.github.io/posts/typefully30-corrigibility/</link>
+  <link>https://laiyenju.github.io/posts/typefully30-whole-brain-emulation/</link>
   <description><![CDATA[ 
 
 
@@ -33,8 +33,32 @@
 </section>
 
  ]]></description>
-  <guid>https://laiyenju.github.io/posts/typefully30-corrigibility/</guid>
+  <guid>https://laiyenju.github.io/posts/typefully30-whole-brain-emulation/</guid>
   <pubDate>Tue, 05 Mar 2024 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title></title>
+  <link>https://laiyenju.github.io/posts/typefully30-corrigibility/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="ai-alignment-terminology-corrigibility" class="level1">
+<h1>AI Alignment Terminology: Corrigibility</h1>
+<p>A “corrigible” AI agent lets its creators fix mistakes without interference.</p>
+<p>e.g.&nbsp;If a home assistant AI was mistakenly ordering excess items online, a corrigible agent could allow ppl to promptly shut it down, rewrite algorithms without resistance.</p>
+<p>By default, an AI might resist having its goals changed or access restricted if those actions went against its goals of making purchases. However, since the home assistant is a corrigible AI, it is incentivized to peacefully accept corrections to its programming.</p>
+<p>More broadly, corrigibility means the AI would provide transparency into its decision making, assist with resolving the over purchasing issue, avoid unpredictable behaviors, and give up resources access if necessary, all while remaining helpful.</p>
+<p>In short, a corrigible AI like this home assistant transparently allows and aids efforts to supervise, redirect, and improve its functioning when errors occur.</p>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://laiyenju.github.io/posts/typefully30-corrigibility/</guid>
+  <pubDate>Mon, 04 Mar 2024 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title></title>

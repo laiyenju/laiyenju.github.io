@@ -21,6 +21,13 @@
     "text": "In other words, AIXI combines Solomonoff Induction and Decision Theory.\n\nSolomonoff Induction is for learning from the complex real-world environment to build a predictive model.\nDecision Theory is for making decisions based on predictions.\n\nThe key idea of AIXI is to transform the real-world environment into simulated interaction outcomes derived from numerous computational models. To make optimal decisions, AIXI (if feasible) could help consider all possible scenarios.\nHere is my simple understanding. For a more detailed and complex analysis, please check Marcus Hutter’s paper."
   },
   {
+    "objectID": "posts/typefully30-corrigibility/index.html",
+    "href": "posts/typefully30-corrigibility/index.html",
+    "title": "AI Alignment Terminology: Corrigibility",
+    "section": "",
+    "text": "AI Alignment Terminology: Corrigibility\nA “corrigible” AI agent lets its creators fix mistakes without interference.\ne.g. If a home assistant AI was mistakenly ordering excess items online, a corrigible agent could allow ppl to promptly shut it down, rewrite algorithms without resistance.\nBy default, an AI might resist having its goals changed or access restricted if those actions went against its goals of making purchases. However, since the home assistant is a corrigible AI, it is incentivized to peacefully accept corrections to its programming.\nMore broadly, corrigibility means the AI would provide transparency into its decision making, assist with resolving the over purchasing issue, avoid unpredictable behaviors, and give up resources access if necessary, all while remaining helpful.\nIn short, a corrigible AI like this home assistant transparently allows and aids efforts to supervise, redirect, and improve its functioning when errors occur."
+  },
+  {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
@@ -28,8 +35,8 @@
     "text": "About this blog"
   },
   {
-    "objectID": "posts/typefully30-corrigibility/index.html",
-    "href": "posts/typefully30-corrigibility/index.html",
+    "objectID": "posts/typefully30-whole-brain-emulation/index.html",
+    "href": "posts/typefully30-whole-brain-emulation/index.html",
     "title": "AI Alignment Terminology: Whole Brain Emulation",
     "section": "",
     "text": "AI Alignment Terminology: Whole Brain Emulation\n[Whole Brain Emulation], WBE is a proposed technique to transfer the information in a biological brain onto a computer substrate to create a machine intelligence or artificial mind.\nThe viability depends on having sufficient computing power, brain scanning resolution, and an accurate emulation capturing the relevant neural details. Proposed approaches include slicing and scanning brains, gradually replacing brain areas with computer interfaces, or modeling personalities.\nPotential advantages include faster processing, backups, self-modification. But challenges exist around consciousness, personhood, employment impacts if mind copying occurs. The feasibility and timeline are debated, but some analyses suggest WBE may be viable by mid-century.\nAs a product manager, I was attracted by this roadmap.\nBrain Emulation Roadmap in 2008: https://fhi.ox.ac.uk/Reports/2008-3.pdf\nAnd there’s still lot of things to go. I am so curious about how’s the roadmap looks now."
