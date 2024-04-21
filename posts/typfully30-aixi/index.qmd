@@ -1,0 +1,34 @@
+---
+date: "2024-03-03"
+---
+
+# AI Alignment Terminology: AIXI
+
+Bridging Theory to Reality for Making Political Science "Science"
+
+## Why AIXI is important?
+[AIXI](https://www.lesswrong.com/tag/aixi) is a concept that could provide inspiration for evaluating complex real-world scenarios.
+
+It might help to have some evidence to address these real-world problems, such as
+
+- Should we implement a universal basic income policy?
+- Will working four days a week make us more productive?
+- ……
+
+It's difficult to verify whether a political science theory actually works, since the real world is not a controlled laboratory setting.
+
+Take a "universal basic income plan" for example. We cannot pre-estimate its positive or negative impacts on society. The best we can do is pilot it in a limited chosen area. However, there is still no way to explore all possible scenarios in the "real world" for now.
+
+According to [Marcus Hutter](http://www.hutter1.net/ai/aixigentle.htm), who developed AIXI:
+
+> Decision theory formally solves the problem of rational agents in uncertain worlds if the true environmental prior probability distribution is known. Solomonoff’s theory of universal induction formally solves the problem of sequence prediction for unknown prior distribution. We combine both ideas and get a parameterless theory of universal Artificial Intelligence.
+
+## What envolves with AIXI?
+In other words, AIXI combines Solomonoff Induction and Decision Theory.
+
+- Solomonoff Induction is for learning from the complex real-world environment to build a predictive model.
+- Decision Theory is for making decisions based on predictions.
+
+The key idea of AIXI is to transform the real-world environment into simulated interaction outcomes derived from numerous computational models. To make optimal decisions, AIXI (if feasible) could help consider all possible scenarios.
+
+Here is my simple understanding. For a more detailed and complex analysis, please check Marcus [Hutter's paper](http://www.hutter1.net/ai/aixigentle.htm).
