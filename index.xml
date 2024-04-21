@@ -10,7 +10,45 @@
 <atom:link href="https://laiyenju.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.3.450</generator>
-<lastBuildDate>Wed, 15 Nov 2023 16:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sat, 02 Mar 2024 16:00:00 GMT</lastBuildDate>
+<item>
+  <title></title>
+  <link>https://laiyenju.github.io/posts/typfully30-aixi/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<section id="ai-alignment-terminology-aixi" class="level1">
+<h1>AI Alignment Terminology: AIXI</h1>
+<p>Bridging Theory to Reality for Making Political Science “Science”</p>
+<p><a href="https://www.lesswrong.com/tag/aixi">AIXI</a> is a concept that could provide inspiration for evaluating complex real-world scenarios.</p>
+<p>It might help to have some evidence to address these real-world problems, such as</p>
+<ul>
+<li>Should we implement a universal basic income policy?</li>
+<li>Will working four days a week make us more productive?</li>
+<li>……</li>
+</ul>
+<p>It’s difficult to verify whether a political science theory actually works, since the real world is not a controlled laboratory setting.</p>
+<p>Take a “universal basic income plan” for example. We cannot pre-estimate its positive or negative impacts on society. The best we can do is pilot it in a limited chosen area. However, there is still no way to explore all possible scenarios in the “real world” for now.</p>
+<p>According to <a href="http://www.hutter1.net/ai/aixigentle.htm">Marcus Hutter</a>, who developed AIXI:</p>
+<blockquote class="blockquote">
+<p>Decision theory formally solves the problem of rational agents in uncertain worlds if the true environmental prior probability distribution is known. Solomonoff’s theory of universal induction formally solves the problem of sequence prediction for unknown prior distribution. We combine both ideas and get a parameterless theory of universal Artificial Intelligence.</p>
+</blockquote>
+<p>In other words, AIXI combines Solomonoff Induction and Decision Theory.</p>
+<ul>
+<li>Solomonoff Induction is for learning from the complex real-world environment to build a predictive model.</li>
+<li>Decision Theory is for making decisions based on predictions.</li>
+</ul>
+<p>The key idea of AIXI is to transform the real-world environment into simulated interaction outcomes derived from numerous computational models. To make optimal decisions, AIXI (if feasible) could help consider all possible scenarios.</p>
+<p>Here is my simple understanding. For a more detailed and complex analysis, please check Marcus <a href="http://www.hutter1.net/ai/aixigentle.htm">Hutter’s paper</a>.</p>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://laiyenju.github.io/posts/typfully30-aixi/index.html</guid>
+  <pubDate>Sat, 02 Mar 2024 16:00:00 GMT</pubDate>
+</item>
 <item>
   <title></title>
   <link>https://laiyenju.github.io/posts/post-with-code/index.html</link>
