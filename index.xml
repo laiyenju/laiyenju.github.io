@@ -10,7 +10,30 @@
 <atom:link href="https://laiyenju.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.3.450</generator>
-<lastBuildDate>Sat, 02 Mar 2024 16:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 04 Mar 2024 16:00:00 GMT</lastBuildDate>
+<item>
+  <title></title>
+  <link>https://laiyenju.github.io/posts/typefully30-corrigibility/index.html</link>
+  <description><![CDATA[ 
+
+
+
+<section id="ai-alignment-terminology-whole-brain-emulation" class="level1">
+<h1>AI Alignment Terminology: Whole Brain Emulation</h1>
+<p>[Whole Brain Emulation], WBE is a proposed technique to transfer the information in a biological brain onto a computer substrate to create a machine intelligence or artificial mind.</p>
+<p>The viability depends on having sufficient computing power, brain scanning resolution, and an accurate emulation capturing the relevant neural details. Proposed approaches include slicing and scanning brains, gradually replacing brain areas with computer interfaces, or modeling personalities.</p>
+<p>Potential advantages include faster processing, backups, self-modification. But challenges exist around consciousness, personhood, employment impacts if mind copying occurs. The feasibility and timeline are debated, but some analyses suggest WBE may be viable by mid-century.</p>
+<p>As a product manager, I was attracted by this roadmap.</p>
+<p>Brain Emulation Roadmap in 2008: <a href="https://fhi.ox.ac.uk/Reports/2008-3.pdf">https://fhi.ox.ac.uk/Reports/2008-3.pdf</a></p>
+<p>And there’s still lot of things to go. I am so curious about how’s the roadmap looks now.</p>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://laiyenju.github.io/posts/typefully30-corrigibility/index.html</guid>
+  <pubDate>Mon, 04 Mar 2024 16:00:00 GMT</pubDate>
+</item>
 <item>
   <title></title>
   <link>https://laiyenju.github.io/posts/typfully30-aixi/index.html</link>
@@ -21,6 +44,8 @@
 <section id="ai-alignment-terminology-aixi" class="level1">
 <h1>AI Alignment Terminology: AIXI</h1>
 <p>Bridging Theory to Reality for Making Political Science “Science”</p>
+<section id="why-aixi-is-important" class="level2">
+<h2 data-anchor-id="why-aixi-is-important">Why AIXI is important?</h2>
 <p><a href="https://www.lesswrong.com/tag/aixi">AIXI</a> is a concept that could provide inspiration for evaluating complex real-world scenarios.</p>
 <p>It might help to have some evidence to address these real-world problems, such as</p>
 <ul>
@@ -34,6 +59,9 @@
 <blockquote class="blockquote">
 <p>Decision theory formally solves the problem of rational agents in uncertain worlds if the true environmental prior probability distribution is known. Solomonoff’s theory of universal induction formally solves the problem of sequence prediction for unknown prior distribution. We combine both ideas and get a parameterless theory of universal Artificial Intelligence.</p>
 </blockquote>
+</section>
+<section id="what-envolves-with-aixi" class="level2">
+<h2 data-anchor-id="what-envolves-with-aixi">What envolves with AIXI?</h2>
 <p>In other words, AIXI combines Solomonoff Induction and Decision Theory.</p>
 <ul>
 <li>Solomonoff Induction is for learning from the complex real-world environment to build a predictive model.</li>
@@ -43,6 +71,7 @@
 <p>Here is my simple understanding. For a more detailed and complex analysis, please check Marcus <a href="http://www.hutter1.net/ai/aixigentle.htm">Hutter’s paper</a>.</p>
 
 
+</section>
 </section>
 
  ]]></description>
