@@ -1,5 +1,12 @@
 [
   {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this blog"
+  },
+  {
     "objectID": "posts/typfully30-aixi/index.html",
     "href": "posts/typfully30-aixi/index.html",
     "title": "AI Alignment Terminology: AIXI",
@@ -21,11 +28,18 @@
     "text": "In other words, AIXI combines Solomonoff Induction and Decision Theory.\n\nSolomonoff Induction is for learning from the complex real-world environment to build a predictive model.\nDecision Theory is for making decisions based on predictions.\n\nThe key idea of AIXI is to transform the real-world environment into simulated interaction outcomes derived from numerous computational models. To make optimal decisions, AIXI (if feasible) could help consider all possible scenarios.\nHere is my simple understanding. For a more detailed and complex analysis, please check Marcus Hutter’s paper."
   },
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
+    "objectID": "posts/post-with-code/index.html",
+    "href": "posts/post-with-code/index.html",
+    "title": "Welcome to My Website",
     "section": "",
-    "text": "About this blog"
+    "text": "This is a Markdown test to check the rendering on your website.\n\n\n\nBold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.11 this is a footnote\n\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.2 this is a footnote"
+  },
+  {
+    "objectID": "posts/post-with-code/index.html#features",
+    "href": "posts/post-with-code/index.html#features",
+    "title": "Welcome to My Website",
+    "section": "",
+    "text": "Bold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.11 this is a footnote\n\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.2 this is a footnote"
   },
   {
     "objectID": "posts/typefully30-corrigibility/index.html",
@@ -33,19 +47,5 @@
     "title": "AI Alignment Terminology: Whole Brain Emulation",
     "section": "",
     "text": "AI Alignment Terminology: Whole Brain Emulation\n[Whole Brain Emulation], WBE is a proposed technique to transfer the information in a biological brain onto a computer substrate to create a machine intelligence or artificial mind.\nThe viability depends on having sufficient computing power, brain scanning resolution, and an accurate emulation capturing the relevant neural details. Proposed approaches include slicing and scanning brains, gradually replacing brain areas with computer interfaces, or modeling personalities.\nPotential advantages include faster processing, backups, self-modification. But challenges exist around consciousness, personhood, employment impacts if mind copying occurs. The feasibility and timeline are debated, but some analyses suggest WBE may be viable by mid-century.\nAs a product manager, I was attracted by this roadmap.\nBrain Emulation Roadmap in 2008: https://fhi.ox.ac.uk/Reports/2008-3.pdf\nAnd there’s still lot of things to go. I am so curious about how’s the roadmap looks now."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html",
-    "href": "posts/post-with-code/index.html",
-    "title": "Welcome to My Website",
-    "section": "",
-    "text": "This is a Markdown test to check the rendering on your website.\n\n\n\nBold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.1\n1 this is a footnote\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.\n\n\n2 this is a footnote"
-  },
-  {
-    "objectID": "posts/post-with-code/index.html#features",
-    "href": "posts/post-with-code/index.html#features",
-    "title": "Welcome to My Website",
-    "section": "",
-    "text": "Bold text for emphasis\nItalic text for subtlety\nCode snippets for technical content\n\n\n\n\n\n\nItem One\nItem Two\n\nSubitem A\nSubitem B\n\n\n\n\n\n\nFirst Step\nSecond Step\n\nDetail A\nDetail B\n\n\n\n\n\n\nVisit GitHub\n\n\n\nSample Image\n\n\n\n\n\n\nMarkdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.1\n1 this is a footnote\n\n\n\nimport sys\n\ndef hello_world():\n    print(\"Hello, world!\")\n\nif __name__ == \"__main__\":\n    hello_world()\n\nRPython\n\n\nTab content\n\n\nTab content\n\n\n\n\n\n\n\n\n\nheader\nContent\nWebsite\n\n\n\n\ntest 1\ntest 2\ntest 3\n\n\ntest 1\ntest 2\ntest 3\n\n\n\nAt the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No. 24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’2, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.\n\n\n2 this is a footnote"
   }
 ]
