@@ -6,17 +6,15 @@
       version="2.0">
 <channel>
 <title>242</title>
-<link>https://laiyenju.github.io/</link>
+<link>https://laiyenju.github.io/index.html</link>
 <atom:link href="https://laiyenju.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
-<generator>quarto-1.4.553</generator>
-<lastBuildDate>Tue, 05 Mar 2024 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.3.450</generator>
+<lastBuildDate>Mon, 04 Mar 2024 16:00:00 GMT</lastBuildDate>
 <item>
   <title></title>
-  <link>https://laiyenju.github.io/posts/typefully30-whole-brain-emulation/</link>
+  <link>https://laiyenju.github.io/posts/typefully30-whole-brain-emulation/index.html</link>
   <description><![CDATA[ 
-
-
 
 
 
@@ -33,15 +31,13 @@
 </section>
 
  ]]></description>
-  <guid>https://laiyenju.github.io/posts/typefully30-whole-brain-emulation/</guid>
-  <pubDate>Tue, 05 Mar 2024 00:00:00 GMT</pubDate>
+  <guid>https://laiyenju.github.io/posts/typefully30-whole-brain-emulation/index.html</guid>
+  <pubDate>Mon, 04 Mar 2024 16:00:00 GMT</pubDate>
 </item>
 <item>
   <title></title>
-  <link>https://laiyenju.github.io/posts/typefully30-corrigibility/</link>
+  <link>https://laiyenju.github.io/posts/typefully30-corrigibility/index.html</link>
   <description><![CDATA[ 
-
-
 
 
 
@@ -57,15 +53,13 @@
 </section>
 
  ]]></description>
-  <guid>https://laiyenju.github.io/posts/typefully30-corrigibility/</guid>
-  <pubDate>Mon, 04 Mar 2024 00:00:00 GMT</pubDate>
+  <guid>https://laiyenju.github.io/posts/typefully30-corrigibility/index.html</guid>
+  <pubDate>Sun, 03 Mar 2024 16:00:00 GMT</pubDate>
 </item>
 <item>
   <title></title>
-  <link>https://laiyenju.github.io/posts/typfully30-aixi/</link>
+  <link>https://laiyenju.github.io/posts/typfully30-aixi/index.html</link>
   <description><![CDATA[ 
-
-
 
 
 
@@ -103,15 +97,13 @@
 </section>
 
  ]]></description>
-  <guid>https://laiyenju.github.io/posts/typfully30-aixi/</guid>
-  <pubDate>Sun, 03 Mar 2024 00:00:00 GMT</pubDate>
+  <guid>https://laiyenju.github.io/posts/typfully30-aixi/index.html</guid>
+  <pubDate>Sat, 02 Mar 2024 16:00:00 GMT</pubDate>
 </item>
 <item>
   <title></title>
-  <link>https://laiyenju.github.io/posts/post-with-code/</link>
+  <link>https://laiyenju.github.io/posts/post-with-code/index.html</link>
   <description><![CDATA[ 
-
-
 
 
 
@@ -155,16 +147,16 @@
 <p><a href="https://github.com">Visit GitHub</a></p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://via.placeholder.com/150.png" class="img-fluid figure-img"></p>
-<figcaption>Sample Image</figcaption>
+<p><img src="https://laiyenju.github.io/posts/post-with-code/https:/via.placeholder.com/150.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Sample Image</figcaption>
 </figure>
 </div>
 </section>
 <section id="blockquote" class="level3 page-columns page-full">
 <h3 data-anchor-id="blockquote">Blockquote</h3>
-<div class="page-columns page-full"><blockquote class="blockquote">
-<p>Markdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.<sup>1</sup></p>
-</blockquote><div class="no-row-height column-margin column-container"><div id="fn1"><p><sup>1</sup>&nbsp;this is a footnote</p></div></div></div>
+<blockquote class="blockquote page-columns page-full">
+<div class="page-columns page-full"><p>Markdown is a lightweight markup language with plain-text formatting syntax. Its design allows it to be converted to many output formats.<sup>1</sup></p><div class="no-row-height column-margin column-container"><li id="fn1"><p><sup>1</sup>&nbsp;this is a footnote</p></li></div></div>
+</blockquote>
 </section>
 <section id="code-block" class="level3">
 <h3 data-anchor-id="code-block">Code Block</h3>
@@ -226,17 +218,17 @@ font-style: inherit;">"__main__"</span>:</span>
 </tr>
 </tbody>
 </table>
-<p>At the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No.&nbsp;24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’<sup>2</sup>, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.</p>
+<div class="page-columns page-full"><p>At the crossroads of legacy and revelation, 242 stands as a beacon. Our name embodies a journey and a destination: the legendary Road No.&nbsp;24, an emblem of adventure and exploration, intertwined with the enigmatic ‘24’<sup>2</sup>, the ultimate answer to life’s profound queries. Here, we merge the thrill of discovery with the wisdom of insight, creating a space where every turn is a story, and every moment is an answer. Welcome to 242 – where your journey finds its meaning.</p><div class="no-row-height column-margin column-container"><li id="fn2"><p><sup>2</sup>&nbsp;this is a footnote</p></li></div></div>
 
 
-<div class="no-row-height column-margin column-container"><div id="fn2"><p><sup>2</sup>&nbsp;this is a footnote</p></div></div></section>
+</section>
 </section>
 </section>
 
 
  ]]></description>
-  <guid>https://laiyenju.github.io/posts/post-with-code/</guid>
-  <pubDate>Thu, 16 Nov 2023 00:00:00 GMT</pubDate>
+  <guid>https://laiyenju.github.io/posts/post-with-code/index.html</guid>
+  <pubDate>Wed, 15 Nov 2023 16:00:00 GMT</pubDate>
   <media:content url="https://laiyenju.github.io/posts/post-with-code/image.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
