@@ -131,12 +131,12 @@
       for (let i = 0; i < sharkCount; i++) {
         const { kind, size } = this.sharkSpecs[i];
         const length = baseLength * size;
-        const orbitRadius = minSide * rand(0.28, 0.4);
-        const a = i / sharkCount * TAU + rand(-0.4, 0.4);
-        const orbitDir = i % 2 === 0 ? 1 : -1;
-        const x = W / 2 + Math.cos(a) * orbitRadius * (W / minSide) * 0.9;
-        const y = H / 2 + Math.sin(a) * orbitRadius;
-        const heading = a + orbitDir * Math.PI / 2;
+        const orbitRadius = minSide * rand(0.22, 0.34);
+        const laneLeft = i % 2 === 0;
+        const orbitDir = laneLeft ? -1 : 1;
+        const x = (laneLeft ? W * 0.18 : W * 0.82) + rand(-W * 0.04, W * 0.04);
+        const y = H * (0.28 + i / Math.max(1, sharkCount - 1) * 0.48);
+        const heading = (laneLeft ? Math.PI : 0) + rand(-0.25, 0.25);
         const nodes = new Float32Array(SHARK_NODES * 2);
         const seg = length / (SHARK_NODES - 1);
         for (let n = 0; n < SHARK_NODES; n++) {
@@ -408,9 +408,7 @@
     }
     stepSharks(dt) {
       const { sharks, width: W, height: H, time } = this;
-      const minSide = Math.min(W, H);
       const cxW = W / 2;
-      const cyW = H / 2;
       for (const sh of sharks) {
         const L = sh.length;
         const nodes = sh.nodes;
@@ -419,9 +417,16 @@
         sh.hunger = Math.min(1, sh.hunger + dt * 0.03);
         let dx = Math.cos(sh.heading);
         let dy = Math.sin(sh.heading);
-        sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 3.2, -1.1, 1.1);
-        dx += Math.cos(sh.heading + sh.wander) * 0.45;
-        dy += Math.sin(sh.heading + sh.wander) * 0.45;
+        sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 1.1, -0.35, 0.35);
+        dx += Math.cos(sh.heading + sh.wander) * 0.12;
+        dy += Math.sin(sh.heading + sh.wander) * 0.12;
+        const navClear = Math.max(120, H * 0.18);
+        const colHalf = Math.min(210, W * 0.16);
+        const colTop = H * 0.28;
+        const colBot = H * 0.74;
+        const laneLeft = sh.id % 2 === 0;
+        const laneX = laneLeft ? W * 0.2 : W * 0.8;
+        const preyQuiet = (px, py) => Math.abs(px - cxW) < colHalf && py > colTop && py < colBot || py < navClear + 28 && Math.abs(px - cxW) < W * 0.32;
         if (time >= sh.retargetAt) {
           sh.target = this.findPrey(sh);
           sh.retargetAt = time + 0.45;
@@ -429,23 +434,20 @@
         const t = sh.target;
         let hunting = false;
         let closing = 0;
-        if (t && t.alive && sh.hunger > 0.3) {
+        if (t && t.alive && sh.hunger > 0.45 && !preyQuiet(t.x, t.y)) {
           const tx = t.x + t.vx * 0.35 - hx;
           const ty = t.y + t.vy * 0.35 - hy;
           const d = Math.hypot(tx, ty) || 1;
-          const w = 1.4 + 2.6 * sh.hunger;
+          const w = 1.1 + 1.6 * sh.hunger;
           dx += tx / d * w;
           dy += ty / d * w;
           hunting = true;
           closing = clamp(1 - d / (L * 0.9), 0, 1);
         } else {
-          const rx = (hx - cxW) / (W / minSide);
-          const ry = hy - cyW;
-          const r = Math.hypot(rx, ry) || 1;
-          const radius = sh.orbitRadius * (1 + 0.15 * Math.sin(time * 0.05 + sh.id));
-          const radial = clamp((radius - r) / radius, -1, 1);
-          dx += (-ry / r * sh.orbitDir + rx / r * radial * 0.9) * 0.55;
-          dy += (rx / r * sh.orbitDir + ry / r * radial * 0.9) * 0.55;
+          const face = Math.cos(sh.heading) >= 0 ? 0 : Math.PI;
+          dx += Math.cos(face) * 1.25;
+          dx += clamp((laneX - hx) / (W * 0.2), -1, 1) * 1.8;
+          dy += Math.sin(time * 0.12 + sh.id) * 0.16;
         }
         for (const other of sharks) {
           if (other === sh) continue;
@@ -461,20 +463,24 @@
             }
           }
         }
-        const ex = (hx - cxW) / (W * 0.3);
-        const ey = (hy - cyW) / (H * 0.16);
-        const e2 = ex * ex + ey * ey;
-        if (e2 < 1) {
-          const e = Math.sqrt(e2) || 1e-3;
-          const w = (1 - e) * (hunting ? 1 : 2.5);
-          dx += ex / e * w;
-          dy += ey / e * w;
+        const nx = (hx - cxW) / colHalf;
+        const midY = (colTop + colBot) / 2;
+        const ny = (hy - midY) / ((colBot - colTop) / 2);
+        if (nx * nx + ny * ny < 1) {
+          const e = Math.sqrt(nx * nx + ny * ny) || 1e-3;
+          const w = (1 - e) * 2.6;
+          dx += nx / e * w;
+        }
+        if (hy < navClear) {
+          const w = (1 - Math.max(0, hy) / navClear) * 3.4;
+          dy += w;
+          if (Math.abs(hx - cxW) < W * 0.36) dx += (hx < cxW ? -1 : 1) * w * 0.8;
         }
         const over = Math.max(-hx, hx - W, -hy, hy - H);
         if (over > -L * 0.05) {
           const w = clamp((over + L * 0.05) / (L * 0.35), 0, 1) * 3.5;
-          const toX = cxW - hx;
-          const toY = cyW - hy;
+          const toX = laneX - hx;
+          const toY = clamp(hy, navClear + L * 0.12, H * 0.82) - hy;
           const d = Math.hypot(toX, toY) || 1;
           dx += toX / d * w;
           dy += toY / d * w;
