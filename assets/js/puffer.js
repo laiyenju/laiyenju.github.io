@@ -98,7 +98,8 @@
     this.targetLevel = 0;
     this.manualState = null; // if set via setState, hold until cleared by breathe
     this.holdUntil = 0;
-    this.pointerNear = false;
+    this.pointerNear = false; // legacy bool (kept for API clarity)
+    this.pointerProximity = 0; // 0..1 soft falloff into mid
     this.w = 0;
     this.h = 0;
     this.dpr = 1;
@@ -218,8 +219,8 @@
       cellH = cellW / aspect;
     }
     // Cap so fish doesn't get tiny on ultrawide / huge
-    // Idle fish was reading too small — bump base cell slightly
-    var maxCellH = Math.min(h * 0.034, 21);
+    // Idle half-step denser (was max 21 / 0.034)
+    var maxCellH = Math.min(h * 0.036, 22.5);
     var minCellH = 8;
     cellH = clamp(cellH, minCellH, maxCellH);
     cellW = cellH * aspect;
@@ -271,16 +272,19 @@
     if (this.manualState && now >= this.holdUntil) {
       this.manualState = null;
     }
-    if (this.pointerNear) {
-      // Clear mid step (was 1.35 → read as near-full; keep true mid)
-      this.targetLevel = 1.0;
+    // Gentle breathe stays in rest band so mid hover is distinct
+    var breath = (Math.sin(this.time * 0.7) + 1) / 2;
+    breath = easeInOut(breath);
+    var idleLevel = lerp(0.0, 0.28, breath);
+
+    // Soft mid: distance falloff (not hard ~200px threshold jump)
+    // Click→full stays on manualState above; this only drives rest↔mid
+    var prox = clamp(this.pointerProximity, 0, 1);
+    if (prox > 0.001) {
+      this.targetLevel = lerp(idleLevel, 1.0, easeInOut(prox));
       return;
     }
-    // Gentle breathe stay in rest band so mid hover is distinct
-    // Was 0.05..0.85 (almost mid) → 2-state feel with hover
-    var breath = (Math.sin(this.time * 0.7) + 1) / 2; // 0..1, slightly livelier
-    breath = easeInOut(breath);
-    this.targetLevel = lerp(0.0, 0.28, breath);
+    this.targetLevel = idleLevel;
   };
 
   PufferInstance.prototype.toLocal = function (e) {
@@ -288,19 +292,28 @@
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
     var inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
-    // "near" = soft center region; enlarged so mid engages more easily
+    // Soft elliptical falloff toward center (same radii as before)
     var cx = rect.width / 2;
     var cy = rect.height / 2;
     var dx = (x - cx) / (rect.width * 0.42);
     var dy = (y - cy) / (rect.height * 0.48);
-    var near = dx * dx + dy * dy < 1;
-    return { x: x, y: y, inside: inside, near: near };
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    // 1 at center → 0 at edge; quadratic ease so mid fades in gently
+    var proximity = dist >= 1 ? 0 : (1 - dist) * (1 - dist);
+    var near = proximity > 0.02;
+    return { x: x, y: y, inside: inside, near: near, proximity: proximity };
   };
 
   PufferInstance.prototype.onPointerMove = function (e) {
     if (this.reducedMotion.matches) return;
     var loc = this.toLocal(e);
-    this.pointerNear = loc.near && e.pointerType !== "touch";
+    if (e.pointerType === "touch") {
+      this.pointerNear = false;
+      this.pointerProximity = 0;
+      return;
+    }
+    this.pointerNear = loc.near;
+    this.pointerProximity = loc.proximity;
   };
 
   PufferInstance.prototype.onPointerDown = function (e) {
@@ -315,6 +328,7 @@
 
   PufferInstance.prototype.onPointerLeave = function () {
     this.pointerNear = false;
+    this.pointerProximity = 0;
   };
 
   PufferInstance.prototype.draw = function () {
@@ -325,20 +339,24 @@
     ctx.clearRect(0, 0, w, h);
 
     var grid = sampleGrid(this.level);
-    var cw = this.cellW;
-    var ch = this.cellH;
+    // Slightly shrink mid→full so spines don't kiss the nav
+    var fullT = clamp(this.level - 1, 0, 1); // 0 at mid, 1 at full
+    var inflateScale = lerp(1.0, 0.90, fullT); // was 1.0 flat
+    var cw = this.cellW * inflateScale;
+    var ch = this.cellH * inflateScale;
     var gridW = COLS * cw;
     var gridH = ROWS * ch;
     var ox = (w - gridW) / 2;
-    var oy = (h - gridH) / 2 - h * 0.02; // slight optical lift
+    // Optical lift eases down a touch as we inflate
+    var oy = (h - gridH) / 2 - h * lerp(0.02, 0.0, fullT);
 
-    var fontPx = Math.max(8, Math.floor(ch * 0.92));
+    var fontPx = Math.max(8, Math.floor(ch * 0.95)); // was 0.92 — idle denser
     ctx.font = "400 " + fontPx + "px " + this.fontFamily;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-    // Soft ink: rest more solid; deepen through mid → full
+    // Soft ink: rest half-step denser (was 0.88→1.0); don't swallow mid
     var deep = clamp(this.level / 2, 0, 1);
-    ctx.globalAlpha = lerp(0.88, 1.0, deep); // idle was too faint
+    ctx.globalAlpha = lerp(0.93, 1.0, deep);
     ctx.fillStyle = deep > 0.4 ? INK_DEEP : INK;
 
     for (var y = 0; y < ROWS; y++) {
