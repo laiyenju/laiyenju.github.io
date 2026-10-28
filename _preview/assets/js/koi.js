@@ -24,9 +24,9 @@
   var FRAME_COLS = 96;
   var FRAME_ROWS = 42;
   var FRAME_TEXT = {
-    cruise: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n               ;St;S                                        ;;%tt;:S                            \n               :%S%;%;t:%t:%                       .'8#8#XX#X8X8#X8X####8':                     \n                      SS%:;;;%:%SS''''SSX8##88###X#@%#8X888SXXSXX8XS##%#XX::(\u00b7).                \n                      tS;:tSStS:%%%S%SS8SSSSXSS%X%#@##XSS%X@##@%%X%%S%%SX%:...::                \n               :t%%:%t;%t%S;                ;ttS:St%XSSX8SSS#@X88X8S8SXXtS;                     \n               :%::t                                                 tS%S                       \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
-    near: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n           :t                                                   :%tt                            \n           %%tt;St;S;                                        ;%tt;:S;t:                         \n                %S%;%;t:%t:                      `.:8X8X8SS8SXSX8SXS8888@%S88':                 \n                    S%SS%:;;;%:%,%XXXSSSSX88XSXXXS#@%#@SXXX%SS@SSXS%S%%#@#%SSX:.(\u00b7)..           \n                  St:;tS;:tSStS::StS%SSXt%%%StttSt#@##S%%tSt##@##Stt%tt%@%%SSS%:%%..:           \n           t%:::t%%:%t;%t%S                t;ttS:St%S%%SX%%%X@@%XSX%X%X%tSXS%%'..               \n           t;S::%                                                  ,``,%S%S;;                   \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
-    lift: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n               S%:;:                                           :%                               \n                  :;S%S                                     ;%:::%tt                            \n                    ;:%StSS                          `,;8#888##XXXX8'#@.                        \n                       :%t:%S;             ,`XX8#8@@@@8X8SS@@##X8SXS%##@8#::.                   \n               %SS;SS%SS%:;;;%:%SS#88XXSSX88XSXXXS%S%SXSXXS#@%@%%XS%S%%%XX::(\u00b7)..'              \n                 ;St:;tS;:tSStS:%%:`       S;:SS8SXSXX8XXS8S88SS%XS%S%%S8%:...:                 \n                                                                '',,`::%tS                      \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n"
+    cruise: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                               :%%                              \n                                                          ;;;%:::%tt%                           \n                St;S;:%St                        `'888X##@#8###XXXX###@@.'                      \n                  %;%;t:%t:%S;tt        ..8#88X8#8@@@X8X8SS8SXSX8S%#%###8.::..:.                \n                       S%:;;;%:%SSt:#XXSSX88XX888X#@%#8X888#@XSXX8%@##SS:::(\u00b7):.S;              \n                       S;:tSStS:%%%SSXXX%SSSS%%%X%S%SSXSS%%@##%%tXt%S%%SX::...::,               \n                  %:%t;%t%S;S::t              tS:8XSXSSX8SSS8SX88X8S8S8XSX8`                    \n                %::tS;St;                                               S                       \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
+    near: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                  :                             \n                                                              %:%%t:S;                          \n            t::;tt                                     ,',';;%:::%tt%%;:                        \n            %tt;St;S;:%StS                     .'XXSXSSXX8XXX88SSSSXXX88XS#8SX.                 \n                 S%;%;t:%t:%S;t       `.SSS8XSSX8S@@@@XSX%%X%S%SX%S%X##@@X%XX.:...::            \n                     %SS%:;;;%:%SSt8X%%%%SXXSSXXXS#@%#XSSXSt@%@%SSS%S#%#@S%S..:(\u00b7):.8:          \n                   t:;tS;:tSStS:%%%S%%%X%t%t%tttSt%t%tS%ttS@##@#;S;tt;;%S;%S8.::.....'          \n            %:::t%%:%t;%t%S;S::              .tS%XS%S%%SX%%%X%SXS%XtStXS%SXSS%X`                \n            ;S::%::tS;S                           %;:S ,.`.,`,'`,'.,``,  %S;;                   \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
+    lift: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                ;:                                           ;S:;t:                             \n                %:;:t%                                    :%S%%:%%t:S                           \n                  :;S%StS:                         `.#8XX8X##8##8#8XX%                          \n                     :%StSStS               '`8XX88X8XSXX8XXX88SSSS888##8X#`                    \n                        %t:%S;tt;     `.XXX#XSSX8X@@@@8X8SS8SXSX8S%#%#88X.::..:.                \n                SS;SS%SS%:;;;%:%SSt:8SSSSSXX%%SSS%t@%%S%SS##@%t%%S%t%tt%:::(\u00b7):.X;              \n                ;;St:;tS;:tSStS:%%%S''`,'`SSX%%S8SXSXS8XS%X@#X%%%X%%S%%SX::...::,               \n                                                 St%tS.''.,.`',,'X8,`,,%tS;                     \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n"
   };
 
   function parseFrame(text) {
@@ -73,6 +73,20 @@
     return BLEND_ROWS;
   }
 
+  function poseWeights(nearT, liftT) {
+    nearT = clamp(nearT, 0, 1);
+    liftT = clamp(liftT, 0, 1);
+    var liftMix = liftT * (1 - nearT * 0.85);
+    var nearW = nearT * (1 - liftMix);
+    var liftW = liftMix;
+    var cruiseW = Math.max(0, 1 - nearW - liftW);
+    return [
+      { grid: GRIDS.cruise, w: cruiseW },
+      { grid: GRIDS.near, w: nearW },
+      { grid: GRIDS.lift, w: liftW }
+    ];
+  }
+
   /** nearT 0..1 cruise→near. liftT 0..1 mixes a little lift while still cruising. */
   function samplePose(nearT, liftT) {
     nearT = clamp(nearT, 0, 1);
@@ -109,19 +123,95 @@
     };
   }
 
-  /* Body amber around #C45C26. #@% spots and the eye stay dark ink. */
-  function glyphInk(ch) {
-    if (ch === "·" || ch === "(" || ch === ")") return { rgba: "rgba(28,27,25,1)" };
-    if ("#%@".indexOf(ch) >= 0) return { rgba: "rgba(28,27,25,0.9)" };
-    if (".,'`~".indexOf(ch) >= 0) return { rgba: "rgba(214,146,96,0.74)" };
-    if (":;|/'\\t".indexOf(ch) >= 0) return { rgba: "rgba(196,92,38,0.88)" };
-    return { rgba: "rgba(158,66,26,0.92)" };
+  /* Ink-wash ramp. Light from the top-left; highlight is rare. */
+  var WASH = {
+    hi: [255, 245, 235],
+    gold: [232, 160, 92],
+    base: [196, 92, 38],
+    shade: [139, 58, 26],
+    ink: [42, 36, 32],
+    cool: [61, 69, 80],
+    eye: [26, 24, 22],
+    spot: [92, 40, 20]
+  };
+
+  function glyphDensity(ch) {
+    if (!ch || ch === " ") return 0;
+    var scale = " .'`:,;~-t%|/;\\SX8#@";
+    var i = scale.indexOf(ch);
+    if (i < 0) i = 9;
+    return i / (scale.length - 1);
   }
 
-  /** Glyph center, rotated by heading around the fish center. No cell snap. */
-  function glyphPoint(c, r, cx, cy, fishCw, fishCh, heading) {
+  function mixRgb(a, b, t) {
+    t = clamp(t, 0, 1);
+    return [
+      (a[0] + (b[0] - a[0]) * t) | 0,
+      (a[1] + (b[1] - a[1]) * t) | 0,
+      (a[2] + (b[2] - a[2]) * t) | 0
+    ];
+  }
+
+  function rgbStr(rgb, alpha) {
+    return "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + "," + alpha + ")";
+  }
+
+  /** Screen-fixed light. Heading rotates the fake normal so shade eases as the fish yaws. */
+  function shadeStyle(ch, grid, c, r, heading) {
+    if (ch === "·" || ch === "(" || ch === ")") return rgbStr(WASH.eye, 1);
+    var d = glyphDensity(ch);
+    var lc = c > 0 ? glyphDensity(grid[r].charAt(c - 1)) : 0;
+    var rc = c < FRAME_COLS - 1 ? glyphDensity(grid[r].charAt(c + 1)) : 0;
+    var uc = r > 0 ? glyphDensity(grid[r - 1].charAt(c)) : 0;
+    var dc = r < FRAME_ROWS - 1 ? glyphDensity(grid[r + 1].charAt(c)) : 0;
+    var gx = rc - lc;
+    var gy = dc - uc;
+    var ox = -gx;
+    var oy = -gy;
+    var elen = Math.hypot(ox, oy);
+    var edge = clamp(elen * 1.8, 0, 1);
+    if (elen < 1e-3) {
+      ox = 0;
+      oy = -1;
+      elen = 1;
+    }
+    ox /= elen;
+    oy /= elen;
+    var co = Math.cos(-(heading || 0));
+    var si = Math.sin(-(heading || 0));
+    var nx = ox * co - oy * si;
+    var ny = ox * si + oy * co;
+    var lit = nx * -0.7071 + ny * -0.7071;
+
+    if ("#%@".indexOf(ch) >= 0) {
+      if (lit > 0.55 && edge > 0.4 && hash3(c, r, 7) > 0.78) return rgbStr(WASH.hi, 0.95);
+      if (lit > 0.25) return rgbStr(mixRgb(WASH.shade, WASH.base, 0.35), 0.94);
+      return rgbStr(lit > -0.15 ? WASH.shade : WASH.spot, 0.95);
+    }
+
+    if (lit > 0.58 && edge > 0.5 && d > 0.08 && d < 0.62 && hash3(c, r, 4) > 0.8) {
+      return rgbStr(WASH.hi, 0.9);
+    }
+
+    var rgb;
+    if (lit > 0.22) rgb = WASH.gold;
+    else if (lit > 0.02) rgb = mixRgb(WASH.base, WASH.gold, (lit - 0.02) / 0.2);
+    else if (lit > -0.16) rgb = WASH.base;
+    else if (lit > -0.4) rgb = mixRgb(WASH.ink, WASH.shade, (lit + 0.4) / 0.24);
+    else if (d > 0.75 && lc > 0.45 && rc > 0.45 && uc > 0.35) rgb = WASH.cool;
+    else rgb = WASH.ink;
+    return rgbStr(rgb, 0.8 + d * 0.16);
+  }
+
+  /** Glyph center. Tail (left) sways; the body stays quiet. No cell snap. */
+  function glyphPoint(c, r, cx, cy, fishCw, fishCh, heading, phase, sway) {
     var lx = (c + 0.5 - FRAME_COLS / 2) * fishCw;
     var ly = (r + 0.5 - FRAME_ROWS / 2) * fishCh;
+    var tail = clamp((34 - c) / 26, 0, 1);
+    tail = tail * tail;
+    var wave = Math.sin(phase || 0);
+    var eased = wave < 0 ? -easeInOut(-wave) : easeInOut(wave);
+    ly += eased * tail * (sway || 0);
     var co = Math.cos(heading || 0);
     var si = Math.sin(heading || 0);
     return { x: cx + lx * co - ly * si, y: cy + lx * si + ly * co };
@@ -194,16 +284,14 @@
   World.prototype.seed = function () {
     var W = this.width;
     var H = this.height;
-    var n = clamp(Math.round((W * H) / 5200), 90, 220);
+    var n = clamp(Math.round((W * H) / 3600), 140, 320);
     this.particles = [];
     for (var i = 0; i < n; i++) {
-      var ang = rand(0, TAU);
-      var spd = rand(8, 22);
       this.particles.push({
         x: rand(0, W),
         y: rand(0, H),
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd,
+        vx: rand(4, 9),
+        vy: rand(-1.2, 1.2),
         phase: rand(0, TAU),
         depth: rand(0.35, 1),
         glyph: FIELD_GLYPHS[(Math.random() * FIELD_GLYPHS.length) | 0],
@@ -249,6 +337,7 @@
   };
 
   World.prototype.stepParticles = function (dt) {
+    if (this.still) return;
     var W = this.width;
     var H = this.height;
     var t = this.time;
@@ -260,8 +349,8 @@
     for (var i = 0; i < this.particles.length; i++) {
       var f = this.particles[i];
       current(f.x, f.y, t, cur);
-      var ax = cur.x * 0.35 + (Math.random() - 0.5) * 28;
-      var ay = cur.y * 0.35 + (Math.random() - 0.5) * 28;
+      var ax = cur.x * 0.045;
+      var ay = cur.y * 0.045;
 
       if (fish && fearRx > 1 && fearRy > 1) {
         var dx = f.x - fish.x;
@@ -288,20 +377,14 @@
 
       f.vx += ax * dt;
       f.vy += ay * dt;
+      var drift = 6 + f.depth * 2;
+      f.vx += (drift - f.vx) * Math.min(1, dt * 0.4);
+      f.vy += (0 - f.vy) * Math.min(1, dt * 0.45);
       var spd = Math.hypot(f.vx, f.vy);
-      var maxS = 36 + f.depth * 12;
+      var maxS = 11;
       if (spd > maxS) {
         f.vx *= maxS / spd;
         f.vy *= maxS / spd;
-      }
-      f.vx *= Math.exp(-dt * 0.35);
-      f.vy *= Math.exp(-dt * 0.35);
-      // keep a cruise so the field never freezes
-      if (spd < 6) {
-        current(f.x, f.y, t + i, cur);
-        var cl = Math.hypot(cur.x, cur.y) || 1;
-        f.vx += (cur.x / cl) * 10 * dt;
-        f.vy += (cur.y / cl) * 10 * dt;
       }
 
       f.x += f.vx * dt;
@@ -335,6 +418,7 @@
       p.lift = 0;
       p.heading = 0;
       p.speed = 0;
+      p.sway = 0;
       p.x = homeX;
       p.y = homeY;
       return;
@@ -351,13 +435,11 @@
     // Same-period shallow wave: speed eases at each end, the body stays in the lane.
     p.x = homeX + Math.sin(ang) * orbitX;
     p.y = homeY + Math.sin(ang) * orbitY;
-    var tvx = Math.cos(ang) * orbitX * pace;
-    var tvy = Math.cos(ang) * orbitY * pace;
-    var pitch = clamp(Math.atan2(tvy, Math.abs(tvx) + 0.001), -0.12, 0.12);
-    var turn = angleDiff(p.heading, pitch);
-    var turnGain = 0.25 + 0.75 * easeInOut(clamp(Math.abs(turn) / 0.4, 0, 1));
-    var maxTurn = 0.65 * turnGain * dt;
-    p.heading += clamp(turn, -maxTurn, maxTurn);
+    var yawWave = Math.sin(ang);
+    var yawEased = yawWave < 0 ? -easeInOut(-yawWave) : easeInOut(yawWave);
+    var yawTarget = yawEased * 0.1;
+    p.heading += (yawTarget - p.heading) * Math.min(1, dt * 1.5);
+    p.sway = 12;
     var cruise = 15 * (1 - attn * 0.1);
     p.speed += (cruise - p.speed) * Math.min(1, dt * 1.5);
 
@@ -538,32 +620,37 @@
     this.frameGrid = null;
     if (!p) return;
     var layout = fishLayout(this.width, this.height, this.cw, this.ch);
-    var grid = samplePose(p.near || 0, p.lift || 0);
+    var layers = poseWeights(p.near || 0, p.lift || 0);
+    this.layers = layers;
     this.fishCx = p.x;
     this.fishCy = p.y;
     this.heading = p.heading || 0;
+    this.phase = p.phase || 0;
+    this.sway = p.sway || 0;
     this.fishCw = layout.fishCw;
     this.fishCh = layout.fishCh;
-    this.frameGrid = grid;
-    this.inflateLevel = p.near || 0;
     var cols = this.cols;
     var rows = this.rows;
-    for (var r = 0; r < FRAME_ROWS; r++) {
-      var line = grid[r];
-      for (var c = 0; c < FRAME_COLS; c++) {
-        if (line.charAt(c) === " ") continue;
-        var pt = glyphPoint(c, r, p.x, p.y, layout.fishCw, layout.fishCh, this.heading);
-        var cc = Math.floor(pt.x / this.cw);
-        var rr = Math.floor(pt.y / this.ch);
-        if (cc < 0 || rr < 0 || cc >= cols || rr >= rows) continue;
-        flag[rr * cols + cc] = 1;
+    for (var li = 0; li < layers.length; li++) {
+      if (layers[li].w < 0.04) continue;
+      var grid = layers[li].grid;
+      for (var r = 0; r < FRAME_ROWS; r++) {
+        var line = grid[r];
+        for (var c = 0; c < FRAME_COLS; c++) {
+          if (line.charAt(c) === " ") continue;
+          var pt = glyphPoint(c, r, p.x, p.y, layout.fishCw, layout.fishCh, this.heading, this.phase, this.sway);
+          var cc = Math.floor(pt.x / this.cw);
+          var rr = Math.floor(pt.y / this.ch);
+          if (cc < 0 || rr < 0 || cc >= cols || rr >= rows) continue;
+          flag[rr * cols + cc] = 1;
+        }
       }
     }
   };
 
   AsciiRenderer.prototype.drawLockedFrame = function () {
-    var grid = this.frameGrid;
-    if (!grid) return;
+    var layers = this.layers;
+    if (!layers) return;
     var ctx = this.ctx;
     var cw = this.fishCw;
     var ch = this.fishCh;
@@ -573,15 +660,21 @@
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     for (var r = 0; r < FRAME_ROWS; r++) {
-      var line = grid[r];
       for (var c = 0; c < FRAME_COLS; c++) {
-        var glyph = line.charAt(c);
-        if (glyph === " ") continue;
-        ctx.fillStyle = glyphInk(glyph).rgba;
-        var pt = glyphPoint(c, r, this.fishCx, this.fishCy, cw, ch, heading);
-        ctx.fillText(glyph, pt.x, pt.y);
+        var pt = null;
+        for (var li = 0; li < layers.length; li++) {
+          var layer = layers[li];
+          if (layer.w < 0.02) continue;
+          var glyph = layer.grid[r].charAt(c);
+          if (glyph === " ") continue;
+          if (!pt) pt = glyphPoint(c, r, this.fishCx, this.fishCy, cw, ch, heading, this.phase, this.sway);
+          ctx.globalAlpha = layer.w;
+          ctx.fillStyle = shadeStyle(glyph, layer.grid, c, r, heading);
+          ctx.fillText(glyph, pt.x, pt.y);
+        }
       }
     }
+    ctx.globalAlpha = 1;
     ctx.restore();
   };
 
@@ -621,7 +714,7 @@
       var col = i % cols;
       var row = (i / cols) | 0;
       var a = clamp((e - 0.12) * 0.55, 0.04, 0.28);
-      ctx.fillStyle = "rgba(" + INK[0] + "," + INK[1] + "," + INK[2] + "," + a.toFixed(3) + ")";
+      ctx.fillStyle = "rgba(154,150,143," + a.toFixed(3) + ")";
       var g = e > 0.55 ? ":" : "·";
       ctx.fillText(g, col * cw + cw / 2, row * ch + ch / 2 + 1);
     }
@@ -634,10 +727,9 @@
       var idx = this.cellIndex(f.x, f.y);
       if (idx < 0 || cellFlag[idx] || stamp[idx] === frame) continue;
       stamp[idx] = frame;
-      var alpha = (0.18 + 0.35 * f.depth) * (0.75 + 0.25 * Math.sin(f.phase));
-      alpha = clamp(alpha, 0.1, 0.48);
-      ctx.fillStyle =
-        "rgba(" + INK[0] + "," + INK[1] + "," + INK[2] + "," + alpha.toFixed(3) + ")";
+      var alpha = 0.14 + 0.16 * f.depth;
+      alpha = clamp(alpha, 0.12, 0.32);
+      ctx.fillStyle = f.depth > 0.55 ? "rgba(184,180,174," + alpha.toFixed(3) + ")" : "rgba(154,150,143," + alpha.toFixed(3) + ")";
       var glyph = f.kind ? "-" : f.glyph;
       ctx.fillText(glyph, (idx % cols) * cw + cw / 2, ((idx / cols) | 0) * ch + ch / 2 + 1);
     }
@@ -738,9 +830,6 @@
   };
 
   Engine.prototype.drawStill = function () {
-    if (this.world.time < 3) {
-      for (var i = 0; i < 180; i++) this.world.step(STEP);
-    }
     this.renderer.render(this.world, STEP);
   };
 
