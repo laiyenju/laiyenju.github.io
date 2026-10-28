@@ -6,7 +6,7 @@
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">
   <div class="home-stage">
-    <canvas data-puffer class="home-puffer" aria-hidden="true"></canvas>
+    <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
     <div class="home-vignette" aria-hidden="true"></div>
 
     <header class="home-nav" role="navigation" aria-label="Primary">
@@ -20,18 +20,18 @@
       <div class="home-copy">
         <h1 class="home-greeting">{{ site.author.greeting }}</h1>
         <p class="home-sub">寫作 · notes &amp; works</p>
-        <p class="home-slogan">A quiet place for notes and works. Living ASCII 河豚 as the homepage main visual — paper ground, sparse forms, type always readable.</p>
+        <p class="home-slogan">A quiet place for notes and works. Living ASCII 錦鯉 as the homepage main visual — paper ground, sparse forms, type always readable.</p>
         <p class="home-contact"><a href="mailto:{{ site.author.email }}">Contact →</a></p>
       </div>
     </div>
   </div>
 
-  <script src="{{ '/assets/js/puffer.js' | relative_url }}" defer></script>
+  <script src="{{ '/assets/js/koi.js' | relative_url }}" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      var el = document.querySelector("canvas[data-puffer]");
-      if (el && window.Puffer) {
-        window.Puffer.mount(el);
+      var el = document.querySelector("canvas[data-koi]");
+      if (el && window.Koi) {
+        window.Koi.mount(el);
       }
     });
   </script>

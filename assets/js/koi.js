@@ -1,17 +1,15 @@
 /*!
- * puffer.js — living ASCII 河豚 field for Yen's homepage
+ * koi.js — living ASCII 錦鯉 field for Yen's homepage
  *
  * Adapted from ascii-sharks (MIT) https://github.com/stackedlol/ascii-sharks
- * Copyright (c) 2026 drewdi — OceanEngine / AsciiRenderer patterns:
- * fixed timestep, offscreen pause, prefers-reduced-motion → still, DPR≤2,
- * wake diffusion. The 河豚 itself is the locked glyph frames, not a sampled blob.
+ * Copyright (c) 2026 drewdi — OceanEngine patterns:
+ * fixed timestep, offscreen pause, prefers-reduced-motion → still, DPR≤2.
  *
- * Motif change: paper-white (#fafaf7) transparent canvas, dark ink glyphs.
- * Creature: Ink-locked 96×42 rest/mid/full frames composited upright into the
- * field (eyes and spine stay the locked glyphs). Hover lerps toward mid;
- * click holds full. Drift does not rotate or chase.
+ * One side-view koi, head right. Poses: cruise (idle), near (pointer attention),
+ * lift (a little dorsal/tail rise on the swim). No rest→mid→full inflate.
+ * Body amber #C45C26; #@% spots and the (·) eye stay dark ink. Field stays gray.
  *
- * API: Puffer.mount(el, opts), Puffer.destroy(el), Puffer.setState(el, state)
+ * API: Koi.mount(el, opts), Koi.destroy(el), Koi.setState(el, state)
  */
 (function (global) {
   "use strict";
@@ -22,13 +20,13 @@
   var FIELD_GLYPHS = "·:.'`,;:~-";
   var INK = [28, 27, 25];
 
-  /* Ink-locked 96×42 frames. Creature layer only — the field stays procedural. */
+  /* Ink-locked 96×42 koi poses. Creature layer only — the field stays gray. */
   var FRAME_COLS = 96;
   var FRAME_ROWS = 42;
   var FRAME_TEXT = {
-    rest: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                          ,,,%``.'%`.'                                          \n                                     '.8@@@@#8###@@@:...#`.                                     \n                                  .`##@#X#8#8S88X.:......::@''                                  \n                                 `X#88SS888XSXSS.:(\u00b7)..(\u00b7):..X.                                 \n                               %''XS8SSX%XXSX%8.:::.....:::::#,,                                \n                               :,`8XXX8%XXSX%SXX..::::-:::..@8`.                                \n                                 ,8SX8XSX%XX%S%%S:::.::.::.8#'.                                 \n                                  .,8XXSXtt%S%S%S%SSS%SX####',                                  \n                                     ,'8SSX8S8S8X888XXX#X`'                                     \n                                          .`..',`'t;;%S                                         \n                                                                                                \n                                        ..~~~~~~~~~~~~~..                                       \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
-    mid: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                           tttStt%SS:                                           \n                                           ::t;%,,;SS                                           \n                                       ''`.,,'`.#@,,,`,,,                                       \n                                  `,,,.`@@#@#@@@#@###@##''',,                                   \n                               .`,'`@@#@8##@#8#@#@@@@@@@#@@@'',,'.                              \n                             '.'`###888@@@8#8#@#8@@@888#@@@@@###`,'                             \n                            ',.88@####8###X##XX88#8XX#X#@@@@@#@#@..,                            \n                          `''8##8##X#X88#S88888SXSS#8X88#8#8@@@#@@.`.                           \n                         '``8#8XX#8XXXXXXSSSSX88X8SSSSSXXXX#8#@#@#@#,'                          \n                        `',XXX#X#88XSXXS8X%8X%XX%SXX8S.:SX8#88#@@8#@@`.                         \n                       `'.####XXXX8XS88%XSXX%%SSX8.::...::::8X8#88#@@``,                        \n                      .'8#X8SX88X8SXXSXX%XSXS%XX:.:......:::..XXX###@@,,'                       \n                      :'.#8XXSSS88SXSS%%XXXXSXX..:(\u00b7)...:(\u00b7).::#8X@8@@@`,'                      \n                    S;%.,8X#XSS8S%%%X%%S%XXSX%8.:::.....::::::.#8X@8##@''                       \n                    %;:'.XXX8SS8XSSSSSX%XXSX%S8...::::::::..:.:8X###8#`.,                       \n                      t,,SX8XX8S%XX%SXXSX%XX%S%S.:::.::-::...:8X#8#@@@'`                        \n                       .,;8SS8XS%%SXXSSSX%%SXSSSXX.::::..:.:SX8X#XX#@@,,                        \n                        ``XSXXXS%SS%XS%X%%SX%S%XSXXXXSS8SX88SSSS88#8@',.                        \n                        '';8888StSSt%%%SS%tt%S%S%tStSttS%SS%XSXX8X#8@'`                         \n                        ,'.XX88XSXS%t%t%tS%%%%%StSt%tS%%SSSXS%#X88X8''                          \n                         '``,SXXXXSSSS%%S%%SStSt%tt%%SS%XSXSSX888X88.,                          \n                            ,``XS8%SXXt%%S%S%%t%tSS%SS%%XS88#XX8#'`,                            \n                             `.'.XX88XSXS%SSS%t%XXSSXX8SS88X#8X...                              \n                                ','`8XX888SSXXX8S88XS8SX8X#8.,`,                                \n                                   '.'S8SSXX888SSS8888XX8,'.`                                   \n                                     `''','`,,.``,``'..`';;                                     \n                                                    :;S;;%:                                     \n                                                                                                \n                                   ...~~~~~~~~~~~~~~~~~~~~~...                                  \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
-    full: "                                         %t...,``@.`.%:                                         \n                                   ''.,..,,,,.'##@@#.,'```.`.                                   \n                               `','.`'`.;:@@#@@@##@###::,`',,,,,'                               \n                       ...`'`..'''';@@@@@#@#@@#@@#@@@#@@@@@@;'''...`                            \n                       '`';#'.`:@#@@@8@#8###88##8#8#@@@@@@#@@#@@..`''``,,''                     \n                       '':####@@###8@@@8#@@888#####8@##8@@@@##@@##@,`..`'`'                     \n                      .'`;8@@@88@88@@#@#@X@888X@#8#8@@##@#8@@@@@@#@@@@#@#..                     \n                    .`.'`#@88#@@@#XXX#XXX#X888X88X88X888##@#@###@@@@@@##:``'                    \n                   ,.''@88#@8###8#X8#8#8X8XX#X##X8X88##8X##8####8@@#@###@.`',                   \n                  ,.,,#8@8X8###888X###XXXXX88888SXXX8X8##XX8#8#8#@@#@@##@#...'                  \n                 ',':888#X88X#8X#8#SX8SXX8S8S888SXSSS8SX88#8X8#8#@8#8@#@@@@;.`.                 \n                `,`;@8XXX#XXXX8XXXSSXXSXSXX8XSX8X88XXX8XSXX##8X888#8#@#@#@##:''`                \n               ..`;8@X###XXX8X88SXXXSSS888SXSX8XS8X8SSSX8X88XXXXX8#8@8#88@#@#;'..               \n              `'.:X88888888S888SS8X8XXS88X%XX%%SSXS%S8%X88888S8S8X8888@##@#@@@;.,,              \n             ''`'X#X##X##SSSXSXXS88SX%SSX%SXXXX%S%%XS%SS8XXS888SX8X8#X@##@#@#@@',,.             \n          ',`'`X###8#8#888X8S8XSSXS%SSSSS%%%%SXXSX%SSSS:.SS8SX8XXS#X#XX@@@@@#@@:`'`             \n         '`';8###8X88#SXS8SSSS8%XXXS%SS%XS%XS%XXSX.::..:...:.:X88SS888X88#@8##@@`,,.            \n          ',.'88#8#8XS8XSS8888%SSSXS%XX%XSXX%%SX.:.::...::::.:::SSXX#X8X8@8#@8@@@@',.'`         \n          :;,`.#88#S8XXXX8SXSSXXSX%SSSXX%XSXS%8::.:......:::..:..XXXX##X#8##8##@@@#;.'.         \n        t%;:'',88X8S88SSS8XSS%%%XX%SSS%%XXXXS8X..:(\u00b7)...:.(\u00b7)::..S8S8#8XXXX####8@@.`'`          \n       %%t:;''.88XS8X8888XS8S%%X%%%%X%%S%XXSXS:.:::.....::::::.::.8SXX#X#88###@@#,''            \n       ::;%t.',X888XS8S8XSSSX%%XXSSSSSX%XXSX%S8...::::::::..:.::.88XSSX#X#88888##`,.            \n        %ttt'.`X#8SS8SSXXSSXSSX%%XX%SXXSX%SX%%S:.:::.::.-:...:...X888X#XX#X@8@@##,``            \n          tS,``:8X8X8SX8S8X%%XS%%%SXXSSSXt%SXSSX8..::::..:.:...X8SSX888XXX#8@8@@;.',            \n            t'':88SS8XSSXSS%SSSS%SS%XS%X%%SX%S%XS88.::::::..:SS%XX8S8SXXX##888#8:'`,            \n             `,.XSS8SSXSSSSXXXX%%XX%SSSXXSt%SXSXStX%8SS8X8XSXSXXXSXS8XSX8#XX@8##'`'             \n             ',,:S8888SX%S%SSXXS%XXS%S%S%XSSSSSX%X%S%XSSXXSXS%XSXXSS8S#8888#@#8:`.'             \n             ',`,8XSXX8%%%S%%t%%%%%%SS%%S%%SStSt%tt%%SStS%S%tt%SS%S%X%SS8X8@#@@'''.             \n              ,`'SSS8S88%t%%%%S%tSt%%St%%S%S%%t%tSS%SSttS%S%SttSXX%SXSX8X8X@88`.,.              \n              ,`88SSSS888%S%%ttS%%%SS%tS%t%SS%t%SS%%SSSttSStSS%XXS%S%XX#X#XX@;'.`               \n             `''SX8XX8XXSSXSt%S%%%S%S%%SSStt%%%StSS%tSt%S%S%%S%XXSSSSX8XXX8#8@`''               \n             ''..'`':88SS8XX%t%tS%St%StStt%%SSStttSSSS%%S%t%%S%%%SS88X88XX#XX@;``               \n                 ',...S88SSSXXXStStt%tSS%%SSttt%%tt%%%Stt%SXXXX%%X#XX888#@@@;,,'.'              \n                   ..``888S8%8XX%%%SttStSSt%S%SSS%S%t%tt%%%XS%%XX8#88XX8X'`,,'```               \n                    ..'.'X8SXS88S%%%S%%%%S%S%%tt%S%t%%tSSXXXXXXXS##88XX.''``                    \n                      `,''`XXS8XS8SSSXtSS%StS%tSSt%SS%SXS888S8SXX8X#8..,,'                      \n                        '..,'XX8XXXSS8SXS8XX8%%X8X8XSXX8SSXSSXX#X##'.`',                        \n                          `,,,,`SXXSX%8SXSSSXSX88XXS88SX8SXX#8X#``',''                          \n                            ,.'''8X8XSXSSX8SS8S88XSSSXXXXXSS8..'.,,,                            \n                               ,,S8SX.``;:X8X888SXXXS8X8SS8S',','                               \n                               `.,`.,`..`,''''''',.'.','.8S...S                                 \n                             ...`''`~~~~~',``''``.'''S:%`'.'`S;.....                            \n"
+    cruise: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                            :;                                  \n                                                          :%S%%:%                               \n                                                       St%;;;%:::%                              \n                St;S;:%StSS            '.#X88X8XX88X8`St;;SS;##XXXX8'                           \n             S%:%S%;%;t:%t:%S;    `.8#X#XSS8XSSX%@S#8X#8#XX8SXSX8SXX%##@..                      \n            S:S%SS;SS%SS%:;;;%:%SX888SSSSX88XX##%##@XX8X8@##XXSXX8S@##%#::(\u00b7).:                 \n            tSt:;;St:;tS;:tSStS:%X%StS%Stttt%tt@#@#t%%S%#%%@##tttStt#@%%:%:...:                 \n              ::t%%:%t;%t%S;S     'XXS8SS%XSX%X%%XS%S%%SX%###%SXXSX%X%X%t.:.                    \n                 ::tS;St;t            ``SX%X8SSXSXX8X88S8XSXS8XS8%;SStS%S                       \n                                          tS%%:S%t;S:           `;t:S;;                         \n                                            ::;%                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
+    near: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                              :S                                \n                                                           S:;S:;t:                             \n                                                         ;:%S%%:%%t:S                           \n             ::;tt:;S%S                   ,`8``        St%;;;%:::%tt%                           \n          S%%tt;St;S;:%St            '8888SXXSXSSXXSXSSXX8XXX88SSSSXXX88.'                      \n       %;;S%:S%:%S%;%;t:%t:%S;t 'XSSX8%X%%%XS%%@%@@XXSXSX%%X%S%SX%S%XX#@@%#8..:.                \n              S%SS;SS%SS%:;;;%:X%%XSStttt%SS%%##%##@%%S%SSS#@%t%%S%t%t%#@#%#..(\u00b7).:,            \n       tSS;ttSt:;;St:;tS;:tSStStt%;t;tt%;;;;t;;@#@#@tt%tt%%@##@#;%;;t;;%@%%%%%:%%..,            \n          :t%:::t%%:%t;%t%S;S::`%SS%%tS%tt%t%;%;;%ttttt%S;###@@SSt%;%;%%t%S;%.:..               \n             S::%::tS;St            .%SX%%t%Stt%tS%X%SS%XStStS%tStSSttS%S%S;                    \n                                        %ttSt%:S%t;S:tS     ,,`'`.,:S;;%;::                     \n                                          S%::;%:;S                 ;::;S                       \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
+    lift: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                           ;S;S                                 \n                                                          :S:%:S                                \n                                                        t;:S:;S:;t                              \n              %S%:;:t%;%                    ,         t%;;:%S%%:%%                              \n           :t::;tt:;S%StS:              `X###XX##%##8#8XX8X8#8##8#8X`                           \n            %tt; t;S;:%StSSt         '###8SXXS%##%@#XSSX@@%%##8SSSS@##@#                        \n              %:%S%;%;t:%t:%S;tt;;XXX8S8%%%XS%%SXS%XXSXSX@%@@S%SX%S%%##@.#(\u00b7)                   \n                SS;SS%SS%:;;;%:%SSXXX%%tt%SS%%SSS%tS%%S%SSSt%%t%%S%t%tt%::%:..:                 \n                  St:;tS;:tSStS:%X%S%SSXtt%%%%%%X%S%SSXSS%X%XX%%%S%%S%%SX::...;                 \n                     t;%t%S;        `.8XX%XSX%X%:St%tS.''.,.8SSX8S%%;::%t                       \n                                          ttt%:S;t%              %;SStS                         \n                                            %                                                   \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n"
   };
 
   function parseFrame(text) {
@@ -42,109 +40,12 @@
   }
 
   var GRIDS = {
-    rest: parseFrame(FRAME_TEXT.rest),
-    mid: parseFrame(FRAME_TEXT.mid),
-    full: parseFrame(FRAME_TEXT.full)
+    cruise: parseFrame(FRAME_TEXT.cruise),
+    near: parseFrame(FRAME_TEXT.near),
+    lift: parseFrame(FRAME_TEXT.lift)
   };
-  var FRAME_STATES = [GRIDS.rest, GRIDS.mid, GRIDS.full];
   var BLEND_ROWS = new Array(FRAME_ROWS);
-  /* '1' / '2' where idle adds a light spine around the locked rest body. */
   var SPINE_MASK = null;
-
-  /**
-   * Rest frame is a small lens. Grow it one contour step — outward spines
-   * on cells mid already inks — so idle reads as a 河豚. Mid/full grids stay locked.
-   */
-  (function augmentRest() {
-    var rest = GRIDS.rest;
-    var mid = GRIDS.mid;
-    var body = {};
-    var y, x, ch;
-    for (y = 0; y < FRAME_ROWS; y++) {
-      for (x = 0; x < FRAME_COLS; x++) {
-        ch = rest[y].charAt(x);
-        if (ch !== " " && ch !== "~") body[x + "," + y] = true;
-      }
-    }
-    function ringAround(src, blocked) {
-      var out = {};
-      var key, parts, px, py, dy, dx, nx, ny, k;
-      for (key in src) {
-        if (!Object.prototype.hasOwnProperty.call(src, key)) continue;
-        parts = key.split(",");
-        px = +parts[0];
-        py = +parts[1];
-        for (dy = -1; dy <= 1; dy++) {
-          for (dx = -1; dx <= 1; dx++) {
-            if (!dx && !dy) continue;
-            nx = px + dx;
-            ny = py + dy;
-            if (nx < 0 || ny < 0 || nx >= FRAME_COLS || ny >= FRAME_ROWS) continue;
-            k = nx + "," + ny;
-            if (blocked[k] || src[k]) continue;
-            if (mid[ny].charAt(nx) === " ") continue;
-            out[k] = [nx, ny];
-          }
-        }
-      }
-      return out;
-    }
-    function outwardGlyph(nx, ny) {
-      var sx = 0;
-      var sy = 0;
-      var n = 0;
-      var dy, dx, k;
-      for (dy = -2; dy <= 2; dy++) {
-        for (dx = -2; dx <= 2; dx++) {
-          k = nx + dx + "," + (ny + dy);
-          if (!body[k]) continue;
-          sx += nx + dx;
-          sy += ny + dy;
-          n++;
-        }
-      }
-      var ax = n ? nx - sx / n : 0;
-      var ay = n ? ny - sy / n : -1;
-      var adx = Math.abs(ax);
-      var ady = Math.abs(ay);
-      // Belly stays a short tick so idle doesn't grow a bar curtain.
-      if (ay > adx * 0.45) return "'";
-      if (ady > adx * 1.2) return "|";
-      if (adx > ady * 1.2) return ":";
-      return ax * ay >= 0 ? "\\" : "/";
-    }
-    var ring1 = ringAround(body, body);
-    var blocked = {};
-    var key;
-    for (key in body) blocked[key] = true;
-    for (key in ring1) blocked[key] = true;
-    var ring2 = ringAround(ring1, blocked);
-    var rows = [];
-    var mask = [];
-    for (y = 0; y < FRAME_ROWS; y++) {
-      rows.push(rest[y].split(""));
-      mask.push(new Array(FRAME_COLS + 1).join("0"));
-    }
-    function paint(ring, mark) {
-      var k, nx, ny, glyph, chars;
-      for (k in ring) {
-        if (!Object.prototype.hasOwnProperty.call(ring, k)) continue;
-        nx = ring[k][0];
-        ny = ring[k][1];
-        glyph = outwardGlyph(nx, ny);
-        rows[ny][nx] = glyph;
-        chars = mask[ny].split("");
-        chars[nx] = mark;
-        mask[ny] = chars.join("");
-      }
-    }
-    paint(ring1, "1");
-    GRIDS.rest = rows.map(function (chars) {
-      return chars.join("");
-    });
-    FRAME_STATES[0] = GRIDS.rest;
-    SPINE_MASK = mask;
-  })();
 
   function easeInOut(t) {
     return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -159,13 +60,7 @@
     return t < 0.5 ? ca : cb;
   }
 
-  function sampleGrid(level) {
-    level = clamp(level, 0, 2);
-    var i0 = Math.floor(level);
-    if (i0 >= 2) return GRIDS.full;
-    var t = level - i0;
-    var a = FRAME_STATES[i0];
-    var b = FRAME_STATES[i0 + 1];
+  function blendGrid(a, b, t) {
     if (t <= 0.02) return a;
     if (t >= 0.98) return b;
     for (var y = 0; y < FRAME_ROWS; y++) {
@@ -176,6 +71,17 @@
       BLEND_ROWS[y] = chars.join("");
     }
     return BLEND_ROWS;
+  }
+
+  /** nearT 0..1 cruise→near. liftT 0..1 mixes a little lift while still cruising. */
+  function samplePose(nearT, liftT) {
+    nearT = clamp(nearT, 0, 1);
+    liftT = clamp(liftT, 0, 1);
+    if (nearT >= 0.98) return GRIDS.near;
+    var base = nearT <= 0.02 ? GRIDS.cruise : blendGrid(GRIDS.cruise, GRIDS.near, nearT);
+    var liftMix = liftT * (1 - nearT);
+    if (liftMix <= 0.02) return base;
+    return blendGrid(base, GRIDS.lift, liftMix);
   }
 
   /** Fit the locked frame at field-cell size when the stage can hold 96×42. */
@@ -203,12 +109,13 @@
     };
   }
 
-  /* Body only: base #C45C26, one light step, one deep step, eyes in dark ink. */
+  /* Body amber around #C45C26. #@% spots and the eye stay dark ink. */
   function glyphInk(ch) {
     if (ch === "·" || ch === "(" || ch === ")") return { rgba: "rgba(28,27,25,1)" };
-    if (".,'`~".indexOf(ch) >= 0) return { rgba: "rgba(214,146,96,0.78)" };
-    if (":;|/'\\%t".indexOf(ch) >= 0) return { rgba: "rgba(196,92,38,0.9)" };
-    return { rgba: "rgba(122,52,20,0.94)" };
+    if ("#%@".indexOf(ch) >= 0) return { rgba: "rgba(28,27,25,0.9)" };
+    if (".,'`~".indexOf(ch) >= 0) return { rgba: "rgba(214,146,96,0.74)" };
+    if (":;|/'\\t".indexOf(ch) >= 0) return { rgba: "rgba(196,92,38,0.88)" };
+    return { rgba: "rgba(158,66,26,0.92)" };
   }
 
   /** Glyph center, rotated by heading around the fish center. No cell snap. */
@@ -259,13 +166,13 @@
     return out;
   }
 
-  /* —— World: ambient field particles + one puffer —— */
+  /* —— World: ambient field particles + one fishfer —— */
   function World() {
     this.width = 0;
     this.height = 0;
     this.time = 0;
     this.particles = [];
-    this.puffer = null;
+    this.koi = null;
     this.events = [];
     this.pointer = { x: 0, y: 0, active: false };
     this._cur = { x: 0, y: 0 };
@@ -277,10 +184,10 @@
     this.height = height;
     this.cellW = cellW;
     this.cellH = cellH;
-    if (first || !this.puffer) this.seed();
+    if (first || !this.koi) this.seed();
     else {
-      this.puffer.x = clamp(this.puffer.x, width * 0.15, width * 0.85);
-      this.puffer.y = clamp(this.puffer.y, height * 0.2, height * 0.75);
+      this.koi.x = clamp(this.koi.x, width * 0.15, width * 0.85);
+      this.koi.y = clamp(this.koi.y, height * 0.2, height * 0.75);
     }
   };
 
@@ -304,28 +211,24 @@
       });
     }
 
-    this.puffer = {
+    this.koi = {
       x: W * 0.5,
       y: H * 0.48,
       heading: 0,
       speed: 0,
       phase: 0,
-      inflate: 0, // continuous 0 rest .. 1 mid .. 2 full
-      targetInflate: 0,
-      holdFullUntil: 0,
-      halfW: Math.min(W, H) * 0.22,
-      halfH: Math.min(W, H) * 0.16
+      near: 0,
+      lift: 0,
+      halfW: Math.min(W, H) * 0.28,
+      halfH: Math.min(W, H) * 0.12
     };
   };
 
   World.prototype.splash = function (x, y) {
     this.events.push({ kind: "splash", x: x, y: y });
-    var p = this.puffer;
-    if (p) {
-      // Click anywhere on the stage: obvious full, then ease back.
-      p.targetInflate = 2;
-      p.holdFullUntil = this.time + 1.9;
-    }
+    var p = this.koi;
+    if (!p) return;
+
     var r = 200;
     for (var i = 0; i < this.particles.length; i++) {
       var f = this.particles[i];
@@ -350,9 +253,9 @@
     var H = this.height;
     var t = this.time;
     var cur = this._cur;
-    var puf = this.puffer;
-    var fearRx = puf ? puf.halfW || 160 : 0;
-    var fearRy = puf ? puf.halfH || 110 : 0;
+    var fish = this.koi;
+    var fearRx = fish ? fish.halfW || 160 : 0;
+    var fearRy = fish ? fish.halfH || 110 : 0;
 
     for (var i = 0; i < this.particles.length; i++) {
       var f = this.particles[i];
@@ -360,13 +263,13 @@
       var ax = cur.x * 0.35 + (Math.random() - 0.5) * 28;
       var ay = cur.y * 0.35 + (Math.random() - 0.5) * 28;
 
-      if (puf && fearRx > 1 && fearRy > 1) {
-        var dx = f.x - puf.x;
-        var dy = f.y - puf.y;
+      if (fish && fearRx > 1 && fearRy > 1) {
+        var dx = f.x - fish.x;
+        var dy = f.y - fish.y;
         var nd = Math.hypot(dx / fearRx, dy / fearRy);
         var d = Math.hypot(dx, dy);
         if (nd < 1.2 && d > 1e-3) {
-          var w = Math.pow(1 - nd / 1.2, 2) * (50 + puf.inflate * 30);
+          var w = Math.pow(1 - nd / 1.2, 2) * (50 + (fish.near || 0) * 18);
           ax += (dx / d) * w;
           ay += (dy / d) * w;
         }
@@ -414,7 +317,7 @@
   };
 
   World.prototype.stepPuffer = function (dt) {
-    var p = this.puffer;
+    var p = this.koi;
     if (!p) return;
     var W = this.width;
     var H = this.height;
@@ -423,13 +326,13 @@
     var top = Math.max(52, (H - layout.gridH) * 0.5 - H * 0.02);
     var homeX = W * 0.5;
     var homeY = top + layout.gridH * 0.5;
-    var span = clamp(p.inflate / 2, 0, 1);
-    p.halfW = layout.gridW * (0.22 + 0.26 * span);
-    p.halfH = layout.gridH * (0.2 + 0.26 * span);
+    var attn = clamp(p.near, 0, 1);
+    p.halfW = layout.gridW * (0.28 + 0.06 * attn);
+    p.halfH = layout.gridH * (0.12 + 0.04 * attn);
 
     if (this.still) {
-      p.inflate = 0;
-      p.targetInflate = 0;
+      p.near = 0;
+      p.lift = 0;
       p.heading = 0;
       p.speed = 0;
       p.x = homeX;
@@ -437,47 +340,57 @@
       return;
     }
 
-    // Smooth cruise: position is a continuous orbit (ease-in/out speed),
-    // heading eases toward the path tangent. No cell-grid snap.
     if (p.phase == null) p.phase = 0;
     if (p.heading == null) p.heading = 0;
     if (p.speed == null) p.speed = 0;
-    var pace = 0.36 * (1 - clamp(p.inflate, 0, 2) * 0.18);
+    var pace = 0.34 * (1 - attn * 0.12);
     p.phase += dt * pace;
-    var orbitX = Math.min(52, W * 0.042);
-    var orbitY = Math.min(22, H * 0.028);
+    var orbitX = Math.min(58, W * 0.046);
+    var orbitY = Math.min(20, H * 0.026);
     var ang = p.phase;
     p.x = homeX + Math.sin(ang) * orbitX;
     p.y = homeY + Math.sin(ang * 0.71 + 0.4) * orbitY;
     var tvx = Math.cos(ang) * orbitX * pace;
     var tvy = Math.cos(ang * 0.71 + 0.4) * orbitY * pace * 0.71;
-    var pitch = clamp(Math.atan2(tvy, Math.abs(tvx) + 0.001), -0.38, 0.38);
+    var pitch = clamp(Math.atan2(tvy, Math.abs(tvx) + 0.001), -0.34, 0.34);
     var turn = angleDiff(p.heading, pitch);
     var turnGain = 0.25 + 0.75 * easeInOut(clamp(Math.abs(turn) / 0.4, 0, 1));
-    var maxTurn = 0.7 * turnGain * dt;
+    var maxTurn = 0.65 * turnGain * dt;
     p.heading += clamp(turn, -maxTurn, maxTurn);
-    var cruise = 14 * (1 - clamp(p.inflate, 0, 2) * 0.15);
+    var cruise = 15 * (1 - attn * 0.1);
     p.speed += (cruise - p.speed) * Math.min(1, dt * 1.5);
 
-    var breath = (Math.sin(t * 0.7) + 1) / 2;
-    breath = easeInOut(breath);
-    var idle = breath * 0.16; // rest body + light spines; below the mid swap
-
-    var target = idle;
-    if (t < p.holdFullUntil) {
-      target = 2;
+    // Swim rhythm: a little lift, still the cruise fish. Pointer eases to near — not inflate.
+    var rhythm = easeInOut((Math.sin(t * 0.5) + 1) / 2);
+    var liftTarget = rhythm * 0.38;
+    var nearTarget = 0;
+    if (p.holdPose === "lift") {
+      liftTarget = 1;
+      nearTarget = 0;
+    } else if (p.holdPose === "near") {
+      nearTarget = 1;
+      liftTarget = 0;
+    } else if (p.holdPose === "cruise") {
+      liftTarget = 0;
+      nearTarget = 0;
     } else if (this.pointer.active) {
-      var dx = (this.pointer.x - p.x) / Math.max(90, layout.gridW * 0.46);
-      var dy = (this.pointer.y - p.y) / Math.max(70, layout.gridH * 0.5);
+      var dx = (this.pointer.x - p.x) / Math.max(100, layout.gridW * 0.42);
+      var dy = (this.pointer.y - p.y) / Math.max(70, layout.gridH * 0.46);
       var dist = Math.sqrt(dx * dx + dy * dy);
       var prox = dist >= 1 ? 0 : (1 - dist) * (1 - dist);
-      if (prox > 0.001) target = idle + (1 - idle) * easeInOut(prox);
+      if (prox > 0.001) {
+        nearTarget = easeInOut(prox);
+        liftTarget = liftTarget * (1 - nearTarget);
+        if (prox > 0.84) liftTarget = Math.max(liftTarget, (prox - 0.84) / 0.16 * 0.55);
+      }
     }
-    p.targetInflate = target;
-    var speed = target > p.inflate ? 3.4 : 1.7;
-    var diff = target - p.inflate;
-    if (Math.abs(diff) < 0.002) p.inflate = target;
-    else p.inflate += Math.sign(diff) * Math.min(Math.abs(diff), speed * dt);
+    function easeTo(cur, target, rate) {
+      var diff = target - cur;
+      if (Math.abs(diff) < 0.002) return target;
+      return cur + Math.sign(diff) * Math.min(Math.abs(diff), rate * dt);
+    }
+    p.near = easeTo(p.near || 0, nearTarget, nearTarget > p.near ? 1.6 : 1.1);
+    p.lift = easeTo(p.lift || 0, liftTarget, 1.2);
   };
 
   /* —— Paper-mode ASCII renderer —— */
@@ -575,9 +488,9 @@
 
   AsciiRenderer.prototype.depositWake = function (world) {
     var energy = this.energy;
-    var p = world.puffer;
+    var p = world.koi;
     if (p) {
-      var rad = 2 + ((p.inflate * 0.8) | 0);
+      var rad = 2;
       var back = 18 + (p.halfH || 40) * 0.08;
       this.stamp(
         energy,
@@ -624,14 +537,14 @@
     this.frameGrid = null;
     if (!p) return;
     var layout = fishLayout(this.width, this.height, this.cw, this.ch);
-    var grid = sampleGrid(p.inflate);
+    var grid = samplePose(p.near || 0, p.lift || 0);
     this.fishCx = p.x;
     this.fishCy = p.y;
     this.heading = p.heading || 0;
     this.fishCw = layout.fishCw;
     this.fishCh = layout.fishCh;
     this.frameGrid = grid;
-    this.inflateLevel = p.inflate;
+    this.inflateLevel = p.near || 0;
     var cols = this.cols;
     var rows = this.rows;
     for (var r = 0; r < FRAME_ROWS; r++) {
@@ -663,10 +576,7 @@
       for (var c = 0; c < FRAME_COLS; c++) {
         var glyph = line.charAt(c);
         if (glyph === " ") continue;
-        var mark =
-          SPINE_MASK && this.inflateLevel < 0.5 ? SPINE_MASK[r].charAt(c) : "0";
-        if (mark === "1") ctx.fillStyle = "rgba(214,146,96,0.62)";
-        else ctx.fillStyle = glyphInk(glyph).rgba;
+        ctx.fillStyle = glyphInk(glyph).rgba;
         var pt = glyphPoint(c, r, this.fishCx, this.fishCy, cw, ch, heading);
         ctx.fillText(glyph, pt.x, pt.y);
       }
@@ -687,7 +597,7 @@
     var H = this.height;
 
     this.consumeEvents(world);
-    this.stampLockedFrame(world.puffer);
+    this.stampLockedFrame(world.koi);
     this.depositWake(world);
     this.diffuse(dt);
 
@@ -837,7 +747,7 @@
     this.world.still = this.reducedMotion.matches;
     if (this.reducedMotion.matches) {
       cancelAnimationFrame(this.raf);
-      if (this.world.puffer) this.world.puffer.inflate = 0;
+      if (this.world.koi) { this.world.koi.near = 0; this.world.koi.lift = 0; }
       this.drawStill();
     } else {
       this.schedule();
@@ -870,17 +780,16 @@
   };
 
   Engine.prototype.setState = function (state) {
-    var map = { rest: 0, mid: 1, full: 2 };
-    if (!(state in map) || !this.world.puffer) return;
-    this.world.puffer.targetInflate = map[state];
-    this.world.puffer.inflate = map[state];
-    if (state === "full") this.world.puffer.holdFullUntil = this.world.time + 2;
+    var p = this.world.koi;
+    if (!p) return;
+    if (state === "cruise" || state === "near" || state === "lift") p.holdPose = state;
+    else p.holdPose = null;
   };
 
   /* —— public API —— */
   var instances = new WeakMap();
 
-  var Puffer = {
+  var Koi = {
     mount: function (el, opts) {
       if (!el || el.tagName !== "CANVAS") return null;
       var prev = instances.get(el);
@@ -904,5 +813,5 @@
     }
   };
 
-  global.Puffer = Puffer;
+  global.Koi = Koi;
 })(typeof window !== "undefined" ? window : this);
