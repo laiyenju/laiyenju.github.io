@@ -80,27 +80,29 @@ interface SharkShape {
   tint: [number, number, number];
 }
 
-/** Side-view koi: blunt head, deep front body, pinched peduncle. Fork is drawn as the caudal. */
+/** Lean side-view koi (ed9754b cell-grid): slim head, early taper, thin peduncle. */
 function koiHalfWidth(s: number) {
-  if (s < 0.045) return 0.072;
-  if (s < 0.14) return 0.072 + 0.05 * smoothstep(0.045, 0.14, s);
-  if (s < 0.46) return 0.122 + 0.028 * smoothstep(0.14, 0.3, s);
-  if (s < 0.64) return 0.15 - 0.05 * smoothstep(0.46, 0.64, s);
-  if (s < 0.8) return 0.1 - 0.055 * smoothstep(0.64, 0.8, s);
-  const k = clamp((s - 0.8) / 0.12, 0, 1);
-  return 0.042 * (1 - k);
+  if (s < 0.14) return 0.108 * Math.pow(Math.sin(((s / 0.14) * Math.PI) / 2), 0.42);
+  if (s < 0.36) return 0.108 + 0.028 * smoothstep(0.14, 0.36, s);
+  if (s < 0.68) return 0.03 + 0.106 * Math.pow(1 - (s - 0.36) / 0.52, 1.05);
+  if (s < 0.82) {
+    const k = (s - 0.68) / 0.14;
+    return 0.055 * (1 - k) + 0.022;
+  }
+  const k = (s - 0.82) / 0.18;
+  return 0.02 * (1 - k);
 }
 
 const SHAPES: Record<SharkKind, SharkShape> = {
   koi: {
     halfWidth: koiHalfWidth,
-    pectoral: [0.28, 0.34, 0.37, 0.04],
+    pectoral: [0.22, 0.32, 0.38, 0.07],
     falcate: false,
-    pelvic: [0.6, 0.63, 0.65, 0.02],
-    caudal: 0.2,
-    dorsal: [0.34, 0.44],
-    secondDorsal: [0.7, 0.72],
-    eye: [0.06, 0.105],
+    pelvic: [0.56, 0.6, 0.63, 0.028],
+    caudal: 0.12,
+    dorsal: [0.3, 0.44],
+    secondDorsal: [0.62, 0.66],
+    eye: [0.07, 0.11],
     gills: [0.16, 0.22],
     tint: [1, 1, 1],
   },
@@ -465,7 +467,6 @@ export class AsciiRenderer {
 
     this.markFish(world);
     this.drawDots(t);
-    this.drawRipples(dt);
 
     ctx.font = `600 ${Math.round(ch * 0.74)}px ${this.fontFamily}`;
     ctx.textAlign = "center";
@@ -474,6 +475,7 @@ export class AsciiRenderer {
     this.drawHeat();
     this.drawFish();
     this.drawSharks(t);
+    this.drawRipples(dt);
   }
 
   // ── simulation → field ──────────────────────────────────────────────
@@ -493,13 +495,13 @@ export class AsciiRenderer {
       const u = rip.age / rip.life;
       const ease = 1 - (1 - u) * (1 - u);
       const alpha = (1 - ease) * 0.15;
-      if (alpha < 0.012) continue;
+      if (alpha < 0.02) continue;
       for (let ring = 0; ring < 2; ring++) {
-        const radius = rip.maxR * (0.22 + 0.78 * ease) * (ring === 0 ? 1 : 0.58);
-        if (radius < cw * 0.75) continue;
-        const count = ring === 0 ? 16 : 10;
+        const radius = rip.maxR * (0.28 + 0.72 * ease) * (ring === 0 ? 1 : 0.62);
+        if (radius < cw * 0.6) continue;
+        const count = ring === 0 ? 18 : 11;
         for (let i = 0; i < count; i++) {
-          if (hash3(i, ring + 2, ((rip.x / cw) | 0) + 5) < 0.38) continue;
+          if (hash3(i, ring + 2, ((rip.x / cw) | 0) + 5) < 0.22) continue;
           const a = (i / count) * Math.PI * 2 + ring * 0.55;
           const px = rip.x + Math.cos(a) * radius;
           const py = rip.y + Math.sin(a) * radius;
@@ -704,8 +706,8 @@ export class AsciiRenderer {
     }
     if (this.shape === SHAPES.koi && shape.caudal > 0) {
       const reach = L * shape.caudal;
-      const lobe = inTriangle(u, a, L * 0.78, 0, L * 0.86, L * 0.012, L * 1.0, reach);
-      const notch = u > L * 0.9 && a < (u - L * 0.9) * 0.9;
+      const lobe = inTriangle(u, a, L * 0.8, 0, L * 0.9, L * 0.012, L * 1.0, reach);
+      const notch = u > L * 0.93 && a < (u - L * 0.93) * 0.75;
       if (lobe && !notch) {
         this.hitFlag = FLAG_FIN;
         this.hitShade = 0.55;
@@ -899,9 +901,8 @@ export class AsciiRenderer {
 
       if (flag === FLAG_EDGE) {
         const set = shade >= 0.5 ? EDGE_HEAVY : EDGE_LIGHT;
-        ctx.fillStyle = lifted > 0.48 ? "#C4C0B8" : "#8A8680";
-        ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
-        ctx.fillStyle = "#4A4744";
+        ctx.globalAlpha = alpha * 0.72;
+        ctx.fillStyle = lifted > 0.55 ? "#C4C0B8" : "#8A8680";
         ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
         ctx.globalAlpha = 1;
         continue;
@@ -933,8 +934,12 @@ export class AsciiRenderer {
         const jitter = ((key >>> 4) % 3) - 1;
         glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * (SKIN_RAMP.length - 0.01)) + jitter, 0, SKIN_RAMP.length - 1)];
       }
-      ctx.fillStyle = fill;
-      ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
+      const breathe = flag === FLAG_BODY && hash3(key, 2, 8) > 0.86;
+      if (!breathe) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
+      }
+      ctx.globalAlpha = breathe ? alpha * 0.55 : alpha;
       ctx.fillStyle = ink;
       ctx.fillText(glyph, x + cw / 2, y + ch / 2 + 1);
       ctx.globalAlpha = 1;

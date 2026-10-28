@@ -149,11 +149,10 @@ export class World {
       const orbitRadius = minSide * rand(0.22, 0.34);
       const laneLeft = i % 2 === 0;
       const orbitDir: 1 | -1 = laneLeft ? -1 : 1;
-      // Snout inset so the trailing body stays in the corridor instead of starting offscreen.
-      const margin = Math.max(64, length * 0.2);
-      const x = laneLeft ? margin + rand(0, W * 0.03) : W - margin - rand(0, W * 0.03);
-      const y = H * (0.34 + (i / Math.max(1, sharkCount - 1)) * 0.36);
-      const heading = (laneLeft ? Math.PI : 0) + rand(-0.12, 0.12);
+      const slotY = [0.42, 0.58, 0.26, 0.74, 0.5][i] ?? 0.5;
+      const x = (laneLeft ? W * 0.26 : W * 0.74) + rand(-W * 0.015, W * 0.015);
+      const y = H * slotY;
+      const heading = (laneLeft ? Math.PI : 0) + rand(-0.08, 0.08);
       const nodes = new Float32Array(SHARK_NODES * 2);
       const seg = length / (SHARK_NODES - 1);
       for (let n = 0; n < SHARK_NODES; n++) {
@@ -481,14 +480,16 @@ export class World {
       dx += Math.cos(sh.heading + sh.wander) * 0.12;
       dy += Math.sin(sh.heading + sh.wander) * 0.12;
 
-      // Quiet center column (~34ch copy) and the strip under the top nav.
-      const navClear = Math.max(120, H * 0.18);
-      const colHalf = Math.min(210, W * 0.16);
-      const colTop = H * 0.28;
-      const colBot = H * 0.74;
+      // Quiet center column. Push is light so a flank can cross the type.
+      const navClear = Math.max(72, H * 0.1);
+      const colHalf = Math.min(188, W * 0.145);
+      const colTop = H * 0.33;
+      const colBot = H * 0.7;
       // id is i+1, and even i spawned on the left. Odd ids stay in the left corridor.
       const laneLeft = sh.id % 2 === 1;
-      const laneX = laneLeft ? W * 0.2 : W * 0.8;
+      const laneX = laneLeft ? W * 0.26 : W * 0.74;
+      const slotY = [0.42, 0.58, 0.26, 0.74, 0.5][sh.id - 1] ?? 0.5;
+      const laneY = H * slotY;
 
       const preyQuiet = (px: number, py: number) =>
         (Math.abs(px - cxW) < colHalf && py > colTop && py < colBot) ||
@@ -512,12 +513,17 @@ export class World {
         hunting = true;
         closing = clamp(1 - d / (L * 0.9), 0, 1);
       } else {
-        // Left / right corridors: cruise along the lane, not a circuit around the page.
-        const face = Math.cos(sh.heading) >= 0 ? 0 : Math.PI;
-        dx += Math.cos(face) * 1.25;
-        dx += clamp((laneX - hx) / (W * 0.2), -1, 1) * 1.8;
-        dy += Math.sin(time * 0.12 + sh.id) * 0.16;
+        hunting = false;
       }
+
+      // Cruise along the lane once the snout is in it. The spring wins near the screen edge
+      // so a fish is not pinned outside the copy, and the body can lie across the type.
+      const along = Math.cos(sh.heading) >= 0 ? 1 : -1;
+      const laneErr = Math.abs(hx - laneX);
+      if (!hunting && laneErr < W * 0.1) dx += along * 0.7;
+      const spring = hunting ? 0.55 : 1.65;
+      dx += clamp((laneX - hx) / (W * 0.16), -1, 1) * spring;
+      dy += clamp((laneY - hy) / (H * 0.22), -1, 1) * spring * 0.55;
 
       // Give other sharks room.
       for (const other of sharks) {
@@ -526,48 +532,47 @@ export class World {
           const ox = hx - other.nodes[k * 2];
           const oy = hy - other.nodes[k * 2 + 1];
           const d = Math.hypot(ox, oy);
-          const range = (L + other.length) * 0.45;
+          const range = (L + other.length) * 0.22;
           if (d < range && d > 1e-3) {
-            const w = (1 - d / range) * 3;
+            const w = (1 - d / range) * 1.15;
             dx += (ox / d) * w;
             dy += (oy / d) * w;
           }
         }
       }
 
-      // Soft push out of the centered copy column. Edges may still skim.
+      // Light nudge out of the copy. The flank may still sit on the glyphs.
       const nx = (hx - cxW) / colHalf;
       const midY = (colTop + colBot) / 2;
       const ny = (hy - midY) / ((colBot - colTop) / 2);
-      if (nx * nx + ny * ny < 1) {
+      const inCopy = nx * nx + ny * ny < 1;
+      if (inCopy) {
         const e = Math.sqrt(nx * nx + ny * ny) || 1e-3;
-        const w = (1 - e) * 2.6;
+        const w = (1 - e) * 0.55;
         dx += (nx / e) * w;
       }
 
-      // Don't linger in the band under the top-center nav.
-      if (hy < navClear) {
-        const w = (1 - Math.max(0, hy) / navClear) * 3.4;
-        dy += w;
-        if (Math.abs(hx - cxW) < W * 0.36) dx += (hx < cxW ? -1 : 1) * w * 0.8;
+      // Top-center and bottom-center are outside the copy. Return those to the lane.
+      if (!inCopy && Math.abs(hx - cxW) < W * 0.2 && (hy < colTop || hy > colBot)) {
+        dx += (hx < cxW ? -1 : 1) * 1.65;
+        dy += clamp((laneY - hy) / (H * 0.22), -1, 1) * 0.7;
       }
 
-      // Turn back into the lane before the snout leaves the corridor.
-      const edgePad = Math.max(48, L * 0.18);
-      const over = Math.max(edgePad - hx, hx - (W - edgePad), -hy, hy - H);
-      if (over > 0) {
-        const w = clamp(over / (L * 0.3), 0, 1) * 3.5;
-        const toX = laneX - hx;
-        const toY = clamp(hy, navClear + L * 0.12, H * 0.82) - hy;
-        const d = Math.hypot(toX, toY) || 1;
-        dx += (toX / d) * w;
-        dy += (toY / d) * w;
+      // Only the band directly under the top-center nav, not a ceiling over the title.
+      if (hy < navClear && Math.abs(hx - cxW) < W * 0.26) {
+        const w = (1 - Math.max(0, hy) / navClear) * 1.5;
+        dy += w;
+        dx += (hx < cxW ? -1 : 1) * w;
       }
+
+      if (hx < 30) dx += 2.1;
+      else if (hx > W - 30) dx -= 2.1;
+      if (hy < 20) dy += 1.6;
+      else if (hy > H - 20) dy -= 1.6;
 
       const desired = Math.atan2(dy, dx);
       // Sharks can't pivot on the spot: the turning circle grows with speed.
-      const edgePadNow = Math.max(48, L * 0.18);
-      const huggingEdge = Math.max(edgePadNow - hx, hx - (W - edgePadNow)) > 0;
+      const huggingEdge = hx < 42 || hx > W - 42 || hy < 28 || hy > H - 28;
       let agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
       if (huggingEdge) agility = Math.max(agility, 2.3);
       const maxTurn = agility * dt;
@@ -582,8 +587,8 @@ export class World {
 
       nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
       nodes[1] += Math.sin(sh.heading) * sh.speed * dt;
-      nodes[0] = clamp(nodes[0], 16, W - 16);
-      nodes[1] = clamp(nodes[1], Math.max(78, H * 0.14), H - 24);
+      nodes[0] = clamp(nodes[0], 12, W - 12);
+      nodes[1] = clamp(nodes[1], 16, H - 16);
 
       // Follow-the-leader spine, with a stiffness limit per joint so the
       // body bends into a C at most and never folds back on itself.

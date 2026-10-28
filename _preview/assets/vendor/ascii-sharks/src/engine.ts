@@ -112,19 +112,41 @@ export class OceanEngine {
     const sharks = this.world.sharks;
     for (const sh of sharks) {
       const prev = this.prevSpeed.get(sh.id);
-      if (prev !== undefined && sh.speed - prev > 1.25) {
+      if (prev !== undefined && sh.speed - prev > 0.75) {
         this.renderer.spawnRipple(sh.nodes[0], sh.nodes[1]);
       }
       this.prevSpeed.set(sh.id, sh.speed);
     }
     const next = new Set<string>();
+    const W = this.world.width;
+    const H = this.world.height;
+    const copyHalf = Math.min(200, W * 0.16);
+    const copyTop = H * 0.32;
+    const copyBot = H * 0.7;
     for (let i = 0; i < sharks.length; i++) {
+      const a = sharks[i];
+      let touching = false;
+      let touchX = a.nodes[0];
+      let touchY = a.nodes[1];
+      for (let k = 0; k < 8; k++) {
+        const x = a.nodes[k * 2];
+        const y = a.nodes[k * 2 + 1];
+        if (Math.abs(x - W / 2) < copyHalf && y > copyTop && y < copyBot) {
+          touching = true;
+          touchX = x;
+          touchY = y;
+        }
+      }
+      const touchKey = `copy-${a.id}`;
+      if (touching) {
+        next.add(touchKey);
+        if (!this.closePairs.has(touchKey)) this.renderer.spawnRipple(touchX, touchY);
+      }
       for (let j = i + 1; j < sharks.length; j++) {
-        const a = sharks[i];
         const b = sharks[j];
         const d = Math.hypot(a.nodes[0] - b.nodes[0], a.nodes[1] - b.nodes[1]);
         const key = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
-        if (d < 128) {
+        if (d < 150) {
           next.add(key);
           if (!this.closePairs.has(key)) {
             this.renderer.spawnRipple((a.nodes[0] + b.nodes[0]) / 2, (a.nodes[1] + b.nodes[1]) / 2);
