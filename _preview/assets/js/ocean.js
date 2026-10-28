@@ -133,16 +133,16 @@
         const length = baseLength * size;
         const orbitRadius = minSide * rand(0.22, 0.34);
         const laneLeft = i % 2 === 0;
-        const orbitDir = laneLeft ? -1 : 1;
-        const slotY = (_a = [0.42, 0.58, 0.26, 0.74, 0.5][i]) != null ? _a : 0.5;
-        const x = (laneLeft ? W * 0.26 : W * 0.74) + rand(-W * 0.015, W * 0.015);
-        const y = H * slotY;
-        const heading = (laneLeft ? Math.PI : 0) + rand(-0.08, 0.08);
+        const orbitDir = i === 0 ? 1 : laneLeft ? -1 : 1;
+        const slots = [0.43, 0.58, 0.7, 0.3, 0.84];
+        const x = i === 0 ? W * 0.34 : laneLeft ? W * 0.16 : W * 0.84;
+        const y = H * ((_a = slots[i]) != null ? _a : 0.5);
+        const heading = orbitDir > 0 ? 0 : Math.PI;
         const nodes = new Float32Array(SHARK_NODES * 2);
         const seg = length / (SHARK_NODES - 1);
         for (let n = 0; n < SHARK_NODES; n++) {
           nodes[n * 2] = x - Math.cos(heading) * seg * n;
-          nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
+          nodes[n * 2 + 1] = y;
         }
         this.sharks.push({
           id: i + 1,
@@ -408,116 +408,45 @@
       }
     }
     stepSharks(dt) {
-      var _a;
-      const { sharks, width: W, height: H, time } = this;
-      const cxW = W / 2;
+      var _a, _b;
+      const { sharks, width: W, height: H } = this;
+      const navFloor = Math.max(108, H * 0.16);
+      const slots = [0.43, 0.58, 0.7, 0.3, 0.84];
+      const inners = [0.56, 0.6, 0.34, 0.68, 0.32];
       for (const sh of sharks) {
         const L = sh.length;
         const nodes = sh.nodes;
+        const laneLeft = sh.id % 2 === 1;
+        const laneY = clamp(H * ((_a = slots[sh.id - 1]) != null ? _a : 0.5), navFloor + 20, H - 36);
+        const outer = laneLeft ? Math.max(48, W * 0.09) : Math.min(W - 48, W * 0.91);
+        const inner = W * ((_b = inners[sh.id - 1]) != null ? _b : laneLeft ? 0.34 : 0.66);
         const hx = nodes[0];
         const hy = nodes[1];
-        sh.hunger = Math.min(1, sh.hunger + dt * 0.03);
-        let dx = Math.cos(sh.heading);
-        let dy = Math.sin(sh.heading);
-        sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 1.1, -0.35, 0.35);
-        dx += Math.cos(sh.heading + sh.wander) * 0.12;
-        dy += Math.sin(sh.heading + sh.wander) * 0.12;
-        const navClear = Math.max(72, H * 0.1);
-        const colHalf = Math.min(188, W * 0.145);
-        const colTop = H * 0.33;
-        const colBot = H * 0.7;
-        const laneLeft = sh.id % 2 === 1;
-        const laneX = laneLeft ? W * 0.26 : W * 0.74;
-        const slotY = (_a = [0.42, 0.58, 0.26, 0.74, 0.5][sh.id - 1]) != null ? _a : 0.5;
-        const laneY = H * slotY;
-        const preyQuiet = (px, py) => Math.abs(px - cxW) < colHalf && py > colTop && py < colBot || py < navClear + 28 && Math.abs(px - cxW) < W * 0.32;
-        if (time >= sh.retargetAt) {
-          sh.target = this.findPrey(sh);
-          sh.retargetAt = time + 0.45;
-        }
-        const t = sh.target;
-        let hunting = false;
-        let closing = 0;
-        if (t && t.alive && sh.hunger > 0.45 && !preyQuiet(t.x, t.y)) {
-          const tx = t.x + t.vx * 0.35 - hx;
-          const ty = t.y + t.vy * 0.35 - hy;
-          const d = Math.hypot(tx, ty) || 1;
-          const w = 1.1 + 1.6 * sh.hunger;
-          dx += tx / d * w;
-          dy += ty / d * w;
-          hunting = true;
-          closing = clamp(1 - d / (L * 0.9), 0, 1);
+        let dir = sh.orbitDir;
+        const lead = 64;
+        if (laneLeft) {
+          if (dir < 0 && hx <= outer + lead) dir = 1;
+          if (dir > 0 && hx >= inner - lead) dir = -1;
         } else {
-          hunting = false;
+          if (dir > 0 && hx >= outer - lead) dir = -1;
+          if (dir < 0 && hx <= inner + lead) dir = 1;
         }
-        const along = Math.cos(sh.heading) >= 0 ? 1 : -1;
-        const laneErr = Math.abs(hx - laneX);
-        if (!hunting && laneErr < W * 0.08) dx += along * 0.55;
-        const spring = hunting ? 1.05 : 2.05;
-        dx += clamp((laneX - hx) / (W * 0.14), -1, 1) * spring;
-        dy += clamp((laneY - hy) / (H * 0.2), -1, 1) * spring * 0.62;
-        if (laneLeft && hx < W * 0.14 && Math.cos(sh.heading) > 0) dx -= 1.6;
-        if (!laneLeft && hx > W * 0.86 && Math.cos(sh.heading) < 0) dx += 1.6;
-        for (const other of sharks) {
-          if (other === sh) continue;
-          for (let k = 0; k < SHARK_NODES; k += 4) {
-            const ox = hx - other.nodes[k * 2];
-            const oy = hy - other.nodes[k * 2 + 1];
-            const d = Math.hypot(ox, oy);
-            const range = (L + other.length) * 0.22;
-            if (d < range && d > 1e-3) {
-              const w = (1 - d / range) * 1.15;
-              dx += ox / d * w;
-              dy += oy / d * w;
-            }
-          }
-        }
-        const nx = (hx - cxW) / colHalf;
-        const midY = (colTop + colBot) / 2;
-        const ny = (hy - midY) / ((colBot - colTop) / 2);
-        const inCopy = nx * nx + ny * ny < 1;
-        if (inCopy) {
-          const e = Math.sqrt(nx * nx + ny * ny) || 1e-3;
-          const w = (1 - e) * 0.55;
-          dx += nx / e * w;
-        }
-        const belly = Math.min(SHARK_NODES - 1, 8);
-        const bx = nodes[belly * 2];
-        const by = nodes[belly * 2 + 1];
-        const snoutCenter = Math.abs(hx - cxW) < W * 0.18 && (hy < colTop || hy > colBot);
-        const bellyCenter = Math.abs(bx - cxW) < W * 0.16 && (by < colTop || by > colBot);
-        if (snoutCenter || bellyCenter) {
-          const ref = bellyCenter ? bx : hx;
-          dx += (ref < cxW ? -1 : 1) * 1.85;
-          dy += clamp((laneY - hy) / (H * 0.2), -1, 1) * 0.85;
-        }
-        if (hy < navClear && Math.abs(hx - cxW) < W * 0.26) {
-          const w = (1 - Math.max(0, hy) / navClear) * 1.5;
-          dy += w;
-          dx += (hx < cxW ? -1 : 1) * w;
-        }
-        if (hx < 30) dx += 2.1;
-        else if (hx > W - 30) dx -= 2.1;
-        if (hy < 20) dy += 1.6;
-        else if (hy > H - 20) dy -= 1.6;
-        const desired = Math.atan2(dy, dx);
-        const huggingEdge = hx < 42 || hx > W - 42 || hy < 28 || hy > H - 28;
-        let agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
-        if (huggingEdge) agility = Math.max(agility, 2.3);
-        const maxTurn = agility * dt;
-        const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
-        sh.heading += turned;
-        sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
-        const cruise = 30 + L * 0.04;
-        const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
-        sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
-        sh.phase += dt * (2 + sh.speed / 24);
-        nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
-        nodes[1] += Math.sin(sh.heading) * sh.speed * dt;
-        nodes[0] = clamp(nodes[0], 12, W - 12);
-        nodes[1] = clamp(nodes[1], 16, H - 16);
+        const turned = dir !== sh.orbitDir;
+        sh.orbitDir = dir;
+        if (turned) sh.speed *= 0.42;
+        const cruise = 32 + L * 0.02;
+        sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.8);
+        const desired = dir > 0 ? 0 : Math.PI;
+        const maxTurn = 1.85 * dt;
+        const dh = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
+        sh.heading += dh;
+        sh.turn = dh / Math.max(dt, 1e-4);
+        sh.phase += dt * (sh.speed / Math.max(48, L * 0.22)) * 7.5;
+        const yPull = clamp(laneY - hy, -1, 1) * 16 * dt;
+        nodes[0] = hx + Math.cos(sh.heading) * sh.speed * dt;
+        nodes[1] = hy + Math.sin(sh.heading) * sh.speed * dt * 0.35 + yPull;
         const seg = L / (SHARK_NODES - 1);
-        const maxBend = 0.16;
+        const maxBend = 0.2;
         let prevAngle = sh.heading + Math.PI;
         for (let k = 1; k < SHARK_NODES; k++) {
           const px = nodes[(k - 1) * 2];
@@ -540,28 +469,14 @@
         }
         let shiftX = 0;
         let shiftY = 0;
-        if (minX < 10) shiftX = 10 - minX;
-        else if (maxX > W - 10) shiftX = W - 10 - maxX;
-        if (minY < 28) shiftY = 28 - minY;
-        else if (maxY > H - 14) shiftY = H - 14 - maxY;
+        if (minX < 14) shiftX = 14 - minX;
+        else if (maxX > W - 14) shiftX = W - 14 - maxX;
+        if (minY < navFloor) shiftY = navFloor - minY;
+        else if (maxY > H - 18) shiftY = H - 18 - maxY;
         if (shiftX !== 0 || shiftY !== 0) {
           for (let k = 0; k < SHARK_NODES; k++) {
             nodes[k * 2] += shiftX;
             nodes[k * 2 + 1] += shiftY;
-          }
-        }
-        if (sh.hunger > 0.15) {
-          const mouthR = L * 0.05 + 8;
-          const mx = nodes[0];
-          const my = nodes[1];
-          for (const f of this.fish) {
-            if (!f.alive) continue;
-            if ((f.x - mx) ** 2 + (f.y - my) ** 2 < mouthR * mouthR) {
-              f.alive = false;
-              f.respawnAt = time + rand(3, 8);
-              sh.hunger = Math.max(0, sh.hunger - 0.16);
-              this.events.push({ kind: "eat", x: f.x, y: f.y });
-            }
           }
         }
       }
@@ -1031,7 +946,7 @@
       const { ctx, cw, ch } = this;
       const keep = [];
       ctx.save();
-      ctx.font = `500 ${Math.max(8, Math.round(ch * 0.68))}px ${this.fontFamily}`;
+      ctx.font = `500 ${Math.max(11, Math.round(ch * 0.95))}px ${this.fontFamily}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       for (const rip of this.ripples) {
@@ -1040,22 +955,24 @@
         keep.push(rip);
         const u = rip.age / rip.life;
         const ease = 1 - (1 - u) * (1 - u);
-        const alpha = (1 - ease) * 0.15;
-        if (alpha < 0.02) continue;
+        const fade = (1 - ease) * (1 - ease);
+        const alphaGold = fade * 0.28;
+        const alphaGrey = fade * 0.16;
+        if (alphaGold < 0.03) continue;
         for (let ring = 0; ring < 2; ring++) {
-          const radius = rip.maxR * (0.28 + 0.72 * ease) * (ring === 0 ? 1 : 0.62);
-          if (radius < cw * 0.6) continue;
-          const count = ring === 0 ? 18 : 11;
+          const radius = rip.maxR * (0.34 + 0.66 * ease) * (ring === 0 ? 1 : 0.66);
+          if (radius < cw * 0.5) continue;
+          const count = ring === 0 ? 22 : 14;
           for (let i = 0; i < count; i++) {
-            if (hash3(i, ring + 2, (rip.x / cw | 0) + 5) < 0.22) continue;
+            if (hash3(i, ring + 2, (rip.x / cw | 0) + 5) < 0.12) continue;
             const a = i / count * Math.PI * 2 + ring * 0.55;
             const px = rip.x + Math.cos(a) * radius;
             const py = rip.y + Math.sin(a) * radius;
             const col = Math.floor(px / cw);
             const row = Math.floor(py / ch);
             if (col < 0 || row < 0 || col >= this.cols || row >= this.rows) continue;
-            const edge = ring === 0 && ease > 0.42;
-            ctx.globalAlpha = alpha;
+            const edge = ring === 0;
+            ctx.globalAlpha = edge ? alphaGold : alphaGrey;
             ctx.fillStyle = edge ? "#E8A05C" : "#D0CCC6";
             ctx.fillText(i % 2 === 0 ? "\xB7" : "\u02DA", col * cw + cw / 2, row * ch + ch / 2);
           }
@@ -1297,8 +1214,8 @@
           tx /= tl;
           ty /= tl;
           const koiWave = sh.kind === "koi";
-          const amp = koiWave ? L * 0.015 * Math.pow(s, 2.2) * swim : L * 0.05 * (0.1 + 0.9 * Math.pow(s, 1.8)) * swim;
-          const off = amp * Math.sin(sh.phase - s * (koiWave ? 1.7 : 5.2));
+          const amp = koiWave ? L * (8e-3 + 0.055 * Math.pow(s, 1.45)) * swim : L * 0.05 * (0.1 + 0.9 * Math.pow(s, 1.8)) * swim;
+          const off = amp * Math.sin(sh.phase - s * (koiWave ? 2.4 : 5.2));
           spine[k * 2] = n[k * 2] - ty * off;
           spine[k * 2 + 1] = n[k * 2 + 1] + tx * off;
         }
@@ -1689,7 +1606,7 @@
           const b = sharks[j];
           const d = Math.hypot(a.nodes[0] - b.nodes[0], a.nodes[1] - b.nodes[1]);
           const key = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
-          if (d < 150) {
+          if (d < 180) {
             next.add(key);
             if (!this.closePairs.has(key)) {
               this.renderer.spawnRipple((a.nodes[0] + b.nodes[0]) / 2, (a.nodes[1] + b.nodes[1]) / 2);

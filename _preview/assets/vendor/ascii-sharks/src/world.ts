@@ -148,16 +148,16 @@ export class World {
       const length = baseLength * size;
       const orbitRadius = minSide * rand(0.22, 0.34);
       const laneLeft = i % 2 === 0;
-      const orbitDir: 1 | -1 = laneLeft ? -1 : 1;
-      const slotY = [0.42, 0.58, 0.26, 0.74, 0.5][i] ?? 0.5;
-      const x = (laneLeft ? W * 0.26 : W * 0.74) + rand(-W * 0.015, W * 0.015);
-      const y = H * slotY;
-      const heading = (laneLeft ? Math.PI : 0) + rand(-0.08, 0.08);
+      const orbitDir: 1 | -1 = i === 0 ? 1 : laneLeft ? -1 : 1;
+      const slots = [0.43, 0.58, 0.7, 0.3, 0.84];
+      const x = i === 0 ? W * 0.34 : laneLeft ? W * 0.16 : W * 0.84;
+      const y = H * (slots[i] ?? 0.5);
+      const heading = orbitDir > 0 ? 0 : Math.PI;
       const nodes = new Float32Array(SHARK_NODES * 2);
       const seg = length / (SHARK_NODES - 1);
       for (let n = 0; n < SHARK_NODES; n++) {
         nodes[n * 2] = x - Math.cos(heading) * seg * n;
-        nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
+        nodes[n * 2 + 1] = y;
       }
       this.sharks.push({
         id: i + 1,
@@ -460,148 +460,51 @@ export class World {
   }
 
   private stepSharks(dt: number) {
-    const { sharks, width: W, height: H, time } = this;
-    const cxW = W / 2;
+    const { sharks, width: W, height: H } = this;
+    const navFloor = Math.max(108, H * 0.16);
+    const slots = [0.43, 0.58, 0.7, 0.3, 0.84];
+    // Only the title fish (id 1) reaches the copy. The other four stay in the side bands.
+    const inners = [0.56, 0.6, 0.34, 0.68, 0.32];
 
     for (const sh of sharks) {
       const L = sh.length;
       const nodes = sh.nodes;
+      const laneLeft = sh.id % 2 === 1;
+      const laneY = clamp(H * (slots[sh.id - 1] ?? 0.5), navFloor + 20, H - 36);
+      const outer = laneLeft ? Math.max(48, W * 0.09) : Math.min(W - 48, W * 0.91);
+      const inner = W * (inners[sh.id - 1] ?? (laneLeft ? 0.34 : 0.66));
       const hx = nodes[0];
       const hy = nodes[1];
+      let dir: 1 | -1 = sh.orbitDir;
+      const lead = 64;
 
-      sh.hunger = Math.min(1, sh.hunger + dt * 0.03);
-
-      // Momentum.
-      let dx = Math.cos(sh.heading);
-      let dy = Math.sin(sh.heading);
-
-      // Light yaw only — not enough to pull a lane cruise into a circle.
-      sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 1.1, -0.35, 0.35);
-      dx += Math.cos(sh.heading + sh.wander) * 0.12;
-      dy += Math.sin(sh.heading + sh.wander) * 0.12;
-
-      // Quiet center column. Push is light so a flank can cross the type.
-      const navClear = Math.max(72, H * 0.1);
-      const colHalf = Math.min(188, W * 0.145);
-      const colTop = H * 0.33;
-      const colBot = H * 0.7;
-      // id is i+1, and even i spawned on the left. Odd ids stay in the left corridor.
-      const laneLeft = sh.id % 2 === 1;
-      const laneX = laneLeft ? W * 0.26 : W * 0.74;
-      const slotY = [0.42, 0.58, 0.26, 0.74, 0.5][sh.id - 1] ?? 0.5;
-      const laneY = H * slotY;
-
-      const preyQuiet = (px: number, py: number) =>
-        (Math.abs(px - cxW) < colHalf && py > colTop && py < colBot) ||
-        (py < navClear + 28 && Math.abs(px - cxW) < W * 0.32);
-
-      // Hunt only outside the quiet zones, so pursuit doesn't drag the school through center/nav.
-      if (time >= sh.retargetAt) {
-        sh.target = this.findPrey(sh);
-        sh.retargetAt = time + 0.45;
-      }
-      const t = sh.target;
-      let hunting = false;
-      let closing = 0;
-      if (t && t.alive && sh.hunger > 0.45 && !preyQuiet(t.x, t.y)) {
-        const tx = t.x + t.vx * 0.35 - hx;
-        const ty = t.y + t.vy * 0.35 - hy;
-        const d = Math.hypot(tx, ty) || 1;
-        const w = 1.1 + 1.6 * sh.hunger;
-        dx += (tx / d) * w;
-        dy += (ty / d) * w;
-        hunting = true;
-        closing = clamp(1 - d / (L * 0.9), 0, 1);
+      if (laneLeft) {
+        if (dir < 0 && hx <= outer + lead) dir = 1;
+        if (dir > 0 && hx >= inner - lead) dir = -1;
       } else {
-        hunting = false;
+        if (dir > 0 && hx >= outer - lead) dir = -1;
+        if (dir < 0 && hx <= inner + lead) dir = 1;
       }
+      const turned = dir !== sh.orbitDir;
+      sh.orbitDir = dir;
+      if (turned) sh.speed *= 0.42;
 
-      // Cruise along the lane once the snout is in it. The spring wins near the screen edge
-      // so a fish is not pinned outside the copy, and the body can lie across the type.
-      const along = Math.cos(sh.heading) >= 0 ? 1 : -1;
-      const laneErr = Math.abs(hx - laneX);
-      if (!hunting && laneErr < W * 0.08) dx += along * 0.55;
-      const spring = hunting ? 1.05 : 2.05;
-      dx += clamp((laneX - hx) / (W * 0.14), -1, 1) * spring;
-      dy += clamp((laneY - hy) / (H * 0.2), -1, 1) * spring * 0.62;
-      if (laneLeft && hx < W * 0.14 && Math.cos(sh.heading) > 0) dx -= 1.6;
-      if (!laneLeft && hx > W * 0.86 && Math.cos(sh.heading) < 0) dx += 1.6;
+      const cruise = 32 + L * 0.02;
+      sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.8);
+      const desired = dir > 0 ? 0 : Math.PI;
+      const maxTurn = 1.85 * dt;
+      const dh = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
+      sh.heading += dh;
+      sh.turn = dh / Math.max(dt, 1e-4);
+      // Wave travels with swim speed so the body does not look like it is sliding.
+      sh.phase += dt * (sh.speed / Math.max(48, L * 0.22)) * 7.5;
 
-      // Give other sharks room.
-      for (const other of sharks) {
-        if (other === sh) continue;
-        for (let k = 0; k < SHARK_NODES; k += 4) {
-          const ox = hx - other.nodes[k * 2];
-          const oy = hy - other.nodes[k * 2 + 1];
-          const d = Math.hypot(ox, oy);
-          const range = (L + other.length) * 0.22;
-          if (d < range && d > 1e-3) {
-            const w = (1 - d / range) * 1.15;
-            dx += (ox / d) * w;
-            dy += (oy / d) * w;
-          }
-        }
-      }
+      const yPull = clamp(laneY - hy, -1, 1) * 16 * dt;
+      nodes[0] = hx + Math.cos(sh.heading) * sh.speed * dt;
+      nodes[1] = hy + Math.sin(sh.heading) * sh.speed * dt * 0.35 + yPull;
 
-      // Light nudge out of the copy. The flank may still sit on the glyphs.
-      const nx = (hx - cxW) / colHalf;
-      const midY = (colTop + colBot) / 2;
-      const ny = (hy - midY) / ((colBot - colTop) / 2);
-      const inCopy = nx * nx + ny * ny < 1;
-      if (inCopy) {
-        const e = Math.sqrt(nx * nx + ny * ny) || 1e-3;
-        const w = (1 - e) * 0.55;
-        dx += (nx / e) * w;
-      }
-
-      // Top-center and bottom-center are outside the copy. Snout or belly, send them back.
-      const belly = Math.min(SHARK_NODES - 1, 8);
-      const bx = nodes[belly * 2];
-      const by = nodes[belly * 2 + 1];
-      const snoutCenter = Math.abs(hx - cxW) < W * 0.18 && (hy < colTop || hy > colBot);
-      const bellyCenter = Math.abs(bx - cxW) < W * 0.16 && (by < colTop || by > colBot);
-      if (snoutCenter || bellyCenter) {
-        const ref = bellyCenter ? bx : hx;
-        dx += (ref < cxW ? -1 : 1) * 1.85;
-        dy += clamp((laneY - hy) / (H * 0.2), -1, 1) * 0.85;
-      }
-
-      // Only the band directly under the top-center nav, not a ceiling over the title.
-      if (hy < navClear && Math.abs(hx - cxW) < W * 0.26) {
-        const w = (1 - Math.max(0, hy) / navClear) * 1.5;
-        dy += w;
-        dx += (hx < cxW ? -1 : 1) * w;
-      }
-
-      if (hx < 30) dx += 2.1;
-      else if (hx > W - 30) dx -= 2.1;
-      if (hy < 20) dy += 1.6;
-      else if (hy > H - 20) dy -= 1.6;
-
-      const desired = Math.atan2(dy, dx);
-      // Sharks can't pivot on the spot: the turning circle grows with speed.
-      const huggingEdge = hx < 42 || hx > W - 42 || hy < 28 || hy > H - 28;
-      let agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
-      if (huggingEdge) agility = Math.max(agility, 2.3);
-      const maxTurn = agility * dt;
-      const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
-      sh.heading += turned;
-      sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
-
-      const cruise = 30 + L * 0.04;
-      const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
-      sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
-      sh.phase += dt * (2 + sh.speed / 24);
-
-      nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
-      nodes[1] += Math.sin(sh.heading) * sh.speed * dt;
-      nodes[0] = clamp(nodes[0], 12, W - 12);
-      nodes[1] = clamp(nodes[1], 16, H - 16);
-
-      // Follow-the-leader spine, with a stiffness limit per joint so the
-      // body bends into a C at most and never folds back on itself.
       const seg = L / (SHARK_NODES - 1);
-      const maxBend = 0.16;
+      const maxBend = 0.2;
       let prevAngle = sh.heading + Math.PI;
       for (let k = 1; k < SHARK_NODES; k++) {
         const px = nodes[(k - 1) * 2];
@@ -625,35 +528,18 @@ export class World {
       }
       let shiftX = 0;
       let shiftY = 0;
-      if (minX < 10) shiftX = 10 - minX;
-      else if (maxX > W - 10) shiftX = W - 10 - maxX;
-      if (minY < 28) shiftY = 28 - minY;
-      else if (maxY > H - 14) shiftY = H - 14 - maxY;
+      if (minX < 14) shiftX = 14 - minX;
+      else if (maxX > W - 14) shiftX = W - 14 - maxX;
+      if (minY < navFloor) shiftY = navFloor - minY;
+      else if (maxY > H - 18) shiftY = H - 18 - maxY;
       if (shiftX !== 0 || shiftY !== 0) {
         for (let k = 0; k < SHARK_NODES; k++) {
           nodes[k * 2] += shiftX;
           nodes[k * 2 + 1] += shiftY;
         }
       }
-
-      // Feed.
-      if (sh.hunger > 0.15) {
-        const mouthR = L * 0.05 + 8;
-        const mx = nodes[0];
-        const my = nodes[1];
-        for (const f of this.fish) {
-          if (!f.alive) continue;
-          if ((f.x - mx) ** 2 + (f.y - my) ** 2 < mouthR * mouthR) {
-            f.alive = false;
-            f.respawnAt = time + rand(3, 8);
-            sh.hunger = Math.max(0, sh.hunger - 0.16);
-            this.events.push({ kind: "eat", x: f.x, y: f.y });
-          }
-        }
-      }
     }
   }
-
   /**
    * Pick prey in the shark's forward cone, preferring close fish in sparse
    * buckets (stragglers) over fish buried in a dense school.

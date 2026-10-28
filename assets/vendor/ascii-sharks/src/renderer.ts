@@ -485,7 +485,7 @@ export class AsciiRenderer {
     const { ctx, cw, ch } = this;
     const keep: typeof this.ripples = [];
     ctx.save();
-    ctx.font = `500 ${Math.max(8, Math.round(ch * 0.68))}px ${this.fontFamily}`;
+    ctx.font = `500 ${Math.max(11, Math.round(ch * 0.95))}px ${this.fontFamily}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     for (const rip of this.ripples) {
@@ -494,22 +494,24 @@ export class AsciiRenderer {
       keep.push(rip);
       const u = rip.age / rip.life;
       const ease = 1 - (1 - u) * (1 - u);
-      const alpha = (1 - ease) * 0.15;
-      if (alpha < 0.02) continue;
+      const fade = (1 - ease) * (1 - ease);
+      const alphaGold = fade * 0.28;
+      const alphaGrey = fade * 0.16;
+      if (alphaGold < 0.03) continue;
       for (let ring = 0; ring < 2; ring++) {
-        const radius = rip.maxR * (0.28 + 0.72 * ease) * (ring === 0 ? 1 : 0.62);
-        if (radius < cw * 0.6) continue;
-        const count = ring === 0 ? 18 : 11;
+        const radius = rip.maxR * (0.34 + 0.66 * ease) * (ring === 0 ? 1 : 0.66);
+        if (radius < cw * 0.5) continue;
+        const count = ring === 0 ? 22 : 14;
         for (let i = 0; i < count; i++) {
-          if (hash3(i, ring + 2, ((rip.x / cw) | 0) + 5) < 0.22) continue;
+          if (hash3(i, ring + 2, ((rip.x / cw) | 0) + 5) < 0.12) continue;
           const a = (i / count) * Math.PI * 2 + ring * 0.55;
           const px = rip.x + Math.cos(a) * radius;
           const py = rip.y + Math.sin(a) * radius;
           const col = Math.floor(px / cw);
           const row = Math.floor(py / ch);
           if (col < 0 || row < 0 || col >= this.cols || row >= this.rows) continue;
-          const edge = ring === 0 && ease > 0.42;
-          ctx.globalAlpha = alpha;
+          const edge = ring === 0;
+          ctx.globalAlpha = edge ? alphaGold : alphaGrey;
           ctx.fillStyle = edge ? "#E8A05C" : "#D0CCC6";
           ctx.fillText(i % 2 === 0 ? "·" : "˚", col * cw + cw / 2, row * ch + ch / 2);
         }
@@ -794,9 +796,9 @@ export class AsciiRenderer {
         ty /= tl;
         const koiWave = sh.kind === "koi";
         const amp = koiWave
-          ? L * 0.015 * Math.pow(s, 2.2) * swim
+          ? L * (0.008 + 0.055 * Math.pow(s, 1.45)) * swim
           : L * 0.05 * (0.1 + 0.9 * Math.pow(s, 1.8)) * swim;
-        const off = amp * Math.sin(sh.phase - s * (koiWave ? 1.7 : 5.2));
+        const off = amp * Math.sin(sh.phase - s * (koiWave ? 2.4 : 5.2));
         spine[k * 2] = n[k * 2] - ty * off;
         spine[k * 2 + 1] = n[k * 2 + 1] + tx * off;
       }

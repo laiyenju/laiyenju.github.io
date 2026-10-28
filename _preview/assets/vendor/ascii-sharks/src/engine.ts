@@ -146,7 +146,7 @@ export class OceanEngine {
         const b = sharks[j];
         const d = Math.hypot(a.nodes[0] - b.nodes[0], a.nodes[1] - b.nodes[1]);
         const key = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
-        if (d < 150) {
+        if (d < 180) {
           next.add(key);
           if (!this.closePairs.has(key)) {
             this.renderer.spawnRipple((a.nodes[0] + b.nodes[0]) / 2, (a.nodes[1] + b.nodes[1]) / 2);
