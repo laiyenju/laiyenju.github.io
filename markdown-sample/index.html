@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown sample</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body class="lang-en page-article">
+  <div class="sheet">
+    <article class="article-page">
+      <div class="article-column">
+        <header class="article-header">
+          <a class="back-link" href="../index.html" aria-label="Back">←</a>
+          <h1 class="article-title" style="font-family: var(--font-latin);">Markdown sample</h1>
+          <p class="article-meta"><time>2026-03-01</time></p>
+          <div class="amber-hairline" aria-hidden="true"></div>
+        </header>
+        <div class="body-with-fn">
+          <div class="reveal-host">
+            <div class="prose reveal-source">
+              <p>Writing is a quiet practice. <strong>Bold</strong> marks a stress; <em>italic</em> softens tone; <del>struck text</del> lets go.</p>
+              <p>重點可用 <mark>amber wash</mark> 標出一句你希望讀者停留的話。</p>
+              <p>Latin sits in <mark>Quattro</mark>; Hanzi in <mark>Noto Sans TC</mark>. Path: <code>published/</code><sup id="fnref:1"><a href="#fn:1" class="footnote" rel="footnote">1</a></sup></p>
+              <h2>Headings</h2>
+              <h3>A smaller step</h3>
+              <p>Enough space under a third-level heading.</p>
+              <pre><code>title: hello
+path: published/hello.md</code></pre>
+              <blockquote><p>Less is more — if the little that remains is right.</p></blockquote>
+              <table>
+                <thead><tr><th>Element</th><th>Role</th><th>Feel</th></tr></thead>
+                <tbody>
+                  <tr><td>Title</td><td>Hierarchy</td><td>Clear</td></tr>
+                  <tr><td>Body</td><td>Body</td><td>Quiet</td></tr>
+                  <tr><td>Footnote</td><td>Footnote</td><td>Aside</td></tr>
+                </tbody>
+              </table>
+              <div class="footnotes"><ol>
+                <li id="fn:1">Side rail on wide screens; footnotes move to the end on narrow ones.<a href="#fnref:1" class="reversefootnote">&#8617;</a></li>
+              </ol></div>
+            </div>
+            <div class="prose reveal-live" aria-live="polite"></div>
+          </div>
+          <aside class="footnote-side" aria-label="Footnotes"></aside>
+        </div>
+        <div class="footnote-bottom" aria-label="Footnotes"></div>
+        <div class="ascii-article-footer" aria-hidden="true">  ⟨ text ⟩
+    ···|</div>
+      </div>
+      <div class="scroll-reveal-controls" role="group" aria-label="Reading reveal controls">
+        <button type="button" data-action="pause">Pause</button>
+        <span class="sep" aria-hidden="true"></span>
+        <button type="button" data-action="fast">≫ Fast</button>
+        <span class="sep" aria-hidden="true"></span>
+        <span class="hint">scroll = reveal</span>
+      </div>
+    </article>
+  </div>
+  <script src="../assets/js/site.js" defer></script>
+</body>
+</html>
