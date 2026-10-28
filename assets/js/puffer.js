@@ -48,6 +48,103 @@
   };
   var FRAME_STATES = [GRIDS.rest, GRIDS.mid, GRIDS.full];
   var BLEND_ROWS = new Array(FRAME_ROWS);
+  /* '1' / '2' where idle adds a light spine around the locked rest body. */
+  var SPINE_MASK = null;
+
+  /**
+   * Rest frame is a small lens. Grow it one contour step — outward spines
+   * on cells mid already inks — so idle reads as a 河豚. Mid/full grids stay locked.
+   */
+  (function augmentRest() {
+    var rest = GRIDS.rest;
+    var mid = GRIDS.mid;
+    var body = {};
+    var y, x, ch;
+    for (y = 0; y < FRAME_ROWS; y++) {
+      for (x = 0; x < FRAME_COLS; x++) {
+        ch = rest[y].charAt(x);
+        if (ch !== " " && ch !== "~") body[x + "," + y] = true;
+      }
+    }
+    function ringAround(src, blocked) {
+      var out = {};
+      var key, parts, px, py, dy, dx, nx, ny, k;
+      for (key in src) {
+        if (!Object.prototype.hasOwnProperty.call(src, key)) continue;
+        parts = key.split(",");
+        px = +parts[0];
+        py = +parts[1];
+        for (dy = -1; dy <= 1; dy++) {
+          for (dx = -1; dx <= 1; dx++) {
+            if (!dx && !dy) continue;
+            nx = px + dx;
+            ny = py + dy;
+            if (nx < 0 || ny < 0 || nx >= FRAME_COLS || ny >= FRAME_ROWS) continue;
+            k = nx + "," + ny;
+            if (blocked[k] || src[k]) continue;
+            if (mid[ny].charAt(nx) === " ") continue;
+            out[k] = [nx, ny];
+          }
+        }
+      }
+      return out;
+    }
+    function outwardGlyph(nx, ny) {
+      var sx = 0;
+      var sy = 0;
+      var n = 0;
+      var dy, dx, k;
+      for (dy = -2; dy <= 2; dy++) {
+        for (dx = -2; dx <= 2; dx++) {
+          k = nx + dx + "," + (ny + dy);
+          if (!body[k]) continue;
+          sx += nx + dx;
+          sy += ny + dy;
+          n++;
+        }
+      }
+      var ax = n ? nx - sx / n : 0;
+      var ay = n ? ny - sy / n : -1;
+      var adx = Math.abs(ax);
+      var ady = Math.abs(ay);
+      // Belly stays a short tick so idle doesn't grow a bar curtain.
+      if (ay > adx * 0.45) return "'";
+      if (ady > adx * 1.2) return "|";
+      if (adx > ady * 1.2) return ":";
+      return ax * ay >= 0 ? "\\" : "/";
+    }
+    var ring1 = ringAround(body, body);
+    var blocked = {};
+    var key;
+    for (key in body) blocked[key] = true;
+    for (key in ring1) blocked[key] = true;
+    var ring2 = ringAround(ring1, blocked);
+    var rows = [];
+    var mask = [];
+    for (y = 0; y < FRAME_ROWS; y++) {
+      rows.push(rest[y].split(""));
+      mask.push(new Array(FRAME_COLS + 1).join("0"));
+    }
+    function paint(ring, mark) {
+      var k, nx, ny, glyph, chars;
+      for (k in ring) {
+        if (!Object.prototype.hasOwnProperty.call(ring, k)) continue;
+        nx = ring[k][0];
+        ny = ring[k][1];
+        glyph = outwardGlyph(nx, ny);
+        rows[ny][nx] = glyph;
+        chars = mask[ny].split("");
+        chars[nx] = mark;
+        mask[ny] = chars.join("");
+      }
+    }
+    paint(ring1, "1");
+    GRIDS.rest = rows.map(function (chars) {
+      return chars.join("");
+    });
+    FRAME_STATES[0] = GRIDS.rest;
+    SPINE_MASK = mask;
+  })();
 
   function easeInOut(t) {
     return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -328,7 +425,7 @@
 
     var breath = (Math.sin(t * 0.7) + 1) / 2;
     breath = easeInOut(breath);
-    var idle = breath * 0.2; // stays inside the rest frame
+    var idle = breath * 0.16; // rest body + light spines; below the mid swap
 
     var target = idle;
     if (t < p.holdFullUntil) {
@@ -496,6 +593,7 @@
     this.fishCw = layout.fishCw;
     this.fishCh = layout.fishCh;
     this.frameGrid = grid;
+    this.inflateLevel = p.inflate;
     var cols = this.cols;
     var rows = this.rows;
     for (var r = 0; r < FRAME_ROWS; r++) {
@@ -530,7 +628,11 @@
       for (var c = 0; c < FRAME_COLS; c++) {
         var glyph = line.charAt(c);
         if (glyph === " ") continue;
-        ctx.fillStyle = glyphInk(glyph).rgba;
+        var mark =
+          SPINE_MASK && this.inflateLevel < 0.5 ? SPINE_MASK[r].charAt(c) : "0";
+        if (mark === "1") ctx.fillStyle = "rgba(63,60,55,0.58)";
+        else if (mark === "2") ctx.fillStyle = "rgba(63,60,55,0.4)";
+        else ctx.fillStyle = glyphInk(glyph).rgba;
         ctx.fillText(glyph, ox + (c + 0.5) * cw, yy);
       }
     }
