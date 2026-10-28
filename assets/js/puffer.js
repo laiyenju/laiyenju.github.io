@@ -4,10 +4,12 @@
  * Adapted from ascii-sharks (MIT) https://github.com/stackedlol/ascii-sharks
  * Copyright (c) 2026 drewdi — OceanEngine / AsciiRenderer patterns:
  * fixed timestep, offscreen pause, prefers-reduced-motion → still, DPR≤2,
- * SKIN_RAMP + supersampled silhouette + wake diffusion.
+ * wake diffusion. The 河豚 itself is the locked glyph frames, not a sampled blob.
  *
- * Motif change: paper-white (#fafaf7) transparent canvas, dark ink glyphs,
- * one 河豚 with rest/mid/full inflate — not shark schools / dark ocean / cyan wakes.
+ * Motif change: paper-white (#fafaf7) transparent canvas, dark ink glyphs.
+ * Creature: Ink-locked 96×42 rest/mid/full frames composited upright into the
+ * field (eyes and spine stay the locked glyphs). Hover lerps toward mid;
+ * click holds full. Drift does not rotate or chase.
  *
  * API: Puffer.mount(el, opts), Puffer.destroy(el), Puffer.setState(el, state)
  */
@@ -17,15 +19,99 @@
   var TAU = Math.PI * 2;
   var STEP = 1 / 60;
   var MAX_STEPS = 4;
-  var SKIN_RAMP = ":;t%SX8#@";
-  var EDGE_HEAVY = ":;";
-  var EDGE_LIGHT = ".',`";
-  var SPINE_GLYPHS = "|;:/\\";
   var FIELD_GLYPHS = "·:.'`,;:~-";
-  var PAPER = "#fafaf7";
   var INK = [28, 27, 25];
-  var SUBSAMPLES = [0.25, 0.3, 0.75, 0.3, 0.25, 0.72, 0.75, 0.72];
-  var PUFFER_NODES = 14;
+
+  /* Ink-locked 96×42 frames. Creature layer only — the field stays procedural. */
+  var FRAME_COLS = 96;
+  var FRAME_ROWS = 42;
+  var FRAME_TEXT = {
+    rest: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                          ,,,%``.'%`.'                                          \n                                     '.8@@@@#8###@@@:...#`.                                     \n                                  .`##@#X#8#8S88X.:......::@''                                  \n                                 `X#88SS888XSXSS.:(\u00b7)..(\u00b7):..X.                                 \n                               %''XS8SSX%XXSX%8.:::.....:::::#,,                                \n                               :,`8XXX8%XXSX%SXX..::::-:::..@8`.                                \n                                 ,8SX8XSX%XX%S%%S:::.::.::.8#'.                                 \n                                  .,8XXSXtt%S%S%S%SSS%SX####',                                  \n                                     ,'8SSX8S8S8X888XXX#X`'                                     \n                                          .`..',`'t;;%S                                         \n                                                                                                \n                                        ..~~~~~~~~~~~~~..                                       \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
+    mid: "                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                           tttStt%SS:                                           \n                                           ::t;%,,;SS                                           \n                                       ''`.,,'`.#@,,,`,,,                                       \n                                  `,,,.`@@#@#@@@#@###@##''',,                                   \n                               .`,'`@@#@8##@#8#@#@@@@@@@#@@@'',,'.                              \n                             '.'`###888@@@8#8#@#8@@@888#@@@@@###`,'                             \n                            ',.88@####8###X##XX88#8XX#X#@@@@@#@#@..,                            \n                          `''8##8##X#X88#S88888SXSS#8X88#8#8@@@#@@.`.                           \n                         '``8#8XX#8XXXXXXSSSSX88X8SSSSSXXXX#8#@#@#@#,'                          \n                        `',XXX#X#88XSXXS8X%8X%XX%SXX8S.:SX8#88#@@8#@@`.                         \n                       `'.####XXXX8XS88%XSXX%%SSX8.::...::::8X8#88#@@``,                        \n                      .'8#X8SX88X8SXXSXX%XSXS%XX:.:......:::..XXX###@@,,'                       \n                      :'.#8XXSSS88SXSS%%XXXXSXX..:(\u00b7)...:(\u00b7).::#8X@8@@@`,'                      \n                    S;%.,8X#XSS8S%%%X%%S%XXSX%8.:::.....::::::.#8X@8##@''                       \n                    %;:'.XXX8SS8XSSSSSX%XXSX%S8...::::::::..:.:8X###8#`.,                       \n                      t,,SX8XX8S%XX%SXXSX%XX%S%S.:::.::-::...:8X#8#@@@'`                        \n                       .,;8SS8XS%%SXXSSSX%%SXSSSXX.::::..:.:SX8X#XX#@@,,                        \n                        ``XSXXXS%SS%XS%X%%SX%S%XSXXXXSS8SX88SSSS88#8@',.                        \n                        '';8888StSSt%%%SS%tt%S%S%tStSttS%SS%XSXX8X#8@'`                         \n                        ,'.XX88XSXS%t%t%tS%%%%%StSt%tS%%SSSXS%#X88X8''                          \n                         '``,SXXXXSSSS%%S%%SStSt%tt%%SS%XSXSSX888X88.,                          \n                            ,``XS8%SXXt%%S%S%%t%tSS%SS%%XS88#XX8#'`,                            \n                             `.'.XX88XSXS%SSS%t%XXSSXX8SS88X#8X...                              \n                                ','`8XX888SSXXX8S88XS8SX8X#8.,`,                                \n                                   '.'S8SSXX888SSS8888XX8,'.`                                   \n                                     `''','`,,.``,``'..`';;                                     \n                                                    :;S;;%:                                     \n                                                                                                \n                                   ...~~~~~~~~~~~~~~~~~~~~~...                                  \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n                                                                                                \n",
+    full: "                                         %t...,``@.`.%:                                         \n                                   ''.,..,,,,.'##@@#.,'```.`.                                   \n                               `','.`'`.;:@@#@@@##@###::,`',,,,,'                               \n                       ...`'`..'''';@@@@@#@#@@#@@#@@@#@@@@@@;'''...`                            \n                       '`';#'.`:@#@@@8@#8###88##8#8#@@@@@@#@@#@@..`''``,,''                     \n                       '':####@@###8@@@8#@@888#####8@##8@@@@##@@##@,`..`'`'                     \n                      .'`;8@@@88@88@@#@#@X@888X@#8#8@@##@#8@@@@@@#@@@@#@#..                     \n                    .`.'`#@88#@@@#XXX#XXX#X888X88X88X888##@#@###@@@@@@##:``'                    \n                   ,.''@88#@8###8#X8#8#8X8XX#X##X8X88##8X##8####8@@#@###@.`',                   \n                  ,.,,#8@8X8###888X###XXXXX88888SXXX8X8##XX8#8#8#@@#@@##@#...'                  \n                 ',':888#X88X#8X#8#SX8SXX8S8S888SXSSS8SX88#8X8#8#@8#8@#@@@@;.`.                 \n                `,`;@8XXX#XXXX8XXXSSXXSXSXX8XSX8X88XXX8XSXX##8X888#8#@#@#@##:''`                \n               ..`;8@X###XXX8X88SXXXSSS888SXSX8XS8X8SSSX8X88XXXXX8#8@8#88@#@#;'..               \n              `'.:X88888888S888SS8X8XXS88X%XX%%SSXS%S8%X88888S8S8X8888@##@#@@@;.,,              \n             ''`'X#X##X##SSSXSXXS88SX%SSX%SXXXX%S%%XS%SS8XXS888SX8X8#X@##@#@#@@',,.             \n          ',`'`X###8#8#888X8S8XSSXS%SSSSS%%%%SXXSX%SSSS:.SS8SX8XXS#X#XX@@@@@#@@:`'`             \n         '`';8###8X88#SXS8SSSS8%XXXS%SS%XS%XS%XXSX.::..:...:.:X88SS888X88#@8##@@`,,.            \n          ',.'88#8#8XS8XSS8888%SSSXS%XX%XSXX%%SX.:.::...::::.:::SSXX#X8X8@8#@8@@@@',.'`         \n          :;,`.#88#S8XXXX8SXSSXXSX%SSSXX%XSXS%8::.:......:::..:..XXXX##X#8##8##@@@#;.'.         \n        t%;:'',88X8S88SSS8XSS%%%XX%SSS%%XXXXS8X..:(\u00b7)...:.(\u00b7)::..S8S8#8XXXX####8@@.`'`          \n       %%t:;''.88XS8X8888XS8S%%X%%%%X%%S%XXSXS:.:::.....::::::.::.8SXX#X#88###@@#,''            \n       ::;%t.',X888XS8S8XSSSX%%XXSSSSSX%XXSX%S8...::::::::..:.::.88XSSX#X#88888##`,.            \n        %ttt'.`X#8SS8SSXXSSXSSX%%XX%SXXSX%SX%%S:.:::.::.-:...:...X888X#XX#X@8@@##,``            \n          tS,``:8X8X8SX8S8X%%XS%%%SXXSSSXt%SXSSX8..::::..:.:...X8SSX888XXX#8@8@@;.',            \n            t'':88SS8XSSXSS%SSSS%SS%XS%X%%SX%S%XS88.::::::..:SS%XX8S8SXXX##888#8:'`,            \n             `,.XSS8SSXSSSSXXXX%%XX%SSSXXSt%SXSXStX%8SS8X8XSXSXXXSXS8XSX8#XX@8##'`'             \n             ',,:S8888SX%S%SSXXS%XXS%S%S%XSSSSSX%X%S%XSSXXSXS%XSXXSS8S#8888#@#8:`.'             \n             ',`,8XSXX8%%%S%%t%%%%%%SS%%S%%SStSt%tt%%SStS%S%tt%SS%S%X%SS8X8@#@@'''.             \n              ,`'SSS8S88%t%%%%S%tSt%%St%%S%S%%t%tSS%SSttS%S%SttSXX%SXSX8X8X@88`.,.              \n              ,`88SSSS888%S%%ttS%%%SS%tS%t%SS%t%SS%%SSSttSStSS%XXS%S%XX#X#XX@;'.`               \n             `''SX8XX8XXSSXSt%S%%%S%S%%SSStt%%%StSS%tSt%S%S%%S%XXSSSSX8XXX8#8@`''               \n             ''..'`':88SS8XX%t%tS%St%StStt%%SSStttSSSS%%S%t%%S%%%SS88X88XX#XX@;``               \n                 ',...S88SSSXXXStStt%tSS%%SSttt%%tt%%%Stt%SXXXX%%X#XX888#@@@;,,'.'              \n                   ..``888S8%8XX%%%SttStSSt%S%SSS%S%t%tt%%%XS%%XX8#88XX8X'`,,'```               \n                    ..'.'X8SXS88S%%%S%%%%S%S%%tt%S%t%%tSSXXXXXXXS##88XX.''``                    \n                      `,''`XXS8XS8SSSXtSS%StS%tSSt%SS%SXS888S8SXX8X#8..,,'                      \n                        '..,'XX8XXXSS8SXS8XX8%%X8X8XSXX8SSXSSXX#X##'.`',                        \n                          `,,,,`SXXSX%8SXSSSXSX88XXS88SX8SXX#8X#``',''                          \n                            ,.'''8X8XSXSSX8SS8S88XSSSXXXXXSS8..'.,,,                            \n                               ,,S8SX.``;:X8X888SXXXS8X8SS8S',','                               \n                               `.,`.,`..`,''''''',.'.','.8S...S                                 \n                             ...`''`~~~~~',``''``.'''S:%`'.'`S;.....                            \n"
+  };
+
+  function parseFrame(text) {
+    var lines = String(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    if (lines.length && lines[lines.length - 1] === "") lines.pop();
+    while (lines.length < FRAME_ROWS) lines.push(new Array(FRAME_COLS + 1).join(" "));
+    return lines.slice(0, FRAME_ROWS).map(function (line) {
+      if (line.length < FRAME_COLS) return line + new Array(FRAME_COLS - line.length + 1).join(" ");
+      return line.slice(0, FRAME_COLS);
+    });
+  }
+
+  var GRIDS = {
+    rest: parseFrame(FRAME_TEXT.rest),
+    mid: parseFrame(FRAME_TEXT.mid),
+    full: parseFrame(FRAME_TEXT.full)
+  };
+  var FRAME_STATES = [GRIDS.rest, GRIDS.mid, GRIDS.full];
+  var BLEND_ROWS = new Array(FRAME_ROWS);
+
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
+  function blendChar(ca, cb, t) {
+    if (t <= 0.02) return ca;
+    if (t >= 0.98) return cb;
+    if (ca === " " && cb === " ") return " ";
+    if (ca === " ") return t > 0.42 ? cb : " ";
+    if (cb === " ") return t < 0.58 ? ca : " ";
+    return t < 0.5 ? ca : cb;
+  }
+
+  function sampleGrid(level) {
+    level = clamp(level, 0, 2);
+    var i0 = Math.floor(level);
+    if (i0 >= 2) return GRIDS.full;
+    var t = level - i0;
+    var a = FRAME_STATES[i0];
+    var b = FRAME_STATES[i0 + 1];
+    if (t <= 0.02) return a;
+    if (t >= 0.98) return b;
+    for (var y = 0; y < FRAME_ROWS; y++) {
+      var la = a[y];
+      var lb = b[y];
+      var chars = new Array(FRAME_COLS);
+      for (var x = 0; x < FRAME_COLS; x++) chars[x] = blendChar(la.charAt(x), lb.charAt(x), t);
+      BLEND_ROWS[y] = chars.join("");
+    }
+    return BLEND_ROWS;
+  }
+
+  /** Fit the locked frame at field-cell size when the stage can hold 96×42. */
+  function fishLayout(width, height, cw, ch) {
+    cw = cw || 11;
+    ch = ch || 16;
+    var aligned = cw * FRAME_COLS <= width * 0.98 && ch * FRAME_ROWS <= height * 0.92;
+    var fishCw = cw;
+    var fishCh = ch;
+    if (!aligned) {
+      fishCw = (width * 0.92) / FRAME_COLS;
+      fishCh = fishCw * (ch / cw);
+      var maxH = height * 0.86;
+      if (fishCh * FRAME_ROWS > maxH) {
+        fishCh = maxH / FRAME_ROWS;
+        fishCw = fishCh * (cw / ch);
+      }
+    }
+    return {
+      fishCw: fishCw,
+      fishCh: fishCh,
+      gridW: fishCw * FRAME_COLS,
+      gridH: fishCh * FRAME_ROWS,
+      aligned: aligned
+    };
+  }
+
+  function glyphInk(ch) {
+    if (".,'`".indexOf(ch) >= 0) return { rgba: "rgba(63,60,55,0.62)" };
+    if (":;".indexOf(ch) >= 0) return { rgba: "rgba(63,60,55,0.8)" };
+    if ("·".indexOf(ch) >= 0 || ch === "(" || ch === ")") return { rgba: "rgba(28,27,25,1)" };
+    return { rgba: "rgba(28,27,25,0.94)" };
+  }
 
   function clamp(v, lo, hi) {
     return v < lo ? lo : v > hi ? hi : v;
@@ -111,41 +197,24 @@
       });
     }
 
-    var px = W * 0.58;
-    var py = H * 0.42;
-    var heading = rand(-0.4, 0.4);
-    var nodes = new Float32Array(PUFFER_NODES * 2);
-    var baseLen = clamp(Math.min(W, H) * 0.22, 90, 180);
-    var seg = baseLen / (PUFFER_NODES - 1);
-    for (var k = 0; k < PUFFER_NODES; k++) {
-      nodes[k * 2] = px - Math.cos(heading) * seg * k * 0.35;
-      nodes[k * 2 + 1] = py - Math.sin(heading) * seg * k * 0.35;
-    }
     this.puffer = {
-      x: px,
-      y: py,
-      heading: heading,
-      speed: 18,
-      phase: rand(0, TAU),
-      turn: 0,
-      wander: 0,
-      inflate: 0, // continuous 0..2
+      x: W * 0.5,
+      y: H * 0.48,
+      inflate: 0, // continuous 0 rest .. 1 mid .. 2 full
       targetInflate: 0,
       holdFullUntil: 0,
-      baseRadius: baseLen * 0.42,
-      nodes: nodes,
-      eyeBlink: 0
+      halfW: Math.min(W, H) * 0.22,
+      halfH: Math.min(W, H) * 0.16
     };
   };
 
   World.prototype.splash = function (x, y) {
     this.events.push({ kind: "splash", x: x, y: y });
     var p = this.puffer;
-    if (!p) return;
-    var d = Math.hypot(p.x - x, p.y - y);
-    if (d < p.baseRadius * (1.4 + p.inflate * 0.5) + 80) {
+    if (p) {
+      // Click anywhere on the stage: obvious full, then ease back.
       p.targetInflate = 2;
-      p.holdFullUntil = this.time + 1.8;
+      p.holdFullUntil = this.time + 1.9;
     }
     var r = 200;
     for (var i = 0; i < this.particles.length; i++) {
@@ -172,7 +241,8 @@
     var t = this.time;
     var cur = this._cur;
     var puf = this.puffer;
-    var fearR = puf ? puf.baseRadius * (1.2 + puf.inflate * 0.7) + 40 : 0;
+    var fearRx = puf ? puf.halfW || 160 : 0;
+    var fearRy = puf ? puf.halfH || 110 : 0;
 
     for (var i = 0; i < this.particles.length; i++) {
       var f = this.particles[i];
@@ -180,12 +250,13 @@
       var ax = cur.x * 0.35 + (Math.random() - 0.5) * 28;
       var ay = cur.y * 0.35 + (Math.random() - 0.5) * 28;
 
-      if (puf) {
+      if (puf && fearRx > 1 && fearRy > 1) {
         var dx = f.x - puf.x;
         var dy = f.y - puf.y;
+        var nd = Math.hypot(dx / fearRx, dy / fearRy);
         var d = Math.hypot(dx, dy);
-        if (d < fearR && d > 1e-3) {
-          var w = Math.pow(1 - d / fearR, 2) * (40 + puf.inflate * 50);
+        if (nd < 1.2 && d > 1e-3) {
+          var w = Math.pow(1 - nd / 1.2, 2) * (50 + puf.inflate * 30);
           ax += (dx / d) * w;
           ay += (dy / d) * w;
         }
@@ -238,86 +309,42 @@
     var W = this.width;
     var H = this.height;
     var t = this.time;
-    var cur = this._cur;
+    var layout = fishLayout(W, H, this.cellW, this.cellH);
+    // Upright frame. A few pixels of drift — no rotation, no cursor chase.
+    var driftX = this.still ? 0 : Math.sin(t * 0.22) * 8;
+    var driftY = this.still ? 0 : Math.cos(t * 0.17) * 5;
+    var top = Math.max(52, (H - layout.gridH) * 0.5 - H * 0.02);
+    p.x = W * 0.5 + driftX;
+    p.y = top + layout.gridH * 0.5 + driftY;
+    var span = clamp(p.inflate / 2, 0, 1);
+    p.halfW = layout.gridW * (0.22 + 0.26 * span);
+    p.halfH = layout.gridH * (0.2 + 0.26 * span);
 
-    // Inflate from pointer proximity (soft mid) or click-hold full
-    var target = 0;
+    if (this.still) {
+      p.inflate = 0;
+      p.targetInflate = 0;
+      return;
+    }
+
+    var breath = (Math.sin(t * 0.7) + 1) / 2;
+    breath = easeInOut(breath);
+    var idle = breath * 0.2; // stays inside the rest frame
+
+    var target = idle;
     if (t < p.holdFullUntil) {
       target = 2;
     } else if (this.pointer.active) {
-      var dist = Math.hypot(p.x - this.pointer.x, p.y - this.pointer.y);
-      var near = p.baseRadius * 1.6 + 220;
-      if (dist < near) {
-        // 0 at edge → ~1.15 mid when close
-        target = clamp((1 - dist / near) * 1.35, 0, 1.25);
-      }
+      var dx = (this.pointer.x - p.x) / Math.max(90, layout.gridW * 0.46);
+      var dy = (this.pointer.y - p.y) / Math.max(70, layout.gridH * 0.5);
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var prox = dist >= 1 ? 0 : (1 - dist) * (1 - dist);
+      if (prox > 0.001) target = idle + (1 - idle) * easeInOut(prox);
     }
     p.targetInflate = target;
-    var rate = p.targetInflate > p.inflate ? 2.4 : 1.4;
-    p.inflate += (p.targetInflate - p.inflate) * Math.min(1, dt * rate);
-
-    // Wander + current cruise; soft orbit around stage center-right
-    current(p.x, p.y, t, cur);
-    p.wander = clamp(p.wander + (Math.random() - 0.5) * dt * 2.4, -0.9, 0.9);
-    var dx = Math.cos(p.heading) + Math.cos(p.heading + p.wander) * 0.5;
-    var dy = Math.sin(p.heading) + Math.sin(p.heading + p.wander) * 0.5;
-    dx += cur.x * 0.00045;
-    dy += cur.y * 0.00045;
-
-    var cx = W * 0.55;
-    var cy = H * 0.44;
-    var toCx = cx - p.x;
-    var toCy = cy - p.y;
-    var td = Math.hypot(toCx, toCy) || 1;
-    // soft leash so it stays in the reading field
-    if (td > Math.min(W, H) * 0.28) {
-      dx += (toCx / td) * 0.55;
-      dy += (toCy / td) * 0.55;
-    }
-
-    // shy from pointer a little when not fully inflated
-    if (this.pointer.active && p.inflate < 1.5) {
-      var sx = p.x - this.pointer.x;
-      var sy = p.y - this.pointer.y;
-      var sd = Math.hypot(sx, sy);
-      if (sd < 160 && sd > 1e-3) {
-        dx += (sx / sd) * 0.35;
-        dy += (sy / sd) * 0.35;
-      }
-    }
-
-    var desired = Math.atan2(dy, dx);
-    var maxTurn = (0.7 + p.inflate * 0.15) * dt;
-    var turned = clamp(angleDiff(p.heading, desired), -maxTurn, maxTurn);
-    p.heading += turned;
-    p.turn += (turned / dt - p.turn) * Math.min(1, dt * 4);
-
-    var cruise = 14 + (2 - p.inflate) * 6; // slower when puffed
-    p.speed += (cruise - p.speed) * Math.min(1, dt * 1.2);
-    p.phase += dt * (1.6 + p.speed / 20);
-    p.x += Math.cos(p.heading) * p.speed * dt;
-    p.y += Math.sin(p.heading) * p.speed * dt;
-    p.x = clamp(p.x, 40, W - 40);
-    p.y = clamp(p.y, 50, H - 50);
-
-    // soft body chain (short spine for sampling)
-    var nodes = p.nodes;
-    nodes[0] = p.x;
-    nodes[1] = p.y;
-    var radius = p.baseRadius * (0.85 + p.inflate * 0.38);
-    var seg = (radius * 1.1) / (PUFFER_NODES - 1);
-    var prevAngle = p.heading + Math.PI;
-    for (var k = 1; k < PUFFER_NODES; k++) {
-      var px0 = nodes[(k - 1) * 2];
-      var py0 = nodes[(k - 1) * 2 + 1];
-      var ang = Math.atan2(nodes[k * 2 + 1] - py0, nodes[k * 2] - px0);
-      ang = prevAngle + clamp(angleDiff(prevAngle, ang), -0.2, 0.2);
-      // idle breathe wave
-      var wave = Math.sin(p.phase - k * 0.45) * radius * 0.04 * (1 - p.inflate * 0.3);
-      nodes[k * 2] = px0 + Math.cos(ang) * seg - Math.sin(ang) * wave;
-      nodes[k * 2 + 1] = py0 + Math.sin(ang) * seg + Math.cos(ang) * wave;
-      prevAngle = ang;
-    }
+    var speed = target > p.inflate ? 3.4 : 1.7;
+    var diff = target - p.inflate;
+    if (Math.abs(diff) < 0.002) p.inflate = target;
+    else p.inflate += Math.sign(diff) * Math.min(Math.abs(diff), speed * dt);
   };
 
   /* —— Paper-mode ASCII renderer —— */
@@ -417,12 +444,8 @@
     var energy = this.energy;
     var p = world.puffer;
     if (p) {
-      var rad = 1 + (p.inflate * 0.6) | 0;
-      this.stamp(energy, p.x, p.y, rad, 0.04 + p.speed * 0.0008);
-      // soft trail behind
-      var bx = p.x - Math.cos(p.heading) * p.baseRadius * 0.6;
-      var by = p.y - Math.sin(p.heading) * p.baseRadius * 0.6;
-      this.stamp(energy, bx, by, 1, 0.03);
+      var rad = 2 + ((p.inflate * 0.8) | 0);
+      this.stamp(energy, p.x, p.y + (p.halfH || 40) * 0.72, rad, 0.035);
     }
     if (world.pointer.active) {
       this.stamp(energy, world.pointer.x, world.pointer.y, 1, 0.05);
@@ -455,122 +478,63 @@
     this.energyTmp = energy;
   };
 
-  /** Puffer silhouette: round body + spines that grow with inflate. */
-  AsciiRenderer.prototype.samplePuffer = function (px, py, p) {
-    var dx = px - p.x;
-    var dy = py - p.y;
-    // orient into heading frame
-    var c = Math.cos(-p.heading);
-    var s = Math.sin(-p.heading);
-    var lx = dx * c - dy * s;
-    var ly = dx * s + dy * c;
-
-    var inflate = p.inflate;
-    var R = p.baseRadius * (0.78 + inflate * 0.42);
-    // slightly oval: longer along heading when rest, rounder when full
-    var ovalX = 1.05 - inflate * 0.12;
-    var ovalY = 0.88 + inflate * 0.14;
-    var nx = lx / (R * ovalX);
-    var ny = ly / (R * ovalY);
-    var rr = Math.hypot(nx, ny);
-    this.hitDist = rr * R;
-
-    // eye
-    var eyeX = R * 0.42;
-    var eyeY = -R * 0.18;
-    if (Math.hypot(lx - eyeX, ly - eyeY) < R * 0.09) {
-      this.hitFlag = 4;
-      this.hitShade = 0.1;
-      return true;
+  AsciiRenderer.prototype.stampLockedFrame = function (p) {
+    var flag = this.cellFlag;
+    flag.fill(0);
+    this.frameGrid = null;
+    if (!p) return;
+    var layout = fishLayout(this.width, this.height, this.cw, this.ch);
+    var grid = sampleGrid(p.inflate);
+    var ox = p.x - layout.gridW / 2;
+    var oy = p.y - layout.gridH / 2;
+    if (layout.aligned) {
+      ox = Math.round(ox / this.cw) * this.cw;
+      oy = Math.round(oy / this.ch) * this.ch;
     }
-
-    // pectoral fins (small)
-    var finReach = R * (0.35 + inflate * 0.08);
-    if (ly > 0 && lx > -R * 0.2 && lx < R * 0.45) {
-      var fin = Math.abs(ly) / finReach + Math.abs(lx - R * 0.1) / (R * 0.55);
-      if (fin < 1 && rr > 0.7) {
-        this.hitFlag = 5;
-        this.hitShade = 0.4;
-        return true;
+    this.fishOx = ox;
+    this.fishOy = oy;
+    this.fishCw = layout.fishCw;
+    this.fishCh = layout.fishCh;
+    this.frameGrid = grid;
+    var cols = this.cols;
+    var rows = this.rows;
+    for (var r = 0; r < FRAME_ROWS; r++) {
+      var line = grid[r];
+      var y = oy + (r + 0.5) * layout.fishCh;
+      for (var c = 0; c < FRAME_COLS; c++) {
+        if (line.charAt(c) === " ") continue;
+        var x = ox + (c + 0.5) * layout.fishCw;
+        var cc = Math.floor(x / this.cw);
+        var rr = Math.floor(y / this.ch);
+        if (cc < 0 || rr < 0 || cc >= cols || rr >= rows) continue;
+        flag[rr * cols + cc] = 1;
       }
     }
-
-    // spines: radial spikes stronger with inflate
-    var spineCount = 12;
-    var ang = Math.atan2(ly, lx);
-    var spineIdx = Math.round(((ang + Math.PI) / TAU) * spineCount) % spineCount;
-    var spineAng = -Math.PI + (spineIdx / spineCount) * TAU;
-    var angDist = Math.abs(angleDiff(ang, spineAng));
-    var spineLen = R * (0.08 + inflate * 0.38);
-    var spineWidth = 0.11 + inflate * 0.04;
-    if (rr > 0.85 && rr < 1 + spineLen / R && angDist < spineWidth) {
-      this.hitFlag = 3;
-      this.hitShade = clamp(1.1 - (rr - 1) * 2, 0.3, 1);
-      return true;
-    }
-
-    if (rr <= 1) {
-      // body shading: lit from top-left
-      var across = rr;
-      var facing = (-nx * 0.55 - ny * 0.75) * across;
-      var shade = 0.55 - across * across * 0.4 + facing * 0.28;
-      // mouth hint
-      if (lx > R * 0.55 && Math.abs(ly) < R * 0.12) shade *= 0.55;
-      this.hitFlag = 1;
-      this.hitShade = clamp(shade, 0, 1);
-      return true;
-    }
-
-    // soft edge band
-    if (rr < 1.12) {
-      this.hitFlag = 2;
-      this.hitShade = clamp(1.2 - rr, 0, 1);
-      return true;
-    }
-    return false;
   };
 
-  AsciiRenderer.prototype.rasterizePuffer = function (p, t) {
-    var flag = this.cellFlag;
-    var shade = this.cellShade;
-    var key = this.cellKey;
-    flag.fill(0);
-    if (!p) return;
-
-    var R = p.baseRadius * (0.78 + p.inflate * 0.42);
-    var reach = R * (1.55 + p.inflate * 0.35);
-    var c0 = Math.max(0, Math.floor((p.x - reach) / this.cw));
-    var c1 = Math.min(this.cols - 1, Math.floor((p.x + reach) / this.cw));
-    var r0 = Math.max(0, Math.floor((p.y - reach) / this.ch));
-    var r1 = Math.min(this.rows - 1, Math.floor((p.y + reach) / this.ch));
-
-    for (var r = r0; r <= r1; r++) {
-      for (var c = c0; c <= c1; c++) {
-        var x = c * this.cw;
-        var y = r * this.ch;
-        var centerHit = this.samplePuffer(x + this.cw / 2, y + this.ch / 2, p);
-        if (!centerHit && this.hitDist > reach) continue;
-        var f0 = this.hitFlag;
-        var s0 = this.hitShade;
-        var hits = centerHit ? 1 : 0;
-        for (var k = 0; k < SUBSAMPLES.length; k += 2) {
-          if (this.samplePuffer(x + SUBSAMPLES[k] * this.cw, y + SUBSAMPLES[k + 1] * this.ch, p))
-            hits++;
-        }
-        if (hits === 0) continue;
-        var coverage = hits / 5;
-        var i = r * this.cols + c;
-        key[i] = (hash3(c, r, (p.inflate * 10) | 0) * 4294967295) >>> 0;
-        if (centerHit && coverage >= 0.55) {
-          flag[i] = f0;
-          var flicker = (hash3(c, r, Math.floor(t * 5)) - 0.5) * 0.05;
-          shade[i] = clamp(s0 + flicker, 0, 1);
-        } else {
-          flag[i] = 2;
-          shade[i] = coverage;
-        }
+  AsciiRenderer.prototype.drawLockedFrame = function () {
+    var grid = this.frameGrid;
+    if (!grid) return;
+    var ctx = this.ctx;
+    var cw = this.fishCw;
+    var ch = this.fishCh;
+    var ox = this.fishOx;
+    var oy = this.fishOy;
+    ctx.save();
+    ctx.font = "500 " + Math.max(9, Math.round(ch * 0.92)) + "px " + this.fontFamily;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (var r = 0; r < FRAME_ROWS; r++) {
+      var line = grid[r];
+      var yy = oy + (r + 0.5) * ch;
+      for (var c = 0; c < FRAME_COLS; c++) {
+        var glyph = line.charAt(c);
+        if (glyph === " ") continue;
+        ctx.fillStyle = glyphInk(glyph).rgba;
+        ctx.fillText(glyph, ox + (c + 0.5) * cw, yy);
       }
     }
+    ctx.restore();
   };
 
   AsciiRenderer.prototype.render = function (world, dt) {
@@ -586,7 +550,7 @@
     var H = this.height;
 
     this.consumeEvents(world);
-    this.rasterizePuffer(world.puffer, t);
+    this.stampLockedFrame(world.puffer);
     this.depositWake(world);
     this.diffuse(dt);
 
@@ -630,49 +594,7 @@
       ctx.fillText(glyph, (idx % cols) * cw + cw / 2, ((idx / cols) | 0) * ch + ch / 2 + 1);
     }
 
-    // puffer body
-    var shadeArr = this.cellShade;
-    var keyArr = this.cellKey;
-    for (var j = 0; j < n; j++) {
-      var fl = cellFlag[j];
-      if (!fl) continue;
-      var cc = j % cols;
-      var rr = (j / cols) | 0;
-      var xx = cc * cw;
-      var yy = rr * ch;
-      var sh = shadeArr[j];
-      var key = keyArr[j];
-      var level, glyph2, alpha2;
-
-      if (fl === 2) {
-        // edge
-        var set = sh >= 0.5 ? EDGE_HEAVY : EDGE_LIGHT;
-        glyph2 = set[(key >>> 8) % set.length];
-        alpha2 = 0.35 + sh * 0.4;
-        ctx.fillStyle =
-          "rgba(" + INK[0] + "," + INK[1] + "," + INK[2] + "," + alpha2.toFixed(3) + ")";
-        ctx.fillText(glyph2, xx + cw / 2, yy + ch / 2 + 1);
-        continue;
-      }
-
-      if (fl === 4) {
-        glyph2 = "o";
-        alpha2 = 0.85;
-      } else if (fl === 3) {
-        glyph2 = SPINE_GLYPHS[(key >>> 8) % SPINE_GLYPHS.length];
-        alpha2 = 0.45 + sh * 0.4;
-      } else if (fl === 5) {
-        glyph2 = ";%t"[(key >>> 8) % 3];
-        alpha2 = 0.4 + sh * 0.3;
-      } else {
-        var gi = clamp(Math.floor((1 - sh) * 8.99), 0, SKIN_RAMP.length - 1);
-        glyph2 = SKIN_RAMP[gi];
-        alpha2 = 0.42 + sh * 0.48;
-      }
-      ctx.fillStyle =
-        "rgba(" + INK[0] + "," + INK[1] + "," + INK[2] + "," + alpha2.toFixed(3) + ")";
-      ctx.fillText(glyph2, xx + cw / 2, yy + ch / 2 + 1);
-    }
+    this.drawLockedFrame();
   };
 
   /* —— Engine (OceanEngine patterns) —— */
@@ -740,6 +662,7 @@
     if (rect.width < 1 || rect.height < 1) return;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.renderer.resize(rect.width, rect.height, dpr);
+    this.world.still = this.reducedMotion.matches;
     this.world.resize(rect.width, rect.height, this.renderer.cellWidth, this.renderer.cellHeight);
     if (this.reducedMotion.matches) this.drawStill();
   };
@@ -774,8 +697,10 @@
   };
 
   Engine.prototype.onMotion = function () {
+    this.world.still = this.reducedMotion.matches;
     if (this.reducedMotion.matches) {
       cancelAnimationFrame(this.raf);
+      if (this.world.puffer) this.world.puffer.inflate = 0;
       this.drawStill();
     } else {
       this.schedule();
