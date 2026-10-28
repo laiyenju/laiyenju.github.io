@@ -378,6 +378,10 @@
         if (relayed > alarm) alarm += (relayed - alarm) * contagion;
         f.alarm = alarm;
         const m = 36;
+        const colHalf = Math.min(190, W * 0.15);
+        if (Math.abs(f.x - W / 2) < colHalf && f.y > H * 0.26 && f.y < H * 0.74) {
+          ax += (f.x < W / 2 ? -1 : 1) * 90;
+        }
         if (f.x < m) ax += (m - f.x) * 7;
         else if (f.x > W - m) ax -= (f.x - (W - m)) * 7;
         if (f.y < m) ay += (m - f.y) * 7;
@@ -411,8 +415,8 @@
       var _a, _b;
       const { sharks, width: W, height: H } = this;
       const navFloor = Math.max(108, H * 0.16);
-      const slots = [0.43, 0.58, 0.7, 0.3, 0.84];
-      const inners = [0.56, 0.6, 0.34, 0.68, 0.32];
+      const slots = [0.415, 0.58, 0.72, 0.3, 0.84];
+      const inners = [0.47, 0.7, 0.32, 0.7, 0.3];
       for (const sh of sharks) {
         const L = sh.length;
         const nodes = sh.nodes;
@@ -423,7 +427,7 @@
         const hx = nodes[0];
         const hy = nodes[1];
         let dir = sh.orbitDir;
-        const lead = 64;
+        const lead = sh.id === 1 ? 0 : 36;
         if (laneLeft) {
           if (dir < 0 && hx <= outer + lead) dir = 1;
           if (dir > 0 && hx >= inner - lead) dir = -1;
@@ -436,6 +440,7 @@
         if (turned) sh.speed *= 0.42;
         const cruise = 32 + L * 0.02;
         sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.8);
+        if (sh.id === 1 && dir > 0 && hx > W * 0.4) sh.speed = Math.min(sh.speed, 18);
         const desired = dir > 0 ? 0 : Math.PI;
         const maxTurn = 1.85 * dt;
         const dh = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
@@ -473,6 +478,13 @@
         else if (maxX > W - 14) shiftX = W - 14 - maxX;
         if (minY < navFloor) shiftY = navFloor - minY;
         else if (maxY > H - 18) shiftY = H - 18 - maxY;
+        const bandL = W * 0.38;
+        const bandR = W * 0.62;
+        for (let k = 6; k < SHARK_NODES; k++) {
+          const x = nodes[k * 2];
+          if (laneLeft && x > bandL) shiftX = Math.min(shiftX, bandL - x);
+          if (!laneLeft && x < bandR) shiftX = Math.max(shiftX, bandR - x);
+        }
         if (shiftX !== 0 || shiftY !== 0) {
           for (let k = 0; k < SHARK_NODES; k++) {
             nodes[k * 2] += shiftX;
@@ -839,23 +851,8 @@
         }
       }
     }
-    spawnRipple(x, y) {
-      const now = performance.now() / 1e3;
-      const near = Math.max(36, this.cw * 3);
-      this.rippleCooldown = this.rippleCooldown.filter((c) => c.until > now);
-      for (const c of this.rippleCooldown) {
-        if (Math.hypot(c.x - x, c.y - y) < near) return;
-      }
-      if (this.ripples.length >= 4) return;
-      this.rippleCooldown.push({ x, y, until: now + 1.2 });
-      const cells = 8 + Math.random() * 4;
-      this.ripples.push({
-        x,
-        y,
-        age: 0,
-        life: 0.8,
-        maxR: Math.max(8, this.cw) * cells
-      });
+    spawnRipple(_x, _y) {
+      return;
     }
     clearRipples() {
       this.ripples.length = 0;
@@ -938,7 +935,6 @@
       this.drawHeat();
       this.drawFish();
       this.drawSharks(t);
-      this.drawRipples(dt);
     }
     // ── simulation → field ──────────────────────────────────────────────
     drawRipples(dt) {
@@ -1125,6 +1121,9 @@
           shade = Math.max(shade, 0.8);
         } else if (this.marked(s, a * bestSign, L, across)) {
           flag = FLAG_MARK;
+        }
+        if (this.shape === SHAPES.koi && flag === FLAG_BODY && s > 0.04 && s < 0.26 && across < 0.8) {
+          shade = Math.min(shade, 0.3);
         }
         this.hitFlag = flag;
         this.hitShade = shade;
@@ -1563,58 +1562,7 @@
       this.renderer.spawnRipple(x, y);
     }
     senseRipples() {
-      if (this.reducedMotion.matches) {
-        this.renderer.clearRipples();
-        this.prevSpeed.clear();
-        this.closePairs.clear();
-        return;
-      }
-      const sharks = this.world.sharks;
-      for (const sh of sharks) {
-        const prev = this.prevSpeed.get(sh.id);
-        if (prev !== void 0 && sh.speed - prev > 0.75) {
-          this.renderer.spawnRipple(sh.nodes[0], sh.nodes[1]);
-        }
-        this.prevSpeed.set(sh.id, sh.speed);
-      }
-      const next = /* @__PURE__ */ new Set();
-      const W = this.world.width;
-      const H = this.world.height;
-      const copyHalf = Math.min(200, W * 0.16);
-      const copyTop = H * 0.32;
-      const copyBot = H * 0.7;
-      for (let i = 0; i < sharks.length; i++) {
-        const a = sharks[i];
-        let touching = false;
-        let touchX = a.nodes[0];
-        let touchY = a.nodes[1];
-        for (let k = 0; k < 8; k++) {
-          const x = a.nodes[k * 2];
-          const y = a.nodes[k * 2 + 1];
-          if (Math.abs(x - W / 2) < copyHalf && y > copyTop && y < copyBot) {
-            touching = true;
-            touchX = x;
-            touchY = y;
-          }
-        }
-        const touchKey = `copy-${a.id}`;
-        if (touching) {
-          next.add(touchKey);
-          if (!this.closePairs.has(touchKey)) this.renderer.spawnRipple(touchX, touchY);
-        }
-        for (let j = i + 1; j < sharks.length; j++) {
-          const b = sharks[j];
-          const d = Math.hypot(a.nodes[0] - b.nodes[0], a.nodes[1] - b.nodes[1]);
-          const key = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
-          if (d < 180) {
-            next.add(key);
-            if (!this.closePairs.has(key)) {
-              this.renderer.spawnRipple((a.nodes[0] + b.nodes[0]) / 2, (a.nodes[1] + b.nodes[1]) / 2);
-            }
-          }
-        }
-      }
-      this.closePairs = next;
+      return;
     }
     /** Reduced motion: let the ecosystem settle, then show a single frame. */
     drawStill() {

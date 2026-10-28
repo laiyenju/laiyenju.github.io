@@ -421,8 +421,12 @@ export class World {
       if (relayed > alarm) alarm += (relayed - alarm) * contagion;
       f.alarm = alarm;
 
-      // Soft walls.
+      // Soft walls. Keep the quiet center column clear even when the pointer scatters fry.
       const m = 36;
+      const colHalf = Math.min(190, W * 0.15);
+      if (Math.abs(f.x - W / 2) < colHalf && f.y > H * 0.26 && f.y < H * 0.74) {
+        ax += (f.x < W / 2 ? -1 : 1) * 90;
+      }
       if (f.x < m) ax += (m - f.x) * 7;
       else if (f.x > W - m) ax -= (f.x - (W - m)) * 7;
       if (f.y < m) ay += (m - f.y) * 7;
@@ -462,9 +466,8 @@ export class World {
   private stepSharks(dt: number) {
     const { sharks, width: W, height: H } = this;
     const navFloor = Math.max(108, H * 0.16);
-    const slots = [0.43, 0.58, 0.7, 0.3, 0.84];
-    // Only the title fish (id 1) reaches the copy. The other four stay in the side bands.
-    const inners = [0.56, 0.6, 0.34, 0.68, 0.32];
+    const slots = [0.415, 0.58, 0.72, 0.3, 0.84];
+    const inners = [0.47, 0.7, 0.32, 0.7, 0.3];
 
     for (const sh of sharks) {
       const L = sh.length;
@@ -476,7 +479,7 @@ export class World {
       const hx = nodes[0];
       const hy = nodes[1];
       let dir: 1 | -1 = sh.orbitDir;
-      const lead = 64;
+      const lead = sh.id === 1 ? 0 : 36;
 
       if (laneLeft) {
         if (dir < 0 && hx <= outer + lead) dir = 1;
@@ -491,6 +494,7 @@ export class World {
 
       const cruise = 32 + L * 0.02;
       sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.8);
+      if (sh.id === 1 && dir > 0 && hx > W * 0.4) sh.speed = Math.min(sh.speed, 18);
       const desired = dir > 0 ? 0 : Math.PI;
       const maxTurn = 1.85 * dt;
       const dh = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
@@ -532,6 +536,14 @@ export class World {
       else if (maxX > W - 14) shiftX = W - 14 - maxX;
       if (minY < navFloor) shiftY = navFloor - minY;
       else if (maxY > H - 18) shiftY = H - 18 - maxY;
+      // Rear body stays in its corridor. The head may reach the title; the belly may not.
+      const bandL = W * 0.38;
+      const bandR = W * 0.62;
+      for (let k = 6; k < SHARK_NODES; k++) {
+        const x = nodes[k * 2];
+        if (laneLeft && x > bandL) shiftX = Math.min(shiftX, bandL - x);
+        if (!laneLeft && x < bandR) shiftX = Math.max(shiftX, bandR - x);
+      }
       if (shiftX !== 0 || shiftY !== 0) {
         for (let k = 0; k < SHARK_NODES; k++) {
           nodes[k * 2] += shiftX;

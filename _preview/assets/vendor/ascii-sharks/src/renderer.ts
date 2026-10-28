@@ -345,23 +345,8 @@ export class AsciiRenderer {
   private ripples: { x: number; y: number; age: number; life: number; maxR: number }[] = [];
   private rippleCooldown: { x: number; y: number; until: number }[] = [];
 
-  spawnRipple(x: number, y: number) {
-    const now = performance.now() / 1000;
-    const near = Math.max(36, this.cw * 3);
-    this.rippleCooldown = this.rippleCooldown.filter((c) => c.until > now);
-    for (const c of this.rippleCooldown) {
-      if (Math.hypot(c.x - x, c.y - y) < near) return;
-    }
-    if (this.ripples.length >= 4) return;
-    this.rippleCooldown.push({ x, y, until: now + 1.2 });
-    const cells = 8 + Math.random() * 4;
-    this.ripples.push({
-      x,
-      y,
-      age: 0,
-      life: 0.8,
-      maxR: Math.max(8, this.cw) * cells,
-    });
+  spawnRipple(_x: number, _y: number) {
+    return;
   }
 
   clearRipples() {
@@ -475,7 +460,6 @@ export class AsciiRenderer {
     this.drawHeat();
     this.drawFish();
     this.drawSharks(t);
-    this.drawRipples(dt);
   }
 
   // ── simulation → field ──────────────────────────────────────────────
@@ -689,6 +673,9 @@ export class AsciiRenderer {
         shade = Math.max(shade, 0.8);
       } else if (this.marked(s, a * bestSign, L, across)) {
         flag = FLAG_MARK;
+      }
+      if (this.shape === SHAPES.koi && flag === FLAG_BODY && s > 0.04 && s < 0.26 && across < 0.8) {
+        shade = Math.min(shade, 0.3);
       }
       this.hitFlag = flag;
       this.hitShade = shade;
