@@ -8,7 +8,7 @@
 
   var COLS = 96;
   var ROWS = 42;
-  var INK = "#5c574f";
+  var INK = "#3f3c37";
   var INK_DEEP = "#1c1b19";
   var STATES = ["rest", "mid", "full"];
   var STATE_INDEX = { rest: 0, mid: 1, full: 2 };
@@ -218,8 +218,9 @@
       cellH = cellW / aspect;
     }
     // Cap so fish doesn't get tiny on ultrawide / huge
-    var maxCellH = Math.min(h * 0.028, 18);
-    var minCellH = 7;
+    // Idle fish was reading too small — bump base cell slightly
+    var maxCellH = Math.min(h * 0.034, 21);
+    var minCellH = 8;
     cellH = clamp(cellH, minCellH, maxCellH);
     cellW = cellH * aspect;
     this.cellW = cellW;
@@ -271,14 +272,15 @@
       this.manualState = null;
     }
     if (this.pointerNear) {
-      // Quiet swell toward mid–full
-      this.targetLevel = 1.35;
+      // Clear mid step (was 1.35 → read as near-full; keep true mid)
+      this.targetLevel = 1.0;
       return;
     }
-    // Gentle breathe rest ↔ mid (0 .. ~0.85)
-    var breath = (Math.sin(this.time * 0.55) + 1) / 2; // 0..1
+    // Gentle breathe stay in rest band so mid hover is distinct
+    // Was 0.05..0.85 (almost mid) → 2-state feel with hover
+    var breath = (Math.sin(this.time * 0.7) + 1) / 2; // 0..1, slightly livelier
     breath = easeInOut(breath);
-    this.targetLevel = lerp(0.05, 0.85, breath);
+    this.targetLevel = lerp(0.0, 0.28, breath);
   };
 
   PufferInstance.prototype.toLocal = function (e) {
@@ -286,11 +288,11 @@
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
     var inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
-    // "near" = inside a soft center region around the fish
+    // "near" = soft center region; enlarged so mid engages more easily
     var cx = rect.width / 2;
     var cy = rect.height / 2;
-    var dx = (x - cx) / (rect.width * 0.28);
-    var dy = (y - cy) / (rect.height * 0.32);
+    var dx = (x - cx) / (rect.width * 0.42);
+    var dy = (y - cy) / (rect.height * 0.48);
     var near = dx * dx + dy * dy < 1;
     return { x: x, y: y, inside: inside, near: near };
   };
@@ -334,9 +336,10 @@
     ctx.font = "400 " + fontPx + "px " + this.fontFamily;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-    // Soft ink: deeper toward full inflation
+    // Soft ink: rest more solid; deepen through mid → full
     var deep = clamp(this.level / 2, 0, 1);
-    ctx.fillStyle = deep > 0.55 ? INK_DEEP : INK;
+    ctx.globalAlpha = lerp(0.88, 1.0, deep); // idle was too faint
+    ctx.fillStyle = deep > 0.4 ? INK_DEEP : INK;
 
     for (var y = 0; y < ROWS; y++) {
       var line = grid[y];
@@ -351,6 +354,7 @@
         ctx.fillText(line.slice(start, x), ox + start * cw, py);
       }
     }
+    ctx.globalAlpha = 1;
   };
 
   function mount(el, opts) {
