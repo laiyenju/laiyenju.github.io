@@ -203,11 +203,21 @@
     };
   }
 
+  /* Body only: base #C45C26, one light step, one deep step, eyes in dark ink. */
   function glyphInk(ch) {
-    if (".,'`".indexOf(ch) >= 0) return { rgba: "rgba(63,60,55,0.62)" };
-    if (":;".indexOf(ch) >= 0) return { rgba: "rgba(63,60,55,0.8)" };
-    if ("·".indexOf(ch) >= 0 || ch === "(" || ch === ")") return { rgba: "rgba(28,27,25,1)" };
-    return { rgba: "rgba(28,27,25,0.94)" };
+    if (ch === "·" || ch === "(" || ch === ")") return { rgba: "rgba(28,27,25,1)" };
+    if (".,'`~".indexOf(ch) >= 0) return { rgba: "rgba(214,146,96,0.78)" };
+    if (":;|/'\\%t".indexOf(ch) >= 0) return { rgba: "rgba(196,92,38,0.9)" };
+    return { rgba: "rgba(122,52,20,0.94)" };
+  }
+
+  /** Glyph center, rotated by heading around the fish center. No cell snap. */
+  function glyphPoint(c, r, cx, cy, fishCw, fishCh, heading) {
+    var lx = (c + 0.5 - FRAME_COLS / 2) * fishCw;
+    var ly = (r + 0.5 - FRAME_ROWS / 2) * fishCh;
+    var co = Math.cos(heading || 0);
+    var si = Math.sin(heading || 0);
+    return { x: cx + lx * co - ly * si, y: cy + lx * si + ly * co };
   }
 
   function clamp(v, lo, hi) {
@@ -297,6 +307,9 @@
     this.puffer = {
       x: W * 0.5,
       y: H * 0.48,
+      heading: 0,
+      speed: 0,
+      phase: 0,
       inflate: 0, // continuous 0 rest .. 1 mid .. 2 full
       targetInflate: 0,
       holdFullUntil: 0,
@@ -407,12 +420,9 @@
     var H = this.height;
     var t = this.time;
     var layout = fishLayout(W, H, this.cellW, this.cellH);
-    // Upright frame. A few pixels of drift — no rotation, no cursor chase.
-    var driftX = this.still ? 0 : Math.sin(t * 0.22) * 8;
-    var driftY = this.still ? 0 : Math.cos(t * 0.17) * 5;
     var top = Math.max(52, (H - layout.gridH) * 0.5 - H * 0.02);
-    p.x = W * 0.5 + driftX;
-    p.y = top + layout.gridH * 0.5 + driftY;
+    var homeX = W * 0.5;
+    var homeY = top + layout.gridH * 0.5;
     var span = clamp(p.inflate / 2, 0, 1);
     p.halfW = layout.gridW * (0.22 + 0.26 * span);
     p.halfH = layout.gridH * (0.2 + 0.26 * span);
@@ -420,8 +430,34 @@
     if (this.still) {
       p.inflate = 0;
       p.targetInflate = 0;
+      p.heading = 0;
+      p.speed = 0;
+      p.x = homeX;
+      p.y = homeY;
       return;
     }
+
+    // Smooth cruise: position is a continuous orbit (ease-in/out speed),
+    // heading eases toward the path tangent. No cell-grid snap.
+    if (p.phase == null) p.phase = 0;
+    if (p.heading == null) p.heading = 0;
+    if (p.speed == null) p.speed = 0;
+    var pace = 0.36 * (1 - clamp(p.inflate, 0, 2) * 0.18);
+    p.phase += dt * pace;
+    var orbitX = Math.min(52, W * 0.042);
+    var orbitY = Math.min(22, H * 0.028);
+    var ang = p.phase;
+    p.x = homeX + Math.sin(ang) * orbitX;
+    p.y = homeY + Math.sin(ang * 0.71 + 0.4) * orbitY;
+    var tvx = Math.cos(ang) * orbitX * pace;
+    var tvy = Math.cos(ang * 0.71 + 0.4) * orbitY * pace * 0.71;
+    var pitch = clamp(Math.atan2(tvy, Math.abs(tvx) + 0.001), -0.38, 0.38);
+    var turn = angleDiff(p.heading, pitch);
+    var turnGain = 0.25 + 0.75 * easeInOut(clamp(Math.abs(turn) / 0.4, 0, 1));
+    var maxTurn = 0.7 * turnGain * dt;
+    p.heading += clamp(turn, -maxTurn, maxTurn);
+    var cruise = 14 * (1 - clamp(p.inflate, 0, 2) * 0.15);
+    p.speed += (cruise - p.speed) * Math.min(1, dt * 1.5);
 
     var breath = (Math.sin(t * 0.7) + 1) / 2;
     breath = easeInOut(breath);
@@ -542,7 +578,14 @@
     var p = world.puffer;
     if (p) {
       var rad = 2 + ((p.inflate * 0.8) | 0);
-      this.stamp(energy, p.x, p.y + (p.halfH || 40) * 0.72, rad, 0.035);
+      var back = 18 + (p.halfH || 40) * 0.08;
+      this.stamp(
+        energy,
+        p.x - Math.cos(p.heading || 0) * back,
+        p.y - Math.sin(p.heading || 0) * back * 0.35 + (p.halfH || 40) * 0.15,
+        rad,
+        0.03
+      );
     }
     if (world.pointer.active) {
       this.stamp(energy, world.pointer.x, world.pointer.y, 1, 0.05);
@@ -582,14 +625,9 @@
     if (!p) return;
     var layout = fishLayout(this.width, this.height, this.cw, this.ch);
     var grid = sampleGrid(p.inflate);
-    var ox = p.x - layout.gridW / 2;
-    var oy = p.y - layout.gridH / 2;
-    if (layout.aligned) {
-      ox = Math.round(ox / this.cw) * this.cw;
-      oy = Math.round(oy / this.ch) * this.ch;
-    }
-    this.fishOx = ox;
-    this.fishOy = oy;
+    this.fishCx = p.x;
+    this.fishCy = p.y;
+    this.heading = p.heading || 0;
     this.fishCw = layout.fishCw;
     this.fishCh = layout.fishCh;
     this.frameGrid = grid;
@@ -598,12 +636,11 @@
     var rows = this.rows;
     for (var r = 0; r < FRAME_ROWS; r++) {
       var line = grid[r];
-      var y = oy + (r + 0.5) * layout.fishCh;
       for (var c = 0; c < FRAME_COLS; c++) {
         if (line.charAt(c) === " ") continue;
-        var x = ox + (c + 0.5) * layout.fishCw;
-        var cc = Math.floor(x / this.cw);
-        var rr = Math.floor(y / this.ch);
+        var pt = glyphPoint(c, r, p.x, p.y, layout.fishCw, layout.fishCh, this.heading);
+        var cc = Math.floor(pt.x / this.cw);
+        var rr = Math.floor(pt.y / this.ch);
         if (cc < 0 || rr < 0 || cc >= cols || rr >= rows) continue;
         flag[rr * cols + cc] = 1;
       }
@@ -616,24 +653,22 @@
     var ctx = this.ctx;
     var cw = this.fishCw;
     var ch = this.fishCh;
-    var ox = this.fishOx;
-    var oy = this.fishOy;
+    var heading = this.heading || 0;
     ctx.save();
     ctx.font = "500 " + Math.max(9, Math.round(ch * 0.92)) + "px " + this.fontFamily;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     for (var r = 0; r < FRAME_ROWS; r++) {
       var line = grid[r];
-      var yy = oy + (r + 0.5) * ch;
       for (var c = 0; c < FRAME_COLS; c++) {
         var glyph = line.charAt(c);
         if (glyph === " ") continue;
         var mark =
           SPINE_MASK && this.inflateLevel < 0.5 ? SPINE_MASK[r].charAt(c) : "0";
-        if (mark === "1") ctx.fillStyle = "rgba(63,60,55,0.58)";
-        else if (mark === "2") ctx.fillStyle = "rgba(63,60,55,0.4)";
+        if (mark === "1") ctx.fillStyle = "rgba(214,146,96,0.62)";
         else ctx.fillStyle = glyphInk(glyph).rgba;
-        ctx.fillText(glyph, ox + (c + 0.5) * cw, yy);
+        var pt = glyphPoint(c, r, this.fishCx, this.fishCy, cw, ch, heading);
+        ctx.fillText(glyph, pt.x, pt.y);
       }
     }
     ctx.restore();
