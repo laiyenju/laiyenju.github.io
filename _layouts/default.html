@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #222; }
+    a { color: #0645ad; }
+    header { margin-bottom: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.75rem; }
+    header a { text-decoration: none; color: inherit; font-weight: 600; }
+    article header { border: 0; margin: 0 0 1rem; padding: 0; }
+    time, .meta { color: #666; font-size: 0.9rem; }
+    ul.posts { list-style: none; padding: 0; }
+    ul.posts li { margin: 0.75rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="{{ '/' | relative_url }}">{{ site.title }}</a>
+  </header>
+  <main>
+    {{ content }}
+  </main>
+</body>
+</html>
