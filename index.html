@@ -4,66 +4,43 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hello, I'm Yen</title>
+<meta name="description" content="Yen Lai 的個人寫作網站">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
 </head>
-<body class="lang-zh-Hant">
-  <div class="sheet">
-    <div class="home">
-      <header class="home-header">
-        <div class="greeting-cluster">
-          <p class="greeting">Hello, I'm Yen</p>
-        </div>
-      </header>
-      <div class="home-columns">
-        <section class="home-col notes" aria-label="Notes">
-          <p class="section-label">Notes</p>
-          <article class="entry">
-            <p class="entry-title zh"><a href="published/2026-03-08-hello/">你好，這是第一篇</a></p>
-            <p class="entry-one-liner">A first practice note — writing quietly.</p>
-            <p class="entry-meta"><time datetime="2026-03-08">2026-03-08</time></p>
-          </article>
-          <article class="entry">
-            <p class="entry-title zh"><a href="published/2026-02-14-reading-writing/">讀與寫</a></p>
-            <p class="entry-one-liner">On reading as a way of making.</p>
-            <p class="entry-meta"><time datetime="2026-02-14">2026-02-14</time></p>
-          </article>
-          <article class="entry">
-            <p class="entry-title zh"><a href="published/2026-01-20-blank-page/">空白頁</a></p>
-            <p class="entry-one-liner">What a blank page asks for.</p>
-            <p class="entry-meta"><time datetime="2026-01-20">2026-01-20</time></p>
-          </article>
-          <p class="all-link">All Notes →</p>
-        </section>
-        <section class="home-col projects" aria-label="Projects">
-          <p class="section-label">Projects</p>
-          <article class="entry">
-            <p class="entry-title"><a href="./">laiyenju.github.io</a></p>
-            <p class="entry-one-liner">This writing site — quiet pages in Jekyll.</p>
-          </article>
-          <article class="entry">
-            <p class="entry-title zh">字與空</p>
-            <p class="entry-one-liner">Experiments in measure and pause.</p>
-          </article>
-          <article class="entry">
-            <p class="entry-title">Sketchbook</p>
-            <p class="entry-one-liner">Small visual studies, unfinished on purpose.</p>
-          </article>
-          <p class="all-link">All Projects →</p>
-        </section>
-        <section class="home-col about" aria-label="About">
-          <p class="about-zh">寫字。安靜地。</p>
-          <p class="about-en"><a href="about/">Quiet notes in zh-TW + English. A longer page lives here →</a></p>
-          <article class="entry">
-            <p class="entry-title"><a href="mailto:yenju.lai@proton.me">Contact</a></p>
-            <p class="entry-one-liner"><a href="mailto:yenju.lai@proton.me">Say hello when you like.</a></p>
-          </article>
-        </section>
+<body class="lang-zh-Hant home">
+  <div class="home-stage">
+    <canvas data-puffer class="home-puffer" aria-hidden="true"></canvas>
+    <div class="home-vignette" aria-hidden="true"></div>
+
+    <header class="home-nav" role="navigation" aria-label="Primary">
+      <a href="published/2026-03-08-hello/">notes</a>
+      <a href="#projects">projects</a>
+      <a href="about/">about</a>
+    </header>
+
+    <div class="home-chrome">
+      <div class="home-dim" aria-hidden="true"></div>
+      <div class="home-copy">
+        <h1 class="home-greeting">Hello, I'm Yen</h1>
+        <p class="home-sub">寫作 · notes &amp; projects</p>
+        <p class="home-slogan">A quiet place for notes and projects. Living ASCII 河豚 as the homepage main visual — paper ground, sparse forms, type always readable.</p>
+        <p class="home-contact"><a href="mailto:yenju.lai@proton.me">Contact →</a></p>
       </div>
     </div>
   </div>
-  <script src="assets/js/site.js" defer></script>
+
+  <script src="assets/js/puffer.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var el = document.querySelector("canvas[data-puffer]");
+      if (el && window.Puffer) {
+        window.Puffer.mount(el, { fps: 24 });
+      }
+    });
+  </script>
 </body>
 </html>

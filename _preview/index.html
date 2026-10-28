@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hello, I'm Yen</title>
+<meta name="description" content="Yen Lai 的個人寫作網站">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body class="lang-zh-Hant home">
+  <div class="home-stage">
+    <canvas data-puffer class="home-puffer" aria-hidden="true"></canvas>
+    <div class="home-vignette" aria-hidden="true"></div>
+
+    <header class="home-nav" role="navigation" aria-label="Primary">
+      <a href="published/2026-03-08-hello/">notes</a>
+      <a href="#projects">projects</a>
+      <a href="about/">about</a>
+    </header>
+
+    <div class="home-chrome">
+      <div class="home-dim" aria-hidden="true"></div>
+      <div class="home-copy">
+        <h1 class="home-greeting">Hello, I'm Yen</h1>
+        <p class="home-sub">寫作 · notes &amp; projects</p>
+        <p class="home-slogan">A quiet place for notes and projects. Living ASCII 河豚 as the homepage main visual — paper ground, sparse forms, type always readable.</p>
+        <p class="home-contact"><a href="mailto:yenju.lai@proton.me">Contact →</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/puffer.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var el = document.querySelector("canvas[data-puffer]");
+      if (el && window.Puffer) {
+        window.Puffer.mount(el, { fps: 24 });
+      }
+    });
+  </script>
+</body>
+</html>
