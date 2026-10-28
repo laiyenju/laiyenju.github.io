@@ -26,12 +26,12 @@
     </div>
   </div>
 
-  <script src="{{ '/assets/js/koi.js' | relative_url }}" defer></script>
+  <script src="{{ '/assets/js/ocean.js' | relative_url }}" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var el = document.querySelector("canvas[data-koi]");
-      if (el && window.Koi) {
-        window.Koi.mount(el);
+      if (el && window.OceanEngine) {
+        new window.OceanEngine(el);
       }
     });
   </script>
