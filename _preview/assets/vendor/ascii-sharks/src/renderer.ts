@@ -82,21 +82,21 @@ interface SharkShape {
 
 /** Lean side-view koi (ed9754b cell-grid): slim head, early taper, thin peduncle. */
 function koiHalfWidth(s: number) {
-  if (s < 0.14) return 0.108 * Math.pow(Math.sin(((s / 0.14) * Math.PI) / 2), 0.42);
-  if (s < 0.36) return 0.108 + 0.028 * smoothstep(0.14, 0.36, s);
-  if (s < 0.68) return 0.03 + 0.106 * Math.pow(1 - (s - 0.36) / 0.52, 1.05);
+  if (s < 0.14) return 0.084 * Math.pow(Math.sin(((s / 0.14) * Math.PI) / 2), 0.55);
+  if (s < 0.36) return 0.084 + 0.016 * smoothstep(0.14, 0.36, s);
+  if (s < 0.68) return 0.02 + 0.08 * Math.pow(1 - (s - 0.36) / 0.52, 1.2);
   if (s < 0.82) {
     const k = (s - 0.68) / 0.14;
-    return 0.055 * (1 - k) + 0.022;
+    return 0.04 * (1 - k) + 0.014;
   }
   const k = (s - 0.82) / 0.18;
-  return 0.02 * (1 - k);
+  return 0.014 * (1 - k);
 }
 
 const SHAPES: Record<SharkKind, SharkShape> = {
   koi: {
     halfWidth: koiHalfWidth,
-    pectoral: [0.22, 0.32, 0.38, 0.07],
+    pectoral: [0.24, 0.32, 0.36, 0.048],
     falcate: false,
     pelvic: [0.56, 0.6, 0.63, 0.028],
     caudal: 0.12,
@@ -923,7 +923,7 @@ export class AsciiRenderer {
         const jitter = ((key >>> 4) % 3) - 1;
         glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * (SKIN_RAMP.length - 0.01)) + jitter, 0, SKIN_RAMP.length - 1)];
       }
-      const breathe = flag === FLAG_BODY && hash3(key, 2, 8) > 0.86;
+      const breathe = flag === FLAG_BODY && hash3(key, 2, 8) > 0.78;
       if (!breathe) {
         ctx.fillStyle = fill;
         ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);

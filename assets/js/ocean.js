@@ -133,9 +133,9 @@
         const length = baseLength * size;
         const orbitRadius = minSide * rand(0.22, 0.34);
         const laneLeft = i % 2 === 0;
-        const orbitDir = i === 0 ? 1 : laneLeft ? -1 : 1;
-        const slots = [0.43, 0.58, 0.7, 0.3, 0.84];
-        const x = i === 0 ? W * 0.34 : laneLeft ? W * 0.16 : W * 0.84;
+        const orbitDir = laneLeft ? -1 : 1;
+        const slots = [0.42, 0.58, 0.72, 0.3, 0.84];
+        const x = laneLeft ? W * 0.16 : W * 0.84;
         const y = H * ((_a = slots[i]) != null ? _a : 0.5);
         const heading = orbitDir > 0 ? 0 : Math.PI;
         const nodes = new Float32Array(SHARK_NODES * 2);
@@ -412,46 +412,52 @@
       }
     }
     stepSharks(dt) {
-      var _a, _b;
+      var _a;
       const { sharks, width: W, height: H } = this;
       const navFloor = Math.max(108, H * 0.16);
-      const slots = [0.415, 0.58, 0.72, 0.3, 0.84];
-      const inners = [0.47, 0.7, 0.32, 0.7, 0.3];
+      const slots = [0.42, 0.58, 0.72, 0.3, 0.84];
       for (const sh of sharks) {
         const L = sh.length;
         const nodes = sh.nodes;
         const laneLeft = sh.id % 2 === 1;
         const laneY = clamp(H * ((_a = slots[sh.id - 1]) != null ? _a : 0.5), navFloor + 20, H - 36);
-        const outer = laneLeft ? Math.max(48, W * 0.09) : Math.min(W - 48, W * 0.91);
-        const inner = W * ((_b = inners[sh.id - 1]) != null ? _b : laneLeft ? 0.34 : 0.66);
+        const outer = laneLeft ? Math.max(56, W * 0.1) : Math.min(W - 56, W * 0.9);
+        const corridorInner = laneLeft ? W * 0.3 : W * 0.7;
+        const kiss = W * 0.45;
+        const inner = sh.id === 1 && sh.wander > 0.5 ? kiss : corridorInner;
         const hx = nodes[0];
         const hy = nodes[1];
         let dir = sh.orbitDir;
-        const lead = sh.id === 1 ? 0 : 36;
+        const lead = 20;
         if (laneLeft) {
-          if (dir < 0 && hx <= outer + lead) dir = 1;
-          if (dir > 0 && hx >= inner - lead) dir = -1;
+          if (dir < 0 && hx <= outer + lead) {
+            dir = 1;
+            if (sh.id === 1) sh.wander = 1;
+          }
+          if (dir > 0 && hx >= inner - 6) {
+            dir = -1;
+            sh.wander = 0;
+          }
         } else {
           if (dir > 0 && hx >= outer - lead) dir = -1;
-          if (dir < 0 && hx <= inner + lead) dir = 1;
+          if (dir < 0 && hx <= inner + 6) dir = 1;
         }
         const turned = dir !== sh.orbitDir;
         sh.orbitDir = dir;
-        if (turned) sh.speed *= 0.42;
-        const cruise = 32 + L * 0.02;
-        sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.8);
-        if (sh.id === 1 && dir > 0 && hx > W * 0.4) sh.speed = Math.min(sh.speed, 18);
+        if (turned) sh.speed *= 0.55;
+        const cruise = 34 + L * 0.018;
+        sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.4);
         const desired = dir > 0 ? 0 : Math.PI;
         const maxTurn = 1.85 * dt;
         const dh = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
         sh.heading += dh;
         sh.turn = dh / Math.max(dt, 1e-4);
         sh.phase += dt * (sh.speed / Math.max(48, L * 0.22)) * 7.5;
-        const yPull = clamp(laneY - hy, -1, 1) * 16 * dt;
+        const yPull = clamp(laneY - hy, -28, 28) * dt * 4.2;
         nodes[0] = hx + Math.cos(sh.heading) * sh.speed * dt;
-        nodes[1] = hy + Math.sin(sh.heading) * sh.speed * dt * 0.35 + yPull;
+        nodes[1] = hy + Math.sin(sh.heading) * sh.speed * dt * 0.16 + yPull;
         const seg = L / (SHARK_NODES - 1);
-        const maxBend = 0.2;
+        const maxBend = 0.13;
         let prevAngle = sh.heading + Math.PI;
         for (let k = 1; k < SHARK_NODES; k++) {
           const px = nodes[(k - 1) * 2];
@@ -587,20 +593,20 @@
     return 0.019 * (1 - k) + 0.012 * Math.sin(k * Math.PI);
   }
   function koiHalfWidth(s) {
-    if (s < 0.14) return 0.108 * Math.pow(Math.sin(s / 0.14 * Math.PI / 2), 0.42);
-    if (s < 0.36) return 0.108 + 0.028 * smoothstep(0.14, 0.36, s);
-    if (s < 0.68) return 0.03 + 0.106 * Math.pow(1 - (s - 0.36) / 0.52, 1.05);
+    if (s < 0.14) return 0.084 * Math.pow(Math.sin(s / 0.14 * Math.PI / 2), 0.55);
+    if (s < 0.36) return 0.084 + 0.016 * smoothstep(0.14, 0.36, s);
+    if (s < 0.68) return 0.02 + 0.08 * Math.pow(1 - (s - 0.36) / 0.52, 1.2);
     if (s < 0.82) {
       const k2 = (s - 0.68) / 0.14;
-      return 0.055 * (1 - k2) + 0.022;
+      return 0.04 * (1 - k2) + 0.014;
     }
     const k = (s - 0.82) / 0.18;
-    return 0.02 * (1 - k);
+    return 0.014 * (1 - k);
   }
   var SHAPES = {
     koi: {
       halfWidth: koiHalfWidth,
-      pectoral: [0.22, 0.32, 0.38, 0.07],
+      pectoral: [0.24, 0.32, 0.36, 0.048],
       falcate: false,
       pelvic: [0.56, 0.6, 0.63, 0.028],
       caudal: 0.12,
@@ -1335,7 +1341,7 @@
           const jitter = (key >>> 4) % 3 - 1;
           glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * (SKIN_RAMP.length - 0.01)) + jitter, 0, SKIN_RAMP.length - 1)];
         }
-        const breathe = flag === FLAG_BODY && hash3(key, 2, 8) > 0.86;
+        const breathe = flag === FLAG_BODY && hash3(key, 2, 8) > 0.78;
         if (!breathe) {
           ctx.fillStyle = fill;
           ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
