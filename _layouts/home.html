@@ -10,8 +10,8 @@
     <div class="home-vignette" aria-hidden="true"></div>
 
     <header class="home-nav" role="navigation" aria-label="Primary">
-      <a href="{{ '/published/2026-03-08-hello/' | relative_url }}">notes</a>
-      <a href="#projects">projects</a>
+      <a href="{{ '/notes/' | relative_url }}">notes</a>
+      <a href="{{ '/works/' | relative_url }}">works</a>
       <a href="{{ '/about/' | relative_url }}">about</a>
     </header>
 
@@ -19,8 +19,8 @@
       <div class="home-dim" aria-hidden="true"></div>
       <div class="home-copy">
         <h1 class="home-greeting">{{ site.author.greeting }}</h1>
-        <p class="home-sub">寫作 · notes &amp; projects</p>
-        <p class="home-slogan">A quiet place for notes and projects. Living ASCII 河豚 as the homepage main visual — paper ground, sparse forms, type always readable.</p>
+        <p class="home-sub">寫作 · notes &amp; works</p>
+        <p class="home-slogan">A quiet place for notes and works. Living ASCII 河豚 as the homepage main visual — paper ground, sparse forms, type always readable.</p>
         <p class="home-contact"><a href="mailto:{{ site.author.email }}">Contact →</a></p>
       </div>
     </div>
@@ -31,7 +31,7 @@
     document.addEventListener("DOMContentLoaded", function () {
       var el = document.querySelector("canvas[data-puffer]");
       if (el && window.Puffer) {
-        window.Puffer.mount(el, { fps: 24 });
+        window.Puffer.mount(el);
       }
     });
   </script>

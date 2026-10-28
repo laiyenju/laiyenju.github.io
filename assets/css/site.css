@@ -75,9 +75,9 @@
   --measure: 640px;
   --col: 260px;
   --gutter: 40px;
-  --font-latin: "iA Writer Quattro", "IBM Plex Sans", system-ui, sans-serif;
-  --font-zh: "Noto Sans TC", "iA Writer Quattro", system-ui, sans-serif;
-  --font-mono: "iA Writer Mono", "IBM Plex Mono", ui-monospace, monospace;
+  --font-latin: "Inter", system-ui, sans-serif;
+  --font-zh: "Noto Sans TC", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 *,
@@ -144,7 +144,7 @@ a:hover {
 
 /* —— Homepage (full-viewport ASCII 河豚 stage) —— */
 body.home {
-  font-family: "IBM Plex Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-family: var(--font-latin);
   overflow: hidden;
   height: 100vh;
   height: 100dvh;
@@ -168,6 +168,7 @@ body.home {
   z-index: 0;
   display: block;
   pointer-events: auto;
+  font-family: var(--font-mono);
 }
 
 .home-vignette {
@@ -200,8 +201,9 @@ body.home {
   z-index: 3;
   display: flex;
   gap: 28px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--font-latin);
   font-size: 13px;
+  font-weight: 500;
   letter-spacing: 0.02em;
   color: rgba(28, 27, 25, 0.84); /* was 0.72 — deepen further, still quiet */
 }
@@ -260,8 +262,12 @@ body.home {
 
 .home-copy {
   position: relative;
-  font-family: "IBM Plex Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-family: var(--font-latin);
   color: #1c1b19;
+}
+.home-copy .home-sub,
+body.lang-zh-Hant .home-copy .home-sub {
+  font-family: var(--font-zh);
 }
 
 .home-greeting {
@@ -898,4 +904,71 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
   .home-col {
     flex: 1 1 180px;
   }
+}
+
+
+/* —— Notes / Works list stubs —— */
+.list-page {
+  padding: 72px 0 120px;
+  width: min(100% - 56px, 640px);
+  margin: 0 auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+.list-title {
+  font-family: var(--font-latin);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 1rem 0 0.35rem;
+}
+.list-lede {
+  font-family: var(--font-zh);
+  font-size: 14px;
+  color: var(--ink-40);
+  margin: 0 0 1rem;
+}
+.list-index {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 2rem;
+}
+.list-index li {
+  margin: 0;
+  border-bottom: 1px solid var(--ink-09);
+}
+.list-index a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 0;
+  text-decoration: none;
+}
+.list-index a:hover {
+  opacity: 1;
+}
+.list-item-title {
+  font-family: var(--font-latin);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.list-item-title.zh {
+  font-family: var(--font-zh);
+}
+.list-index time,
+.list-item-blurb {
+  font-family: var(--font-latin);
+  font-size: 13px;
+  color: var(--ink-40);
+}
+.list-foot {
+  font-family: var(--font-latin);
+  font-size: 12px;
+  color: var(--ink-40);
+  line-height: 1.5;
+}
+.list-foot code {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
 }
