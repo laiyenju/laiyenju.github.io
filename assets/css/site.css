@@ -251,13 +251,17 @@ body.home {
   color: #2a2420;
 }
 
-.home-sub {
-  margin: 0 0 14px;
+.home-sub,
+.home-role {
+  margin: 0 0 8px;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.01em;
   color: #6e6a64;
+}
+.home-role {
+  margin-bottom: 14px;
 }
 
 .home-slogan {
@@ -268,7 +272,6 @@ body.home {
   line-height: 1.55;
   letter-spacing: -0.01em;
   color: #2a2420;
-  max-width: 36ch;
 }
 @media (min-width: 900px) {
   .home-slogan {
@@ -277,19 +280,21 @@ body.home {
   }
 }
 
-.home-contact {
+.home-links {
   margin: 0;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.01em;
+  color: #2a2420;
 }
-.home-contact a {
-  color: #C45C26;
+.home-links a {
+  color: inherit;
   text-decoration: none;
 }
-.home-contact a:hover {
-  opacity: 0.8;
+.home-links a:hover {
+  opacity: 1;
+  color: #C45C26;
 }
 
 @media (max-width: 640px) {

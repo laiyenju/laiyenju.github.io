@@ -80,30 +80,27 @@ interface SharkShape {
   tint: [number, number, number];
 }
 
-/** Side-view koi: rounded head, full body, cinched peduncle, forked tail. */
+/** Side-view koi: blunt head, deep front body, pinched peduncle. Fork is drawn as the caudal. */
 function koiHalfWidth(s: number) {
-  // Rounded head, full mid-body, cinched peduncle, then a forked tail.
-  if (s < 0.16) return 0.125 * Math.pow(Math.sin(((s / 0.16) * Math.PI) / 2), 0.32);
-  if (s < 0.4) return 0.125 + 0.03 * smoothstep(0.16, 0.4, s);
-  if (s < 0.64) return 0.036 + 0.119 * Math.pow(1 - (s - 0.4) / 0.46, 0.9);
-  if (s < 0.8) {
-    const k = (s - 0.64) / 0.16;
-    return 0.078 * (1 - k * 0.7) + 0.02;
-  }
-  const k = (s - 0.8) / 0.2;
-  return 0.026 * (1 - k) + 0.024 * Math.sin(k * Math.PI);
+  if (s < 0.045) return 0.072;
+  if (s < 0.14) return 0.072 + 0.05 * smoothstep(0.045, 0.14, s);
+  if (s < 0.46) return 0.122 + 0.028 * smoothstep(0.14, 0.3, s);
+  if (s < 0.64) return 0.15 - 0.05 * smoothstep(0.46, 0.64, s);
+  if (s < 0.8) return 0.1 - 0.055 * smoothstep(0.64, 0.8, s);
+  const k = clamp((s - 0.8) / 0.12, 0, 1);
+  return 0.042 * (1 - k);
 }
 
 const SHAPES: Record<SharkKind, SharkShape> = {
   koi: {
     halfWidth: koiHalfWidth,
-    pectoral: [0.22, 0.34, 0.4, 0.1],
+    pectoral: [0.28, 0.34, 0.37, 0.04],
     falcate: false,
-    pelvic: [0.56, 0.61, 0.64, 0.045],
-    caudal: 0.16,
-    dorsal: [0.34, 0.42],
-    secondDorsal: [0.66, 0.69],
-    eye: [0.055, 0.085],
+    pelvic: [0.6, 0.63, 0.65, 0.02],
+    caudal: 0.2,
+    dorsal: [0.34, 0.44],
+    secondDorsal: [0.7, 0.72],
+    eye: [0.06, 0.105],
     gills: [0.16, 0.22],
     tint: [1, 1, 1],
   },
@@ -342,6 +339,32 @@ export class AsciiRenderer {
   /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
   private fishBuckets: number[][] = FISH_ALPHAS.map(() => []);
   private fishStyles = FISH_ALPHAS.map((a) => `rgba(208,204,198,${(a * 0.45).toFixed(3)})`);
+  /** Quiet expanding rings. One event, 0.8s, then a same-point cooldown. */
+  private ripples: { x: number; y: number; age: number; life: number; maxR: number }[] = [];
+  private rippleCooldown: { x: number; y: number; until: number }[] = [];
+
+  spawnRipple(x: number, y: number) {
+    const now = performance.now() / 1000;
+    const near = Math.max(36, this.cw * 3);
+    this.rippleCooldown = this.rippleCooldown.filter((c) => c.until > now);
+    for (const c of this.rippleCooldown) {
+      if (Math.hypot(c.x - x, c.y - y) < near) return;
+    }
+    if (this.ripples.length >= 4) return;
+    this.rippleCooldown.push({ x, y, until: now + 1.2 });
+    const cells = 8 + Math.random() * 4;
+    this.ripples.push({
+      x,
+      y,
+      age: 0,
+      life: 0.8,
+      maxR: Math.max(8, this.cw) * cells,
+    });
+  }
+
+  clearRipples() {
+    this.ripples.length = 0;
+  }
 
   constructor(private canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d", { alpha: false });
@@ -442,6 +465,7 @@ export class AsciiRenderer {
 
     this.markFish(world);
     this.drawDots(t);
+    this.drawRipples(dt);
 
     ctx.font = `600 ${Math.round(ch * 0.74)}px ${this.fontFamily}`;
     ctx.textAlign = "center";
@@ -453,6 +477,45 @@ export class AsciiRenderer {
   }
 
   // ── simulation → field ──────────────────────────────────────────────
+
+  private drawRipples(dt: number) {
+    if (!this.ripples.length) return;
+    const { ctx, cw, ch } = this;
+    const keep: typeof this.ripples = [];
+    ctx.save();
+    ctx.font = `500 ${Math.max(8, Math.round(ch * 0.68))}px ${this.fontFamily}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const rip of this.ripples) {
+      rip.age += dt;
+      if (rip.age >= rip.life) continue;
+      keep.push(rip);
+      const u = rip.age / rip.life;
+      const ease = 1 - (1 - u) * (1 - u);
+      const alpha = (1 - ease) * 0.15;
+      if (alpha < 0.012) continue;
+      for (let ring = 0; ring < 2; ring++) {
+        const radius = rip.maxR * (0.22 + 0.78 * ease) * (ring === 0 ? 1 : 0.58);
+        if (radius < cw * 0.75) continue;
+        const count = ring === 0 ? 16 : 10;
+        for (let i = 0; i < count; i++) {
+          if (hash3(i, ring + 2, ((rip.x / cw) | 0) + 5) < 0.38) continue;
+          const a = (i / count) * Math.PI * 2 + ring * 0.55;
+          const px = rip.x + Math.cos(a) * radius;
+          const py = rip.y + Math.sin(a) * radius;
+          const col = Math.floor(px / cw);
+          const row = Math.floor(py / ch);
+          if (col < 0 || row < 0 || col >= this.cols || row >= this.rows) continue;
+          const edge = ring === 0 && ease > 0.42;
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = edge ? "#E8A05C" : "#D0CCC6";
+          ctx.fillText(i % 2 === 0 ? "·" : "˚", col * cw + cw / 2, row * ch + ch / 2);
+        }
+      }
+    }
+    ctx.restore();
+    this.ripples = keep;
+  }
 
   private cellIndex(x: number, y: number) {
     const c = Math.floor(x / this.cw);
@@ -600,9 +663,15 @@ export class AsciiRenderer {
           flag = FLAG_RIDGE;
           shade = 1;
         }
-      } else if (s > shape.secondDorsal[0] && s < shape.secondDorsal[1] && across < 0.4) {
+      } else if (this.shape !== SHAPES.koi && s > shape.secondDorsal[0] && s < shape.secondDorsal[1] && across < 0.4) {
         shade = Math.max(shade, 0.82);
-      } else if (shape.eye && s > shape.eye[0] && s < shape.eye[1] && across > 0.42 && across < 0.78) {
+      } else if (
+        shape.eye &&
+        s > shape.eye[0] &&
+        s < shape.eye[1] &&
+        across > (this.shape === SHAPES.koi ? 0.48 : 0.42) &&
+        across < (this.shape === SHAPES.koi ? 0.78 : 0.78)
+      ) {
         flag = FLAG_EYE;
         shade = 0.9;
       } else if (this.shape !== SHAPES.koi && s > shape.gills[0] && s < shape.gills[1] && across > 0.58) {
@@ -633,11 +702,22 @@ export class AsciiRenderer {
       this.hitShade = 0.38 + 0.22 * (1 - clamp(a / tip, 0, 1));
       return true;
     }
+    if (this.shape === SHAPES.koi && shape.caudal > 0) {
+      const reach = L * shape.caudal;
+      const lobe = inTriangle(u, a, L * 0.78, 0, L * 0.86, L * 0.012, L * 1.0, reach);
+      const notch = u > L * 0.9 && a < (u - L * 0.9) * 0.9;
+      if (lobe && !notch) {
+        this.hitFlag = FLAG_FIN;
+        this.hitShade = 0.55;
+        return true;
+      }
+    }
     const [v0, v1, v2, vr] = shape.pelvic;
     if (
       inTriangle(u, a, L * v0, 0, L * v1, 0, L * v2, L * vr) ||
-      // Forked caudal fin.
-      (shape.caudal > 0 && inTriangle(u, a, L * 0.86, 0, L * 0.95, 0, L, L * shape.caudal))
+      (this.shape !== SHAPES.koi &&
+        shape.caudal > 0 &&
+        inTriangle(u, a, L * 0.86, 0, L * 0.95, 0, L, L * shape.caudal))
     ) {
       this.hitFlag = FLAG_FIN;
       this.hitShade = 0.36;
@@ -656,16 +736,16 @@ export class AsciiRenderer {
       return bar > 0.65 - 0.5 * smoothstep(0.2, 0.42, s) + 0.4 * smoothstep(0.8, 0.9, s);
     }
     if (this.shape === SHAPES.koi) {
-      // Sparse terracotta patches along the flank, not a leopard coat.
-      if (s < 0.22 || s > 0.62 || across < 0.2 || across > 0.75) return false;
-      const gu = (s * L) / (L * 0.11);
-      const gv = v / (L * 0.055);
+      // Sparse pale-orange patches. A little denser than the first pass, still not a coat.
+      if (s < 0.28 || s > 0.6 || across < 0.34 || across > 0.66) return false;
+      const gu = (s * L) / (L * 0.13);
+      const gv = v / (L * 0.07);
       const cu = Math.floor(gu);
       const cv = Math.floor(gv);
-      if (hash3(cu, cv, this.sharkId + 4) < 0.62) return false;
+      if (hash3(cu, cv, this.sharkId + 4) < 0.55) return false;
       const jx = hash3(cu, cv, this.sharkId) * 0.5 + 0.25;
       const jy = hash3(cu, cv, this.sharkId + 11) * 0.5 + 0.25;
-      return (gu - cu - jx) ** 2 + (gv - cv - jy) ** 2 < 0.07;
+      return (gu - cu - jx) ** 2 + (gv - cv - jy) ** 2 < 0.085;
     }
     if (this.shape === SHAPES.zebra) {
       // Leopard spots on a jittered grid, so they ride along with the skin.
@@ -710,8 +790,11 @@ export class AsciiRenderer {
         const tl = Math.hypot(tx, ty) || 1;
         tx /= tl;
         ty /= tl;
-        const amp = L * 0.05 * (0.1 + 0.9 * Math.pow(s, 1.8)) * swim;
-        const off = amp * Math.sin(sh.phase - s * 5.2);
+        const koiWave = sh.kind === "koi";
+        const amp = koiWave
+          ? L * 0.015 * Math.pow(s, 2.2) * swim
+          : L * 0.05 * (0.1 + 0.9 * Math.pow(s, 1.8)) * swim;
+        const off = amp * Math.sin(sh.phase - s * (koiWave ? 1.7 : 5.2));
         spine[k * 2] = n[k * 2] - ty * off;
         spine[k * 2 + 1] = n[k * 2 + 1] + tx * off;
       }
@@ -793,7 +876,7 @@ export class AsciiRenderer {
   }
 
   private drawSharks(t: number) {
-    const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind } = this;
+    const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkKind } = this;
     const n = cols * rows;
     for (let i = 0; i < n; i++) {
       const flag = sharkFlag[i];
@@ -804,50 +887,48 @@ export class AsciiRenderer {
       const y = row * ch;
       const key = sharkKey[i];
       const shade = sharkShade[i];
-      const dim = 0.7 + 0.3 * sharkDepth[i];
       const [tr, tg, tb] = SHAPES[KINDS[sharkKind[i]]].tint;
+      // Screen Y is depth: top is near (dark, opaque), bottom is far (light, thin).
+      const yNorm = row / Math.max(1, rows - 1);
+      const near = 1 - yNorm;
+      const alpha = clamp(0.99 - yNorm * 0.5, 0.45, 1);
+      // Top reads charcoal; bottom eases into light grey. Continuous in Y, including inside one fish.
+      const lifted = clamp(shade + (0.55 - near) * 0.82, 0, 1);
 
-      // Colours re-roll on a staggered clock so the hide shimmers.
-      const tick = Math.floor(t * 2.4 + (key % 997) / 97);
-      const roll = hash3(key, tick, 7);
-
-      ctx.globalAlpha = 0.4 + 0.6 * sharkDepth[i];
-
-      const warm = shade > 0.84 ? "#FFF5EB"
-        : shade > 0.62 ? "#E8A05C"
-        : shade > 0.36 ? "#C45C26"
-        : shade > 0.16 ? "#8B3A1A"
-        : "#2A2420";
+      ctx.globalAlpha = alpha;
 
       if (flag === FLAG_EDGE) {
         const set = shade >= 0.5 ? EDGE_HEAVY : EDGE_LIGHT;
-        ctx.fillStyle = shade > 0.5 ? "#C4C0B8" : "#8A8680";
+        ctx.fillStyle = lifted > 0.48 ? "#C4C0B8" : "#8A8680";
         ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
-        ctx.fillStyle = "#2A2420";
+        ctx.fillStyle = "#4A4744";
         ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
         ctx.globalAlpha = 1;
         continue;
       }
 
-      let fill = warm;
+      let fill = lifted > 0.58 ? "#C4C0B8" : lifted > 0.3 ? "#8A8680" : "#4A4744";
+      if (shade > 0.9) fill = "#F7F5F0";
       let glyph: string;
-      let ink = shade > 0.5 ? "#2A2420" : "#FFF5EB";
+      let ink = lifted > 0.48 ? "#4A4744" : "#F7F5F0";
       if (flag === FLAG_RIDGE) {
-        fill = "#FFF5EB";
+        fill = "#F7F5F0";
         glyph = RIDGE_GLYPHS[(key >>> 8) % RIDGE_GLYPHS.length];
-        ink = "#2A2420";
+        ink = "#4A4744";
       } else if (flag === FLAG_EYE) {
-        fill = "#FFF5EB";
+        fill = "#FFFEFA";
         glyph = "·";
         ink = "#1A1816";
       } else if (flag === FLAG_MARK) {
-        fill = shade > 0.55 ? "#D4894A" : "#C45C26";
+        const spot = hash3(key, 3, 11);
+        fill = spot > 0.93 ? "#C45C26" : shade > 0.72 || spot > 0.8 ? "#E8A05C" : "#D4894A";
         glyph = MARK_GLYPHS[(key >>> 8) % MARK_GLYPHS.length];
-        ink = "#2A2420";
+        ink = "#4A4744";
       } else if (flag === FLAG_FIN) {
-        fill = shade > 0.6 ? "#E8A05C" : "#C45C26";
+        fill = lifted > 0.5 ? "#C4C0B8" : "#8A8680";
+        if (hash3(key, 5, 2) > 0.92) fill = "#E8A05C";
         glyph = FIN_GLYPHS[(key >>> 8) % FIN_GLYPHS.length];
-        ink = "#2A2420";
+        ink = "#4A4744";
       } else {
         const jitter = ((key >>> 4) % 3) - 1;
         glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * (SKIN_RAMP.length - 0.01)) + jitter, 0, SKIN_RAMP.length - 1)];
@@ -857,11 +938,9 @@ export class AsciiRenderer {
       ctx.fillStyle = ink;
       ctx.fillText(glyph, x + cw / 2, y + ch / 2 + 1);
       ctx.globalAlpha = 1;
-      void roll;
       void tr;
       void tg;
       void tb;
-      void dim;
     }
   }
 

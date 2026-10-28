@@ -19,6 +19,8 @@ export class OceanEngine {
   private resizeObserver: ResizeObserver;
   private intersectionObserver: IntersectionObserver;
   private disposed = false;
+  private prevSpeed = new Map<number, number>();
+  private closePairs = new Set<string>();
 
   constructor(private canvas: HTMLCanvasElement, sharks?: SharkSpec[]) {
     // Few grey dashes as quiet field particles; the koi school is the subject.
@@ -41,6 +43,7 @@ export class OceanEngine {
     document.documentElement.addEventListener("pointerleave", this.onPointerLeave);
     window.addEventListener("blur", this.onPointerLeave);
 
+    (canvas as HTMLCanvasElement & { __ocean?: OceanEngine }).__ocean = this;
     this.resize();
     // Canvas text can't trigger a webfont load; once the mono face is in, redraw.
     document.fonts?.load(`600 16px ${getComputedStyle(canvas).fontFamily}`).then(() => {
@@ -88,9 +91,49 @@ export class OceanEngine {
       steps++;
     }
     if (steps === MAX_STEPS) this.acc = 0;
+    this.senseRipples();
     this.renderer.render(this.world, dt);
     this.raf = requestAnimationFrame(this.frame);
   };
+
+  /** One quiet ring. Ignored when the reader prefers reduced motion. */
+  ripple(x: number, y: number) {
+    if (this.reducedMotion.matches) return;
+    this.renderer.spawnRipple(x, y);
+  }
+
+  private senseRipples() {
+    if (this.reducedMotion.matches) {
+      this.renderer.clearRipples();
+      this.prevSpeed.clear();
+      this.closePairs.clear();
+      return;
+    }
+    const sharks = this.world.sharks;
+    for (const sh of sharks) {
+      const prev = this.prevSpeed.get(sh.id);
+      if (prev !== undefined && sh.speed - prev > 1.25) {
+        this.renderer.spawnRipple(sh.nodes[0], sh.nodes[1]);
+      }
+      this.prevSpeed.set(sh.id, sh.speed);
+    }
+    const next = new Set<string>();
+    for (let i = 0; i < sharks.length; i++) {
+      for (let j = i + 1; j < sharks.length; j++) {
+        const a = sharks[i];
+        const b = sharks[j];
+        const d = Math.hypot(a.nodes[0] - b.nodes[0], a.nodes[1] - b.nodes[1]);
+        const key = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
+        if (d < 128) {
+          next.add(key);
+          if (!this.closePairs.has(key)) {
+            this.renderer.spawnRipple((a.nodes[0] + b.nodes[0]) / 2, (a.nodes[1] + b.nodes[1]) / 2);
+          }
+        }
+      }
+    }
+    this.closePairs = next;
+  }
 
   /** Reduced motion: let the ecosystem settle, then show a single frame. */
   private drawStill() {

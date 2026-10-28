@@ -149,9 +149,11 @@ export class World {
       const orbitRadius = minSide * rand(0.22, 0.34);
       const laneLeft = i % 2 === 0;
       const orbitDir: 1 | -1 = laneLeft ? -1 : 1;
-      const x = (laneLeft ? W * 0.18 : W * 0.82) + rand(-W * 0.04, W * 0.04);
-      const y = H * (0.28 + (i / Math.max(1, sharkCount - 1)) * 0.48);
-      const heading = (laneLeft ? Math.PI : 0) + rand(-0.25, 0.25);
+      // Snout inset so the trailing body stays in the corridor instead of starting offscreen.
+      const margin = Math.max(64, length * 0.2);
+      const x = laneLeft ? margin + rand(0, W * 0.03) : W - margin - rand(0, W * 0.03);
+      const y = H * (0.34 + (i / Math.max(1, sharkCount - 1)) * 0.36);
+      const heading = (laneLeft ? Math.PI : 0) + rand(-0.12, 0.12);
       const nodes = new Float32Array(SHARK_NODES * 2);
       const seg = length / (SHARK_NODES - 1);
       for (let n = 0; n < SHARK_NODES; n++) {
@@ -484,7 +486,8 @@ export class World {
       const colHalf = Math.min(210, W * 0.16);
       const colTop = H * 0.28;
       const colBot = H * 0.74;
-      const laneLeft = sh.id % 2 === 0;
+      // id is i+1, and even i spawned on the left. Odd ids stay in the left corridor.
+      const laneLeft = sh.id % 2 === 1;
       const laneX = laneLeft ? W * 0.2 : W * 0.8;
 
       const preyQuiet = (px: number, py: number) =>
@@ -549,10 +552,11 @@ export class World {
         if (Math.abs(hx - cxW) < W * 0.36) dx += (hx < cxW ? -1 : 1) * w * 0.8;
       }
 
-      // Turn back into the lane, not into the middle of the page.
-      const over = Math.max(-hx, hx - W, -hy, hy - H);
-      if (over > -L * 0.05) {
-        const w = clamp((over + L * 0.05) / (L * 0.35), 0, 1) * 3.5;
+      // Turn back into the lane before the snout leaves the corridor.
+      const edgePad = Math.max(48, L * 0.18);
+      const over = Math.max(edgePad - hx, hx - (W - edgePad), -hy, hy - H);
+      if (over > 0) {
+        const w = clamp(over / (L * 0.3), 0, 1) * 3.5;
         const toX = laneX - hx;
         const toY = clamp(hy, navClear + L * 0.12, H * 0.82) - hy;
         const d = Math.hypot(toX, toY) || 1;
@@ -562,7 +566,10 @@ export class World {
 
       const desired = Math.atan2(dy, dx);
       // Sharks can't pivot on the spot: the turning circle grows with speed.
-      const agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+      const edgePadNow = Math.max(48, L * 0.18);
+      const huggingEdge = Math.max(edgePadNow - hx, hx - (W - edgePadNow)) > 0;
+      let agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+      if (huggingEdge) agility = Math.max(agility, 2.3);
       const maxTurn = agility * dt;
       const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
       sh.heading += turned;
@@ -575,6 +582,8 @@ export class World {
 
       nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
       nodes[1] += Math.sin(sh.heading) * sh.speed * dt;
+      nodes[0] = clamp(nodes[0], 16, W - 16);
+      nodes[1] = clamp(nodes[1], Math.max(78, H * 0.14), H - 24);
 
       // Follow-the-leader spine, with a stiffness limit per joint so the
       // body bends into a C at most and never folds back on itself.
