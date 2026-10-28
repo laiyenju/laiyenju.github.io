@@ -30,9 +30,68 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var el = document.querySelector("canvas[data-koi]");
-      if (el && window.OceanEngine) {
-        new window.OceanEngine(el);
+      if (el && window.OceanEngine) new window.OceanEngine(el);
+      var roots = document.querySelectorAll(".home-nav, .home-copy");
+      roots.forEach(function (root) {
+        var texts = [];
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+        var node;
+        while ((node = walker.nextNode())) {
+          if (node.nodeValue && node.nodeValue.trim()) texts.push(node);
+        }
+        texts.forEach(function (textNode) {
+          var frag = document.createDocumentFragment();
+          var value = textNode.nodeValue;
+          for (var i = 0; i < value.length; i++) {
+            var ch = value.charAt(i);
+            if (ch === " " || ch === "\n" || ch === "\t") {
+              frag.appendChild(document.createTextNode(ch));
+            } else {
+              var span = document.createElement("span");
+              span.className = "home-glyph";
+              span.textContent = ch;
+              frag.appendChild(span);
+            }
+          }
+          textNode.parentNode.replaceChild(frag, textNode);
+        });
+      });
+      var glyphs = document.querySelectorAll(".home-glyph");
+      function fishAt(data, w, x, y) {
+        if (x < 1 || y < 1 || x >= w - 1) return false;
+        for (var dy = -1; dy <= 1; dy++) {
+          for (var dx = -1; dx <= 1; dx++) {
+            var i = ((y + dy) * w + (x + dx)) * 4;
+            var r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+            if (a < 200) continue;
+            var warm = r > g + 22 && r > 120 && g < 200;
+            var deep = r < 72 && g < 64 && b < 60;
+            if (warm || deep) return true;
+          }
+        }
+        return false;
       }
+      function tick() {
+        var canvas = document.querySelector("canvas[data-koi]");
+        if (canvas) {
+          var ctx = canvas.getContext("2d");
+          var crect = canvas.getBoundingClientRect();
+          if (ctx && crect.width > 0) {
+            var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            var sx = canvas.width / crect.width;
+            var sy = canvas.height / crect.height;
+            for (var i = 0; i < glyphs.length; i++) {
+              var g = glyphs[i];
+              var r = g.getBoundingClientRect();
+              var x = Math.round((r.left + r.width / 2 - crect.left) * sx);
+              var y = Math.round((r.top + r.height / 2 - crect.top) * sy);
+              g.style.color = fishAt(data, canvas.width, x, y) ? "#FFF5EB" : "";
+            }
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
     });
   </script>
 </body>

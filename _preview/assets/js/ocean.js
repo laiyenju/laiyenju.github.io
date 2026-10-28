@@ -619,26 +619,26 @@
     return 0.019 * (1 - k) + 0.012 * Math.sin(k * Math.PI);
   }
   function koiHalfWidth(s) {
-    if (s < 0.14) return 0.108 * Math.pow(Math.sin(s / 0.14 * Math.PI / 2), 0.42);
-    if (s < 0.36) return 0.108 + 0.028 * smoothstep(0.14, 0.36, s);
-    if (s < 0.68) return 0.03 + 0.106 * Math.pow(1 - (s - 0.36) / 0.52, 1.05);
-    if (s < 0.82) {
-      const k2 = (s - 0.68) / 0.14;
-      return 0.055 * (1 - k2) + 0.022;
+    if (s < 0.16) return 0.125 * Math.pow(Math.sin(s / 0.16 * Math.PI / 2), 0.32);
+    if (s < 0.4) return 0.125 + 0.03 * smoothstep(0.16, 0.4, s);
+    if (s < 0.64) return 0.036 + 0.119 * Math.pow(1 - (s - 0.4) / 0.46, 0.9);
+    if (s < 0.8) {
+      const k2 = (s - 0.64) / 0.16;
+      return 0.078 * (1 - k2 * 0.7) + 0.02;
     }
-    const k = (s - 0.82) / 0.18;
-    return 0.022 * (1 - k) + 0.018 * Math.sin(k * Math.PI);
+    const k = (s - 0.8) / 0.2;
+    return 0.026 * (1 - k) + 0.024 * Math.sin(k * Math.PI);
   }
   var SHAPES = {
     koi: {
       halfWidth: koiHalfWidth,
-      pectoral: [0.2, 0.34, 0.4, 0.12],
+      pectoral: [0.22, 0.34, 0.4, 0.1],
       falcate: false,
-      pelvic: [0.55, 0.6, 0.63, 0.05],
-      caudal: 0.11,
-      dorsal: [0.3, 0.44],
-      secondDorsal: [0.62, 0.66],
-      eye: [0.07, 0.12],
+      pelvic: [0.56, 0.61, 0.64, 0.045],
+      caudal: 0.16,
+      dorsal: [0.34, 0.42],
+      secondDorsal: [0.66, 0.69],
+      eye: [0.055, 0.085],
       gills: [0.16, 0.22],
       tint: [1, 1, 1]
     },
@@ -1085,14 +1085,18 @@
         let shade = 0.58 - across * across * 0.42 + facing * 0.26;
         let flag = FLAG_BODY;
         if (s > shape.dorsal[0] && s < shape.dorsal[1] && across < 0.3) {
-          flag = FLAG_RIDGE;
-          shade = 1;
+          if (this.shape === SHAPES.koi) {
+            shade = Math.min(1, shade + 0.2);
+          } else {
+            flag = FLAG_RIDGE;
+            shade = 1;
+          }
         } else if (s > shape.secondDorsal[0] && s < shape.secondDorsal[1] && across < 0.4) {
           shade = Math.max(shade, 0.82);
-        } else if (shape.eye && s > shape.eye[0] && s < shape.eye[1] && across > 0.6) {
+        } else if (shape.eye && s > shape.eye[0] && s < shape.eye[1] && across > 0.42 && across < 0.78) {
           flag = FLAG_EYE;
-          shade = 0;
-        } else if (s > shape.gills[0] && s < shape.gills[1] && across > 0.58) {
+          shade = 0.9;
+        } else if (this.shape !== SHAPES.koi && s > shape.gills[0] && s < shape.gills[1] && across > 0.58) {
           if (Math.floor((s - shape.gills[0]) / (shape.gills[1] - shape.gills[0]) * 5) % 2 === 0) shade *= 0.45;
         } else if (s < 0.05) {
           shade = Math.max(shade, 0.7);
@@ -1236,7 +1240,7 @@
             sharkKind[i] = kindIndex;
             if (centerHit && coverage >= 0.6) {
               sharkFlag[i] = flag;
-              const flicker = (hash3(c, r, Math.floor(t * 6)) - 0.5) * 0.06;
+              const flicker = Math.sin(t * 1.15 + key % 64 * 0.08) * 0.02;
               sharkShade[i] = clamp(shade + flicker, 0, 1);
               const sc = c + shadowDc;
               const sr = r + shadowDr;
@@ -1265,36 +1269,37 @@
         const [tr, tg, tb] = SHAPES[KINDS[sharkKind[i]]].tint;
         const tick = Math.floor(t * 2.4 + key % 997 / 97);
         const roll = hash3(key, tick, 7);
-        ctx.globalAlpha = 0.42 + 0.58 * dim;
+        ctx.globalAlpha = 0.4 + 0.6 * sharkDepth[i];
+        const warm = shade > 0.84 ? "#FFF5EB" : shade > 0.62 ? "#E8A05C" : shade > 0.36 ? "#C45C26" : shade > 0.16 ? "#8B3A1A" : "#2A2420";
         if (flag === FLAG_EDGE) {
           const set = shade >= 0.5 ? EDGE_HEAVY : EDGE_LIGHT;
-          ctx.fillStyle = "#8A8680";
+          ctx.fillStyle = shade > 0.5 ? "#C4C0B8" : "#8A8680";
+          ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
+          ctx.fillStyle = "#2A2420";
           ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
           ctx.globalAlpha = 1;
           continue;
         }
-        let fill = "#C4C0B8";
+        let fill = warm;
         let glyph;
-        let ink = "#4A4744";
+        let ink = shade > 0.5 ? "#2A2420" : "#FFF5EB";
         if (flag === FLAG_RIDGE) {
-          fill = shade > 0.4 ? "#F7F5F0" : "#C4C0B8";
+          fill = "#FFF5EB";
           glyph = RIDGE_GLYPHS[(key >>> 8) % RIDGE_GLYPHS.length];
+          ink = "#2A2420";
         } else if (flag === FLAG_EYE) {
-          fill = "#FFFEFA";
+          fill = "#FFF5EB";
           glyph = "\xB7";
           ink = "#1A1816";
         } else if (flag === FLAG_MARK) {
           fill = shade > 0.55 ? "#D4894A" : "#C45C26";
           glyph = MARK_GLYPHS[(key >>> 8) % MARK_GLYPHS.length];
-          ink = "#4A4744";
+          ink = "#2A2420";
         } else if (flag === FLAG_FIN) {
-          fill = shade > 0.5 ? "#C4C0B8" : "#8A8680";
+          fill = shade > 0.6 ? "#E8A05C" : "#C45C26";
           glyph = FIN_GLYPHS[(key >>> 8) % FIN_GLYPHS.length];
+          ink = "#2A2420";
         } else {
-          if (shade > 0.72) fill = "#F7F5F0";
-          else if (shade > 0.48) fill = "#C4C0B8";
-          else if (shade > 0.28) fill = "#8A8680";
-          else fill = "#4A4744";
           const jitter = (key >>> 4) % 3 - 1;
           glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * (SKIN_RAMP.length - 0.01)) + jitter, 0, SKIN_RAMP.length - 1)];
         }
@@ -1307,6 +1312,7 @@
         void tr;
         void tg;
         void tb;
+        void dim;
       }
     }
     // ── fish, dots, heat ────────────────────────────────────────────────
