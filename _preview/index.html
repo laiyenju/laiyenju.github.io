@@ -66,22 +66,30 @@
       var glyphs = document.querySelectorAll(".home-glyph");
       function fishCell(r, g, b) {
         var lum = (r * 3 + g * 4 + b) / 8;
-        if (lum < 228) return true;
-        if (r > b + 26 && r > 168 && g < 230) return true;
+        if (lum < 162) return true;
+        if (r > b + 48 && lum < 168 && r > 155 && g < 200) return true;
         return false;
       }
       function fishAt(data, w, h, x0, y0, x1, y1) {
         if (x1 < x0 || y1 < y0) return false;
         var stepX = Math.max(1, Math.round((x1 - x0) / 8));
         var stepY = Math.max(1, Math.round((y1 - y0) / 10));
+        var hits = 0;
+        var seen = 0;
+        var sum = 0;
         for (var y = y0; y <= y1; y += stepY) {
           var row = y * w;
           for (var x = x0; x <= x1; x += stepX) {
             var i = (row + x) * 4;
-            if (fishCell(data[i], data[i + 1], data[i + 2])) return true;
+            var r = data[i], g = data[i + 1], b = data[i + 2];
+            var lum = (r * 3 + g * 4 + b) / 8;
+            seen++;
+            sum += lum;
+            if (fishCell(r, g, b)) hits++;
           }
         }
-        return false;
+        if (!seen) return false;
+        return hits >= 3 && hits / seen >= 0.5 && sum / seen < 172;
       }
       function tick() {
         var canvas = document.querySelector("canvas[data-koi]");

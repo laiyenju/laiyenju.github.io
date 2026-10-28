@@ -520,10 +520,12 @@ export class World {
       // so a fish is not pinned outside the copy, and the body can lie across the type.
       const along = Math.cos(sh.heading) >= 0 ? 1 : -1;
       const laneErr = Math.abs(hx - laneX);
-      if (!hunting && laneErr < W * 0.1) dx += along * 0.7;
-      const spring = hunting ? 0.55 : 1.65;
-      dx += clamp((laneX - hx) / (W * 0.16), -1, 1) * spring;
-      dy += clamp((laneY - hy) / (H * 0.22), -1, 1) * spring * 0.55;
+      if (!hunting && laneErr < W * 0.08) dx += along * 0.55;
+      const spring = hunting ? 1.05 : 2.05;
+      dx += clamp((laneX - hx) / (W * 0.14), -1, 1) * spring;
+      dy += clamp((laneY - hy) / (H * 0.2), -1, 1) * spring * 0.62;
+      if (laneLeft && hx < W * 0.14 && Math.cos(sh.heading) > 0) dx -= 1.6;
+      if (!laneLeft && hx > W * 0.86 && Math.cos(sh.heading) < 0) dx += 1.6;
 
       // Give other sharks room.
       for (const other of sharks) {
@@ -552,10 +554,16 @@ export class World {
         dx += (nx / e) * w;
       }
 
-      // Top-center and bottom-center are outside the copy. Return those to the lane.
-      if (!inCopy && Math.abs(hx - cxW) < W * 0.2 && (hy < colTop || hy > colBot)) {
-        dx += (hx < cxW ? -1 : 1) * 1.65;
-        dy += clamp((laneY - hy) / (H * 0.22), -1, 1) * 0.7;
+      // Top-center and bottom-center are outside the copy. Snout or belly, send them back.
+      const belly = Math.min(SHARK_NODES - 1, 8);
+      const bx = nodes[belly * 2];
+      const by = nodes[belly * 2 + 1];
+      const snoutCenter = Math.abs(hx - cxW) < W * 0.18 && (hy < colTop || hy > colBot);
+      const bellyCenter = Math.abs(bx - cxW) < W * 0.16 && (by < colTop || by > colBot);
+      if (snoutCenter || bellyCenter) {
+        const ref = bellyCenter ? bx : hx;
+        dx += (ref < cxW ? -1 : 1) * 1.85;
+        dy += clamp((laneY - hy) / (H * 0.2), -1, 1) * 0.85;
       }
 
       // Only the band directly under the top-center nav, not a ceiling over the title.
@@ -603,6 +611,29 @@ export class World {
         nodes[k * 2] = px + Math.cos(angle) * seg;
         nodes[k * 2 + 1] = py + Math.sin(angle) * seg;
         prevAngle = angle;
+      }
+
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (let k = 0; k < SHARK_NODES; k++) {
+        minX = Math.min(minX, nodes[k * 2]);
+        maxX = Math.max(maxX, nodes[k * 2]);
+        minY = Math.min(minY, nodes[k * 2 + 1]);
+        maxY = Math.max(maxY, nodes[k * 2 + 1]);
+      }
+      let shiftX = 0;
+      let shiftY = 0;
+      if (minX < 10) shiftX = 10 - minX;
+      else if (maxX > W - 10) shiftX = W - 10 - maxX;
+      if (minY < 28) shiftY = 28 - minY;
+      else if (maxY > H - 14) shiftY = H - 14 - maxY;
+      if (shiftX !== 0 || shiftY !== 0) {
+        for (let k = 0; k < SHARK_NODES; k++) {
+          nodes[k * 2] += shiftX;
+          nodes[k * 2 + 1] += shiftY;
+        }
       }
 
       // Feed.
