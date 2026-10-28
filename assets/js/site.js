@@ -32,7 +32,9 @@
 
   /* —— Footnotes: clone into side rail (desktop) + bottom (mobile) —— */
   function initFootnotes() {
-    var prose = document.querySelector(".prose");
+    var prose =
+      document.querySelector(".prose.reveal-source") ||
+      document.querySelector(".prose");
     var side = document.querySelector(".footnote-side");
     var bottom = document.querySelector(".footnote-bottom");
     if (!prose || !side || !bottom) return;
@@ -49,7 +51,6 @@
     items.forEach(function (li, idx) {
       var cloneSide = li.cloneNode(true);
       var cloneBottom = li.cloneNode(true);
-      // Strip reverse link noise for quieter presentation
       cloneSide.querySelectorAll(".reversefootnote").forEach(function (a) {
         a.remove();
       });
@@ -83,7 +84,18 @@
     bottom.classList.add("has-notes");
   }
 
-  /* —— Typewriter / scroll-speed reveal —— */
+  function revealFootnotes() {
+    document
+      .querySelectorAll(".footnote-side, .footnote-bottom")
+      .forEach(function (el) {
+        el.classList.add("is-fn-visible");
+      });
+  }
+
+  /* —— Scroll-driven typewriter (no auto-play) ——
+     scroll progress → target char index; display lerps toward target.
+     Title types first, then body. Footnotes only after full reveal.
+     Footnote rail is absolutely parked (CSS) so typing never shoves it. —— */
   function initReveal() {
     var host = document.querySelector(".reveal-host");
     if (!host) return;
@@ -91,101 +103,185 @@
     var source = host.querySelector(".reveal-source");
     var live = host.querySelector(".reveal-live");
     var controls = document.querySelector(".scroll-reveal-controls");
+    var titleEl = document.querySelector(".article-title");
     if (!source || !live) return;
 
-    var fullHTML = source.innerHTML;
-    // Use text for progressive reveal, keep simple HTML tags via textContent path for safety
-    // Progressive reveal of text nodes while preserving structure is hard;
-    // we reveal by growing a text Content mirror then swap to full HTML when done.
-    var plain = source.innerText || source.textContent || "";
-    plain = plain.replace(/\n{3,}/g, "\n\n").trim();
+    /* Capture body HTML / plain text without the footnotes block */
+    var fnBlock = source.querySelector(".footnotes");
+    var fnHTML = fnBlock ? fnBlock.outerHTML : "";
+    if (fnBlock) fnBlock.remove();
 
-    var idx = 0;
+    var fullHTML = source.innerHTML;
+    var plain = (source.innerText || source.textContent || "")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/^\s+|\s+$/g, "");
+
+    /* Restore footnotes in source (display:none) so DOM stays complete */
+    if (fnHTML) {
+      source.insertAdjacentHTML("beforeend", fnHTML);
+    }
+
+    /* Title → measure (holds space) + live overlay */
+    var titleText = "";
+    var titleLive = null;
+    var titleMeasure = null;
+    if (titleEl) {
+      titleText = (titleEl.textContent || "").replace(/\s+/g, " ").trim();
+      titleEl.textContent = "";
+      titleMeasure = document.createElement("span");
+      titleMeasure.className = "title-measure";
+      titleMeasure.setAttribute("aria-hidden", "true");
+      titleMeasure.textContent = titleText;
+      titleLive = document.createElement("span");
+      titleLive.className = "title-live";
+      titleEl.appendChild(titleMeasure);
+      titleEl.appendChild(titleLive);
+      titleEl.classList.add("is-typing");
+    }
+
+    var titleLen = titleText.length;
+    var totalChars = titleLen + plain.length;
+
+    var display = 0;
+    var target = 0;
     var paused = false;
     var fast = false;
     var done = false;
-    var lastScrollY = window.scrollY || 0;
-    var scrollBoost = 0;
     var raf = null;
+    var LERP = 0.22;
+    var cursorEl = null;
+    var spacer = null;
 
-    function baseCharsPerTick() {
-      if (fast) return 4;
-      return 1;
+    function maxScroll() {
+      var doc = document.documentElement;
+      return Math.max(1, (doc.scrollHeight || 0) - (window.innerHeight || 0));
     }
 
-    function tick() {
-      if (done) return;
-      if (paused) {
-        raf = window.requestAnimationFrame(tick);
-        return;
-      }
-      var step = baseCharsPerTick();
-      if (scrollBoost > 0) {
-        step += Math.min(8, Math.floor(scrollBoost / 40));
-        scrollBoost *= 0.85;
-      }
-      idx = Math.min(plain.length, idx + step);
-      live.textContent = plain.slice(0, idx);
-      // ensure cursor element exists
-      var cursor = live.querySelector(".typewriter-cursor");
-      if (!cursor) {
-        // textContent wiped children; re-append cursor via sibling
-      }
-      updateCursor();
-      if (idx >= plain.length) {
-        finish();
-        return;
-      }
-      var delay = fast ? 8 : 28;
-      window.setTimeout(function () {
-        raf = window.requestAnimationFrame(tick);
-      }, delay);
+    function scrollProgress() {
+      var y = window.scrollY || window.pageYOffset || 0;
+      return Math.min(1, Math.max(0, y / maxScroll()));
     }
 
-    function updateCursor() {
-      var existing = host.querySelector(".typewriter-cursor");
+    function syncTarget() {
+      var p = scrollProgress();
+      /* Complete a little before absolute bottom so finish is reachable */
+      var mapped = Math.min(1, p / 0.9);
+      /* Fast: steeper scroll→chars curve; still requires scroll (no auto-play) */
+      var factor = fast ? 2.4 : 1;
+      target = Math.min(totalChars, mapped * totalChars * factor);
+    }
+
+    function ensureScrollRoom() {
+      /* Source already locks most height; add spacer if the page still
+         cannot scroll enough for a full reveal (short article / tall screen). */
+      var need = Math.max(window.innerHeight * 0.55, Math.ceil(totalChars * 1.8));
+      var natural = maxScroll();
+      if (natural >= need) return;
+      spacer = document.createElement("div");
+      spacer.className = "reveal-scroll-spacer";
+      spacer.style.height = need - natural + 48 + "px";
+      spacer.setAttribute("aria-hidden", "true");
+      var page = document.querySelector(".article-page");
+      if (page) page.appendChild(spacer);
+    }
+
+    function removeSpacer() {
+      if (spacer && spacer.parentNode) spacer.parentNode.removeChild(spacer);
+      spacer = null;
+    }
+
+    function ensureCursor(parent) {
       if (done) {
-        if (existing) existing.remove();
+        if (cursorEl && cursorEl.parentNode) cursorEl.parentNode.removeChild(cursorEl);
+        cursorEl = null;
         return;
       }
-      if (!existing) {
-        existing = document.createElement("span");
-        existing.className = "typewriter-cursor";
-        existing.setAttribute("aria-hidden", "true");
-        live.parentNode.insertBefore(existing, live.nextSibling);
+      if (!cursorEl) {
+        cursorEl = document.createElement("span");
+        cursorEl.className = "typewriter-cursor";
+        cursorEl.setAttribute("aria-hidden", "true");
+      }
+      if (parent && cursorEl.parentNode !== parent) {
+        parent.appendChild(cursorEl);
+      }
+    }
+
+    function render(n) {
+      var chars = Math.max(0, Math.min(totalChars, n));
+      if (titleLive) {
+        if (chars < titleLen) {
+          titleLive.textContent = titleText.slice(0, chars);
+          live.textContent = "";
+          ensureCursor(titleLive);
+        } else {
+          titleLive.textContent = titleText;
+          live.textContent = plain.slice(0, chars - titleLen);
+          ensureCursor(live);
+        }
+      } else {
+        live.textContent = plain.slice(0, chars);
+        ensureCursor(live);
       }
     }
 
     function finish() {
+      if (done) return;
       done = true;
+      display = totalChars;
+      target = totalChars;
+
+      if (titleLive && titleEl) {
+        titleLive.textContent = titleText;
+        titleEl.classList.remove("is-typing");
+        titleEl.classList.add("is-title-done");
+      }
+
+      host.classList.remove("is-revealing");
       host.classList.add("is-done");
       live.innerHTML = fullHTML;
-      var existing = host.querySelector(".typewriter-cursor");
-      if (existing) existing.remove();
-      // subtle coalesce: brief opacity dip
+
+      if (cursorEl && cursorEl.parentNode) cursorEl.parentNode.removeChild(cursorEl);
+      cursorEl = null;
+
+      removeSpacer();
+      revealFootnotes();
+
+      if (controls) controls.hidden = true;
+
       live.style.transition = "opacity 280ms ease";
       live.style.opacity = "0.92";
       window.setTimeout(function () {
         live.style.opacity = "1";
       }, 40);
-      if (controls) controls.hidden = true;
     }
 
     function showFullImmediate() {
-      finish();
+      if (titleEl) {
+        if (titleText) titleEl.textContent = titleText;
+        titleEl.classList.remove("is-typing");
+        titleEl.classList.add("is-title-done");
+      }
+      host.classList.remove("is-revealing");
+      host.classList.add("is-done");
+      live.innerHTML = fullHTML;
+      source.setAttribute("hidden", "");
+      removeSpacer();
+      revealFootnotes();
+      if (controls) controls.hidden = true;
+      done = true;
     }
 
-    if (reduceMotion) {
+    if (reduceMotion || totalChars === 0) {
       showFullImmediate();
-      if (controls) controls.hidden = true;
       return;
     }
 
-    // Start empty
-    source.setAttribute("hidden", "");
-    live.textContent = "";
+    /* Source stays in flow (invisible) to lock scroll height; live overlays */
     host.classList.add("is-revealing");
-    updateCursor();
+    live.textContent = "";
+    if (titleLive) titleLive.textContent = "";
+    render(0);
+    ensureScrollRoom();
 
     if (controls) {
       var btnPause = controls.querySelector("[data-action=pause]");
@@ -196,28 +292,76 @@
           host.classList.toggle("is-paused", paused);
           btnPause.classList.toggle("is-active", paused);
           btnPause.textContent = paused ? "Resume" : "Pause";
+          if (!paused) {
+            syncTarget();
+            kick();
+          }
         });
       }
       if (btnFast) {
         btnFast.addEventListener("click", function () {
           fast = !fast;
           btnFast.classList.toggle("is-active", fast);
+          syncTarget();
+          kick();
         });
       }
+    }
+
+    function tick() {
+      raf = null;
+      if (done) return;
+
+      if (!paused) {
+        var diff = target - display;
+        if (Math.abs(diff) < 0.35) {
+          display = target;
+        } else {
+          display += diff * LERP;
+        }
+      }
+
+      render(Math.floor(display));
+
+      if (display >= totalChars - 0.35 && target >= totalChars) {
+        finish();
+        return;
+      }
+
+      /* Keep lerping only while catching up — no auto-advance without scroll */
+      if (!paused && Math.abs(target - display) >= 0.35) {
+        raf = window.requestAnimationFrame(tick);
+      }
+    }
+
+    function kick() {
+      if (done || raf) return;
+      raf = window.requestAnimationFrame(tick);
     }
 
     window.addEventListener(
       "scroll",
       function () {
-        var y = window.scrollY || 0;
-        var dy = Math.abs(y - lastScrollY);
-        lastScrollY = y;
-        scrollBoost += dy;
+        if (done) return;
+        syncTarget();
+        kick();
       },
       { passive: true }
     );
 
-    raf = window.requestAnimationFrame(tick);
+    window.addEventListener(
+      "resize",
+      function () {
+        if (done) return;
+        syncTarget();
+        kick();
+      },
+      { passive: true }
+    );
+
+    /* Load: zero prose typed. Do NOT start a typing loop. */
+    syncTarget();
+    if (target > 0) kick();
   }
 
   document.addEventListener("DOMContentLoaded", function () {

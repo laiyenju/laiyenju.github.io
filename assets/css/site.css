@@ -341,9 +341,9 @@ a:hover {
 }
 
 .body-with-fn {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
+  /* Side footnotes are absolutely parked; no flex shove while typing */
+  position: relative;
+  display: block;
 }
 
 .prose {
@@ -472,14 +472,14 @@ body.lang-en .prose {
   margin-top: 8px;
 }
 
-/* Footnotes */
+/* Footnotes — out of prose flow so typing never shoves the rail.
+   Side rail is absolutely parked beside the measure; visibility only
+   toggles after the typewriter finishes (see .is-fn-visible). */
 .prose .footnotes {
   display: none; /* moved by JS / CSS layout */
 }
 
 .footnote-side {
-  flex: 0 0 180px;
-  width: 180px;
   display: none;
   gap: 12px;
   padding-top: 2px;
@@ -487,6 +487,17 @@ body.lang-en .prose {
   font-size: 13px;
   line-height: 1.5;
   color: var(--ink-40);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms ease, visibility 0s linear 320ms;
+}
+
+.footnote-side.has-notes.is-fn-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 320ms ease, visibility 0s linear 0s;
 }
 
 .footnote-side .rail {
@@ -515,6 +526,17 @@ body.lang-en .prose {
   font-size: 14px;
   color: var(--ink-40);
   line-height: 1.55;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms ease, visibility 0s linear 320ms;
+}
+
+.footnote-bottom.has-notes.is-fn-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 320ms ease, visibility 0s linear 0s;
 }
 
 .footnote-bottom ol {
@@ -532,17 +554,34 @@ body.lang-en .prose {
 }
 
 @media (min-width: 900px) {
+  .article-column {
+    /* measure + gap + side rail — room for absolute footnote slot */
+    width: min(100% - 56px, 844px);
+  }
   .footnote-side.has-notes {
     display: flex;
+    position: absolute;
+    left: calc(var(--measure) + 24px);
+    top: 0;
+    width: 180px;
+    flex: none;
   }
   .footnote-bottom.has-notes {
-    display: none;
+    display: none !important;
   }
 }
 
 @media (max-width: 899px) {
   .footnote-bottom.has-notes {
     display: block;
+  }
+  .footnote-bottom.has-notes:not(.is-fn-visible) {
+    /* collapse until reveal so mobile layout does not reserve a dead gap */
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
   .footnote-side {
     display: none !important;
@@ -569,15 +608,98 @@ body.lang-en .prose {
   }
 }
 
-/* Typewriter / scroll reveal */
-.reveal-host .reveal-live { display: none; }
-.reveal-host.is-revealing .reveal-source { display: none; }
-.reveal-host.is-revealing .reveal-live { display: block; }
+/* Before JS bootstraps: keep title/body visually empty but sized
+   (html.reveal-js is set by a tiny inline script in article pages). */
+html.reveal-js body.page-article .article-title:not(.is-typing):not(.is-title-done) {
+  visibility: hidden;
+}
+html.reveal-js body.page-article .reveal-host:not(.is-done) .reveal-source {
+  visibility: hidden;
+  pointer-events: none;
+}
+html.reveal-js body.page-article .reveal-host:not(.is-done) .reveal-live {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+html.reveal-js body.page-article .footnote-side.has-notes:not(.is-fn-visible),
+html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Typewriter / scroll reveal
+   Source stays in flow (invisible) to lock scroll height;
+   live overlays so growing text does not reflow the page. */
+
+.reveal-scroll-spacer {
+  width: 100%;
+  pointer-events: none;
+}
+
+.reveal-host {
+  position: relative;
+  max-width: var(--measure);
+  width: 100%;
+}
+
 .reveal-host .reveal-live {
+  display: none;
   white-space: pre-wrap;
   word-break: break-word;
 }
-.reveal-host .typewriter-cursor {
+
+.reveal-host.is-revealing .reveal-source {
+  visibility: hidden; /* NOT display:none — keeps height / scroll range stable */
+  pointer-events: none;
+}
+
+.reveal-host.is-revealing .reveal-live {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+
+.reveal-host.is-done .reveal-source {
+  display: none;
+}
+
+.reveal-host.is-done .reveal-live {
+  display: block;
+  position: static;
+}
+
+/* Title typewriter: measure holds space; live overlays */
+.article-title {
+  position: relative;
+}
+
+.article-title.is-typing .title-measure {
+  visibility: hidden;
+  display: block;
+}
+
+.article-title.is-typing .title-live {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+
+.article-title.is-title-done .title-measure {
+  display: none;
+}
+
+.article-title.is-title-done .title-live {
+  position: static;
+}
+
+.typewriter-cursor {
   display: inline-block;
   width: 1.5px;
   height: 1.05em;
@@ -586,9 +708,17 @@ body.lang-en .prose {
   vertical-align: text-bottom;
   animation: blink-cursor 1s steps(1) infinite;
 }
-.reveal-host.is-done .typewriter-cursor {
+
+.reveal-host.is-done .typewriter-cursor,
+.article-title.is-title-done .typewriter-cursor {
   display: none;
 }
+
+.reveal-host.is-paused .typewriter-cursor,
+.article-title .typewriter-cursor {
+  /* paused: solid caret */
+}
+
 .reveal-host.is-paused .typewriter-cursor {
   animation: none;
   opacity: 1;
