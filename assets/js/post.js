@@ -5,7 +5,8 @@
         across the text; footnotes move into the right margin on wide
         screens. —— */
 
-  var RAIL_MIN = 1180;
+  /* Column (680) + gap (28) + rail (200) = 908, plus a margin either side. */
+  var RAIL_MIN = 960;
   /* Phones get no koi (the canvas is also hidden in CSS below this width). */
   var KOI_MIN = 760;
   var GAP = 12;
@@ -14,13 +15,13 @@
   var prose = document.querySelector(".post-prose");
   var ocean = null;
 
-  var TEXT = ".post-head, .post-prose > *, .post-note";
+  var TEXT = ".post-head, .post-prose > *, .post-end, .post-note";
   var queued = false;
 
   var heads = [];
   var currentHead = null;
 
-  /** The cursor sits on the title, then on whichever h2 the reader has scrolled past. */
+  /** The cursor sits on whichever h2 the reader has scrolled past (the title has none). */
   function markHead() {
     var line = window.innerHeight * 0.4;
     var next = heads[0] || null;
@@ -102,25 +103,137 @@
     markText();
   }
 
-  /** Label code blocks with their language (Rouge puts it in a class). */
+  /** Label code blocks with their language (Rouge puts it in a class), and give each a line-number gutter. */
   function labelCode() {
     document.querySelectorAll(".post-prose div.highlighter-rouge").forEach(function (el) {
       var m = /\blanguage-([\w+#-]+)/.exec(el.className);
       if (m && m[1] !== "plaintext") el.setAttribute("data-lang", m[1]);
     });
+    document.querySelectorAll(".post-prose pre > code").forEach(function (code) {
+      var lines = code.textContent.replace(/\n$/, "").split("\n").length;
+      var gutter = document.createElement("span");
+      gutter.className = "code-gutter";
+      gutter.setAttribute("aria-hidden", "true");
+      for (var i = 1; i <= lines; i++) gutter.textContent += (i > 1 ? "\n" : "") + i;
+      code.parentNode.insertBefore(gutter, code);
+      code.parentNode.classList.add("has-gutter");
+    });
+  }
+
+  /* —— Print: the blocks on the first screen appear one after another, like
+        terminal output; everything below is shown at once. (Off when motion
+        is reduced: the head script then never adds .post-print.) —— */
+  var PRINT = ".post-head > *, .post-prose > *, .post-end";
+  function print() {
+    var root = document.documentElement;
+    if (!root.classList.contains("post-print")) return;
+    var h = window.innerHeight;
+    var n = 0;
+    document.querySelectorAll(PRINT).forEach(function (el) {
+      var top = el.getBoundingClientRect().top;
+      el.style.setProperty("--print-delay", (top < h ? n++ * 30 : 0) + "ms");
+      el.classList.add("is-printed");
+    });
+  }
+
+  /** Day radicals on paper, night radicals on the dark palette. */
+  function startKoi(canvas) {
+    if (ocean) ocean.destroy();
+    var themes = window.OceanThemes || {};
+    var night = document.body.classList.contains("theme-night");
+    ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, night ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
+    ocean.setCalm(true, true);
+    ocean.setGrid(false);
+    queueText();
+  }
+
+  /* —— The prompt after (END): a few commands, like the notes shell. —— */
+  function setupShell() {
+    var input = document.getElementById("post-input");
+    var out = document.querySelector(".post-end .sh-out");
+    if (!input || !out) return;
+    function link(sel) { var a = document.querySelector(sel); return a ? a.href : null; }
+    var to = {
+      notes: link(".post-back"),
+      next: link('.post-pager a[data-pager="next"]'),
+      prev: link('.post-pager a[data-pager="prev"]'),
+    };
+    var root = new URL("./", to.notes || location.href).href.replace(/notes\/$/, "");
+    function say(text, prompt) {
+      var p = document.createElement("p");
+      if (prompt) {
+        p.innerHTML = '<span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ ';
+        p.appendChild(document.createTextNode(text));
+      } else {
+        p.className = "sh-dim";
+        p.textContent = text;
+      }
+      out.appendChild(p);
+      while (out.children.length > 14) out.removeChild(out.firstChild);
+    }
+    function go(url) { window.setTimeout(function () { location.href = url; }, 260); }
+    function run(raw) {
+      var line = raw.trim().replace(/\s+/g, " ");
+      if (!line) return;
+      say(line, true);
+      var w = line.split(" ");
+      var arg = w[1] || "";
+      if (w[0] === "cd") {
+        if (arg === "" || arg === "~" || arg === "~/" || arg === "/") return go(root);
+        if (arg === ".." || arg === "../" || arg === "~/notes" || arg === "notes") return go(to.notes);
+        if (arg === "-") return window.setTimeout(function () { history.back(); }, 260);
+        if (arg === "works" || arg === "../works" || arg === "~/works") return go(root + "works/");
+        return say("cd: no such file or directory: " + arg);
+      }
+      if (w[0] === "ls") return go(to.notes);
+      if (w[0] === "next" || w[0] === "prev" || (w[0] === "cat" && (arg === "next" || arg === "prev"))) {
+        var which = w[0] === "cat" ? arg : w[0];
+        if (to[which]) return go(to[which]);
+        return say(which === "next" ? "this is the newest note. 這已經是最新的一篇。" : "this is the first note. 這是第一篇。");
+      }
+      if (w[0] === "top") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+      if (w[0] === "clear") { out.innerHTML = ""; return; }
+      if (w[0] === "whoami") return say("yen — product manager @Taiwan. I build things, then make sense of them.");
+      if (w[0] === "pwd") return say("/home/yen/notes");
+      if (w[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
+      if (w[0] === "exit" || w[0] === "home") return go(root);
+      if (w[0] === "help") {
+        say("cd ..     back to notes        回到文章列表（也可以打 ls）");
+        say("cd ~      go home              回首頁");
+        say("cd -      go back              回上一頁");
+        say("next      newer note           下一篇（較新）");
+        say("prev      older note           上一篇（較舊）");
+        say("top       back to the top      回到頁首");
+        say("whoami    who is Yen           我是誰");
+        say("clear     clear the screen     清除畫面");
+        return say("help      show this list       列出這些指令");
+      }
+      say("sh: command not found: " + w[0] + " — try help（輸入 help 看看可以做什麼）");
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      run(input.value);
+      input.value = "";
+    });
+    // Back from the next page: an empty prompt again.
+    window.addEventListener("pageshow", function (e) {
+      if (e.persisted) { input.value = ""; out.innerHTML = ""; }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     labelCode();
-    heads = Array.prototype.slice.call(document.querySelectorAll(".post-title, .post-prose h2"));
+    print();
+    setupShell();
+    heads = Array.prototype.slice.call(document.querySelectorAll(".post-prose h2"));
     var canvas = document.querySelector("canvas[data-koi]");
-    if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) {
-      // Article pages stay on paper, so the koi is drawn in the day radicals.
-      var theme = window.OceanThemes && window.OceanThemes.GLYPH_DAY;
-      ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, theme);
-      ocean.setCalm(true, true);
-      ocean.setGrid(false);
-    }
+    if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) startKoi(canvas);
+    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+    if (dark) dark.addEventListener("change", function (e) {
+      document.body.classList.toggle("theme-night", e.matches);
+      if (ocean) startKoi(canvas);
+    });
     buildRail();
     layout();
     window.addEventListener("resize", layout);

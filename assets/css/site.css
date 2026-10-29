@@ -459,8 +459,9 @@ body.theme-night .home-vignette {
 .sh-panel .panel-list { grid-template-columns: 1fr; }
 .sh-panel .panel-list li { border-top: 0; }
 .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sh-prompt { color: #4f8a4a; }
-.sh-path { color: #c45c26; }
+/* Prompt in ink tones only: the one accent (朱 by day, amber by night) is kept for what needs the eye. */
+.sh-prompt { color: #8a857e; }
+.sh-path { color: #2a2420; }
 .sh-dim { color: #8a857e; }
 .sh-cmd::after, .sh-caret::after {
   content: ""; display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px;
@@ -484,7 +485,9 @@ body.theme-night .home-vignette {
 .home-panel.is-listing .sh-live,
 .home-panel.is-listing .sh-keys { visibility: hidden; }
 .sh-panel .panel-list a:hover,
-.sh-panel .panel-list a:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
+.sh-panel .panel-list a:focus-visible,
+.sh-panel .panel-list a.is-opening { background: #2a2420; color: #fafaf7; outline: none; }
+.sh-panel .panel-list a.is-opening * { color: inherit; }
 .sh-panel .panel-list a:hover *,
 .sh-panel .panel-list a:focus-visible * { color: inherit; }
 .sh-panel .panel-list a:hover .panel-title { color: inherit; }
@@ -492,7 +495,7 @@ body.theme-night .home-vignette {
 .sh-panel .panel-list a:hover .ls-mark { color: inherit; }
 /* Back to home, said the shell way. */
 .home-panel .panel-back.sh-back { padding: 1px 6px; margin-left: -6px; border-radius: 1px; color: #8a857e; }
-.sh-back .sh-dollar { color: #4f8a4a; }
+.sh-back .sh-dollar { color: #8a857e; }
 .home-panel .panel-back.sh-back:hover,
 .home-panel .panel-back.sh-back:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
 .sh-back:hover .sh-dollar, .sh-back:focus-visible .sh-dollar { color: inherit; }
@@ -522,9 +525,10 @@ body.theme-night .home-vignette {
   display: grid; grid-template-columns: 1.5ch 10ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
 }
 .work-status { font-size: 12px; color: #8a857e; white-space: nowrap; }
-.work-status::before { content: "● "; color: var(--status, #8a857e); }
-.work-status[data-status="in progress"] { --status: #4f8a4a; }
-.work-status[data-status="experiment"] { --status: #c45c26; }
+/* Status by shape, not colour: ● in progress (the accent), ◐ experiment, ○ done. */
+.work-status::before { content: "○ "; }
+.work-status[data-status="experiment"]::before { content: "◐ "; }
+.work-status[data-status="in progress"]::before { content: "● "; color: #c45c26; }
 .work-desc { grid-column: 3 / -1; font-size: 12px; line-height: 1.6; color: #8a857e; padding-bottom: 4px; }
 @media (max-width: 560px) {
   .sh-works .panel-list a { grid-template-columns: 1.5ch minmax(0, 1fr) auto; column-gap: 10px; }
@@ -538,17 +542,17 @@ body.theme-night .sh-dim,
 body.theme-night .sh-keys,
 body.theme-night .work-status,
 body.theme-night .work-desc { color: #9c8462; }
-body.theme-night .sh-prompt { color: #9fd08a; }
-body.theme-night .sh-path { color: #f0a868; }
+body.theme-night .sh-prompt { color: #9c8462; }
+body.theme-night .sh-path { color: #ecc488; }
 body.theme-night .sh-keys kbd { border-color: rgba(236, 196, 136, 0.3); }
 body.theme-night .home-panel .panel-back.sh-back { color: #9c8462; }
-body.theme-night .sh-back .sh-dollar { color: #9fd08a; }
+body.theme-night .sh-back .sh-dollar { color: #9c8462; }
 body.theme-night .home-panel .panel-back.sh-back:hover,
 body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #ecc488; color: #14110d; }
 body.theme-night .sh-panel .panel-list a:hover,
-body.theme-night .sh-panel .panel-list a:focus-visible { background: #ecc488; color: #14110d; }
-body.theme-night .work-status[data-status="in progress"] { --status: #9fd08a; }
-body.theme-night .work-status[data-status="experiment"] { --status: #f0a868; }
+body.theme-night .sh-panel .panel-list a:focus-visible,
+body.theme-night .sh-panel .panel-list a.is-opening { background: #ecc488; color: #14110d; }
+body.theme-night .work-status[data-status="in progress"]::before { color: #f0a868; }
 
 /* —— Home copy: a few terminal marks on a human page —— */
 /* The same underline cursor as article titles. */
@@ -1251,13 +1255,6 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
   max-width: 680px;
   margin: 0 auto;
   padding: 72px 20px 96px;
-  animation: post-in 420ms cubic-bezier(0.2, 0, 0, 1) both;
-}
-@keyframes post-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
 }
 
 .post-back,
@@ -1788,6 +1785,12 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
 body.has-rail .post-prose .footnotes {
   display: none;
 }
+/* With the rail, centre the column and the rail together (908px), so the
+   notes fit beside the text from 960px up instead of only on wide screens. */
+body.has-rail .post {
+  margin-left: max(16px, calc((100vw - 908px) / 2));
+  margin-right: auto;
+}
 
 /* Phones: no koi; the column is all text. */
 @media (max-width: 759px) {
@@ -1803,11 +1806,312 @@ body.has-rail .post-prose .footnotes {
     font-size: 16px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .post {
-    animation: none;
+
+/* —— Article, terminal pass: the page reads like `cat note.md` in a shell
+      that renders Markdown (after Charm's Glow). Body text stays in the
+      reading face; the terminal lives in the structure around it. —— */
+
+/* Header: the cat command with $ cd .. beside it, the title, date · chars.
+   The title takes no cursor; the h2 cursors mark the section being read. */
+.post-title::after {
+  content: none;
+}
+.post-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.post-back {
+  display: inline-block;
+  flex: none;
+  padding: 1px 6px;
+  margin-right: -6px;
+}
+.post-back .sh-dollar {
+  color: #8a857e;
+}
+.post-cmd {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #2a2420;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.post-bar + .post-title {
+  margin-top: 14px;
+}
+.post-meta {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lists: a dim hyphen for bullets, plain mono numbers. */
+.post-prose ul > li::before,
+.post-prose ul ul > li::before,
+.post-prose ul ul ul > li::before {
+  content: "-";
+  top: 0;
+  left: -1.1em;
+  width: auto;
+  height: auto;
+  border: 0;
+  background: none;
+  font-family: var(--mono);
+  color: var(--ink-faint);
+}
+.post-prose ol {
+  list-style: decimal;
+}
+.post-prose ol > li::marker {
+  font-variant-numeric: tabular-nums;
+}
+/* Task list: [ ] and [x] in mono; the real checkbox stays for assistive tech. */
+.post-prose .task-list-item-checkbox {
+  opacity: 0;
+}
+.post-prose li.task-list-item::before {
+  content: "[ ]";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--mono);
+  font-size: 0.82em;
+  line-height: 2.2;
+  color: var(--ink-faint);
+  white-space: pre;
+}
+.post-prose li.task-list-item:has(.task-list-item-checkbox:checked)::before {
+  content: "[x]";
+  color: var(--shu);
+}
+.post-prose li.task-list-item {
+  padding-left: 2.4em;
+}
+
+/* Code blocks: a ── lang ── rule on top, a line-number gutter, no accent bar. */
+.post-prose div.highlighter-rouge::before,
+.post-prose div.highlighter-rouge[data-lang]::before {
+  content: "── code ────────────────────────────────────────────────────────────────────────────────";
+  position: static;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--ink-faint);
+}
+.post-prose div.highlighter-rouge[data-lang]::before {
+  content: "── " attr(data-lang) " ────────────────────────────────────────────────────────────────────────────────";
+}
+.post-prose pre {
+  border-left: 0;
+}
+.post-prose pre.has-gutter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 16px;
+}
+.code-gutter {
+  white-space: pre;
+  text-align: right;
+  color: var(--ink-faint);
+  opacity: 0.6;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Tables: mono, boxed in hairlines like a terminal table. */
+.post-prose table {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.post-prose th,
+.post-prose td,
+.post-prose th:first-child,
+.post-prose td:first-child,
+.post-prose th:last-child,
+.post-prose td:last-child {
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+}
+.post-prose th {
+  border-bottom-color: var(--ink-faint);
+}
+
+/* Break: a short box-drawing rule. */
+.post-prose hr {
+  width: auto;
+  height: auto;
+  margin: 3em 0;
+  background: none;
+  text-align: center;
+  overflow: visible;
+}
+.post-prose hr::before {
+  content: "────────";
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* Footnote references read [1]. */
+.post-prose a.footnote::before,
+.post-note-n::before {
+  content: "[";
+}
+.post-prose a.footnote::after,
+.post-note-n::after {
+  content: "]";
+}
+
+/* Selected text: reverse video, like a link under the pointer. */
+.post-prose ::selection,
+.post-head ::selection {
+  background: var(--link-sel-bg);
+  color: var(--link-sel-fg);
+}
+
+/* End: (END) like less at the end of a file, the next / prev notes, then a prompt. */
+.post-end {
+  margin-top: 4em;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 13px;
+  color: #2a2420;
+}
+.post-eof {
+  margin: 0 0 1.6em;
+  color: #8a857e;
+}
+.post-pager {
+  display: grid;
+  margin: 0 0 1.6em;
+}
+.post-pager a {
+  display: grid;
+  grid-template-columns: 5ch 10ch minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: baseline;
+  padding: 3px 6px;
+  margin: 0 -6px;
+  line-height: 1.75;
+}
+.post-pager-label,
+.post-pager time {
+  color: #8a857e;
+  font-variant-numeric: tabular-nums;
+}
+.post-end .sh-live {
+  margin-top: 0;
+}
+.post-end .sh-out:not(:empty) {
+  margin: 0;
+}
+.post-end .sh-keys kbd {
+  font: inherit;
+  padding: 0 4px;
+  border: 1px solid rgba(42, 36, 32, 0.25);
+  border-radius: 2px;
+}
+
+/* Print: first-screen blocks appear one after another (see post.js). A
+   safety reveal shows everything after 1.2s should the script not run. */
+html.post-print .post-head > *,
+html.post-print .post-prose > *,
+html.post-print .post-end {
+  opacity: 0;
+  animation: post-print 1ms 1.2s steps(1) forwards;
+}
+html.post-print .post-head > .is-printed,
+html.post-print .post-prose > .is-printed,
+html.post-print .post-end.is-printed {
+  animation: post-print 1ms var(--print-delay, 0ms) steps(1) forwards;
+}
+@keyframes post-print {
+  to {
+    opacity: 1;
   }
 }
+
+/* The title carries over from the notes row that opened it (cross-document view transition). */
+@view-transition {
+  navigation: auto;
+}
+.post-title {
+  view-transition-name: post-title;
+}
+::view-transition-group(*) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+/* Night: a softer dark than the home's amber screen, for long reading. */
+body.post-body.theme-night {
+  background: #17150f;
+  color: #ddd5c7;
+  --link-sel-bg: #ecc488;
+  --link-sel-fg: #17150f;
+}
+body.theme-night .post-prose {
+  --ink: #ddd5c7;
+  --ink-soft: #b3aa9b;
+  --ink-faint: #857c6f;
+  --rule: rgba(221, 213, 199, 0.14);
+  --washi: #201d17;
+  --shu: #f0a868;
+}
+body.theme-night .post-back,
+body.theme-night .post-meta,
+body.theme-night .post-eof,
+body.theme-night .post-pager-label,
+body.theme-night .post-pager time,
+body.theme-night .post-end .sh-dim,
+body.theme-night .post-end .sh-keys { color: #857c6f; }
+body.theme-night .post-title,
+body.theme-night .post-cmd,
+body.theme-night .post-end { color: #ddd5c7; }
+body.theme-night .post-prose h2::after { background: #f0a868; }
+body.theme-night .post-back .sh-dollar,
+body.theme-night .post-head .sh-prompt,
+body.theme-night .post-end .sh-prompt { color: #857c6f; }
+body.theme-night .post-head .sh-path,
+body.theme-night .post-end .sh-path { color: #ddd5c7; }
+body.theme-night .post-prose :not(pre) > code { background: rgba(221, 213, 199, 0.08); }
+body.theme-night .post-prose kbd { background: #201d17; color: #ddd5c7; border-color: rgba(221, 213, 199, 0.25); }
+body.theme-night .post-prose img { border-color: rgba(221, 213, 199, 0.1); }
+body.theme-night .post-prose .highlight .c,
+body.theme-night .post-prose .highlight .c1,
+body.theme-night .post-prose .highlight .cm,
+body.theme-night .post-prose .highlight .cs,
+body.theme-night .post-prose .highlight .sd { color: #857c6f; }
+body.theme-night .post-prose .highlight .s,
+body.theme-night .post-prose .highlight .s1,
+body.theme-night .post-prose .highlight .s2,
+body.theme-night .post-prose .highlight .sh,
+body.theme-night .post-prose .highlight .sb,
+body.theme-night .post-prose .highlight .dl,
+body.theme-night .post-prose .highlight .se { color: #a9b98a; }
+body.theme-night .post-prose .highlight .nf,
+body.theme-night .post-prose .highlight .nc,
+body.theme-night .post-prose .highlight .fm { color: #8fb0d3; }
+body.theme-night .post-prose .highlight .nb,
+body.theme-night .post-prose .highlight .bp,
+body.theme-night .post-prose .highlight .na { color: #c9a27a; }
+body.theme-night .post-note { color: #a39a8c; }
+body.theme-night .post-note.is-lit { color: #ddd5c7; }
+body.theme-night .post-note-n { color: #f0a868; }
+body.theme-night .post-end .sh-keys kbd { border-color: rgba(221, 213, 199, 0.3); }
 
 /* —— Links: reverse video when pointed at, focused from the keyboard or
    tapped, like the selected row of a terminal picker. Inline links keep
