@@ -2176,6 +2176,38 @@ body.theme-night .post-note.is-lit { color: #e8e6e3; }
 body.theme-night .post-note-n { color: #f5b942; }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
+/* —— Day / night switch (theme.js): a small mono button in the top right
+      that scrolls away with the page, highlighted like a link. —— */
+.theme-toggle {
+  position: absolute;
+  z-index: 20;
+  top: max(14px, env(safe-area-inset-top, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  margin: 0;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 1px;
+  background: none;
+  font: 12px/1.5 "JetBrains Mono", ui-monospace, monospace;
+  color: #8a857e;
+  cursor: pointer;
+}
+body.theme-night .theme-toggle {
+  color: #8a8f99;
+}
+.theme-toggle:focus-visible,
+.theme-toggle:active {
+  outline: none;
+  background: var(--link-sel-bg);
+  color: var(--link-sel-fg);
+}
+@media (hover: hover) {
+  .theme-toggle:hover {
+    background: var(--link-sel-bg);
+    color: var(--link-sel-fg);
+  }
+}
+
 /* —— Links: reverse video when pointed at, focused from the keyboard or
    tapped, like the selected row of a terminal picker. Inline links keep
    their underline at rest so they can be found in a sentence; when one

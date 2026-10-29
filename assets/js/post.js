@@ -228,6 +228,12 @@
       out.appendChild(p);
       while (out.children.length > 14) out.removeChild(out.firstChild);
     }
+    function theme(arg) {
+      var t = window.siteTheme;
+      if (!t) return say("theme: not available");
+      if (arg === "day" || arg === "night" || arg === "auto") { t.set(arg); return say("theme: " + arg); }
+      say("theme: " + t.pref() + "　（用法：theme day / night / auto）");
+    }
     function go(url) { window.setTimeout(function () { location.href = url; }, 260); }
     function run(raw) {
       var line = raw.trim().replace(/\s+/g, " ");
@@ -250,6 +256,7 @@
       }
       if (w[0] === "top") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
       if (w[0] === "clear") { out.innerHTML = ""; return; }
+      if (w[0] === "theme") return theme(arg);
       if (w[0] === "whoami") return say("yen — product manager @Taiwan. I build things, then make sense of them.");
       if (w[0] === "pwd") return say("/home/yen/notes");
       if (w[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
@@ -261,6 +268,7 @@
         say("next      newer note           下一篇（較新）");
         say("prev      older note           上一篇（較舊）");
         say("top       back to the top      回到頁首");
+        say("theme     day / night / auto   切換日夜（auto 跟隨系統）");
         say("whoami    who is Yen           我是誰");
         say("clear     clear the screen     清除畫面");
         return say("help      show this list       列出這些指令");
@@ -294,10 +302,6 @@
     });
     setupShell();
     watchEnd(document.querySelector("canvas[data-koi]"));
-    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-    if (dark) dark.addEventListener("change", function (e) {
-      document.body.classList.toggle("theme-night", e.matches);
-    });
     buildRail();
     layout();
     window.addEventListener("resize", layout);

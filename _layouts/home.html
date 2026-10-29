@@ -6,10 +6,7 @@
 </head>
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">
-  <script>
-    // Night palette before first paint, so a dark-mode visit never flashes paper.
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.body.classList.add("theme-night");
-  </script>
+  {% include theme-boot.html %}
   <div class="home-stage">
     <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
     <div class="home-vignette" aria-hidden="true"></div>
@@ -85,13 +82,13 @@
     </div>
   </div>
 
+  <script src="{{ '/assets/js/theme.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script src="{{ '/assets/js/ocean.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script src="{{ '/assets/js/home.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script src="{{ '/assets/js/shell.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var canvas = document.querySelector("canvas[data-koi]");
-      var dark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
       var ringBox = null;
 
       function view() { return document.body.getAttribute("data-view") || "home"; }
@@ -130,10 +127,8 @@
         syncText();
       }
 
-      if (dark) dark.addEventListener("change", function (e) {
-        document.body.classList.toggle("theme-night", e.matches);
-        startOcean();
-      });
+      // theme.js switched day / night: redraw the koi in the other palette.
+      document.addEventListener("themechange", startOcean);
 
       var roots = document.querySelectorAll(".home-nav, .home-copy");
       roots.forEach(function (root) {

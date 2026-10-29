@@ -46,3 +46,4 @@ jekyll serve
 - works 的狀態寫在 `_data/works.yml` 的 `status`：`in progress`（綠點）、`experiment`（橘點），其他值是灰點。
 - 文章頁（`_layouts/default.html`、`assets/js/post.js`）也是 terminal 風格：上方 `$ cd ..`、`cat 檔名.md`，標題下方是日期和字數；Markdown 的清單、程式碼、表格、分隔線、註腳用 terminal 的寫法呈現，內文維持一般字型。文章結尾是 `(END)`、上一篇／下一篇，以及可以輸入指令的提示字元。文章頁也跟著系統切換日間和夜間。
 - 從 notes 點文章時，提示字元會快速打出 `cat 檔名.md`，這一行再滑到文章頁上方（瀏覽器支援 View Transitions 時）；接著標題一個字一個字打出來、日期那行打出來，第一個畫面的內文一行一行印出來。按任何鍵、捲動或點擊會立刻顯示全文；系統設定「減少動態效果」時都會省略。
+- 日夜切換：每頁右上角的 `theme:` 按鈕，依序切換 `auto`（跟隨系統）、日間、夜間，選擇會記在瀏覽器裡（`assets/js/theme.js`）。notes／works／文章結尾的提示字元也可以輸入 `theme day`、`theme night`、`theme auto`。

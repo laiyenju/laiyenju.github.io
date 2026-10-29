@@ -31,10 +31,7 @@
   </script>
 </head>
 <body class="post-body">
-  <script>
-    // Night palette before first paint, so a dark-mode visit never flashes paper.
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.body.classList.add("theme-night");
-  </script>
+  {% include theme-boot.html %}
   <canvas data-koi class="post-pond" aria-hidden="true"></canvas>
 
   {% comment %}The file this page was written as, without its date: 2026-10-29-markdown-styles.md → markdown-styles.md{% endcomment %}
@@ -86,6 +83,7 @@
     </footer>
   </article>
 
+  <script src="{{ '/assets/js/theme.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script src="{{ '/assets/js/ocean.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script src="{{ '/assets/js/post.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
 </body>
