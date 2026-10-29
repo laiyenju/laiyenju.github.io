@@ -281,7 +281,17 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     labelCode();
-    stream();
+    // Arriving through the view transition: start typing once the carried
+    // command line has landed. pagereveal has fired by the first frame.
+    // Typing also waits for the fonts (at most 400ms), so the first characters
+    // don't stall while the Chinese face is still coming in.
+    requestAnimationFrame(function () {
+      var landed = window.postArrival || (document.activeViewTransition && document.activeViewTransition.finished) || Promise.resolve();
+      var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+      var cap = new Promise(function (res) { window.setTimeout(res, 400); });
+      var go = function () { Promise.race([fonts, cap]).then(stream, stream); };
+      landed.then(go, go);
+    });
     setupShell();
     watchEnd(document.querySelector("canvas[data-koi]"));
     var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");

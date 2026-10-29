@@ -145,17 +145,24 @@
     opening = true;
     var file = decodeURIComponent(url.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
     a.classList.add("is-opening");
+    prefetch(url.href);
     var input = notesPanel.querySelector(".sh-input");
     var live = notesPanel.querySelector(".sh-live");
-    if (live) live.style.viewTransitionName = "post-cmd";
     try { sessionStorage.setItem("post-cmd-typed", url.pathname); } catch (err) {}
     var text = "cat " + file;
     var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (still || !input) { location.href = url.href; return; }
+    if (still || !input || !live) { location.href = url.href; return; }
+    // The line shrinks to just its text (a span stands in for the input), so it
+    // has the same size as the article's command line and only moves, never stretches.
+    var typed = document.createElement("span");
+    typed.className = "sh-typed";
+    live.appendChild(typed);
+    live.classList.add("is-carrying");
+    live.style.viewTransitionName = "post-cmd";
     var n = 0;
     var step = Math.max(8, Math.min(16, Math.floor(280 / text.length)));
     var timer = window.setInterval(function () {
-      input.value = text.slice(0, ++n);
+      typed.textContent = " " + text.slice(0, ++n);
       if (n < text.length) return;
       window.clearInterval(timer);
       window.setTimeout(function () { location.href = url.href; }, 90);
@@ -168,7 +175,29 @@
     var input = notesPanel.querySelector(".sh-input");
     if (input) input.value = "";
     var live = notesPanel.querySelector(".sh-live");
-    if (live) live.style.viewTransitionName = "";
+    if (live) {
+      live.style.viewTransitionName = "";
+      live.classList.remove("is-carrying");
+      live.querySelectorAll(".sh-typed").forEach(function (t) { t.remove(); });
+    }
     notesPanel.querySelectorAll(".is-opening").forEach(function (a) { a.classList.remove("is-opening"); });
+  });
+
+  // Fetch a note as soon as its row is pointed at or focused, so the page is
+  // ready by the time the command has typed out.
+  var fetched = {};
+  function prefetch(href) {
+    if (fetched[href]) return;
+    fetched[href] = true;
+    var link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+  if (notesPanel) ["pointerenter", "focusin", "touchstart"].forEach(function (ev) {
+    notesPanel.addEventListener(ev, function (e) {
+      var a = e.target.closest && e.target.closest(".panel-list a");
+      if (a) prefetch(a.href);
+    }, { capture: true, passive: true });
   });
 })();
