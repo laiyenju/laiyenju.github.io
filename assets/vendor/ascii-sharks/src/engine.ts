@@ -78,6 +78,16 @@ export class OceanEngine {
     this.world.setRing(rect.left - c.left + rect.width / 2, rect.top - c.top + rect.height / 2, rect.width / 2, rect.height / 2);
   }
 
+  /**
+   * Article pages, at the end: one koi swims across once at clientY, heading
+   * right (1) or left (-1). When it is out, the engine stops and clears.
+   */
+  swimAcross(clientY: number, dir: 1 | -1) {
+    const rect = this.canvas.getBoundingClientRect();
+    this.world.textRects = null;
+    this.world.startPass(clientY - rect.top, dir);
+  }
+
   /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
   setTextRects(rects: Float32Array | null) {
     this.world.textRects = rects;
@@ -129,6 +139,12 @@ export class OceanEngine {
     }
     if (steps === MAX_STEPS) this.acc = 0;
     this.renderer.render(this.world, dt);
+    if (this.world.passDone) {
+      // The pass is over: wipe the water and stop.
+      this.canvas.getContext("2d")?.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.destroy();
+      return;
+    }
     this.raf = requestAnimationFrame(this.frame);
   };
 

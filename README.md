@@ -40,7 +40,7 @@ jekyll serve
   ```
 
 - 字元和配色在 `src/themes.ts`：`GLYPH_DAY`（明體倉頡字根）、`GLYPH_NIGHT`（點陣字根、琥珀色），`ASCII` 是原本的樣子。首頁跟著系統的淺色／深色設定切換；文章頁固定用日間版。
-- 首頁錦鯉圍著中間的文字繞圈；點 notes / works 後自由游動。
+- 首頁錦鯉圍著中間的文字繞圈；點 notes / works 後自由游動。文章頁讀的時候沒有錦鯉，捲到 `(END)` 時才有一條游過去一次（`World.startPass`、`OceanEngine.swimAcross`）。
 - notes / works 是 terminal 風格（`assets/js/shell.js`），最後一行可以輸入指令，輸入 `help` 看有哪些。
 - notes 的字數由 Jekyll 建置時粗略計算（扣掉 HTML 標籤和空白後的字元數），`total` 只算今年的文章。
 - works 的狀態寫在 `_data/works.yml` 的 `status`：`in progress`（綠點）、`experiment`（橘點），其他值是灰點。

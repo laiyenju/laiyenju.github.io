@@ -1,42 +1,16 @@
 (function () {
   "use strict";
 
-  /* —— Article pages: one small koi roams the plain paper and hurries
-        across the text; footnotes move into the right margin on wide
-        screens. —— */
+  /* —— Article pages: plain paper while reading. When (END) comes into view,
+        one small koi swims across it, once. Footnotes move into the right
+        margin on wide screens. —— */
 
   /* Column (680) + gap (28) + rail (200) = 908, plus a margin either side. */
   var RAIL_MIN = 960;
-  /* Phones get no koi (the canvas is also hidden in CSS below this width). */
-  var KOI_MIN = 760;
   var GAP = 12;
 
   var post = document.querySelector(".post");
   var prose = document.querySelector(".post-prose");
-  var ocean = null;
-
-  var TEXT = ".post-head, .post-prose > *, .post-end, .post-note";
-  var queued = false;
-
-  /** Hand the koi the on-screen text boxes (the canvas is fixed, so client px = canvas px). */
-  function markText() {
-    queued = false;
-    if (!ocean) return;
-    var boxes = [];
-    var h = window.innerHeight;
-    document.querySelectorAll(TEXT).forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > h || !r.width) return;
-      boxes.push(r.left, r.top, r.right, r.bottom);
-    });
-    ocean.setTextRects(new Float32Array(boxes));
-  }
-
-  function queueText() {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(markText);
-  }
 
   /* Kramdown footnotes: <sup><a class="footnote" href="#fn:1"> in the text,
      <div class="footnotes"><ol><li id="fn:1"> at the end. */
@@ -83,7 +57,6 @@
 
   function layout() {
     layoutRail();
-    markText();
   }
 
   /** Label code blocks with their language (Rouge puts it in a class), and give each a line-number gutter. */
@@ -202,7 +175,6 @@
       finishers.forEach(function (f) { f(); });
       root.classList.add("stream-done");
       stopListening();
-      queueText();
     }
     var SKIP = ["keydown", "wheel", "touchstart", "mousedown"];
     function stopListening() { SKIP.forEach(function (ev) { window.removeEventListener(ev, done, true); }); }
@@ -211,15 +183,25 @@
     typeBar(function () { typeTitle(function () { typeMeta(streamProse); }); });
   }
 
-  /** Day radicals on paper, night radicals on the dark palette. */
-  function startKoi(canvas) {
-    if (ocean) ocean.destroy();
-    var themes = window.OceanThemes || {};
-    var night = document.body.classList.contains("theme-night");
-    ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, night ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
-    ocean.setCalm(true, true);
-    ocean.setGrid(false);
-    queueText();
+  /* —— The end: once (END) is fully in view, a koi swims across it, once per
+        visit, from a random side; day or night radicals to match the page.
+        The engine stops and clears itself when the koi is out. Skipped when
+        motion is reduced. —— */
+  function watchEnd(canvas) {
+    var eof = document.querySelector(".post-eof");
+    if (!canvas || !eof || !window.OceanEngine || !("IntersectionObserver" in window)) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var io = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      io.disconnect();
+      var themes = window.OceanThemes || {};
+      var night = document.body.classList.contains("theme-night");
+      var ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, night ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
+      ocean.setGrid(false);
+      var r = eof.getBoundingClientRect();
+      ocean.swimAcross(r.top + r.height / 2, Math.random() < 0.5 ? 1 : -1);
+    }, { threshold: 1 });
+    io.observe(eof);
   }
 
   /* —— The prompt after (END): a few commands, like the notes shell. —— */
@@ -301,17 +283,14 @@
     labelCode();
     stream();
     setupShell();
-    var canvas = document.querySelector("canvas[data-koi]");
-    if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) startKoi(canvas);
+    watchEnd(document.querySelector("canvas[data-koi]"));
     var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
     if (dark) dark.addEventListener("change", function (e) {
       document.body.classList.toggle("theme-night", e.matches);
-      if (ocean) startKoi(canvas);
     });
     buildRail();
     layout();
     window.addEventListener("resize", layout);
-    window.addEventListener("scroll", queueText, { passive: true });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
   });
 })();

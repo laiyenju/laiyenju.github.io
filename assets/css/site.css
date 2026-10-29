@@ -1230,10 +1230,10 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
   font-size: 0.95em;
 }
 
-/* —— Article (Jekyll default layout): quiet reading column over the pond.
-      Plain paper, no grid. One small koi roams anywhere and hurries over
-      the text; footnotes sit in the right margin on wide screens and at
-      the end on narrow ones. —— */
+/* —— Article (Jekyll default layout): a quiet reading column on plain
+      paper. The pond stays empty while reading; one small koi swims across
+      when (END) comes into view. Footnotes sit in the right margin on wide
+      screens and at the end on narrow ones. —— */
 .post-body {
   margin: 0;
   background: #fafaf7;
@@ -1769,12 +1769,6 @@ body.has-rail .post {
   margin-right: auto;
 }
 
-/* Phones: no koi; the column is all text. */
-@media (max-width: 759px) {
-  .post-pond {
-    display: none;
-  }
-}
 @media (max-width: 640px) {
   .post {
     padding: 48px 20px 72px;

@@ -126,6 +126,12 @@ export class World {
   ring: { cx: number; cy: number; rx: number; ry: number } | null = null;
   /** With a ring set: true while a list is open, and the koi roam freely. */
   free = false;
+  /**
+   * A single pass (article pages, at the end): the first koi swims across the
+   * frame once along y, heading dir, then leaves. passDone is set once it is out.
+   */
+  pass: { y: number; dir: 1 | -1; at: number } | null = null;
+  passDone = false;
 
   /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
   private perception = 60;
@@ -352,6 +358,31 @@ export class World {
     rx = Math.min(rx * grow, maxRx);
     ry = Math.min(ry * grow, maxRy);
     this.ring = { cx, cy, rx: Math.max(rx, halfW), ry: Math.max(ry, halfH) };
+  }
+
+  /** Send the first koi across the frame once, from the edge behind dir, along y. The rest stay hidden. */
+  startPass(y: number, dir: 1 | -1) {
+    const { width: W } = this;
+    this.sharks.forEach((sh, i) => {
+      sh.fade = i === 0 ? 1 : 0;
+    });
+    const sh = this.sharks[0];
+    if (!sh) return;
+    const heading = dir > 0 ? 0 : Math.PI;
+    const x = dir > 0 ? -sh.length * 0.1 : W + sh.length * 0.1;
+    const seg = sh.length / (SHARK_NODES - 1);
+    for (let n = 0; n < SHARK_NODES; n++) {
+      sh.nodes[n * 2] = x - Math.cos(heading) * seg * n;
+      sh.nodes[n * 2 + 1] = y;
+    }
+    sh.heading = heading;
+    sh.wander = 0;
+    sh.scare = 0;
+    sh.rush = 0;
+    sh.away = false;
+    sh.speed = Math.max(40, W / 7);
+    this.pass = { y, dir, at: this.time };
+    this.passDone = false;
   }
 
   /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
@@ -669,7 +700,8 @@ export class World {
 
       // Wander: a slowly drifting offset on a circle ahead of the snout.
       // Circling koi hold their line; roaming koi wander more.
-      const wanderW = circling ? 0.12 : ring ? 0.6 : 0.45;
+      const pass = this.pass;
+      const wanderW = circling ? 0.12 : pass ? 0.3 : ring ? 0.6 : 0.45;
       sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 3.2, -1.1, 1.1);
       dx += Math.cos(sh.heading + sh.wander) * wanderW;
       dy += Math.sin(sh.heading + sh.wander) * wanderW;
@@ -706,6 +738,10 @@ export class World {
         const radial = clamp(1 - r, -1, 1) * 2.4;
         dx += tx * 1.6 + (nx / r) * radial;
         dy += ty * 1.6 + (ny / r) * radial;
+      } else if (pass) {
+        // Pass: keep heading across, drifting back toward the line it set out on.
+        dx += pass.dir * 2.2;
+        dy += clamp((pass.y - hy) / (L * 0.6), -1, 1) * 0.9;
       } else if (!ring) {
         // Patrol: a lazy circuit around the headline.
         const rx = (hx - cxW) / (W / minSide);
@@ -751,7 +787,7 @@ export class World {
       const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
       const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
       const e2 = ex * ex + ey * ey;
-      if (e2 < 1 && !sh.away && !this.textRects && !ring) {
+      if (e2 < 1 && !sh.away && !this.textRects && !ring && !pass) {
         const e = Math.sqrt(e2) || 1e-3;
         const w = (1 - e) * (hunting ? 1 : 2.5);
         dx += (ex / e) * w;
@@ -761,7 +797,7 @@ export class World {
       // Turn back once the snout leaves the frame, so bodies dip off-screen
       // now and then but the sharks never wander away for good.
       const over = Math.max(-hx, hx - W, -hy, hy - H);
-      if (over > -L * 0.05 && !sh.away) {
+      if (over > -L * 0.05 && !sh.away && !pass) {
         const w = clamp((over + L * 0.05) / (L * 0.35), 0, 1) * 3.5;
         const toX = cxW - hx;
         const toY = cyW - hy;
@@ -788,6 +824,7 @@ export class World {
       targetSpeed *= 1 + 2.5 * sh.rush;
       sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
       targetSpeed *= 1 + 4 * sh.hurry;
+      if (pass) targetSpeed = Math.max(cruise, W / 7);
       if (sh.away) targetSpeed = Math.max(W, H) * 0.6;
       else if (sh.scare > 0) targetSpeed = Math.max(targetSpeed, cruise * (1 + 9 * sh.scare));
       sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (sh.scare > 0 ? 4 : 1.1));
@@ -828,6 +865,7 @@ export class World {
       }
 
       if (sh.away) this.checkGone(sh);
+      if (pass && si === 0) this.checkPassed(sh, pass);
     }
   }
 
@@ -844,6 +882,24 @@ export class World {
       }
     }
     return -1;
+  }
+
+  /** End the pass once the koi's whole body is past the far edge (or it's taking too long). */
+  private checkPassed(sh: Shark, pass: { dir: 1 | -1; at: number }) {
+    const pad = 24;
+    let out = true;
+    for (let k = 0; k < SHARK_NODES; k++) {
+      const x = sh.nodes[k * 2];
+      if (pass.dir > 0 ? x < this.width + pad : x > -pad) {
+        out = false;
+        break;
+      }
+    }
+    if (out || this.time - pass.at > 20) {
+      sh.fade = 0;
+      this.pass = null;
+      this.passDone = true;
+    }
   }
 
   /** Hide a bolting koi once its whole body is out of frame (or it's taking too long). */
