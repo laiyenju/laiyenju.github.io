@@ -54,8 +54,8 @@
     </div>
   </div>
 
-  <script src="{{ '/assets/js/ocean.js' | relative_url }}" defer></script>
-  <script src="{{ '/assets/js/home.js' | relative_url }}" defer></script>
+  <script src="{{ '/assets/js/ocean.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+  <script src="{{ '/assets/js/home.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var el = document.querySelector("canvas[data-koi]");
