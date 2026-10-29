@@ -101,23 +101,16 @@
 
   /* —— Works: the same shell, listing directories. Each row leads with its seal character. —— */
   .sh-works .panel-list a {
-    display: grid; grid-template-columns: 1.5ch 10ch 2.6ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
+    display: grid; grid-template-columns: 1.5ch 10ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
   }
-  .work-seal {
-    display: inline-grid; place-items: center; width: 2.2ch; height: 1.5em; align-self: center;
-    background: #b8332a; color: #f6efe4; border-radius: 1px;
-    font: 600 13px/1 "Noto Serif TC", "Songti TC", serif;
-  }
-  .sh-panel .panel-list a:hover .work-seal,
-  .sh-panel .panel-list a:focus-visible .work-seal { color: #f6efe4; }
   .work-status { font-size: 12px; color: #8a857e; white-space: nowrap; }
   .work-status::before { content: "● "; color: var(--status, #8a857e); }
-  .work-status[data-status="進行中"] { --status: #4f8a4a; }
-  .work-status[data-status="實驗"] { --status: #c45c26; }
-  .work-desc { grid-column: 4 / -1; font-size: 12px; line-height: 1.6; color: #8a857e; padding-bottom: 4px; }
+  .work-status[data-status="in progress"] { --status: #4f8a4a; }
+  .work-status[data-status="experiment"] { --status: #c45c26; }
+  .work-desc { grid-column: 3 / -1; font-size: 12px; line-height: 1.6; color: #8a857e; padding-bottom: 4px; }
   @media (max-width: 560px) {
-    .sh-works .panel-list a { grid-template-columns: 1.5ch 2.6ch minmax(0, 1fr) auto; column-gap: 10px; }
-    .work-desc { grid-column: 3 / -1; }
+    .sh-works .panel-list a { grid-template-columns: 1.5ch minmax(0, 1fr) auto; column-gap: 10px; }
+    .work-desc { grid-column: 2 / -1; }
   }
 
   body.theme-night .ls-perm,
@@ -136,11 +129,8 @@
   body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #ecc488; color: #14110d; }
   body.theme-night .sh-panel .panel-list a:hover,
   body.theme-night .sh-panel .panel-list a:focus-visible { background: #ecc488; color: #14110d; }
-  body.theme-night .work-seal,
-  body.theme-night .sh-panel .panel-list a:hover .work-seal,
-  body.theme-night .sh-panel .panel-list a:focus-visible .work-seal { background: #e8a852; color: #17130e; }
-  body.theme-night .work-status[data-status="進行中"] { --status: #9fd08a; }
-  body.theme-night .work-status[data-status="實驗"] { --status: #f0a868; }
+  body.theme-night .work-status[data-status="in progress"] { --status: #9fd08a; }
+  body.theme-night .work-status[data-status="experiment"] { --status: #f0a868; }
 
   /* Prototype switcher: not part of the design. */
   .proto {
@@ -201,9 +191,9 @@
         <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$ <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
         <p class="sh-line sh-dim sh-total">total 3 works · 1 in progress</p>
         <ul class="panel-list">
-          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="work-seal" aria-hidden="true">寫</span><span class="panel-title">laiyenju.github.io/</span><span class="work-status" data-status="進行中">進行中</span><span class="work-desc">This writing site — quiet pages in Jekyll.</span></a></li>
-          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="work-seal" aria-hidden="true">空</span><span class="panel-title">字與空/</span><span class="work-status" data-status="實驗">實驗</span><span class="work-desc">Experiments in measure and pause.</span></a></li>
-          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="work-seal" aria-hidden="true">畫</span><span class="panel-title">Sketchbook/</span><span class="work-status" data-status="完成">完成</span><span class="work-desc">Small visual studies, unfinished on purpose.</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="panel-title">laiyenju.github.io/</span><span class="work-status" data-status="in progress">in progress</span><span class="work-desc">This writing site — quiet pages in Jekyll.</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="panel-title">字與空/</span><span class="work-status" data-status="experiment">experiment</span><span class="work-desc">Experiments in measure and pause.</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="panel-title">Sketchbook/</span><span class="work-status" data-status="done">done</span><span class="work-desc">Small visual studies, unfinished on purpose.</span></a></li>
         </ul>
         <div class="sh-out" aria-live="polite"></div>
         <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>

@@ -17,8 +17,8 @@
 ## notes / works 版面
 
 - **notes**：一段 shell 對話。上方 `$ cd ~` 回首頁；提示字元打出 `ls -lt`；`total` 是今年的總字數和篇數（英文：`total 940 chars · 2 posts in 2026`）；每列是權限、日期、標題、字數（`860 chars`）。選到的那一列會反白，↑↓ 選擇、⏎ 開啟、esc 返回。最後一行可以輸入指令（小彩蛋）：`cd ~`／`cd ..` 回首頁、`cd -` 回上一頁、`cd works`、`ls`、`whoami`、`clear`（清空整個畫面再重新列出）、`help`（中英對照）。手機上隱藏權限欄和按鍵提示。
-- **works**：同一套 shell。上方 `$ cd ~`，打出 `ls -l`，`total 3 works · 1 in progress`；每件作品是一個資料夾（`drwxr-xr-x`、名稱後面加 `/`），前面是代表字印章，右邊是狀態，第二行是簡介。指令和 notes 相同，`cd notes` 可以切過去。
-- 原型裡的字數是粗估；代表字和狀態是範例，正式版會從 `_data/works.yml` 讀取。
+- **works**：同一套 shell。上方 `$ cd ~`，打出 `ls -l`，`total 3 works · 1 in progress`；每件作品是一個資料夾（`drwxr-xr-x`、名稱後面加 `/`），右邊是英文狀態（`in progress`、`experiment`、`done`），第二行是簡介。指令和 notes 相同，`cd notes` 可以切過去。
+- 原型裡的字數是粗估；狀態是範例，正式版會從 `_data/works.yml` 讀取。
 
 正式網站的 `assets/vendor/ascii-sharks/` 和 `assets/js/ocean.js` 都沒有改動。
 
