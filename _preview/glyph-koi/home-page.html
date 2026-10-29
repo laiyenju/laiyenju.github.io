@@ -46,13 +46,20 @@
   .sh-cmd:not(.is-typing)::after { display: none; }
   @keyframes sh-blink { 50% { opacity: 0; } }
   .home-panel[data-view="notes"] .panel-list a {
-    display: grid; grid-template-columns: 1.5ch 10ch 10ch minmax(0, 1fr) 6ch; gap: 14px; align-items: baseline;
+    display: grid; grid-template-columns: 1.5ch 10ch 10ch minmax(0, 1fr) 10ch; gap: 14px; align-items: baseline;
     padding: 3px 6px; margin: 0 -6px; border-radius: 1px; font-size: 13px; line-height: 1.75;
   }
   .home-panel[data-view="notes"] .panel-title { font-size: 13px; line-height: 1.75; }
   .ls-mark { color: transparent; }
   .ls-perm, .ls-size, .ls-date { color: #8a857e; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ls-size { text-align: right; }
+  /* While the command types itself out, the listing waits, as if the shell hasn't answered yet. */
+  .home-panel.is-listing .sh-total,
+  .home-panel.is-listing .panel-list,
+  .home-panel.is-listing .panel-more,
+  .home-panel.is-listing .sh-out,
+  .home-panel.is-listing .sh-live,
+  .home-panel.is-listing .sh-keys { visibility: hidden; }
   .home-panel[data-view="notes"] .panel-list a:hover,
   .home-panel[data-view="notes"] .panel-list a:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
   .home-panel[data-view="notes"] .panel-list a:hover *,
@@ -81,7 +88,7 @@
   .sh-keys { margin: 14px 0 0; font-size: 12px; color: #8a857e; }
   .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
   @media (max-width: 560px) {
-    .home-panel[data-view="notes"] .panel-list a { grid-template-columns: 1.5ch 10ch minmax(0, 1fr) 5ch; gap: 10px; }
+    .home-panel[data-view="notes"] .panel-list a { grid-template-columns: 1.5ch 10ch minmax(0, 1fr) 9ch; gap: 10px; }
     .ls-perm { display: none; }
     .sh-keys { display: none; }
   }
@@ -161,10 +168,10 @@
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
         </div>
         <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
-        <p class="sh-line sh-dim">total 940 字 · 2026 年 2 篇</p>
+        <p class="sh-line sh-dim sh-total">total 940 chars · 2 posts in 2026</p>
         <ul class="panel-list">
-          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span><time class="ls-date" datetime="2026-10-29">2026-10-29</time><span class="panel-title">Markdown 樣式總覽</span><span class="ls-size">860字</span></a></li>
-          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span><time class="ls-date" datetime="2026-03-08">2026-03-08</time><span class="panel-title">你好，這是第一篇</span><span class="ls-size">80字</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span><time class="ls-date" datetime="2026-10-29">2026-10-29</time><span class="panel-title">Markdown 樣式總覽</span><span class="ls-size">860 chars</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span><time class="ls-date" datetime="2026-03-08">2026-03-08</time><span class="panel-title">你好，這是第一篇</span><span class="ls-size">80 chars</span></a></li>
         </ul>
         <div class="sh-out" aria-live="polite"></div>
         <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><input class="sh-input" id="sh-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
@@ -313,17 +320,24 @@
       // —— Notes shell: type the command each time the list opens; arrow keys walk the rows. ——
       var cmd = document.querySelector(".sh-cmd");
       var typing = 0;
-      function typeCommand() {
+      var notesPanel = document.querySelector('.home-panel[data-view="notes"]');
+      function typeCommand(then) {
         var text = cmd.getAttribute("data-cmd");
         var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         window.clearInterval(typing);
-        if (still) { cmd.textContent = text; return; }
+        function done() {
+          cmd.classList.remove("is-typing");
+          notesPanel.classList.remove("is-listing");
+          if (then) then();
+        }
+        if (still) { cmd.textContent = text; done(); return; }
         var n = 0;
         cmd.textContent = "";
         cmd.classList.add("is-typing");
+        notesPanel.classList.add("is-listing");
         typing = window.setInterval(function () {
           cmd.textContent = text.slice(0, ++n);
-          if (n >= text.length) { window.clearInterval(typing); cmd.classList.remove("is-typing"); }
+          if (n >= text.length) { window.clearInterval(typing); window.setTimeout(done, 180); }
         }, 70);
       }
       new MutationObserver(function () {
@@ -369,18 +383,26 @@
       }
       var COMMANDS = {
         help: function () {
-          say("cd ~      回首頁（也可以打 cd 或 cd ..）");
-          say("cd -      回上一頁");
-          say("cd works  去看作品");
-          say("ls        重新列出文章");
-          say("whoami    我是誰");
-          say("clear     清除畫面");
+          say("cd ~      go home              回首頁（也可以打 cd 或 cd ..）");
+          say("cd -      go back              回上一頁");
+          say("cd works  see works            去看作品");
+          say("ls        list notes again     重新列出文章");
+          say("whoami    who is Yen           我是誰");
+          say("clear     clear the screen     清除畫面，重新列出文章");
+          say("help      show this list       列出這些指令");
         },
         whoami: function () { say("yen — product manager @Taiwan. I build things, then make sense of them."); },
         pwd: function () { say("/home/yen/notes"); },
-        ls: function () { out.innerHTML = ""; typeCommand(); },
-        clear: function () { out.innerHTML = ""; },
+        ls: function () { relist(); },
+        // Clear wipes the whole screen, list included, then the shell lists the notes again.
+        clear: function () { relist(); },
       };
+      function relist() {
+        out.innerHTML = "";
+        cmd.textContent = "";
+        notesPanel.classList.add("is-listing");
+        window.setTimeout(function () { typeCommand(function () { input.focus({ preventScroll: true }); }); }, 260);
+      }
       function run(raw) {
         var line = raw.trim().replace(/\s+/g, " ");
         if (!line) return;
@@ -398,7 +420,7 @@
         if (words[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
         if (words[0] === "exit" || words[0] === "home") return goTo("home");
         if (COMMANDS[words[0]]) return COMMANDS[words[0]]();
-        say("sh: command not found: " + words[0] + "　（輸入 help 看看可以做什麼）");
+        say("sh: command not found: " + words[0] + " — try help（輸入 help 看看可以做什麼）");
       }
       input.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
