@@ -430,9 +430,9 @@ body .home-nav a[aria-current="page"] {
 
 /* —— Home: night palette and the notes / works shell ——
    body.theme-night is set from prefers-color-scheme (see _layouts/home.html). */
-/* Night: the same type and layout, recoloured for an amber phosphor screen. */
+/* Night: the same type and layout on a cool ink ground; the koi stay gold, and gold is the one accent. */
 body.home.theme-night,
-body.theme-night .home-stage { background: #14110d; color: #ecc488; }
+body.theme-night .home-stage { background: #0d0f12; color: #e8e6e3; }
 body.theme-night .home-nav,
 body.theme-night .home-greeting,
 body.theme-night .home-role,
@@ -440,19 +440,16 @@ body.theme-night .home-slogan,
 body.theme-night .home-copy,
 body.theme-night .home-panel,
 body.theme-night .panel-back:hover,
-body.theme-night .home-nav a[aria-current="page"] { color: #ecc488; }
+body.theme-night .home-nav a[aria-current="page"] { color: #e8e6e3; }
 body.theme-night .panel-head,
-body.theme-night .panel-meta { color: #9c8462; }
+body.theme-night .panel-meta { color: #8a8f99; }
 body.theme-night[data-view="notes"] .home-nav a,
-body.theme-night[data-view="works"] .home-nav a { color: #7d6a50; }
+body.theme-night[data-view="works"] .home-nav a { color: #626873; }
 body.theme-night .home-links,
-body.theme-night .panel-more { color: #f0a868; }
-body.theme-night .home-panel { background: rgba(20, 17, 13, 0.86); box-shadow: 0 0 28px 14px rgba(20, 17, 13, 0.86); }
-body.theme-night .panel-list li { border-top-color: rgba(236, 196, 136, 0.16); }
+body.theme-night .panel-more { color: #f5b942; }
+body.theme-night .home-panel { background: rgba(13, 15, 18, 0.86); box-shadow: 0 0 28px 14px rgba(13, 15, 18, 0.86); }
+body.theme-night .panel-list li { border-top-color: rgba(232, 230, 227, 0.16); }
 body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0.45)); }
-body.theme-night .home-vignette {
-  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.16) 2px 3px);
-}
 
 /* —— Notes: a shell session. A prompt runs `ls -lt`, rows sit in `ls -l` columns,
       and the row under the pointer or keyboard turns reverse video like a TUI picker. —— */
@@ -460,8 +457,8 @@ body.theme-night .home-vignette {
 .sh-panel .panel-list li { border-top: 0; }
 .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Prompt in ink tones only: the one accent (朱 by day, amber by night) is kept for what needs the eye. */
-.sh-prompt { color: #8a857e; }
-.sh-path { color: #2a2420; }
+.sh-prompt { color: #c45c26; font-weight: 600; }
+.sh-path { color: #2a2420; font-weight: 600; }
 .sh-dim { color: #8a857e; }
 .sh-cmd::after, .sh-caret::after {
   content: ""; display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px;
@@ -541,18 +538,18 @@ body.theme-night .ls-date,
 body.theme-night .sh-dim,
 body.theme-night .sh-keys,
 body.theme-night .work-status,
-body.theme-night .work-desc { color: #9c8462; }
-body.theme-night .sh-prompt { color: #9c8462; }
-body.theme-night .sh-path { color: #ecc488; }
-body.theme-night .sh-keys kbd { border-color: rgba(236, 196, 136, 0.3); }
-body.theme-night .home-panel .panel-back.sh-back { color: #9c8462; }
-body.theme-night .sh-back .sh-dollar { color: #9c8462; }
+body.theme-night .work-desc { color: #8a8f99; }
+body.theme-night .sh-prompt { color: #f5b942; }
+body.theme-night .sh-path { color: #e8e6e3; }
+body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
+body.theme-night .home-panel .panel-back.sh-back { color: #8a8f99; }
+body.theme-night .sh-back .sh-dollar { color: #8a8f99; }
 body.theme-night .home-panel .panel-back.sh-back:hover,
-body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #ecc488; color: #14110d; }
+body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #e8e6e3; color: #0d0f12; }
 body.theme-night .sh-panel .panel-list a:hover,
 body.theme-night .sh-panel .panel-list a:focus-visible,
-body.theme-night .sh-panel .panel-list a.is-opening { background: #ecc488; color: #14110d; }
-body.theme-night .work-status[data-status="in progress"]::before { color: #f0a868; }
+body.theme-night .sh-panel .panel-list a.is-opening { background: #e8e6e3; color: #0d0f12; }
+body.theme-night .work-status[data-status="in progress"]::before { color: #f5b942; }
 
 /* —— Home copy: a few terminal marks on a human page —— */
 /* The same underline cursor as article titles. */
@@ -588,10 +585,10 @@ body.theme-night .work-status[data-status="in progress"]::before { color: #f0a86
   color: #2a2420;
   border-bottom: 1px solid rgba(42, 36, 32, 0.25);
 }
-body.theme-night .home-greeting::after { background: #f0a868; }
-body.theme-night .home-last { color: #9c8462; border-top-color: rgba(236, 196, 136, 0.18); }
-body.theme-night .home-last-label { color: #7d6a50; }
-body.theme-night .home-last a { color: #ecc488; border-bottom-color: rgba(236, 196, 136, 0.3); }
+body.theme-night .home-greeting::after { background: #f5b942; }
+body.theme-night .home-last { color: #8a8f99; border-top-color: rgba(232, 230, 227, 0.18); }
+body.theme-night .home-last-label { color: #626873; }
+body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 230, 227, 0.3); }
 @media (prefers-reduced-motion: reduce) {
   .home-greeting::after { animation: none; }
 }
@@ -2062,19 +2059,60 @@ html.post-print.stream-done .post-prose > * {
 }
 
 /* The typed `cat` line carries over from the notes prompt to the top of the
-   article (cross-document view transition). */
+   article (cross-document view transition). Both ends are just the line's
+   text at the same size, so it only moves; only the arriving copy is drawn,
+   so no doubled text. The old page leaves quickly, the new one comes in
+   behind the line, and the article starts typing once the line has landed. */
 @view-transition {
   navigation: auto;
 }
-.post-cmd {
+.post-cmd-line {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
   view-transition-name: post-cmd;
 }
+.sh-live.is-carrying {
+  display: inline-flex;
+  max-width: 100%;
+}
+.sh-live.is-carrying .sh-input {
+  display: none;
+}
+.sh-typed {
+  white-space: pre;
+}
 ::view-transition-group(*) {
-  animation-duration: 260ms;
+  animation-duration: 240ms;
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
+::view-transition-old(root) {
+  animation: vt-out 160ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: vt-in 220ms 100ms cubic-bezier(0, 0, 0.2, 1) both;
+}
 ::view-transition-group(post-cmd) {
-  animation-duration: 380ms;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(post-cmd) {
+  display: none;
+}
+::view-transition-new(post-cmd) {
+  animation: none;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
@@ -2082,20 +2120,20 @@ html.post-print.stream-done .post-prose > * {
   }
 }
 
-/* Night: a softer dark than the home's amber screen, for long reading. */
+/* Night: the same cool ink ground as the home, light text, gold only for the accent and selection. */
 body.post-body.theme-night {
-  background: #17150f;
-  color: #ddd5c7;
-  --link-sel-bg: #ecc488;
-  --link-sel-fg: #17150f;
+  background: #0d0f12;
+  color: #e8e6e3;
+  --link-sel-bg: #f5b942;
+  --link-sel-fg: #0d0f12;
 }
 body.theme-night .post-prose {
-  --ink: #ddd5c7;
-  --ink-soft: #b3aa9b;
-  --ink-faint: #857c6f;
-  --rule: rgba(221, 213, 199, 0.14);
-  --washi: #201d17;
-  --shu: #f0a868;
+  --ink: #e8e6e3;
+  --ink-soft: #b6b9bf;
+  --ink-faint: #8a8f99;
+  --rule: rgba(232, 230, 227, 0.14);
+  --washi: #151820;
+  --shu: #f5b942;
 }
 body.theme-night .post-back,
 body.theme-night .post-meta,
@@ -2103,40 +2141,40 @@ body.theme-night .post-eof,
 body.theme-night .post-pager-label,
 body.theme-night .post-pager time,
 body.theme-night .post-end .sh-dim,
-body.theme-night .post-end .sh-keys { color: #857c6f; }
+body.theme-night .post-end .sh-keys { color: #8a8f99; }
 body.theme-night .post-title,
 body.theme-night .post-cmd,
-body.theme-night .post-end { color: #ddd5c7; }
-body.theme-night .post-back .sh-dollar,
+body.theme-night .post-end { color: #e8e6e3; }
+body.theme-night .post-back .sh-dollar { color: #8a8f99; }
 body.theme-night .post-head .sh-prompt,
-body.theme-night .post-end .sh-prompt { color: #857c6f; }
+body.theme-night .post-end .sh-prompt { color: #f5b942; }
 body.theme-night .post-head .sh-path,
-body.theme-night .post-end .sh-path { color: #ddd5c7; }
-body.theme-night .post-prose :not(pre) > code { background: rgba(221, 213, 199, 0.08); }
-body.theme-night .post-prose kbd { background: #201d17; color: #ddd5c7; border-color: rgba(221, 213, 199, 0.25); }
-body.theme-night .post-prose img { border-color: rgba(221, 213, 199, 0.1); }
+body.theme-night .post-end .sh-path { color: #e8e6e3; }
+body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
+body.theme-night .post-prose kbd { background: #151820; color: #e8e6e3; border-color: rgba(232, 230, 227, 0.25); }
+body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
 body.theme-night .post-prose .highlight .c,
 body.theme-night .post-prose .highlight .c1,
 body.theme-night .post-prose .highlight .cm,
 body.theme-night .post-prose .highlight .cs,
-body.theme-night .post-prose .highlight .sd { color: #857c6f; }
+body.theme-night .post-prose .highlight .sd { color: #8a8f99; }
 body.theme-night .post-prose .highlight .s,
 body.theme-night .post-prose .highlight .s1,
 body.theme-night .post-prose .highlight .s2,
 body.theme-night .post-prose .highlight .sh,
 body.theme-night .post-prose .highlight .sb,
 body.theme-night .post-prose .highlight .dl,
-body.theme-night .post-prose .highlight .se { color: #a9b98a; }
+body.theme-night .post-prose .highlight .se { color: #a6d6a8; }
 body.theme-night .post-prose .highlight .nf,
 body.theme-night .post-prose .highlight .nc,
-body.theme-night .post-prose .highlight .fm { color: #8fb0d3; }
+body.theme-night .post-prose .highlight .fm { color: #8db7ff; }
 body.theme-night .post-prose .highlight .nb,
 body.theme-night .post-prose .highlight .bp,
-body.theme-night .post-prose .highlight .na { color: #c9a27a; }
-body.theme-night .post-note { color: #a39a8c; }
-body.theme-night .post-note.is-lit { color: #ddd5c7; }
-body.theme-night .post-note-n { color: #f0a868; }
-body.theme-night .post-end .sh-keys kbd { border-color: rgba(221, 213, 199, 0.3); }
+body.theme-night .post-prose .highlight .na { color: #c8a8ff; }
+body.theme-night .post-note { color: #a3a7af; }
+body.theme-night .post-note.is-lit { color: #e8e6e3; }
+body.theme-night .post-note-n { color: #f5b942; }
+body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
 /* —— Links: reverse video when pointed at, focused from the keyboard or
    tapped, like the selected row of a terminal picker. Inline links keep
@@ -2149,8 +2187,8 @@ body.theme-night .post-end .sh-keys kbd { border-color: rgba(221, 213, 199, 0.3)
   --link-sel-fg: #fafaf7;
 }
 body.theme-night {
-  --link-sel-bg: #ecc488;
-  --link-sel-fg: #14110d;
+  --link-sel-bg: #f5b942;
+  --link-sel-fg: #0d0f12;
 }
 a {
   border-radius: 1px;
@@ -2162,7 +2200,8 @@ a:active {
   opacity: 1;
   outline: none;
   background-color: var(--link-sel-bg) !important;
-  box-shadow: 0 0 0 2px var(--link-sel-bg);
+  /* 5px of room each side, 2px above and below; a shadow, so nothing moves. */
+  box-shadow: -3px 0 0 2px var(--link-sel-bg), 3px 0 0 2px var(--link-sel-bg);
   color: var(--link-sel-fg) !important;
   text-decoration-color: transparent;
   border-bottom-color: transparent;
@@ -2172,7 +2211,7 @@ a:active {
   a:hover {
     opacity: 1;
     background-color: var(--link-sel-bg) !important;
-    box-shadow: 0 0 0 2px var(--link-sel-bg);
+    box-shadow: -3px 0 0 2px var(--link-sel-bg), 3px 0 0 2px var(--link-sel-bg);
     color: var(--link-sel-fg) !important;
     text-decoration-color: transparent;
     border-bottom-color: transparent;

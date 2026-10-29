@@ -23,6 +23,10 @@
         if (sessionStorage.getItem("post-cmd-typed") === location.pathname) root.classList.add("from-notes");
         sessionStorage.removeItem("post-cmd-typed");
       } catch (e) {}
+      // Hold the typing until the carried line has landed (post.js waits on this).
+      window.addEventListener("pagereveal", function (e) {
+        if (e.viewTransition) window.postArrival = e.viewTransition.finished;
+      });
     })();
   </script>
 </head>
@@ -57,7 +61,7 @@
   <article class="post">
     <header class="post-head">
       <div class="post-bar">
-        <p class="post-cmd"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="post-cmd-text">cat {{ file_name }}</span></p>
+        <p class="post-cmd"><span class="post-cmd-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="post-cmd-text">cat {{ file_name }}</span></span></p>
         <a class="post-back" href="{{ '/notes/' | relative_url }}"><span class="sh-dollar">$</span> cd ..</a>
       </div>
       <h1 class="post-title">{{ page.title }}</h1>

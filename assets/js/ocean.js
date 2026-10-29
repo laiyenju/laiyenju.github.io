@@ -1014,7 +1014,7 @@
     patchGlint: "#3a2a14",
     accents: ["#fff3d6"],
     accentRate: 0.04,
-    grid: "rgba(255,190,100,0.05)",
+    grid: "rgba(232,230,227,0.04)",
     wake: [212, 150, 70],
     fishInk: [230, 180, 100],
     heatHot: [255, 214, 140],
