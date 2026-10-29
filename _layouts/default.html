@@ -12,8 +12,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600&family=DotGothic16&text=%E5%8D%81%E5%A4%A7%E4%B8%AD%E5%8F%A3%E6%9C%A8%E6%97%A5%E7%94%B0%E9%87%91%E9%9B%A3%E5%BF%83%E6%B0%B4%E6%89%8B%E7%81%AB%E6%9C%88%E5%B1%B1%E5%9C%9F%E5%BC%93%E4%BA%BA%E5%8D%9C%E4%B8%B6%E4%B8%BF%E4%B9%80%E4%B8%80%E4%B9%99%E7%AB%B9%E6%88%88%E5%A5%B3%E7%9B%AE%E3%84%85%E3%84%86%E3%84%87%E3%84%88%E3%84%89%E3%84%8A%E7%B1%B3%E3%80%82&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}?v={{ site.time | date: '%s' }}">
   <script>
-    // Print the first screen in block by block (post.js), unless motion is reduced.
-    if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) document.documentElement.classList.add("post-print");
+    // Type the note out on arrival (post.js), unless motion is reduced. When it
+    // was opened from the notes list, the cat command is already typed there
+    // and carried up by the view transition, so that line shows at once.
+    (function () {
+      var root = document.documentElement;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      root.classList.add("post-print");
+      try {
+        if (sessionStorage.getItem("post-cmd-typed") === location.pathname) root.classList.add("from-notes");
+        sessionStorage.removeItem("post-cmd-typed");
+      } catch (e) {}
+    })();
   </script>
 </head>
 <body class="post-body">
@@ -47,7 +57,7 @@
   <article class="post">
     <header class="post-head">
       <div class="post-bar">
-        <p class="post-cmd"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ cat {{ file_name }}</p>
+        <p class="post-cmd"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="post-cmd-text">cat {{ file_name }}</span></p>
         <a class="post-back" href="{{ '/notes/' | relative_url }}"><span class="sh-dollar">$</span> cd ..</a>
       </div>
       <h1 class="post-title">{{ page.title }}</h1>

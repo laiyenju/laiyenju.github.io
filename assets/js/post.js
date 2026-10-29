@@ -1,59 +1,16 @@
 (function () {
   "use strict";
 
-  /* —— Article pages: one small koi roams the plain paper and hurries
-        across the text; footnotes move into the right margin on wide
-        screens. —— */
+  /* —— Article pages: plain paper while reading. When (END) comes into view,
+        one small koi swims across it, once. Footnotes move into the right
+        margin on wide screens. —— */
 
   /* Column (680) + gap (28) + rail (200) = 908, plus a margin either side. */
   var RAIL_MIN = 960;
-  /* Phones get no koi (the canvas is also hidden in CSS below this width). */
-  var KOI_MIN = 760;
   var GAP = 12;
 
   var post = document.querySelector(".post");
   var prose = document.querySelector(".post-prose");
-  var ocean = null;
-
-  var TEXT = ".post-head, .post-prose > *, .post-end, .post-note";
-  var queued = false;
-
-  var heads = [];
-  var currentHead = null;
-
-  /** The cursor sits on whichever h2 the reader has scrolled past (the title has none). */
-  function markHead() {
-    var line = window.innerHeight * 0.4;
-    var next = heads[0] || null;
-    for (var i = 1; i < heads.length; i++) {
-      if (heads[i].getBoundingClientRect().top < line) next = heads[i];
-    }
-    if (next === currentHead) return;
-    if (currentHead) currentHead.classList.remove("is-current");
-    if (next) next.classList.add("is-current");
-    currentHead = next;
-  }
-
-  /** Hand the koi the on-screen text boxes (the canvas is fixed, so client px = canvas px). */
-  function markText() {
-    queued = false;
-    markHead();
-    if (!ocean) return;
-    var boxes = [];
-    var h = window.innerHeight;
-    document.querySelectorAll(TEXT).forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > h || !r.width) return;
-      boxes.push(r.left, r.top, r.right, r.bottom);
-    });
-    ocean.setTextRects(new Float32Array(boxes));
-  }
-
-  function queueText() {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(markText);
-  }
 
   /* Kramdown footnotes: <sup><a class="footnote" href="#fn:1"> in the text,
      <div class="footnotes"><ol><li id="fn:1"> at the end. */
@@ -100,7 +57,6 @@
 
   function layout() {
     layoutRail();
-    markText();
   }
 
   /** Label code blocks with their language (Rouge puts it in a class), and give each a line-number gutter. */
@@ -120,31 +76,132 @@
     });
   }
 
-  /* —— Print: the blocks on the first screen appear one after another, like
-        terminal output; everything below is shown at once. (Off when motion
-        is reduced: the head script then never adds .post-print.) —— */
-  var PRINT = ".post-head > *, .post-prose > *, .post-end";
-  function print() {
-    var root = document.documentElement;
-    if (!root.classList.contains("post-print")) return;
-    var h = window.innerHeight;
+  /* —— Arrival, like `cat` in a terminal: the command (unless it was typed on
+        the notes list and carried up), the title typed character by
+        character, the date line typed out, then the first screen of prose
+        streamed in line by line. Below the first screen everything is simply
+        there. A key, a scroll or a tap finishes it at once. Off when motion
+        is reduced: the head script then never adds .post-print. —— */
+  var timers = [];
+  function later(ms, fn) { timers.push(window.setTimeout(fn, ms)); }
+
+  /** Type an element's plain text in place; the untyped rest keeps its room, so nothing reflows. */
+  function typeText(el, perChar, done, withCursor) {
+    var text = el.textContent;
+    var shown = document.createElement("span");
+    var rest = document.createElement("span");
+    rest.className = "type-rest";
+    rest.textContent = text;
+    el.textContent = "";
+    el.appendChild(shown);
+    if (withCursor) {
+      // The cursor sits right after the typed part, not after the hidden rest.
+      var cursor = document.createElement("span");
+      cursor.className = "type-cursor";
+      cursor.setAttribute("aria-hidden", "true");
+      el.appendChild(cursor);
+    }
+    el.appendChild(rest);
     var n = 0;
-    document.querySelectorAll(PRINT).forEach(function (el) {
-      var top = el.getBoundingClientRect().top;
-      el.style.setProperty("--print-delay", (top < h ? n++ * 30 : 0) + "ms");
-      el.classList.add("is-printed");
-    });
+    (function step() {
+      n++;
+      shown.textContent = text.slice(0, n);
+      rest.textContent = text.slice(n);
+      if (n < text.length) later(perChar, step);
+      else if (withCursor) later(140, function () { el.textContent = text; if (done) done(); });
+      else { el.textContent = text; if (done) done(); }
+    })();
+    return function finish() { el.textContent = text; };
   }
 
-  /** Day radicals on paper, night radicals on the dark palette. */
-  function startKoi(canvas) {
-    if (ocean) ocean.destroy();
-    var themes = window.OceanThemes || {};
-    var night = document.body.classList.contains("theme-night");
-    ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, night ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
-    ocean.setCalm(true, true);
-    ocean.setGrid(false);
-    queueText();
+  var finishers = [];
+  function stream() {
+    var root = document.documentElement;
+    if (!root.classList.contains("post-print")) return;
+    var bar = document.querySelector(".post-bar");
+    var cmd = document.querySelector(".post-cmd-text");
+    var title = document.querySelector(".post-title");
+    var meta = document.querySelector(".post-meta");
+    var end = document.querySelector(".post-end");
+    var h = window.innerHeight;
+
+    function show(el) { if (el) el.classList.add("is-shown"); }
+
+    function typeBar(next) {
+      show(bar);
+      if (root.classList.contains("from-notes") || !cmd) return next();
+      finishers.push(typeText(cmd, 26, function () { later(120, next); }));
+    }
+    function typeTitle(next) {
+      if (!title) return next();
+      show(title);
+      var len = title.textContent.length;
+      var per = Math.max(16, Math.min(42, Math.floor(600 / Math.max(1, len))));
+      finishers.push(typeText(title, per, next, true));
+    }
+    function typeMeta(next) {
+      if (!meta) return next();
+      var chars = meta.textContent.length;
+      meta.style.setProperty("--type-chars", chars);
+      meta.style.setProperty("--type-dur", chars * 12 + "ms");
+      show(meta);
+      later(chars * 12 + 120, next);
+    }
+    function streamProse() {
+      // Each first-screen block uncovers one line at a time, one block after another.
+      var t = 0;
+      document.querySelectorAll(".post-prose > *").forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top < h) {
+          var lh = parseFloat(getComputedStyle(el).lineHeight) || 28;
+          var lines = Math.max(1, Math.round(r.height / lh));
+          var dur = lines * 34;
+          el.style.setProperty("--stream-lines", lines);
+          el.style.setProperty("--stream-dur", dur + "ms");
+          el.style.setProperty("--stream-delay", t + "ms");
+          t += dur + 40;
+        }
+        el.classList.add("is-streaming");
+      });
+      if (end) {
+        if (end.getBoundingClientRect().top < h) later(t, function () { show(end); });
+        else show(end);
+      }
+      later(t, done);
+    }
+    function done() {
+      timers.forEach(window.clearTimeout);
+      timers = [];
+      finishers.forEach(function (f) { f(); });
+      root.classList.add("stream-done");
+      stopListening();
+    }
+    var SKIP = ["keydown", "wheel", "touchstart", "mousedown"];
+    function stopListening() { SKIP.forEach(function (ev) { window.removeEventListener(ev, done, true); }); }
+    SKIP.forEach(function (ev) { window.addEventListener(ev, done, { capture: true, passive: true }); });
+
+    typeBar(function () { typeTitle(function () { typeMeta(streamProse); }); });
+  }
+
+  /* —— The end: once (END) is fully in view, a koi swims across it, once per
+        visit, from a random side; day or night radicals to match the page.
+        The engine stops and clears itself when the koi is out. Skipped when
+        motion is reduced. —— */
+  function watchEnd(canvas) {
+    var eof = document.querySelector(".post-eof");
+    if (!canvas || !eof || !window.OceanEngine || !("IntersectionObserver" in window)) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var io = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      io.disconnect();
+      var themes = window.OceanThemes || {};
+      var night = document.body.classList.contains("theme-night");
+      var ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, night ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
+      ocean.setGrid(false);
+      var r = eof.getBoundingClientRect();
+      ocean.swimAcross(r.top + r.height / 2, Math.random() < 0.5 ? 1 : -1);
+    }, { threshold: 1 });
+    io.observe(eof);
   }
 
   /* —— The prompt after (END): a few commands, like the notes shell. —— */
@@ -224,20 +281,16 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     labelCode();
-    print();
+    stream();
     setupShell();
-    heads = Array.prototype.slice.call(document.querySelectorAll(".post-prose h2"));
-    var canvas = document.querySelector("canvas[data-koi]");
-    if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) startKoi(canvas);
+    watchEnd(document.querySelector("canvas[data-koi]"));
     var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
     if (dark) dark.addEventListener("change", function (e) {
       document.body.classList.toggle("theme-night", e.matches);
-      if (ocean) startKoi(canvas);
     });
     buildRail();
     layout();
     window.addEventListener("resize", layout);
-    window.addEventListener("scroll", queueText, { passive: true });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
   });
 })();

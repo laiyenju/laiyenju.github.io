@@ -128,9 +128,11 @@
   });
 
   /* —— Opening a note: the row stays lit, the prompt types `cat name.md`,
-        then the page changes. The row's title carries the view-transition
-        name, so browsers that support cross-document transitions slide it
-        into the article title. Kept under half a second. —— */
+        then the page changes. The prompt line carries the view-transition
+        name, so browsers that support cross-document transitions carry it up
+        to the same line at the top of the article, where the note then types
+        itself out (post.js). The article is told, through sessionStorage,
+        that the command has already been typed. —— */
   var notesPanel = document.querySelector('.home-panel[data-view="notes"]');
   var opening = false;
   if (notesPanel) notesPanel.addEventListener("click", function (e) {
@@ -142,10 +144,11 @@
     e.preventDefault();
     opening = true;
     var file = decodeURIComponent(url.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
-    var title = a.querySelector(".panel-title");
-    if (title) title.style.viewTransitionName = "post-title";
     a.classList.add("is-opening");
     var input = notesPanel.querySelector(".sh-input");
+    var live = notesPanel.querySelector(".sh-live");
+    if (live) live.style.viewTransitionName = "post-cmd";
+    try { sessionStorage.setItem("post-cmd-typed", url.pathname); } catch (err) {}
     var text = "cat " + file;
     var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (still || !input) { location.href = url.href; return; }
@@ -158,16 +161,14 @@
       window.setTimeout(function () { location.href = url.href; }, 90);
     }, step);
   });
-  // Back from the article (page restored from the cache): a clean prompt and no lingering title name.
+  // Back from the article (page restored from the cache): a clean prompt and no lingering transition name.
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted || !notesPanel) return;
     opening = false;
     var input = notesPanel.querySelector(".sh-input");
     if (input) input.value = "";
-    notesPanel.querySelectorAll(".is-opening").forEach(function (a) {
-      a.classList.remove("is-opening");
-      var t = a.querySelector(".panel-title");
-      if (t) t.style.viewTransitionName = "";
-    });
+    var live = notesPanel.querySelector(".sh-live");
+    if (live) live.style.viewTransitionName = "";
+    notesPanel.querySelectorAll(".is-opening").forEach(function (a) { a.classList.remove("is-opening"); });
   });
 })();
