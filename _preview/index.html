@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hey, I'm Yen.</title>
+<meta name="description" content="Yen Lai 的個人寫作網站">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<base href="./">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body class="lang-zh-Hant home">
+  <div class="home-stage">
+    <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
+    <div class="home-vignette" aria-hidden="true"></div>
+
+    <div class="home-chrome">
+      <nav class="home-nav" aria-label="Primary">
+        <a href="notes/" data-view-link="notes">notes</a>
+        <a href="works/" data-view-link="works">works</a>
+      </nav>
+
+      <div class="home-view home-copy" data-view="home">
+        <h1 class="home-greeting">hey, I'm Yen.</h1>
+        <p class="home-sub">寫</p>
+        <p class="home-role">Product manager @Taiwan</p>
+        <p class="home-slogan">I build things, then make sense of them.</p>
+        <p class="home-links"><a href="https://github.com/laiyenju">github</a>｜<a href="https://www.linkedin.com/in/laiyenju/">LinkedIn</a>｜<a href="https://x.com/theYenLai">X</a></p>
+      </div>
+
+      <section class="home-view home-panel" data-view="notes" aria-label="Notes" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">日常寫作紀錄 · everyday writing</span>
+        </div>
+        <ul class="panel-list">
+          <li><a href="published/2026-03-10-on-type/"><span class="panel-title">On type and the published path</span><time class="panel-meta" datetime="2026-03-10">2026-03-10</time></a></li>
+          <li><a href="published/2026-03-08-hello/"><span class="panel-title">你好，這是第一篇</span><time class="panel-meta" datetime="2026-03-08">2026-03-08</time></a></li>
+          <li><a href="published/2026-02-14-reading-writing/"><span class="panel-title">讀與寫</span><time class="panel-meta" datetime="2026-02-14">2026-02-14</time></a></li>
+          <li><a href="published/2026-01-20-blank-page/"><span class="panel-title">空白頁</span><time class="panel-meta" datetime="2026-01-20">2026-01-20</time></a></li>
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
+
+      <section class="home-view home-panel" data-view="works" aria-label="Works" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">作品集 · portfolio</span>
+        </div>
+        <ul class="panel-list">
+          <li><a href="./"><span class="panel-title">laiyenju.github.io</span><span class="panel-meta">This writing site — quiet pages in Jekyll.</span></a></li>
+          <li><a href="#"><span class="panel-title">字與空</span><span class="panel-meta">Experiments in measure and pause.</span></a></li>
+          <li><a href="#"><span class="panel-title">Sketchbook</span><span class="panel-meta">Small visual studies, unfinished on purpose.</span></a></li>
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
+    </div>
+  </div>
+
+  <script src="assets/js/ocean.js" defer></script>
+  <script src="assets/js/home.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var el = document.querySelector("canvas[data-koi]");
+      if (el && window.OceanEngine) window.homeOcean = new window.OceanEngine(el, undefined, 0);
+      var roots = document.querySelectorAll(".home-nav, .home-copy");
+      if (window.homeViews) window.homeViews.start();
+      roots.forEach(function (root) {
+        var texts = [];
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+        var node;
+        while ((node = walker.nextNode())) {
+          if (node.nodeValue && node.nodeValue.trim()) texts.push(node);
+        }
+        texts.forEach(function (textNode) {
+          var frag = document.createDocumentFragment();
+          var value = textNode.nodeValue;
+          for (var i = 0; i < value.length; i++) {
+            var ch = value.charAt(i);
+            if (ch === " " || ch === "\n" || ch === "\t") {
+              frag.appendChild(document.createTextNode(ch));
+            } else {
+              var span = document.createElement("span");
+              span.className = "home-glyph";
+              span.textContent = ch;
+              frag.appendChild(span);
+            }
+          }
+          textNode.parentNode.replaceChild(frag, textNode);
+        });
+      });
+      var glyphs = document.querySelectorAll(".home-glyph");
+      function fishCell(r, g, b, a) {
+        if (a < 180) return false;
+        var lum = (r * 3 + g * 4 + b) / 8;
+        if (lum < 162) return true;
+        if (r > b + 48 && lum < 168 && r > 155 && g < 200) return true;
+        return false;
+      }
+      function fishAt(data, w, h, x0, y0, x1, y1) {
+        if (x1 < x0 || y1 < y0) return false;
+        var stepX = Math.max(1, Math.round((x1 - x0) / 8));
+        var stepY = Math.max(1, Math.round((y1 - y0) / 10));
+        var hits = 0;
+        var seen = 0;
+        var sum = 0;
+        for (var y = y0; y <= y1; y += stepY) {
+          var row = y * w;
+          for (var x = x0; x <= x1; x += stepX) {
+            var i = (row + x) * 4;
+            var r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+            if (a < 180) continue;
+            seen++;
+            sum += (r * 3 + g * 4 + b) / 8;
+            if (fishCell(r, g, b, a)) hits++;
+          }
+        }
+        if (seen < 3) return false;
+        return hits >= 3 && hits / seen >= 0.42 && sum / seen < 186;
+      }
+      function tick() {
+        var canvas = document.querySelector("canvas[data-koi]");
+        if (canvas) {
+          var ctx = canvas.getContext("2d");
+          var crect = canvas.getBoundingClientRect();
+          if (ctx && crect.width > 0) {
+            var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            var sx = canvas.width / crect.width;
+            var sy = canvas.height / crect.height;
+            for (var i = 0; i < glyphs.length; i++) {
+              var g = glyphs[i];
+              var r = g.getBoundingClientRect();
+              var x0 = Math.max(0, Math.floor((r.left - crect.left) * sx) - 1);
+              var y0 = Math.max(0, Math.floor((r.top - crect.top) * sy) - 1);
+              var x1 = Math.min(canvas.width - 1, Math.ceil((r.right - crect.left) * sx) + 1);
+              var y1 = Math.min(canvas.height - 1, Math.ceil((r.bottom - crect.top) * sy) + 1);
+              var hit = fishAt(data, canvas.width, canvas.height, x0, y0, x1, y1);
+              g.dataset.on = hit ? "1" : "";
+              g.style.color = hit ? "#FFF5EB" : "";
+            }
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  </script>
+</body>
+</html>

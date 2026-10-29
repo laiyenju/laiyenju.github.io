@@ -1,0 +1,1082 @@
+/* Yen writing site — extreme minimal editorial (rsms-inspired type scale)
+   Tokens from Figma 4DOJqZaOLLEHSetb8oFyAi; Yen: all-paper bg, no letterbox */
+
+@font-face {
+  font-family: "iA Writer Quattro";
+  src: url("../fonts/quattro/iAWriterQuattroS-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Quattro";
+  src: url("../fonts/quattro/iAWriterQuattroS-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Quattro";
+  src: url("../fonts/quattro/iAWriterQuattroS-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Quattro";
+  src: url("../fonts/quattro/iAWriterQuattroS-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Mono";
+  src: url("../fonts/mono/iAWriterMonoS-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Mono";
+  src: url("../fonts/mono/iAWriterMonoS-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Mono";
+  src: url("../fonts/mono/iAWriterMonoS-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Mono";
+  src: url("../fonts/mono/iAWriterMonoS-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --paper: #fafaf7;
+  --letterbox: #fafaf7; /* deprecated: same as paper — no dark gutters */
+  --ink: #000;
+  --ink-85: rgba(0, 0, 0, 0.85);
+  --ink-70: rgba(0, 0, 0, 0.7);
+  --ink-40: rgba(0, 0, 0, 0.4);
+  --ink-25: rgba(0, 0, 0, 0.25);
+  --ink-20: rgba(0, 0, 0, 0.2);
+  --ink-09: rgba(0, 0, 0, 0.09);
+  --amber: #d4a058;
+  --amber-line: #c9923e; /* richer hairline under article date — Ink contrast bump */
+  --amber-wash: rgba(212, 160, 88, 0.28);
+  --sheet-max: 1100px;
+  --measure: 640px;
+  --col: 260px;
+  --gutter: 40px;
+  --font-latin: "Inter", system-ui, sans-serif;
+  --font-zh: "Noto Sans TC", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-latin);
+  font-size: 18px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ink locked: article pages = full paper bleed (NO homepage letterbox sidebars) */
+body.page-article {
+  background: var(--paper);
+}
+body.page-article .sheet {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+}
+
+/* Whole-page language stacks */
+body.lang-en {
+  font-family: var(--font-latin);
+}
+body.lang-zh,
+body.lang-zh-Hant {
+  font-family: var(--font-zh);
+}
+body.lang-zh :lang(en),
+body.lang-zh-Hant .latin {
+  font-family: var(--font-latin);
+  font-size: 1.06em; /* Latin leads visually vs Noto */
+}
+
+.sheet {
+  background: var(--paper);
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0 auto;
+  position: relative;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover {
+  opacity: 0.7;
+}
+
+/* —— Homepage (full-viewport ASCII 河豚 stage) —— */
+body.home {
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-weight: 400;
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #fafaf7;
+  color: #2a2420;
+}
+
+.home-stage {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #fafaf7;
+}
+
+.home-puffer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+  pointer-events: auto;
+  background: transparent;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.home-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: none;
+}
+
+/* Nav sits in the centred column, right above the copy, so every control
+   is within one short reach. It stays put when a list replaces the copy. */
+.home-chrome {
+  position: relative;
+  z-index: 5;
+  width: min(680px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: max(72px, calc(50vh - 128px)) 0 72px;
+  padding-top: max(72px, calc(50dvh - 128px));
+  text-align: center;
+  pointer-events: none;
+}
+.home-chrome a,
+.home-chrome button,
+.home-view {
+  pointer-events: auto;
+}
+
+.home-nav {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin: 0 0 40px;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #2a2420;
+}
+.home-nav a {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  transition: color 240ms ease;
+}
+.home-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+.home-nav a:hover {
+  opacity: 1;
+}
+body[data-view="notes"] .home-nav a,
+body[data-view="works"] .home-nav a {
+  color: #9a948c;
+}
+body .home-nav a[aria-current="page"] {
+  color: #2a2420;
+}
+.home-nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* View swap: out = fade + 6px up; in = from 8px below. No scale, no blur. */
+.home-view {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.home-view.is-out {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.home-view:not(.is-out) {
+  transition: opacity 420ms cubic-bezier(0.2, 0, 0, 1), transform 420ms cubic-bezier(0.2, 0, 0, 1);
+}
+.home-view.is-before {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: none;
+}
+.home-view:focus {
+  outline: none;
+}
+
+.home-dim {
+  display: none;
+}
+
+.home-copy {
+  position: relative;
+  max-width: 36ch;
+  margin: 0 auto;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-weight: 400;
+  color: #2a2420;
+  background: none;
+}
+
+/* —— Notes / works list, two columns —— */
+.home-panel {
+  text-align: left;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  color: #2a2420;
+  padding: 18px 20px 22px;
+  margin: -18px -20px 0;
+  background: rgba(250, 250, 247, 0.86);
+  /* Feathered, so the wash reads as paper, not a card. */
+  box-shadow: 0 0 28px 14px rgba(250, 250, 247, 0.86);
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #8a857e;
+}
+.panel-back {
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.panel-back:hover {
+  opacity: 1;
+  color: #2a2420;
+}
+.panel-lede {
+  text-align: right;
+}
+.panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 32px;
+}
+.panel-list li {
+  border-top: 1px solid rgba(42, 36, 32, 0.12);
+  transition: opacity 420ms cubic-bezier(0.2, 0, 0, 1), transform 420ms cubic-bezier(0.2, 0, 0, 1);
+  transition-delay: calc(var(--i, 0) * 40ms + 60ms);
+}
+.home-view.is-before .panel-list li,
+.panel-list li.is-before {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: none;
+}
+.panel-list a {
+  display: block;
+  padding: 14px 0 16px;
+  color: inherit;
+  text-decoration: none;
+}
+.panel-list a:hover {
+  opacity: 1;
+}
+.panel-list a:hover .panel-title {
+  color: #c45c26;
+}
+.panel-title {
+  display: block;
+  font-size: 14px;
+  line-height: 1.45;
+  transition: color 200ms ease;
+}
+.panel-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a857e;
+}
+.panel-more {
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: #c45c26;
+  cursor: pointer;
+}
+.panel-more:hover {
+  opacity: 0.8;
+}
+@media (max-width: 560px) {
+  .panel-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-view,
+  .home-view:not(.is-out),
+  .panel-list li,
+  .home-nav a,
+  .home-nav a::after {
+    transition: none;
+  }
+}
+
+.home-greeting {
+  margin: 0 0 8px;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: clamp(22px, 2.6vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #2a2420;
+}
+
+.home-sub {
+  margin: 0 0 8px;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: #6e6a64;
+}
+
+.home-role,
+.home-slogan {
+  margin: 0 auto 8px;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: #2a2420;
+}
+.home-slogan {
+  margin-bottom: 18px;
+}
+@media (min-width: 900px) {
+  .home-role,
+  .home-slogan {
+    font-size: 15px;
+    line-height: 1.58;
+  }
+}
+
+.home-links {
+  margin: 0;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: #c45c26;
+}
+.home-links a {
+  color: inherit;
+  text-decoration: none;
+}
+.home-links a:hover {
+  opacity: 0.8;
+  color: #c45c26;
+}
+
+@media (max-width: 640px) {
+  .home-nav {
+    gap: 22px;
+    margin-bottom: 32px;
+  }
+  .home-chrome {
+    width: calc(100% - 40px);
+  }
+}
+
+/* Legacy home column styles kept inert (no longer used by home layout) */
+.home-columns,
+.home-header,
+.ascii-load {
+  display: none;
+}
+
+/* —— Article —— */
+.article-page {
+  padding: 72px 0 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.article-column {
+  width: min(100% - 56px, 744px);
+  padding: 0 28px;
+}
+
+.article-header {
+  max-width: var(--measure);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.back-link {
+  font-family: var(--font-latin);
+  font-size: 22px;
+  color: var(--ink-40);
+  line-height: 1;
+}
+
+.article-title {
+  font-family: var(--font-zh);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.article-meta {
+  font-family: var(--font-latin);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--ink-40);
+  margin: 0;
+}
+
+.amber-hairline {
+  width: 28px;
+  height: 2px;
+  background: var(--amber-line);
+  /* Ink: bump contrast vs paper — still subtle; ASCII/footer stay faint */
+}
+
+.body-with-fn {
+  /* Side footnotes are absolutely parked; no flex shove while typing */
+  position: relative;
+  display: block;
+}
+
+.prose {
+  max-width: var(--measure);
+  width: 100%;
+  font-family: var(--font-zh);
+  font-size: 17px;
+  line-height: 1.75;
+  letter-spacing: -0.01em;
+}
+
+body.lang-en .prose {
+  font-family: var(--font-latin);
+  font-size: 19px;
+}
+
+.prose p {
+  margin: 0 0 1em;
+}
+
+.prose strong,
+.prose b {
+  font-weight: 700;
+  color: #000;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose mark,
+.prose .amber-hl {
+  background: var(--amber-wash);
+  border-radius: 2px;
+  padding: 0 2px;
+  color: inherit;
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  background: transparent;
+}
+
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0 0 1.25em;
+  border-radius: 2px;
+}
+
+.prose pre code {
+  font-size: inherit;
+}
+
+.prose blockquote {
+  margin: 0 0 1.25em;
+  padding-left: 17px;
+  border-left: 3px solid var(--ink-25);
+  color: var(--ink-85);
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 1.25em;
+  padding-left: 1.25em;
+}
+
+.prose li {
+  margin: 0.35em 0;
+}
+
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--ink);
+}
+
+.prose h2 {
+  font-size: 1.35em;
+  font-weight: 700;
+  margin: 1.75em 0 0.5em;
+  letter-spacing: -0.01em;
+}
+
+.prose h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 1.5em 0 0.4em;
+}
+
+/* Tables: horizontal hairlines only */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 0 0 1.5em;
+}
+
+.prose th,
+.prose td {
+  text-align: left;
+  padding: 14px 12px;
+  border: none;
+  border-bottom: 1px solid var(--ink-09);
+  vertical-align: top;
+}
+
+.prose thead th {
+  font-weight: 600;
+  color: var(--ink-70);
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+.prose figcaption {
+  font-size: 12px;
+  color: var(--ink-40);
+  margin-top: 8px;
+}
+
+/* Footnotes — out of prose flow so typing never shoves the rail.
+   Side rail is absolutely parked beside the measure; visibility only
+   toggles after the typewriter finishes (see .is-fn-visible). */
+.prose .footnotes {
+  display: none; /* moved by JS / CSS layout */
+}
+
+.footnote-side {
+  display: none;
+  gap: 12px;
+  padding-top: 2px;
+  font-family: var(--font-zh);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-40);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms ease, visibility 0s linear 320ms;
+}
+
+.footnote-side.has-notes.is-fn-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 320ms ease, visibility 0s linear 0s;
+}
+
+.footnote-side .rail {
+  width: 1px;
+  min-height: 56px;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+
+.footnote-side ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footnote-side li {
+  margin: 0 0 0.75em;
+}
+
+.footnote-bottom {
+  display: none;
+  max-width: var(--measure);
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--ink-09);
+  font-size: 14px;
+  color: var(--ink-40);
+  line-height: 1.55;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms ease, visibility 0s linear 320ms;
+}
+
+.footnote-bottom.has-notes.is-fn-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 320ms ease, visibility 0s linear 0s;
+}
+
+.footnote-bottom ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footnote-bottom li {
+  margin: 0 0 0.5em;
+}
+
+.footnote-bottom .reversefootnote {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .article-column {
+    /* measure + gap + side rail — room for absolute footnote slot */
+    width: min(100% - 56px, 844px);
+  }
+  .footnote-side.has-notes {
+    display: flex;
+    position: absolute;
+    left: calc(var(--measure) + 24px);
+    top: 0;
+    width: 180px;
+    flex: none;
+  }
+  .footnote-bottom.has-notes {
+    display: none !important;
+  }
+}
+
+@media (max-width: 899px) {
+  .footnote-bottom.has-notes {
+    display: block;
+  }
+  .footnote-bottom.has-notes:not(.is-fn-visible) {
+    /* collapse until reveal so mobile layout does not reserve a dead gap */
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .footnote-side {
+    display: none !important;
+  }
+}
+
+.ascii-article-footer {
+  margin-top: 24px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.25;
+  color: var(--ink-20);
+  white-space: pre;
+  animation: ascii-pulse 3.6s ease-in-out infinite;
+}
+
+@keyframes ascii-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Before JS bootstraps: keep title/body visually empty but sized
+   (html.reveal-js is set by a tiny inline script in article pages). */
+html.reveal-js body.page-article .article-title:not(.is-typing):not(.is-title-done) {
+  visibility: hidden;
+}
+html.reveal-js body.page-article .reveal-host:not(.is-done) .reveal-source {
+  visibility: hidden;
+  pointer-events: none;
+}
+html.reveal-js body.page-article .reveal-host:not(.is-done) .reveal-live {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+html.reveal-js body.page-article .footnote-side.has-notes:not(.is-fn-visible),
+html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Typewriter / scroll reveal
+   Source stays in flow (invisible) to lock scroll height;
+   live overlays so growing text does not reflow the page. */
+
+.reveal-scroll-spacer {
+  width: 100%;
+  pointer-events: none;
+}
+
+.reveal-host {
+  position: relative;
+  max-width: var(--measure);
+  width: 100%;
+}
+
+.reveal-host .reveal-live {
+  display: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.reveal-host.is-revealing .reveal-source {
+  visibility: hidden; /* NOT display:none — keeps height / scroll range stable */
+  pointer-events: none;
+}
+
+.reveal-host.is-revealing .reveal-live {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+
+.reveal-host.is-done .reveal-source {
+  display: none;
+}
+
+.reveal-host.is-done .reveal-live {
+  display: block;
+  position: static;
+}
+
+/* Title typewriter: measure holds space; live overlays */
+.article-title {
+  position: relative;
+}
+
+.article-title.is-typing .title-measure {
+  visibility: hidden;
+  display: block;
+}
+
+.article-title.is-typing .title-live {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+
+.article-title.is-title-done .title-measure {
+  display: none;
+}
+
+.article-title.is-title-done .title-live {
+  position: static;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.05em;
+  background: var(--amber);
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  animation: blink-cursor 1s steps(1) infinite;
+}
+
+.reveal-host.is-done .typewriter-cursor,
+.article-title.is-title-done .typewriter-cursor {
+  display: none;
+}
+
+.reveal-host.is-paused .typewriter-cursor,
+.article-title .typewriter-cursor {
+  /* paused: solid caret */
+}
+
+.reveal-host.is-paused .typewriter-cursor {
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes blink-cursor {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.scroll-reveal-controls {
+  position: fixed;
+  left: max(16px, calc(50% - var(--sheet-max) / 2 + 40px));
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--paper);
+  border: 1px solid var(--ink-09);
+  border-radius: 999px;
+  font-family: var(--font-latin);
+  z-index: 20;
+  box-shadow: 0 1px 0 var(--ink-09);
+}
+
+.scroll-reveal-controls button {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-70);
+  cursor: pointer;
+}
+.scroll-reveal-controls button.is-active {
+  color: var(--ink);
+  font-weight: 600;
+}
+.scroll-reveal-controls .sep {
+  width: 1px;
+  height: 12px;
+  background: var(--ink-09);
+}
+.scroll-reveal-controls .hint {
+  font-size: 11px;
+  color: var(--ink-25);
+}
+
+/* Prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .ascii-load .ascii-line,
+  .ascii-article-footer,
+  .typewriter-cursor {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .reveal-host .reveal-live {
+    /* JS also skips */
+  }
+}
+
+/* —— Mobile —— */
+@media (max-width: 799px) {
+  body {
+    background: var(--paper);
+  }
+  body.page-article {
+    background: var(--paper);
+  }
+  .sheet {
+    width: 100%;
+  }
+  .home-header {
+    margin-bottom: 28px;
+  }
+  .greeting {
+    font-size: 18px;
+  }
+  .ascii-load {
+    display: none; /* mobile frame omits ASCII box */
+  }
+  .amber-dot {
+    width: 5px;
+    height: 5px;
+  }
+  .home-columns {
+    flex-direction: column;
+    gap: 28px;
+  }
+  .home-col {
+    width: 100%;
+    flex: none;
+    gap: 14px;
+  }
+  .article-page {
+    padding: 28px 0 100px;
+  }
+  .article-column {
+    width: 100%;
+    padding: 0 28px;
+  }
+  .article-title {
+    font-size: 28px;
+  }
+  .scroll-reveal-controls {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+  }
+}
+
+@media (min-width: 800px) and (max-width: 1024px) {
+  .home-columns {
+    flex-wrap: wrap;
+  }
+  .home-col {
+    flex: 1 1 180px;
+  }
+}
+
+
+/* —— Notes / Works list stubs —— */
+.list-page {
+  padding: 72px 0 120px;
+  width: min(100% - 56px, 640px);
+  margin: 0 auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+.list-title {
+  font-family: var(--font-latin);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 1rem 0 0.35rem;
+}
+.list-lede {
+  font-family: var(--font-zh);
+  font-size: 14px;
+  color: var(--ink-40);
+  margin: 0 0 1rem;
+}
+.list-index {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 2rem;
+}
+.list-index li {
+  margin: 0;
+  border-bottom: 1px solid var(--ink-09);
+}
+.list-index a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 0;
+  text-decoration: none;
+}
+.list-index a:hover {
+  opacity: 1;
+}
+.list-item-title {
+  font-family: var(--font-latin);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.list-item-title.zh {
+  font-family: var(--font-zh);
+}
+.list-index time,
+.list-item-blurb {
+  font-family: var(--font-latin);
+  font-size: 13px;
+  color: var(--ink-40);
+}
+.list-foot {
+  font-family: var(--font-latin);
+  font-size: 12px;
+  color: var(--ink-40);
+  line-height: 1.5;
+}
+.list-foot code {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}

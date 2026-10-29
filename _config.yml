@@ -17,6 +17,7 @@ exclude:
   - _site
   - .jekyll-cache
   - "*.draft.md"
+  - assets/vendor
 
 defaults:
   - scope:
