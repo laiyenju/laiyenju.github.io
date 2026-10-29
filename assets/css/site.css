@@ -1784,6 +1784,12 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
 body.has-rail .post-prose .footnotes {
   display: none;
 }
+/* With the rail, centre the column and the rail together (908px), so the
+   notes fit beside the text from 960px up instead of only on wide screens. */
+body.has-rail .post {
+  margin-left: max(16px, calc((100vw - 908px) / 2));
+  margin-right: auto;
+}
 
 /* Phones: no koi; the column is all text. */
 @media (max-width: 759px) {
@@ -1804,7 +1810,11 @@ body.has-rail .post-prose .footnotes {
       that renders Markdown (after Charm's Glow). Body text stays in the
       reading face; the terminal lives in the structure around it. —— */
 
-/* Header: $ cd .. back, the cat command, the title, date · chars. */
+/* Header: $ cd .. back, the cat command, the title, date · chars.
+   The title takes no cursor; the h2 cursors mark the section being read. */
+.post-title::after {
+  content: none;
+}
 .post-back {
   display: inline-block;
   padding: 1px 6px;
@@ -2061,7 +2071,6 @@ body.theme-night .post-end .sh-keys { color: #857c6f; }
 body.theme-night .post-title,
 body.theme-night .post-cmd,
 body.theme-night .post-end { color: #ddd5c7; }
-body.theme-night .post-title::after,
 body.theme-night .post-prose h2::after { background: #e08a5a; }
 body.theme-night .post-back .sh-dollar,
 body.theme-night .post-head .sh-prompt,

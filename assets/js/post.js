@@ -5,7 +5,8 @@
         across the text; footnotes move into the right margin on wide
         screens. —— */
 
-  var RAIL_MIN = 1180;
+  /* Column (680) + gap (28) + rail (200) = 908, plus a margin either side. */
+  var RAIL_MIN = 960;
   /* Phones get no koi (the canvas is also hidden in CSS below this width). */
   var KOI_MIN = 760;
   var GAP = 12;
@@ -20,7 +21,7 @@
   var heads = [];
   var currentHead = null;
 
-  /** The cursor sits on the title, then on whichever h2 the reader has scrolled past. */
+  /** The cursor sits on whichever h2 the reader has scrolled past (the title has none). */
   function markHead() {
     var line = window.innerHeight * 0.4;
     var next = heads[0] || null;
@@ -225,7 +226,7 @@
     labelCode();
     print();
     setupShell();
-    heads = Array.prototype.slice.call(document.querySelectorAll(".post-title, .post-prose h2"));
+    heads = Array.prototype.slice.call(document.querySelectorAll(".post-prose h2"));
     var canvas = document.querySelector("canvas[data-koi]");
     if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) startKoi(canvas);
     var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
