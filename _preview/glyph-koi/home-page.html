@@ -1,0 +1,232 @@
+<title>字根錦鯉首頁</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600&family=DotGothic16&display=swap" rel="stylesheet">
+<!--SITE_CSS-->
+<style>
+  /* Night: the same type and layout as the live home, recoloured for an amber phosphor screen. */
+  body.home.theme-night,
+  body.theme-night .home-stage { background: #14110d; color: #ecc488; }
+  body.theme-night .home-nav,
+  body.theme-night .home-greeting,
+  body.theme-night .home-role,
+  body.theme-night .home-slogan,
+  body.theme-night .home-copy,
+  body.theme-night .home-panel,
+  body.theme-night .panel-back:hover,
+  body.theme-night .home-nav a[aria-current="page"] { color: #ecc488; }
+  body.theme-night .home-sub,
+  body.theme-night .panel-head,
+  body.theme-night .panel-meta { color: #9c8462; }
+  body.theme-night[data-view="notes"] .home-nav a,
+  body.theme-night[data-view="works"] .home-nav a { color: #7d6a50; }
+  body.theme-night .home-links,
+  body.theme-night .home-links a:hover,
+  body.theme-night .panel-more,
+  body.theme-night .panel-list a:hover .panel-title { color: #f0a868; }
+  body.theme-night .home-panel { background: rgba(20, 17, 13, 0.86); box-shadow: 0 0 28px 14px rgba(20, 17, 13, 0.86); }
+  body.theme-night .panel-list li { border-top-color: rgba(236, 196, 136, 0.16); }
+  body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0.45)); }
+  body.theme-night .home-vignette {
+    background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.16) 2px 3px);
+  }
+
+  /* Prototype switcher: not part of the design. */
+  .proto {
+    position: fixed; z-index: 20; right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: flex-end; max-width: calc(100% - 24px);
+    padding: 5px; border-radius: 999px; background: rgba(42, 36, 32, 0.88); color: #f4efe6;
+    font: 12px/1 "JetBrains Mono", ui-monospace, monospace;
+  }
+  .proto button, .proto label {
+    border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
+    padding: 7px 10px; border-radius: 999px; display: inline-flex; gap: 6px; align-items: center;
+  }
+  .proto button[aria-pressed="true"] { background: #f4efe6; color: #2a2420; }
+  .proto button:focus-visible, .proto label:focus-within { outline: 2px solid #f0a868; outline-offset: 1px; }
+  .proto input { margin: 0; accent-color: #f0a868; }
+</style>
+
+<body class="lang-zh-Hant home">
+  <div class="home-stage">
+    <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
+    <div class="home-vignette" aria-hidden="true"></div>
+
+    <div class="home-chrome">
+      <nav class="home-nav" aria-label="Primary">
+        <a href="notes/" data-view-link="notes">notes</a>
+        <a href="works/" data-view-link="works">works</a>
+      </nav>
+
+      <div class="home-view home-copy" data-view="home">
+        <h1 class="home-greeting">hey, I'm Yen.</h1>
+        <p class="home-sub">寫</p>
+        <p class="home-role">Product manager @Taiwan</p>
+        <p class="home-slogan">I build things, then make sense of them.</p>
+        <p class="home-links"><a href="https://github.com/laiyenju">github</a>｜<a href="https://www.linkedin.com/in/laiyenju/">LinkedIn</a>｜<a href="https://x.com/theYenLai">X</a></p>
+      </div>
+
+      <section class="home-view home-panel" data-view="notes" aria-label="Notes" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">日常寫作紀錄 · everyday writing</span>
+        </div>
+        <ul class="panel-list">
+          <li><a href="#"><span class="panel-title">Markdown 樣式總覽</span><time class="panel-meta" datetime="2026-10-29">2026-10-29</time></a></li>
+          <li><a href="#"><span class="panel-title">你好，這是第一篇</span><time class="panel-meta" datetime="2026-03-08">2026-03-08</time></a></li>
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
+
+      <section class="home-view home-panel" data-view="works" aria-label="Works" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">作品集 · portfolio</span>
+        </div>
+        <ul class="panel-list">
+          <li><a href="#"><span class="panel-title">laiyenju.github.io</span><span class="panel-meta">This writing site — quiet pages in Jekyll.</span></a></li>
+          <li><a href="#"><span class="panel-title">字與空</span><span class="panel-meta">Experiments in measure and pause.</span></a></li>
+          <li><a href="#"><span class="panel-title">Sketchbook</span><span class="panel-meta">Small visual studies, unfinished on purpose.</span></a></li>
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="proto" role="group" aria-label="原型切換">
+    <button type="button" id="th-day" data-theme-key="GLYPH_DAY">日間</button>
+    <button type="button" id="th-night" data-theme-key="GLYPH_NIGHT">夜間</button>
+    <button type="button" id="th-ascii" data-theme-key="ASCII">原版字元</button>
+    <label><input type="checkbox" id="opt-fish"> 小魚</label>
+  </div>
+
+  <!--GLYPH_OCEAN-->
+  <!--HOME_JS-->
+  <script>
+    (function () {
+      var canvas = document.querySelector("canvas[data-koi]");
+      var fish = document.getElementById("opt-fish");
+      var buttons = Array.prototype.slice.call(document.querySelectorAll(".proto button"));
+      var themeKey = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "GLYPH_NIGHT" : "GLYPH_DAY";
+
+      function view() { return document.body.getAttribute("data-view") || "home"; }
+
+      // The koi circle the nav and the copy together.
+      function ringBox() {
+        var a = document.querySelector(".home-nav").getBoundingClientRect();
+        var b = document.querySelector(".home-copy").getBoundingClientRect();
+        var l = Math.min(a.left, b.left), t = Math.min(a.top, b.top);
+        return new DOMRect(l, t, Math.max(a.right, b.right) - l, Math.max(a.bottom, b.bottom) - t);
+      }
+
+      // Lists: the koi hurry across the open panel instead of sitting on the rows.
+      function syncText() {
+        var o = window.homeOcean;
+        if (!o) return;
+        if (view() === "home") { o.setTextRects(null); return; }
+        var p = document.querySelector('.home-view[data-view="' + view() + '"]');
+        if (!p || p.hidden) return;
+        var r = p.getBoundingClientRect();
+        o.setTextRects(new Float32Array([r.left, r.top, r.right, r.bottom]));
+      }
+
+      function start() {
+        if (window.homeOcean) window.homeOcean.destroy();
+        var theme = window.GlyphThemes[themeKey];
+        document.body.classList.toggle("theme-night", themeKey === "GLYPH_NIGHT");
+        buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-key") === themeKey)); });
+        // fishCount 0 matches the live home page; undefined sizes the schools to the screen.
+        var o = new window.GlyphOcean(canvas, undefined, fish.checked ? undefined : 0, theme);
+        window.homeOcean = o;
+        if (view() === "home") o.setRing(ringBox());
+        else { o.setRing(ringBox()); o.setCalm(true, true); }
+        syncText();
+      }
+
+      buttons.forEach(function (b) {
+        b.addEventListener("click", function () { themeKey = b.getAttribute("data-theme-key"); start(); });
+      });
+      fish.addEventListener("change", start);
+      window.addEventListener("resize", function () {
+        if (window.homeOcean && view() === "home") window.homeOcean.setRing(ringBox());
+      });
+      window.setInterval(syncText, 400);
+
+      // —— Same as the live home: split the copy into glyph spans that flip colour over a koi. ——
+      function splitGlyphs() {
+        document.querySelectorAll(".home-nav, .home-copy").forEach(function (root) {
+          var texts = [];
+          var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+          var node;
+          while ((node = walker.nextNode())) if (node.nodeValue && node.nodeValue.trim()) texts.push(node);
+          texts.forEach(function (textNode) {
+            var frag = document.createDocumentFragment();
+            var value = textNode.nodeValue;
+            for (var i = 0; i < value.length; i++) {
+              var ch = value.charAt(i);
+              if (ch === " " || ch === "\n" || ch === "\t") frag.appendChild(document.createTextNode(ch));
+              else {
+                var span = document.createElement("span");
+                span.className = "home-glyph";
+                span.textContent = ch;
+                frag.appendChild(span);
+              }
+            }
+            textNode.parentNode.replaceChild(frag, textNode);
+          });
+        });
+      }
+      // Day: text over dark ink turns paper-coloured. Night: text over lit amber turns dark.
+      function fishAt(data, x0, y0, x1, y1, w, night) {
+        if (x1 < x0 || y1 < y0) return false;
+        var stepX = Math.max(1, Math.round((x1 - x0) / 8));
+        var stepY = Math.max(1, Math.round((y1 - y0) / 10));
+        var hits = 0, seen = 0;
+        for (var y = y0; y <= y1; y += stepY) {
+          for (var x = x0; x <= x1; x += stepX) {
+            var i = (y * w + x) * 4;
+            var r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+            if (a < 120) continue;
+            seen++;
+            var lum = (r * 3 + g * 4 + b) / 8;
+            if (night ? lum > 110 : lum < 162 || (r > b + 48 && lum < 168 && r > 155 && g < 200)) hits++;
+          }
+        }
+        return seen >= 3 && hits >= 3 && hits / seen >= 0.42;
+      }
+      function tick() {
+        var glyphs = document.querySelectorAll(".home-glyph");
+        var ctx = canvas.getContext("2d");
+        var c = canvas.getBoundingClientRect();
+        if (ctx && c.width > 0) {
+          var night = themeKey === "GLYPH_NIGHT";
+          var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          var sx = canvas.width / c.width, sy = canvas.height / c.height;
+          for (var i = 0; i < glyphs.length; i++) {
+            var r = glyphs[i].getBoundingClientRect();
+            var hit = fishAt(data,
+              Math.max(0, Math.floor((r.left - c.left) * sx) - 1),
+              Math.max(0, Math.floor((r.top - c.top) * sy) - 1),
+              Math.min(canvas.width - 1, Math.ceil((r.right - c.left) * sx) + 1),
+              Math.min(canvas.height - 1, Math.ceil((r.bottom - c.top) * sy) + 1),
+              canvas.width, night);
+            glyphs[i].style.color = hit ? (night ? "#14110d" : "#FFF5EB") : "";
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+
+      var sample = "十大中口木日田金難心水手火月山土弓目丶丿乀乙ㄅㄆㄇ";
+      Promise.all([
+        document.fonts.load('600 16px "Noto Serif TC"', sample),
+        document.fonts.load('400 16px "DotGothic16"', sample),
+        document.fonts.load('600 16px "JetBrains Mono"', "hey"),
+      ]).catch(function () {}).then(function () {
+        splitGlyphs();
+        if (window.homeViews) window.homeViews.start();
+        start();
+        requestAnimationFrame(tick);
+      });
+    })();
+  </script>
+</body>

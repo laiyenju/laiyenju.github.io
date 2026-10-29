@@ -65,6 +65,19 @@ export class OceanEngine {
     if (still) this.renderer.render(this.world, STEP);
   }
 
+  /**
+   * Home: the koi circle this element (a box in client px), nose to tail.
+   * List views (setCalm(true)) break the circle and they roam.
+   */
+  setRing(rect: DOMRect | null) {
+    if (!rect) {
+      this.world.ring = null;
+      return;
+    }
+    const c = this.canvas.getBoundingClientRect();
+    this.world.setRing(rect.left - c.left + rect.width / 2, rect.top - c.top + rect.height / 2, rect.width / 2, rect.height / 2);
+  }
+
   /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
   setTextRects(rects: Float32Array | null) {
     this.world.textRects = rects;

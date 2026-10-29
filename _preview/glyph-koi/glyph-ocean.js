@@ -156,6 +156,13 @@
        * null = home, where the koi keep the headline clear instead.
        */
       __publicField(this, "textRects", null);
+      /**
+       * Home ring: the koi swim nose to tail around this ellipse (canvas px),
+       * spaced evenly, instead of patrolling. null = the original patrol.
+       */
+      __publicField(this, "ring", null);
+      /** With a ring set: true while a list is open, and the koi roam freely. */
+      __publicField(this, "free", false);
       /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
       __publicField(this, "perception", 60);
       /** Per-species personal space in px (x, y). */
@@ -169,6 +176,8 @@
       __publicField(this, "bucketNext", new Int32Array(0));
       __publicField(this, "lastSpawn", 0);
       __publicField(this, "tmp", { x: 0, y: 0 });
+      /** Per-koi speed factor that evens out the ring. */
+      __publicField(this, "pace", new Float32Array(0));
     }
     resize(width, height, cellW, cellH) {
       const first = this.width === 0;
@@ -286,6 +295,20 @@
      * then settles and slows. Calm off: the others swim back in from the edges.
      */
     setCalm(calm, instant = false, ox = this.width / 2, oy = this.height / 2) {
+      if (this.ring) {
+        if (calm === this.free && !instant) return;
+        this.free = calm;
+        if (!calm || instant) return;
+        for (const sh of this.sharks) {
+          const fx = sh.nodes[0] - ox;
+          const fy = sh.nodes[1] - oy;
+          const d = Math.hypot(fx, fy) || 1;
+          sh.fleeX = fx / d;
+          sh.fleeY = fy / d;
+          sh.scare = 0.55;
+        }
+        return;
+      }
       if (calm === this.calm && !instant) return;
       this.calm = calm;
       for (const sh of this.sharks) {
@@ -318,6 +341,30 @@
           if (sh.fade === 0) this.reenter(sh);
         }
       }
+    }
+    /**
+     * Fit the home ring around a box (canvas px, centre and half sizes): far
+     * enough out that the bodies clear it, long enough for the whole school,
+     * and inside the frame.
+     */
+    setRing(cx, cy, halfW, halfH) {
+      const { width: W, height: H } = this;
+      let longest = 0;
+      let total = 0;
+      for (const sh of this.sharks) {
+        longest = Math.max(longest, sh.baseLength);
+        total += sh.baseLength;
+      }
+      let rx = halfW + longest * 0.3;
+      let ry = Math.max(halfH + longest * 0.3, rx * 0.62);
+      const perimeter = TAU * Math.sqrt((rx * rx + ry * ry) / 2);
+      const grow = Math.max(1, total * 1.6 / perimeter);
+      const maxRx = W / 2 - longest * 0.12;
+      const maxRy = H / 2 - longest * 0.12;
+      if (rx * grow > maxRx) ry = Math.max(ry, maxRx * 1.7);
+      rx = Math.min(rx * grow, maxRx);
+      ry = Math.min(ry * grow, maxRy);
+      this.ring = { cx, cy, rx: Math.max(rx, halfW), ry: Math.max(ry, halfH) };
     }
     /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
     reenter(sh) {
@@ -556,7 +603,28 @@
       const minSide = Math.min(W, H);
       const cxW = W / 2;
       const cyW = H / 2;
-      for (const sh of sharks) {
+      const ring = this.ring;
+      const circling = ring !== null && !this.free;
+      if (this.pace.length !== sharks.length) this.pace = new Float32Array(sharks.length);
+      if (circling) {
+        const n = sharks.length;
+        const ideal = TAU / n;
+        for (let i = 0; i < n; i++) {
+          const a = sharks[i];
+          const ta = Math.atan2((a.nodes[1] - ring.cy) / ring.ry, (a.nodes[0] - ring.cx) / ring.rx);
+          let gap = TAU;
+          for (let j = 0; j < n; j++) {
+            if (j === i) continue;
+            const b = sharks[j];
+            const tb = Math.atan2((b.nodes[1] - ring.cy) / ring.ry, (b.nodes[0] - ring.cx) / ring.rx);
+            const d = (tb - ta + TAU * 2) % TAU;
+            if (d < gap) gap = d;
+          }
+          this.pace[i] = n > 1 ? clamp(1 + 0.8 * (gap - ideal) / ideal, 0.55, 1.7) : 1;
+        }
+      }
+      for (let si = 0; si < sharks.length; si++) {
+        const sh = sharks[si];
         const lead = sh === sharks[0];
         if (sh.fade === 0) continue;
         sh.length += ((this.calm && lead ? sh.baseLength * 0.8 : sh.baseLength) - sh.length) * Math.min(1, dt * 1.6);
@@ -569,9 +637,10 @@
         sh.hunger = Math.min(1, sh.hunger + dt * 0.03);
         let dx = Math.cos(sh.heading);
         let dy = Math.sin(sh.heading);
+        const wanderW = circling ? 0.12 : ring ? 0.6 : 0.45;
         sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 3.2, -1.1, 1.1);
-        dx += Math.cos(sh.heading + sh.wander) * 0.45;
-        dy += Math.sin(sh.heading + sh.wander) * 0.45;
+        dx += Math.cos(sh.heading + sh.wander) * wanderW;
+        dy += Math.sin(sh.heading + sh.wander) * wanderW;
         if (time >= sh.retargetAt) {
           sh.target = this.findPrey(sh);
           sh.retargetAt = time + 0.45;
@@ -588,7 +657,19 @@
           dy += ty / d * w;
           hunting = true;
           closing = clamp(1 - d / (L * 0.9), 0, 1);
-        } else {
+        } else if (circling) {
+          const nx = (hx - ring.cx) / ring.rx;
+          const ny = (hy - ring.cy) / ring.ry;
+          const r = Math.hypot(nx, ny) || 1e-3;
+          let tx = -ny / r * ring.rx;
+          let ty = nx / r * ring.ry;
+          const tl = Math.hypot(tx, ty) || 1;
+          tx /= tl;
+          ty /= tl;
+          const radial = clamp(1 - r, -1, 1) * 2.4;
+          dx += tx * 1.6 + nx / r * radial;
+          dy += ty * 1.6 + ny / r * radial;
+        } else if (!ring) {
           const rx = (hx - cxW) / (W / minSide);
           const ry = hy - cyW;
           const r = Math.hypot(rx, ry) || 1;
@@ -623,7 +704,7 @@
         const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
         const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
         const e2 = ex * ex + ey * ey;
-        if (e2 < 1 && !sh.away && !this.textRects) {
+        if (e2 < 1 && !sh.away && !this.textRects && !ring) {
           const e = Math.sqrt(e2) || 1e-3;
           const w = (1 - e) * (hunting ? 1 : 2.5);
           dx += ex / e * w;
@@ -648,7 +729,7 @@
         sh.heading += turned;
         sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
         const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
-        let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
+        let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise * (circling ? this.pace[si] : 1);
         targetSpeed *= 1 + 2.5 * sh.rush;
         sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
         targetSpeed *= 1 + 4 * sh.hurry;
@@ -819,7 +900,7 @@
     heatWarm: [220, 40, 40]
   };
   var RADICALS = {
-    skin: "\u4E00\u535C\u4EBA\u5341\u5927\u53E3\u65E5\u7530\u91D1",
+    skin: "\u5341\u5927\u4E2D\u53E3\u6728\u65E5\u7530\u91D1\u96E3",
     fin: "\u5FC3\u6C34\u624B\u706B\u6708",
     ridge: "\u5C71\u571F\u5F13",
     edgeHeavy: "\u4EBA\u535C",
@@ -833,19 +914,19 @@
   var GLYPH_DAY = {
     ...RADICALS,
     aspect: 1,
-    cellDiv: 92,
-    cellMin: 12,
-    cellMax: 17,
+    cellDiv: 140,
+    cellMin: 9,
+    cellMax: 12,
     font: '"Noto Serif TC", "Songti TC", serif',
     weight: 600,
-    glyphScale: 0.86,
+    glyphScale: 0.94,
     blocks: false,
     shadow: [29, 24, 19],
     lit: [150, 138, 124],
     ridgeColor: "#1d1813",
     eyeColor: "#1d1813",
     wash: [96, 78, 60],
-    washAlpha: 0.16,
+    washAlpha: 0.22,
     patchFill: [184, 51, 42],
     patchGlyph: "#f6efe4",
     patchGlint: "#ffd9c8",
@@ -860,19 +941,19 @@
   var GLYPH_NIGHT = {
     ...RADICALS,
     aspect: 1,
-    cellDiv: 92,
-    cellMin: 12,
-    cellMax: 17,
+    cellDiv: 140,
+    cellMin: 9,
+    cellMax: 12,
     font: '"DotGothic16", "Noto Serif TC", monospace',
     weight: 400,
-    glyphScale: 0.9,
+    glyphScale: 1,
     blocks: false,
     shadow: [120, 80, 30],
     lit: [255, 206, 122],
     ridgeColor: "#ffe2a8",
     eyeColor: "#ffe2a8",
     wash: [242, 176, 80],
-    washAlpha: 0.13,
+    washAlpha: 0.18,
     patchFill: [232, 168, 82],
     patchGlyph: "#17130e",
     patchGlint: "#3a2a14",
@@ -1901,6 +1982,18 @@
       const oy = clientY === void 0 ? rect.height / 2 : clientY - rect.top;
       this.world.setCalm(calm, instant || still, ox, oy);
       if (still) this.renderer.render(this.world, STEP);
+    }
+    /**
+     * Home: the koi circle this element (a box in client px), nose to tail.
+     * List views (setCalm(true)) break the circle and they roam.
+     */
+    setRing(rect) {
+      if (!rect) {
+        this.world.ring = null;
+        return;
+      }
+      const c = this.canvas.getBoundingClientRect();
+      this.world.setRing(rect.left - c.left + rect.width / 2, rect.top - c.top + rect.height / 2, rect.width / 2, rect.height / 2);
     }
     /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
     setTextRects(rects) {

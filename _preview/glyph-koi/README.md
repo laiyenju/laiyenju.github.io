@@ -1,34 +1,48 @@
-# 字根錦鯉（glyph koi）原型
+# 字根錦鯉（glyph koi）首頁原型
 
-用倉頡字根取代 ASCII 字元畫錦鯉，並排比較三種樣式：
+正式首頁的複製版，文字、字體、版面都沿用 `assets/css/site.css` 和 `assets/js/home.js`，只換掉錦鯉：
 
-- **A · 現在的版本**：原本的 ASCII 字元和色塊（`ASCII` 主題，行為和正式網站相同）
-- **B · 日間**：明體字根印在紙上，紅斑是朱砂印章格（`GLYPH_DAY`）
-- **C · 夜間**：琥珀磷光終端機，點陣字根，紅斑改成反白（`GLYPH_NIGHT`）
+- **日間**：明體倉頡字根，紅斑是朱砂印章格（`GLYPH_DAY`）
+- **夜間**：點陣字根，琥珀磷光配色，紅斑改成反白（`GLYPH_NIGHT`）；文字只換顏色
+- **原版字元**：原本的 ASCII 字元和色塊（`ASCII`）
+
+預設跟著系統的淺色／深色設定，右下角可以切換。
+
+## 錦鯉的游法
+
+- **首頁**：錦鯉頭尾相接，圍著中間的 nav 和文字繞圈，彼此會調整速度保持等距（`World.setRing`）。
+- **notes / works**：點下去錦鯉從點擊處散開，接著自由游動；游到清單上會加速通過。回到首頁會重新圍成一圈。
+- 手機畫面太窄時，圈會拉成直立橢圓。
 
 正式網站的 `assets/vendor/ascii-sharks/` 和 `assets/js/ocean.js` 都沒有改動。
-這裡的 `src/` 是複製出來的版本，多了 `themes.ts`，renderer 改成從主題讀字元、顏色和格子比例。
 
 ## 檔案
 
 | 檔案 | 用途 |
 |---|---|
-| `src/themes.ts` | 三個主題：字元組、顏色、格子比例、字型 |
-| `src/renderer.ts` | 從主題讀設定；字根模式不畫色塊，改畫淡墨暈 + 字 |
-| `entry.ts` | 打包入口，輸出 `window.GlyphOcean`、`window.GlyphThemes` |
+| `src/themes.ts` | 三個主題：字元組、顏色、格子大小、字型 |
+| `src/renderer.ts` | 從主題讀設定；字根模式畫淡墨暈 + 字，不畫色塊 |
+| `src/world.ts` | 新增環繞模式（`ring`、`free`、`setRing`） |
+| `src/engine.ts` | 新增 `setRing(rect)` |
+| `home-page.html` | 頁面內容；`index.html` 由 `build.py` 產生 |
 | `glyph-ocean.js` | 打包結果 |
-| `page.html` | 對照頁內容；`index.html` 由它產生 |
 
-## 重新打包
+## 重新產生
 
 ```bash
 npx esbuild@0.24.0 entry.ts --bundle --format=iife --target=es2020 --outfile=glyph-ocean.js
 ```
 
+```bash
+python3 build.py
+```
+
 ## 本機預覽
 
-`_preview/` 開頭是底線，Jekyll 不會建置它，所以直接開靜態伺服器：
+`_preview/` 開頭是底線，Jekyll 不會建置它。從 repo 根目錄開靜態伺服器：
 
 ```bash
-npx http-server _preview/glyph-koi -p 8123
+npx http-server . -p 8124
 ```
+
+再打開 <http://127.0.0.1:8124/_preview/glyph-koi/index.html>。
