@@ -1,8 +1,9 @@
 (function () {
   "use strict";
 
-  /* —— Article pages: one small koi in the left margin, and footnotes
-        pulled into the right margin on wide screens. —— */
+  /* —— Article pages: one small koi roams the plain paper and hurries
+        across the text; footnotes move into the right margin on wide
+        screens. —— */
 
   var RAIL_MIN = 1180;
   var GAP = 12;
@@ -11,11 +12,27 @@
   var prose = document.querySelector(".post-prose");
   var ocean = null;
 
-  function placeKoi() {
-    if (!ocean || !post) return;
-    var left = post.getBoundingClientRect().left;
-    // Keep clear of the paper wash's feathered edge.
-    ocean.setLane([16, left - 40]);
+  var TEXT = ".post-head, .post-prose > *, .post-note, .post-foot";
+  var queued = false;
+
+  /** Hand the koi the on-screen text boxes (the canvas is fixed, so client px = canvas px). */
+  function markText() {
+    queued = false;
+    if (!ocean) return;
+    var boxes = [];
+    var h = window.innerHeight;
+    document.querySelectorAll(TEXT).forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > h || !r.width) return;
+      boxes.push(r.left, r.top, r.right, r.bottom);
+    });
+    ocean.setTextRects(new Float32Array(boxes));
+  }
+
+  function queueText() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(markText);
   }
 
   /* Kramdown footnotes: <sup><a class="footnote" href="#fn:1"> in the text,
@@ -63,7 +80,7 @@
 
   function layout() {
     layoutRail();
-    placeKoi();
+    markText();
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -71,10 +88,12 @@
     if (canvas && window.OceanEngine) {
       ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0);
       ocean.setCalm(true, true);
+      ocean.setGrid(false);
     }
     buildRail();
     layout();
     window.addEventListener("resize", layout);
+    window.addEventListener("scroll", queueText, { passive: true });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
   });
 })();

@@ -151,10 +151,11 @@
        */
       __publicField(this, "calm", false);
       /**
-       * Article pages: the koi keep to this x range (a page margin) and wander
-       * between waypoints in it instead of circling the headline. null = whole pond.
+       * Article pages: boxes of text (x0, y0, x1, y1, ...) in canvas px. A koi
+       * swimming over one speeds up so it never sits on the words for long.
+       * null = home, where the koi keep the headline clear instead.
        */
-      __publicField(this, "lane", null);
+      __publicField(this, "textRects", null);
       /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
       __publicField(this, "perception", 60);
       /** Per-species personal space in px (x, y). */
@@ -220,9 +221,7 @@
           away: false,
           awayAt: 0,
           rush: 0,
-          waypointX: 0,
-          waypointY: 0,
-          waypointAt: 0,
+          hurry: 0,
           nodes,
           heading,
           speed: 30,
@@ -319,35 +318,6 @@
           sh.away = false;
           if (sh.fade === 0) this.reenter(sh);
         }
-      }
-    }
-    /**
-     * Keep the koi inside [x0, x1]. A lane too narrow for a koi hides it; a koi
-     * outside the lane (first call, or after a resize) is dropped into it.
-     */
-    setLane(lane) {
-      this.lane = lane;
-      if (!lane) return;
-      const [x0, x1] = lane;
-      for (const sh of this.sharks) {
-        if (x1 - x0 < sh.baseLength * 0.9) {
-          sh.fade = 0;
-          continue;
-        }
-        if (sh.fade === 1 && sh.nodes[0] > x0 && sh.nodes[0] < x1) continue;
-        const x = (x0 + x1) / 2;
-        const y = rand(0.25, 0.6) * this.height;
-        const heading = Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2;
-        const seg = sh.length / (SHARK_NODES - 1);
-        for (let n = 0; n < SHARK_NODES; n++) {
-          sh.nodes[n * 2] = x;
-          sh.nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
-        }
-        sh.heading = heading;
-        sh.fade = 1;
-        sh.away = false;
-        sh.scare = 0;
-        sh.waypointAt = 0;
       }
     }
     /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
@@ -619,23 +589,6 @@
           dy += ty / d * w;
           hunting = true;
           closing = clamp(1 - d / (L * 0.9), 0, 1);
-        } else if (this.lane) {
-          const [x0, x1] = this.lane;
-          if (time >= sh.waypointAt || Math.hypot(sh.waypointX - hx, sh.waypointY - hy) < L * 0.5) {
-            const m = Math.min(L * 0.45, (x1 - x0) / 2);
-            sh.waypointX = rand(x0 + m, x1 - m);
-            sh.waypointY = rand(H * 0.12, H * 0.88);
-            sh.waypointAt = time + rand(6, 12);
-          }
-          const tx = sh.waypointX - hx;
-          const ty = sh.waypointY - hy;
-          const d = Math.hypot(tx, ty) || 1;
-          dx += tx / d * 0.7;
-          dy += ty / d * 0.7;
-          const ax = hx + Math.cos(sh.heading) * L * 0.6;
-          const edge = L * 0.35;
-          if (ax < x0 + edge) dx += clamp((x0 + edge - ax) / edge, 0, 2) * 2.5;
-          else if (ax > x1 - edge) dx -= clamp((ax - (x1 - edge)) / edge, 0, 2) * 2.5;
         } else {
           const rx = (hx - cxW) / (W / minSide);
           const ry = hy - cyW;
@@ -644,6 +597,11 @@
           const radial = clamp((radius - r) / radius, -1, 1);
           dx += (-ry / r * sh.orbitDir + rx / r * radial * 0.9) * 0.55;
           dy += (rx / r * sh.orbitDir + ry / r * radial * 0.9) * 0.55;
+        }
+        const onText = this.textAt(sh);
+        if (onText >= 0) {
+          const r = this.textRects;
+          dx += (hx < (r[onText] + r[onText + 2]) / 2 ? -1 : 1) * 0.9;
         }
         if (sh.scare > 0) {
           dx += sh.fleeX * 8 * sh.scare;
@@ -666,7 +624,7 @@
         const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
         const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
         const e2 = ex * ex + ey * ey;
-        if (e2 < 1 && !sh.away && !this.lane) {
+        if (e2 < 1 && !sh.away && !this.textRects) {
           const e = Math.sqrt(e2) || 1e-3;
           const w = (1 - e) * (hunting ? 1 : 2.5);
           dx += ex / e * w;
@@ -693,6 +651,8 @@
         const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
         let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
         targetSpeed *= 1 + 2.5 * sh.rush;
+        sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
+        targetSpeed *= 1 + 4 * sh.hurry;
         if (sh.away) targetSpeed = Math.max(W, H) * 0.6;
         else if (sh.scare > 0) targetSpeed = Math.max(targetSpeed, cruise * (1 + 9 * sh.scare));
         sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (sh.scare > 0 ? 4 : 1.1));
@@ -727,6 +687,20 @@
         }
         if (sh.away) this.checkGone(sh);
       }
+    }
+    /** Index into textRects of a box under the koi's head, middle, or tail; -1 if none. */
+    textAt(sh) {
+      const r = this.textRects;
+      if (!r) return -1;
+      const pad = 6;
+      for (const k of [0, SHARK_NODES >> 1, SHARK_NODES - 1]) {
+        const x = sh.nodes[k * 2];
+        const y = sh.nodes[k * 2 + 1];
+        for (let i = 0; i < r.length; i += 4) {
+          if (x > r[i] - pad && x < r[i + 2] + pad && y > r[i + 1] - pad && y < r[i + 3] + pad) return i;
+        }
+      }
+      return -1;
     }
     /** Hide a bolting koi once its whole body is out of frame (or it's taking too long). */
     checkGone(sh) {
@@ -1095,6 +1069,7 @@
       /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
       __publicField(this, "fishBuckets", FISH_ALPHAS.map(() => []));
       __publicField(this, "fishStyles", FISH_ALPHAS.map((a) => `rgba(26,28,32,${a})`));
+      __publicField(this, "showGrid", true);
       const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) throw new Error("2D canvas unavailable");
       this.ctx = ctx;
@@ -1112,6 +1087,10 @@
     }
     get cellHeight() {
       return this.ch;
+    }
+    setGrid(show) {
+      this.showGrid = show;
+      this.paintBackground();
     }
     setFontFamily(family) {
       if (family) this.fontFamily = family;
@@ -1164,7 +1143,7 @@
       const { width: W, height: H, dpr, cw, ch } = this;
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.clearRect(0, 0, this.bg.width, this.bg.height);
-      paintGrid(g, W, H, cw, ch, dpr);
+      if (this.showGrid) paintGrid(g, W, H, cw, ch, dpr);
     }
     render(world, dt) {
       const { ctx, dpr, cols, ch } = this;
@@ -1791,10 +1770,14 @@
       this.world.setCalm(calm, instant || still, ox, oy);
       if (still) this.renderer.render(this.world, STEP);
     }
-    /** Article pages: keep the koi to a page margin, x0..x1 in canvas px (null = whole pond). */
-    setLane(lane) {
-      this.world.setLane(lane);
-      if (this.reducedMotion.matches) this.renderer.render(this.world, STEP);
+    /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
+    setTextRects(rects) {
+      this.world.textRects = rects;
+    }
+    /** Article pages draw on plain paper, without the cell grid. */
+    setGrid(show) {
+      this.renderer.setGrid(show);
+      if (this.reducedMotion.matches) this.drawStill();
     }
     destroy() {
       this.disposed = true;

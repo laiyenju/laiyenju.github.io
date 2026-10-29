@@ -62,10 +62,15 @@ export class OceanEngine {
     if (still) this.renderer.render(this.world, STEP);
   }
 
-  /** Article pages: keep the koi to a page margin, x0..x1 in canvas px (null = whole pond). */
-  setLane(lane: [number, number] | null) {
-    this.world.setLane(lane);
-    if (this.reducedMotion.matches) this.renderer.render(this.world, STEP);
+  /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
+  setTextRects(rects: Float32Array | null) {
+    this.world.textRects = rects;
+  }
+
+  /** Article pages draw on plain paper, without the cell grid. */
+  setGrid(show: boolean) {
+    this.renderer.setGrid(show);
+    if (this.reducedMotion.matches) this.drawStill();
   }
 
   destroy() {
