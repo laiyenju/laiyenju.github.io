@@ -6,13 +6,15 @@
         screens. —— */
 
   var RAIL_MIN = 1180;
+  /* Phones get no koi (the canvas is also hidden in CSS below this width). */
+  var KOI_MIN = 760;
   var GAP = 12;
 
   var post = document.querySelector(".post");
   var prose = document.querySelector(".post-prose");
   var ocean = null;
 
-  var TEXT = ".post-head, .post-prose > *, .post-note, .post-foot";
+  var TEXT = ".post-head, .post-prose > *, .post-note";
   var queued = false;
 
   /** Hand the koi the on-screen text boxes (the canvas is fixed, so client px = canvas px). */
@@ -85,7 +87,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     var canvas = document.querySelector("canvas[data-koi]");
-    if (canvas && window.OceanEngine) {
+    if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) {
       ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0);
       ocean.setCalm(true, true);
       ocean.setGrid(false);

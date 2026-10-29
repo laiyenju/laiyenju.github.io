@@ -1116,21 +1116,18 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
 }
 
 .post-back,
-.post-meta,
-.post-foot {
+.post-meta {
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 12px;
   letter-spacing: 0.01em;
   color: #8a857e;
 }
-.post-back,
-.post-foot a {
+.post-back {
   color: inherit;
   text-decoration: none;
   transition: color 200ms ease;
 }
-.post-back:hover,
-.post-foot a:hover {
+.post-back:hover {
   opacity: 1;
   color: #2a2420;
 }
@@ -1146,13 +1143,8 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
 .post-meta {
   margin: 0;
 }
-.post-head::after {
-  content: "";
-  display: block;
-  width: 24px;
-  height: 1px;
-  margin: 22px 0 40px;
-  background: #c45c26;
+.post-head {
+  margin-bottom: 44px;
 }
 
 .post-prose {
@@ -1318,15 +1310,12 @@ body.has-rail .post-prose .footnotes {
   display: none;
 }
 
-.post-foot {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 4em;
-  padding-top: 1.2em;
-  border-top: 1px solid rgba(42, 36, 32, 0.12);
+/* Phones: no koi; the column is all text. */
+@media (max-width: 759px) {
+  .post-pond {
+    display: none;
+  }
 }
-
 @media (max-width: 640px) {
   .post {
     padding: 48px 20px 72px;
