@@ -10,11 +10,12 @@
  */
 import { clamp, hash3, smoothstep } from "./math";
 import { SHARK_NODES, type Shark, type SharkKind, type World } from "./world";
+import { ASCII, type GlyphTheme, type RGB } from "./themes";
 
 const ALPHA_LEVELS = 6;
 const FISH_ALPHAS = [0.82, 0.88, 0.93, 0.97, 1];
 
-// Dot colour classes: blue, green, red, pale; the last entry is the cyan wake.
+// Dot colour classes: blue, green, red, pale; the last entry is the wake (from the theme).
 const DOT_RGB: [number, number, number][] = [
   [48, 52, 235],
   [52, 205, 60],
@@ -25,16 +26,11 @@ const DOT_RGB: [number, number, number][] = [
 const DOT_BASE_ALPHA = [1, 1, 1, 1, 1];
 const WAKE = DOT_RGB.length - 1;
 
-const ACCENTS = ["#e0892c", "#e03a32", "#b44ae0", "#33c8cc", "#3cb54a", "#3150e8", "#d9c14a"];
+// Glyph sets and accents live in the theme (themes.ts). Sparse glyphs on
+// bright skin, dense glyphs in shadow, so the texture reinforces the shading.
 
-// Sparse glyphs on bright skin, dense glyphs in shadow, so the texture
-// reinforces the shading instead of fighting it.
-const SKIN_RAMP = ":;t%SX8#@";
-const FIN_GLYPHS = "%;tS:";
-const RIDGE_GLYPHS = "@8%";
-const EDGE_HEAVY = ":;";
-const EDGE_LIGHT = ".',`";
-
+const mix = (a: RGB, b: RGB, k: number, alpha = 1) =>
+  `rgba(${Math.round(a[0] + (b[0] - a[0]) * k)},${Math.round(a[1] + (b[1] - a[1]) * k)},${Math.round(a[2] + (b[2] - a[2]) * k)},${alpha.toFixed(2)})`;
 
 const FLAG_BODY = 1;
 const FLAG_EDGE = 2;
@@ -43,12 +39,12 @@ const FLAG_RIDGE = 4;
 const FLAG_EYE = 5;
 /** Dark skin markings: tiger bars, zebra-shark spots. */
 const FLAG_MARK = 6;
-const MARK_GLYPHS = "#%@";
+
 /** Bare glyph, no block: the trailing edges of koi fins and tail. */
 const FLAG_WISP = 7;
 /** Koi colour patch (kohaku red). */
 const FLAG_PATCH = 8;
-const WISP_GLYPHS = "~-=:~'";
+
 
 // Sub-cell sample offsets for anti-aliased silhouettes.
 const SUBSAMPLES = [0.25, 0.3, 0.75, 0.3, 0.25, 0.72, 0.75, 0.72];
@@ -283,9 +279,9 @@ function inTriangle(
 }
 
 /** Visible dark-grey cell grid, snapped to device pixels. Shared with the sidebar backdrop. */
-export function paintGrid(g: CanvasRenderingContext2D, W: number, H: number, cw: number, ch: number, dpr: number) {
+export function paintGrid(g: CanvasRenderingContext2D, W: number, H: number, cw: number, ch: number, dpr: number, color = ASCII.grid) {
   g.setTransform(1, 0, 0, 1, 0, 0);
-  g.strokeStyle = "rgba(42,36,32,0.08)";
+  g.strokeStyle = color;
   g.lineWidth = 1;
   g.beginPath();
   for (let c = 0; c <= Math.ceil(W / cw); c++) {
@@ -352,9 +348,12 @@ export class AsciiRenderer {
   private frameId = 0;
   /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
   private fishBuckets: number[][] = FISH_ALPHAS.map(() => []);
-  private fishStyles = FISH_ALPHAS.map((a) => `rgba(26,28,32,${a})`);
+  private fishStyles: string[];
 
-  constructor(private canvas: HTMLCanvasElement) {
+  constructor(private canvas: HTMLCanvasElement, private theme: GlyphTheme = ASCII) {
+    DOT_RGB[WAKE] = theme.wake;
+    if (theme.font) this.fontFamily = theme.font;
+    this.fishStyles = FISH_ALPHAS.map((a) => mix(theme.fishInk, theme.fishInk, 0, a));
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) throw new Error("2D canvas unavailable");
     this.ctx = ctx;
@@ -385,7 +384,7 @@ export class AsciiRenderer {
   }
 
   setFontFamily(family: string) {
-    if (family) this.fontFamily = family;
+    if (family && !this.theme.font) this.fontFamily = family;
   }
 
   resize(width: number, height: number, dpr: number) {
@@ -394,8 +393,9 @@ export class AsciiRenderer {
     this.width = width;
     this.height = height;
     this.dpr = dpr;
-    this.cw = clamp(Math.round(width / 124), 8, 13);
-    this.ch = Math.round(this.cw * 1.45);
+    const th = this.theme;
+    this.cw = clamp(Math.round(width / th.cellDiv), th.cellMin, th.cellMax);
+    this.ch = Math.round(this.cw * th.aspect);
     this.cols = Math.ceil(width / this.cw);
     this.rows = Math.ceil(height / this.ch);
 
@@ -441,7 +441,7 @@ export class AsciiRenderer {
     const { width: W, height: H, dpr, cw, ch } = this;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, this.bg.width, this.bg.height);
-    if (this.showGrid) paintGrid(g, W, H, cw, ch, dpr);
+    if (this.showGrid) paintGrid(g, W, H, cw, ch, dpr, this.theme.grid);
   }
 
   render(world: World, dt: number) {
@@ -462,7 +462,7 @@ export class AsciiRenderer {
     this.markFish(world);
     this.drawDots(t);
 
-    ctx.font = `600 ${Math.round(ch * 0.74)}px ${this.fontFamily}`;
+    ctx.font = `${this.theme.weight} ${Math.round(ch * this.theme.glyphScale)}px ${this.fontFamily}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
@@ -487,7 +487,7 @@ export class AsciiRenderer {
     for (let r = r0 - radius; r <= r0 + radius; r++) {
       for (let c = c0 - radius; c <= c0 + radius; c++) {
         if (c < 0 || r < 0 || c >= this.cols || r >= this.rows) continue;
-        const d = Math.hypot(c - c0, (r - r0) * 1.4);
+        const d = Math.hypot(c - c0, (r - r0) * this.theme.aspect);
         if (d > radius + 0.5) continue;
         const i = r * this.cols + c;
         field[i] = Math.min(1.6, field[i] + amount * (1 - d / (radius + 1)));
@@ -847,8 +847,9 @@ export class AsciiRenderer {
   }
 
   private drawSharks(t: number) {
-    const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha } = this;
+    const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha, theme: th } = this;
     const n = cols * rows;
+    const { accents } = th;
     for (let i = 0; i < n; i++) {
       const flag = sharkFlag[i];
       if (!flag) continue;
@@ -857,6 +858,8 @@ export class AsciiRenderer {
       const row = (i / cols) | 0;
       const x = col * cw;
       const y = row * ch;
+      const gx = x + cw / 2;
+      const gy = y + ch / 2 + 1;
       const key = sharkKey[i];
       const shade = sharkShade[i];
       const dim = 0.7 + 0.3 * sharkDepth[i];
@@ -865,34 +868,38 @@ export class AsciiRenderer {
       // Colours re-roll on a staggered clock so the hide shimmers.
       const tick = Math.floor(t * 2.4 + (key % 997) / 97);
       const roll = hash3(key, tick, 7);
+      const accent = accents[key % accents.length];
 
       if (flag === FLAG_EDGE) {
         // Soft, anti-aliased silhouette: no block, just a light glyph.
-        const set = shade >= 0.5 ? EDGE_HEAVY : EDGE_LIGHT;
-        const g = (70 + shade * 80) * dim;
-        ctx.fillStyle =
-          roll < 0.07
-            ? ACCENTS[key % ACCENTS.length]
-            : `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
-        ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
+        const set = shade >= 0.5 ? th.edgeHeavy : th.edgeLight;
+        if (roll < th.accentRate * 0.8) ctx.fillStyle = accent;
+        else if (th.blocks) {
+          const g = (70 + shade * 80) * dim;
+          ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
+        } else ctx.fillStyle = mix(th.lit, th.shadow, 0.25, 0.45 + 0.4 * shade);
+        ctx.fillText(set[(key >>> 8) % set.length], gx, gy);
         continue;
       }
 
       if (flag === FLAG_WISP) {
-        // Fin tips and tail fan: ink only, so the cream shows through.
-        const g = (58 + (1 - shade) * 60) * dim;
-        ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
-        ctx.fillText(WISP_GLYPHS[(key >>> 8) % WISP_GLYPHS.length], x + cw / 2, y + ch / 2 + 1);
+        // Fin tips and tail fan: ink only, so the page shows through.
+        if (th.blocks) {
+          const g = (58 + (1 - shade) * 60) * dim;
+          ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
+        } else ctx.fillStyle = mix(th.lit, th.shadow, 0.35, 0.75);
+        ctx.fillText(th.wisp[(key >>> 8) % th.wisp.length], gx, gy);
         continue;
       }
 
       if (flag === FLAG_PATCH) {
-        // Kohaku red, lit like the rest of the back.
-        const lit = (0.72 + 0.4 * shade) * dim;
-        ctx.fillStyle = `rgb(${Math.min(255, Math.round(206 * lit))},${Math.round(88 * lit)},${Math.round(56 * lit)})`;
+        // Kohaku patch: a filled cell with the glyph cut into it (a seal stamp by day, reverse video by night).
+        const lit = th.blocks ? (0.72 + 0.4 * shade) * dim : 0.9 + 0.12 * shade;
+        const [pr, pg, pb] = th.patchFill;
+        ctx.fillStyle = `rgb(${Math.min(255, Math.round(pr * lit))},${Math.min(255, Math.round(pg * lit))},${Math.min(255, Math.round(pb * lit))})`;
         ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
-        ctx.fillStyle = roll < 0.1 ? "#fff5eb" : "#3a1a10";
-        ctx.fillText(SKIN_RAMP[clamp(Math.floor((1 - shade) * 6) + 1, 0, SKIN_RAMP.length - 1)], x + cw / 2, y + ch / 2 + 1);
+        ctx.fillStyle = roll < 0.1 ? th.patchGlint : th.patchGlyph;
+        ctx.fillText(th.skin[clamp(Math.floor((1 - shade) * 6) + 1, 0, th.skin.length - 1)], gx, gy);
         continue;
       }
 
@@ -900,34 +907,52 @@ export class AsciiRenderer {
       let glyph: string;
       if (flag === FLAG_RIDGE) {
         level = 226;
-        glyph = RIDGE_GLYPHS[(key >>> 8) % RIDGE_GLYPHS.length];
+        glyph = th.ridge[(key >>> 8) % th.ridge.length];
       } else if (flag === FLAG_EYE) {
         level = 12;
-        glyph = "o";
+        glyph = th.eye;
       } else if (flag === FLAG_MARK) {
         level = 24 + shade * 22;
-        glyph = MARK_GLYPHS[(key >>> 8) % MARK_GLYPHS.length];
+        glyph = th.mark[(key >>> 8) % th.mark.length];
       } else if (flag === FLAG_FIN) {
         level = 40 + shade * 120;
-        glyph = FIN_GLYPHS[(key >>> 8) % FIN_GLYPHS.length];
+        glyph = th.fin[(key >>> 8) % th.fin.length];
       } else {
         level = 46 + shade * 160;
         const jitter = ((key >>> 4) % 3) - 1;
-        glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * 8.99) + jitter, 0, SKIN_RAMP.length - 1)];
+        glyph = th.skin[clamp(Math.floor((1 - shade) * 8.99) + jitter, 0, th.skin.length - 1)];
       }
+
+      if (!th.blocks) {
+        // Ink on the page: the glyph's own density and tone carry the shading,
+        // over a faint wash that keeps the body reading as one shape.
+        const wash = th.washAlpha * (flag === FLAG_FIN ? 0.6 : 1 - 0.45 * shade) * dim;
+        ctx.fillStyle = mix(th.wash, th.wash, 0, wash);
+        ctx.fillRect(x, y, cw, ch);
+        let color: string;
+        if (flag === FLAG_RIDGE) color = th.ridgeColor;
+        else if (flag === FLAG_EYE) color = th.eyeColor;
+        else if (roll < th.accentRate) color = accent;
+        else if (flag === FLAG_FIN) color = mix(th.shadow, th.lit, clamp(shade * 0.9 + 0.1, 0, 1), 0.85 * dim + 0.15);
+        else color = mix(th.shadow, th.lit, shade, 0.8 * dim + 0.2);
+        ctx.fillStyle = color;
+        ctx.fillText(glyph, gx, gy);
+        continue;
+      }
+
       level *= dim;
       // Tinted per species; the classic tint is a cool blue-grey, like a back seen through deep water.
       ctx.fillStyle = `rgb(${Math.min(255, Math.round(level * tr))},${Math.min(255, Math.round(level * tg))},${Math.min(255, Math.round(level * tb + 4))})`;
       ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
 
       let color: string;
-      if (flag === FLAG_EYE) color = "#9aa0ad";
+      if (flag === FLAG_EYE) color = th.eyeColor;
       else if (flag === FLAG_MARK) color = `rgb(${Math.round(70 * tr)},${Math.round(70 * tg)},${Math.round(70 * tb)})`;
-      else if (roll < 0.09) color = ACCENTS[key % ACCENTS.length];
-      else if (roll < 0.13) color = "#ffffff";
-      else color = shade > 0.55 ? "#0e0f13" : "#1b1d24";
+      else if (roll < th.accentRate) color = accent;
+      else if (roll < th.accentRate + 0.04) color = "#ffffff";
+      else color = shade > 0.55 ? th.ridgeColor : "#1b1d24";
       ctx.fillStyle = color;
-      ctx.fillText(glyph, x + cw / 2, y + ch / 2 + 1);
+      ctx.fillText(glyph, gx, gy);
     }
   }
 
@@ -967,7 +992,10 @@ export class AsciiRenderer {
     const { ctx, cw, ch, cols, fishBuckets } = this;
     ctx.save();
     ctx.globalAlpha = 1;
-    ctx.font = `700 ${Math.max(12, Math.round(ch * 0.92))}px ${this.fontFamily}`;
+    const th = this.theme;
+    ctx.font = th.blocks
+      ? `700 ${Math.max(12, Math.round(ch * 0.92))}px ${this.fontFamily}`
+      : `${th.weight} ${Math.round(ch * th.glyphScale * 0.92)}px ${this.fontFamily}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const barH = Math.max(2, Math.round(ch * 0.16));
@@ -981,8 +1009,13 @@ export class AsciiRenderer {
         const x = col * cw;
         const y = row * ch;
         if (this.overType(x + cw / 2, y + ch / 2)) continue;
-        ctx.fillRect(x + cw * 0.16, y + (ch - barH) / 2, cw * 0.68, barH);
-        ctx.fillText("-", x + cw / 2, y + ch / 2);
+        if (th.blocks) {
+          ctx.fillRect(x + cw * 0.16, y + (ch - barH) / 2, cw * 0.68, barH);
+          ctx.fillText(th.fish, x + cw / 2, y + ch / 2);
+        } else {
+          // Zhuyin minnows: each cell keeps its own symbol, so a school reads as scattered type.
+          ctx.fillText(th.fish[(col * 7 + row * 13) % th.fish.length], x + cw / 2, y + ch / 2 + 1);
+        }
       }
     }
     ctx.restore();
@@ -995,8 +1028,9 @@ export class AsciiRenderer {
       if (h < 0.08) continue;
       const col = i % cols;
       const row = (i / cols) | 0;
-      ctx.fillStyle = h > 0.5 ? `rgba(255,120,60,${h.toFixed(2)})` : `rgba(220,40,40,${(h * 1.6).toFixed(2)})`;
-      ctx.fillText(h > 0.6 ? "*" : "·", col * cw + cw / 2, row * ch + ch / 2 + 1);
+      const { heatHot: hot, heatWarm: warm, heat: glyphs } = this.theme;
+      ctx.fillStyle = h > 0.5 ? mix(hot, hot, 0, Math.min(1, h)) : mix(warm, warm, 0, Math.min(1, h * 1.6));
+      ctx.fillText(h > 0.6 ? glyphs[0] : glyphs[1], col * cw + cw / 2, row * ch + ch / 2 + 1);
     }
   }
 

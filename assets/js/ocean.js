@@ -156,6 +156,13 @@
        * null = home, where the koi keep the headline clear instead.
        */
       __publicField(this, "textRects", null);
+      /**
+       * Home ring: the koi swim nose to tail around this ellipse (canvas px),
+       * spaced evenly, instead of patrolling. null = the original patrol.
+       */
+      __publicField(this, "ring", null);
+      /** With a ring set: true while a list is open, and the koi roam freely. */
+      __publicField(this, "free", false);
       /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
       __publicField(this, "perception", 60);
       /** Per-species personal space in px (x, y). */
@@ -169,6 +176,8 @@
       __publicField(this, "bucketNext", new Int32Array(0));
       __publicField(this, "lastSpawn", 0);
       __publicField(this, "tmp", { x: 0, y: 0 });
+      /** Per-koi speed factor that evens out the ring. */
+      __publicField(this, "pace", new Float32Array(0));
     }
     resize(width, height, cellW, cellH) {
       const first = this.width === 0;
@@ -287,6 +296,20 @@
      * then settles and slows. Calm off: the others swim back in from the edges.
      */
     setCalm(calm, instant = false, ox = this.width / 2, oy = this.height / 2) {
+      if (this.ring) {
+        if (calm === this.free && !instant) return;
+        this.free = calm;
+        if (!calm || instant) return;
+        for (const sh of this.sharks) {
+          const fx = sh.nodes[0] - ox;
+          const fy = sh.nodes[1] - oy;
+          const d = Math.hypot(fx, fy) || 1;
+          sh.fleeX = fx / d;
+          sh.fleeY = fy / d;
+          sh.scare = 0.55;
+        }
+        return;
+      }
       if (calm === this.calm && !instant) return;
       this.calm = calm;
       for (const sh of this.sharks) {
@@ -319,6 +342,30 @@
           if (sh.fade === 0) this.reenter(sh);
         }
       }
+    }
+    /**
+     * Fit the home ring around a box (canvas px, centre and half sizes): far
+     * enough out that the bodies clear it, long enough for the whole school,
+     * and inside the frame.
+     */
+    setRing(cx, cy, halfW, halfH) {
+      const { width: W, height: H } = this;
+      let longest = 0;
+      let total = 0;
+      for (const sh of this.sharks) {
+        longest = Math.max(longest, sh.baseLength);
+        total += sh.baseLength;
+      }
+      let rx = halfW + longest * 0.3;
+      let ry = Math.max(halfH + longest * 0.3, rx * 0.62);
+      const perimeter = TAU * Math.sqrt((rx * rx + ry * ry) / 2);
+      const grow = Math.max(1, total * 1.6 / perimeter);
+      const maxRx = W / 2 - longest * 0.12;
+      const maxRy = H / 2 - longest * 0.12;
+      if (rx * grow > maxRx) ry = Math.max(ry, maxRx * 1.7);
+      rx = Math.min(rx * grow, maxRx);
+      ry = Math.min(ry * grow, maxRy);
+      this.ring = { cx, cy, rx: Math.max(rx, halfW), ry: Math.max(ry, halfH) };
     }
     /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
     reenter(sh) {
@@ -557,7 +604,28 @@
       const minSide = Math.min(W, H);
       const cxW = W / 2;
       const cyW = H / 2;
-      for (const sh of sharks) {
+      const ring = this.ring;
+      const circling = ring !== null && !this.free;
+      if (this.pace.length !== sharks.length) this.pace = new Float32Array(sharks.length);
+      if (circling) {
+        const n = sharks.length;
+        const ideal = TAU / n;
+        for (let i = 0; i < n; i++) {
+          const a = sharks[i];
+          const ta = Math.atan2((a.nodes[1] - ring.cy) / ring.ry, (a.nodes[0] - ring.cx) / ring.rx);
+          let gap = TAU;
+          for (let j = 0; j < n; j++) {
+            if (j === i) continue;
+            const b = sharks[j];
+            const tb = Math.atan2((b.nodes[1] - ring.cy) / ring.ry, (b.nodes[0] - ring.cx) / ring.rx);
+            const d = (tb - ta + TAU * 2) % TAU;
+            if (d < gap) gap = d;
+          }
+          this.pace[i] = n > 1 ? clamp(1 + 0.8 * (gap - ideal) / ideal, 0.55, 1.7) : 1;
+        }
+      }
+      for (let si = 0; si < sharks.length; si++) {
+        const sh = sharks[si];
         const lead = sh === sharks[0];
         if (sh.fade === 0) continue;
         sh.length += ((this.calm && lead ? sh.baseLength * 0.8 : sh.baseLength) - sh.length) * Math.min(1, dt * 1.6);
@@ -570,9 +638,10 @@
         sh.hunger = Math.min(1, sh.hunger + dt * 0.03);
         let dx = Math.cos(sh.heading);
         let dy = Math.sin(sh.heading);
+        const wanderW = circling ? 0.12 : ring ? 0.6 : 0.45;
         sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 3.2, -1.1, 1.1);
-        dx += Math.cos(sh.heading + sh.wander) * 0.45;
-        dy += Math.sin(sh.heading + sh.wander) * 0.45;
+        dx += Math.cos(sh.heading + sh.wander) * wanderW;
+        dy += Math.sin(sh.heading + sh.wander) * wanderW;
         if (time >= sh.retargetAt) {
           sh.target = this.findPrey(sh);
           sh.retargetAt = time + 0.45;
@@ -589,7 +658,19 @@
           dy += ty / d * w;
           hunting = true;
           closing = clamp(1 - d / (L * 0.9), 0, 1);
-        } else {
+        } else if (circling) {
+          const nx = (hx - ring.cx) / ring.rx;
+          const ny = (hy - ring.cy) / ring.ry;
+          const r = Math.hypot(nx, ny) || 1e-3;
+          let tx = -ny / r * ring.rx;
+          let ty = nx / r * ring.ry;
+          const tl = Math.hypot(tx, ty) || 1;
+          tx /= tl;
+          ty /= tl;
+          const radial = clamp(1 - r, -1, 1) * 2.4;
+          dx += tx * 1.6 + nx / r * radial;
+          dy += ty * 1.6 + ny / r * radial;
+        } else if (!ring) {
           const rx = (hx - cxW) / (W / minSide);
           const ry = hy - cyW;
           const r = Math.hypot(rx, ry) || 1;
@@ -624,7 +705,7 @@
         const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
         const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
         const e2 = ex * ex + ey * ey;
-        if (e2 < 1 && !sh.away && !this.textRects) {
+        if (e2 < 1 && !sh.away && !this.textRects && !ring) {
           const e = Math.sqrt(e2) || 1e-3;
           const w = (1 - e) * (hunting ? 1 : 2.5);
           dx += ex / e * w;
@@ -649,7 +730,7 @@
         sh.heading += turned;
         sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
         const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
-        let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
+        let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise * (circling ? this.pace[si] : 1);
         targetSpeed *= 1 + 2.5 * sh.rush;
         sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
         targetSpeed *= 1 + 4 * sh.hurry;
@@ -782,6 +863,110 @@
     }
   };
 
+  // assets/vendor/ascii-sharks/src/themes.ts
+  var ASCII = {
+    skin: ":;t%SX8#@",
+    fin: "%;tS:",
+    ridge: "@8%",
+    edgeHeavy: ":;",
+    edgeLight: ".',`",
+    wisp: "~-=:~'",
+    mark: "#%@",
+    eye: "o",
+    fish: "-",
+    heat: ["*", "\xB7"],
+    aspect: 1.45,
+    cellDiv: 124,
+    cellMin: 8,
+    cellMax: 13,
+    font: null,
+    weight: 600,
+    glyphScale: 0.74,
+    blocks: true,
+    shadow: [0, 0, 0],
+    lit: [0, 0, 0],
+    ridgeColor: "#0e0f13",
+    eyeColor: "#9aa0ad",
+    wash: [0, 0, 0],
+    washAlpha: 0,
+    patchFill: [206, 88, 56],
+    patchGlyph: "#3a1a10",
+    patchGlint: "#fff5eb",
+    accents: ["#e0892c", "#e03a32", "#b44ae0", "#33c8cc", "#3cb54a", "#3150e8", "#d9c14a"],
+    accentRate: 0.09,
+    grid: "rgba(42,36,32,0.08)",
+    wake: [110, 230, 255],
+    fishInk: [26, 28, 32],
+    heatHot: [255, 120, 60],
+    heatWarm: [220, 40, 40]
+  };
+  var RADICALS = {
+    skin: "\u5341\u5927\u4E2D\u53E3\u6728\u65E5\u7530\u91D1\u96E3",
+    fin: "\u5FC3\u6C34\u624B\u706B\u6708",
+    ridge: "\u5C71\u571F\u5F13",
+    edgeHeavy: "\u4EBA\u535C",
+    edgeLight: "\u4E36\u4E3F\u4E40\u4E00",
+    wisp: "\u4E40\u4E3F\u4E36\u4E59",
+    mark: "\u7AF9\u6208\u5973",
+    eye: "\u76EE",
+    fish: "\u3105\u3106\u3107\u3108\u3109\u310A",
+    heat: ["\u7C73", "\u3002"]
+  };
+  var GLYPH_DAY = {
+    ...RADICALS,
+    aspect: 1,
+    cellDiv: 140,
+    cellMin: 9,
+    cellMax: 12,
+    font: '"Noto Serif TC", "Songti TC", serif',
+    weight: 600,
+    glyphScale: 0.94,
+    blocks: false,
+    shadow: [29, 24, 19],
+    lit: [150, 138, 124],
+    ridgeColor: "#1d1813",
+    eyeColor: "#1d1813",
+    wash: [96, 78, 60],
+    washAlpha: 0.22,
+    patchFill: [184, 51, 42],
+    patchGlyph: "#f6efe4",
+    patchGlint: "#ffd9c8",
+    accents: ["#b8332a"],
+    accentRate: 0.03,
+    grid: "rgba(42,36,32,0.06)",
+    wake: [212, 160, 88],
+    fishInk: [60, 52, 44],
+    heatHot: [184, 51, 42],
+    heatWarm: [212, 160, 88]
+  };
+  var GLYPH_NIGHT = {
+    ...RADICALS,
+    aspect: 1,
+    cellDiv: 140,
+    cellMin: 9,
+    cellMax: 12,
+    font: '"DotGothic16", "Noto Serif TC", monospace',
+    weight: 400,
+    glyphScale: 1,
+    blocks: false,
+    shadow: [120, 80, 30],
+    lit: [255, 206, 122],
+    ridgeColor: "#ffe2a8",
+    eyeColor: "#ffe2a8",
+    wash: [242, 176, 80],
+    washAlpha: 0.18,
+    patchFill: [232, 168, 82],
+    patchGlyph: "#17130e",
+    patchGlint: "#3a2a14",
+    accents: ["#fff3d6"],
+    accentRate: 0.04,
+    grid: "rgba(255,190,100,0.05)",
+    wake: [212, 150, 70],
+    fishInk: [230, 180, 100],
+    heatHot: [255, 214, 140],
+    heatWarm: [212, 150, 70]
+  };
+
   // assets/vendor/ascii-sharks/src/renderer.ts
   var ALPHA_LEVELS = 6;
   var FISH_ALPHAS = [0.82, 0.88, 0.93, 0.97, 1];
@@ -794,22 +979,15 @@
   ];
   var DOT_BASE_ALPHA = [1, 1, 1, 1, 1];
   var WAKE = DOT_RGB.length - 1;
-  var ACCENTS = ["#e0892c", "#e03a32", "#b44ae0", "#33c8cc", "#3cb54a", "#3150e8", "#d9c14a"];
-  var SKIN_RAMP = ":;t%SX8#@";
-  var FIN_GLYPHS = "%;tS:";
-  var RIDGE_GLYPHS = "@8%";
-  var EDGE_HEAVY = ":;";
-  var EDGE_LIGHT = ".',`";
+  var mix = (a, b, k, alpha = 1) => `rgba(${Math.round(a[0] + (b[0] - a[0]) * k)},${Math.round(a[1] + (b[1] - a[1]) * k)},${Math.round(a[2] + (b[2] - a[2]) * k)},${alpha.toFixed(2)})`;
   var FLAG_BODY = 1;
   var FLAG_EDGE = 2;
   var FLAG_FIN = 3;
   var FLAG_RIDGE = 4;
   var FLAG_EYE = 5;
   var FLAG_MARK = 6;
-  var MARK_GLYPHS = "#%@";
   var FLAG_WISP = 7;
   var FLAG_PATCH = 8;
-  var WISP_GLYPHS = "~-=:~'";
   var SUBSAMPLES = [0.25, 0.3, 0.75, 0.3, 0.25, 0.72, 0.75, 0.72];
   function classicHalfWidth(s) {
     if (s < 0.13) return 0.09 * Math.pow(Math.sin(s / 0.13 * Math.PI / 2), 0.95);
@@ -1000,9 +1178,9 @@
     const pos = d1 > 0 || d2 > 0 || d3 > 0;
     return !(neg && pos);
   }
-  function paintGrid(g, W, H, cw, ch, dpr) {
+  function paintGrid(g, W, H, cw, ch, dpr, color = ASCII.grid) {
     g.setTransform(1, 0, 0, 1, 0, 0);
-    g.strokeStyle = "rgba(42,36,32,0.08)";
+    g.strokeStyle = color;
     g.lineWidth = 1;
     g.beginPath();
     for (let c = 0; c <= Math.ceil(W / cw); c++) {
@@ -1018,8 +1196,9 @@
     g.stroke();
   }
   var AsciiRenderer = class {
-    constructor(canvas) {
+    constructor(canvas, theme = ASCII) {
       this.canvas = canvas;
+      this.theme = theme;
       __publicField(this, "ctx");
       __publicField(this, "bg");
       __publicField(this, "dpr", 1);
@@ -1068,8 +1247,11 @@
       __publicField(this, "frameId", 0);
       /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
       __publicField(this, "fishBuckets", FISH_ALPHAS.map(() => []));
-      __publicField(this, "fishStyles", FISH_ALPHAS.map((a) => `rgba(26,28,32,${a})`));
+      __publicField(this, "fishStyles");
       __publicField(this, "showGrid", true);
+      DOT_RGB[WAKE] = theme.wake;
+      if (theme.font) this.fontFamily = theme.font;
+      this.fishStyles = FISH_ALPHAS.map((a) => mix(theme.fishInk, theme.fishInk, 0, a));
       const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) throw new Error("2D canvas unavailable");
       this.ctx = ctx;
@@ -1093,7 +1275,7 @@
       this.paintBackground();
     }
     setFontFamily(family) {
-      if (family) this.fontFamily = family;
+      if (family && !this.theme.font) this.fontFamily = family;
     }
     resize(width, height, dpr) {
       const prevCols = this.cols;
@@ -1101,8 +1283,9 @@
       this.width = width;
       this.height = height;
       this.dpr = dpr;
-      this.cw = clamp(Math.round(width / 124), 8, 13);
-      this.ch = Math.round(this.cw * 1.45);
+      const th = this.theme;
+      this.cw = clamp(Math.round(width / th.cellDiv), th.cellMin, th.cellMax);
+      this.ch = Math.round(this.cw * th.aspect);
       this.cols = Math.ceil(width / this.cw);
       this.rows = Math.ceil(height / this.ch);
       this.canvas.width = Math.round(width * dpr);
@@ -1143,7 +1326,7 @@
       const { width: W, height: H, dpr, cw, ch } = this;
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.clearRect(0, 0, this.bg.width, this.bg.height);
-      if (this.showGrid) paintGrid(g, W, H, cw, ch, dpr);
+      if (this.showGrid) paintGrid(g, W, H, cw, ch, dpr, this.theme.grid);
     }
     render(world, dt) {
       const { ctx, dpr, cols, ch } = this;
@@ -1159,7 +1342,7 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.markFish(world);
       this.drawDots(t);
-      ctx.font = `600 ${Math.round(ch * 0.74)}px ${this.fontFamily}`;
+      ctx.font = `${this.theme.weight} ${Math.round(ch * this.theme.glyphScale)}px ${this.fontFamily}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       this.drawHeat();
@@ -1180,7 +1363,7 @@
       for (let r = r0 - radius; r <= r0 + radius; r++) {
         for (let c = c0 - radius; c <= c0 + radius; c++) {
           if (c < 0 || r < 0 || c >= this.cols || r >= this.rows) continue;
-          const d = Math.hypot(c - c0, (r - r0) * 1.4);
+          const d = Math.hypot(c - c0, (r - r0) * this.theme.aspect);
           if (d > radius + 0.5) continue;
           const i = r * this.cols + c;
           field[i] = Math.min(1.6, field[i] + amount * (1 - d / (radius + 1)));
@@ -1490,8 +1673,9 @@
       }
     }
     drawSharks(t) {
-      const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha } = this;
+      const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha, theme: th } = this;
       const n = cols * rows;
+      const { accents } = th;
       for (let i = 0; i < n; i++) {
         const flag = sharkFlag[i];
         if (!flag) continue;
@@ -1500,63 +1684,86 @@
         const row = i / cols | 0;
         const x = col * cw;
         const y = row * ch;
+        const gx = x + cw / 2;
+        const gy = y + ch / 2 + 1;
         const key = sharkKey[i];
         const shade = sharkShade[i];
         const dim = 0.7 + 0.3 * sharkDepth[i];
         const [tr, tg, tb] = SHAPES[KINDS[sharkKind[i]]].tint;
         const tick = Math.floor(t * 2.4 + key % 997 / 97);
         const roll = hash3(key, tick, 7);
+        const accent = accents[key % accents.length];
         if (flag === FLAG_EDGE) {
-          const set = shade >= 0.5 ? EDGE_HEAVY : EDGE_LIGHT;
-          const g = (70 + shade * 80) * dim;
-          ctx.fillStyle = roll < 0.07 ? ACCENTS[key % ACCENTS.length] : `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
-          ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
+          const set = shade >= 0.5 ? th.edgeHeavy : th.edgeLight;
+          if (roll < th.accentRate * 0.8) ctx.fillStyle = accent;
+          else if (th.blocks) {
+            const g = (70 + shade * 80) * dim;
+            ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
+          } else ctx.fillStyle = mix(th.lit, th.shadow, 0.25, 0.45 + 0.4 * shade);
+          ctx.fillText(set[(key >>> 8) % set.length], gx, gy);
           continue;
         }
         if (flag === FLAG_WISP) {
-          const g = (58 + (1 - shade) * 60) * dim;
-          ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
-          ctx.fillText(WISP_GLYPHS[(key >>> 8) % WISP_GLYPHS.length], x + cw / 2, y + ch / 2 + 1);
+          if (th.blocks) {
+            const g = (58 + (1 - shade) * 60) * dim;
+            ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
+          } else ctx.fillStyle = mix(th.lit, th.shadow, 0.35, 0.75);
+          ctx.fillText(th.wisp[(key >>> 8) % th.wisp.length], gx, gy);
           continue;
         }
         if (flag === FLAG_PATCH) {
-          const lit = (0.72 + 0.4 * shade) * dim;
-          ctx.fillStyle = `rgb(${Math.min(255, Math.round(206 * lit))},${Math.round(88 * lit)},${Math.round(56 * lit)})`;
+          const lit = th.blocks ? (0.72 + 0.4 * shade) * dim : 0.9 + 0.12 * shade;
+          const [pr, pg, pb] = th.patchFill;
+          ctx.fillStyle = `rgb(${Math.min(255, Math.round(pr * lit))},${Math.min(255, Math.round(pg * lit))},${Math.min(255, Math.round(pb * lit))})`;
           ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
-          ctx.fillStyle = roll < 0.1 ? "#fff5eb" : "#3a1a10";
-          ctx.fillText(SKIN_RAMP[clamp(Math.floor((1 - shade) * 6) + 1, 0, SKIN_RAMP.length - 1)], x + cw / 2, y + ch / 2 + 1);
+          ctx.fillStyle = roll < 0.1 ? th.patchGlint : th.patchGlyph;
+          ctx.fillText(th.skin[clamp(Math.floor((1 - shade) * 6) + 1, 0, th.skin.length - 1)], gx, gy);
           continue;
         }
         let level;
         let glyph;
         if (flag === FLAG_RIDGE) {
           level = 226;
-          glyph = RIDGE_GLYPHS[(key >>> 8) % RIDGE_GLYPHS.length];
+          glyph = th.ridge[(key >>> 8) % th.ridge.length];
         } else if (flag === FLAG_EYE) {
           level = 12;
-          glyph = "o";
+          glyph = th.eye;
         } else if (flag === FLAG_MARK) {
           level = 24 + shade * 22;
-          glyph = MARK_GLYPHS[(key >>> 8) % MARK_GLYPHS.length];
+          glyph = th.mark[(key >>> 8) % th.mark.length];
         } else if (flag === FLAG_FIN) {
           level = 40 + shade * 120;
-          glyph = FIN_GLYPHS[(key >>> 8) % FIN_GLYPHS.length];
+          glyph = th.fin[(key >>> 8) % th.fin.length];
         } else {
           level = 46 + shade * 160;
           const jitter = (key >>> 4) % 3 - 1;
-          glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * 8.99) + jitter, 0, SKIN_RAMP.length - 1)];
+          glyph = th.skin[clamp(Math.floor((1 - shade) * 8.99) + jitter, 0, th.skin.length - 1)];
+        }
+        if (!th.blocks) {
+          const wash = th.washAlpha * (flag === FLAG_FIN ? 0.6 : 1 - 0.45 * shade) * dim;
+          ctx.fillStyle = mix(th.wash, th.wash, 0, wash);
+          ctx.fillRect(x, y, cw, ch);
+          let color2;
+          if (flag === FLAG_RIDGE) color2 = th.ridgeColor;
+          else if (flag === FLAG_EYE) color2 = th.eyeColor;
+          else if (roll < th.accentRate) color2 = accent;
+          else if (flag === FLAG_FIN) color2 = mix(th.shadow, th.lit, clamp(shade * 0.9 + 0.1, 0, 1), 0.85 * dim + 0.15);
+          else color2 = mix(th.shadow, th.lit, shade, 0.8 * dim + 0.2);
+          ctx.fillStyle = color2;
+          ctx.fillText(glyph, gx, gy);
+          continue;
         }
         level *= dim;
         ctx.fillStyle = `rgb(${Math.min(255, Math.round(level * tr))},${Math.min(255, Math.round(level * tg))},${Math.min(255, Math.round(level * tb + 4))})`;
         ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
         let color;
-        if (flag === FLAG_EYE) color = "#9aa0ad";
+        if (flag === FLAG_EYE) color = th.eyeColor;
         else if (flag === FLAG_MARK) color = `rgb(${Math.round(70 * tr)},${Math.round(70 * tg)},${Math.round(70 * tb)})`;
-        else if (roll < 0.09) color = ACCENTS[key % ACCENTS.length];
-        else if (roll < 0.13) color = "#ffffff";
-        else color = shade > 0.55 ? "#0e0f13" : "#1b1d24";
+        else if (roll < th.accentRate) color = accent;
+        else if (roll < th.accentRate + 0.04) color = "#ffffff";
+        else color = shade > 0.55 ? th.ridgeColor : "#1b1d24";
         ctx.fillStyle = color;
-        ctx.fillText(glyph, x + cw / 2, y + ch / 2 + 1);
+        ctx.fillText(glyph, gx, gy);
       }
     }
     // ── fish, dots, heat ────────────────────────────────────────────────
@@ -1592,7 +1799,8 @@
       const { ctx, cw, ch, cols, fishBuckets } = this;
       ctx.save();
       ctx.globalAlpha = 1;
-      ctx.font = `700 ${Math.max(12, Math.round(ch * 0.92))}px ${this.fontFamily}`;
+      const th = this.theme;
+      ctx.font = th.blocks ? `700 ${Math.max(12, Math.round(ch * 0.92))}px ${this.fontFamily}` : `${th.weight} ${Math.round(ch * th.glyphScale * 0.92)}px ${this.fontFamily}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       const barH = Math.max(2, Math.round(ch * 0.16));
@@ -1606,8 +1814,12 @@
           const x = col * cw;
           const y = row * ch;
           if (this.overType(x + cw / 2, y + ch / 2)) continue;
-          ctx.fillRect(x + cw * 0.16, y + (ch - barH) / 2, cw * 0.68, barH);
-          ctx.fillText("-", x + cw / 2, y + ch / 2);
+          if (th.blocks) {
+            ctx.fillRect(x + cw * 0.16, y + (ch - barH) / 2, cw * 0.68, barH);
+            ctx.fillText(th.fish, x + cw / 2, y + ch / 2);
+          } else {
+            ctx.fillText(th.fish[(col * 7 + row * 13) % th.fish.length], x + cw / 2, y + ch / 2 + 1);
+          }
         }
       }
       ctx.restore();
@@ -1619,8 +1831,9 @@
         if (h < 0.08) continue;
         const col = i % cols;
         const row = i / cols | 0;
-        ctx.fillStyle = h > 0.5 ? `rgba(255,120,60,${h.toFixed(2)})` : `rgba(220,40,40,${(h * 1.6).toFixed(2)})`;
-        ctx.fillText(h > 0.6 ? "*" : "\xB7", col * cw + cw / 2, row * ch + ch / 2 + 1);
+        const { heatHot: hot, heatWarm: warm, heat: glyphs } = this.theme;
+        ctx.fillStyle = h > 0.5 ? mix(hot, hot, 0, Math.min(1, h)) : mix(warm, warm, 0, Math.min(1, h * 1.6));
+        ctx.fillText(h > 0.6 ? glyphs[0] : glyphs[1], col * cw + cw / 2, row * ch + ch / 2 + 1);
       }
     }
     /**
@@ -1686,7 +1899,7 @@
   var STEP = 1 / 60;
   var MAX_STEPS = 4;
   var OceanEngine = class {
-    constructor(canvas, sharks, fishCount) {
+    constructor(canvas, sharks, fishCount, theme = ASCII) {
       this.canvas = canvas;
       __publicField(this, "world");
       __publicField(this, "renderer");
@@ -1734,9 +1947,9 @@
       __publicField(this, "onPointerLeave", () => {
         this.world.pointer.active = false;
       });
-      var _a;
+      var _a, _b;
       this.world = new World(sharks, fishCount);
-      this.renderer = new AsciiRenderer(canvas);
+      this.renderer = new AsciiRenderer(canvas, theme);
       this.renderer.setFontFamily(getComputedStyle(canvas).fontFamily);
       this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
       this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -1753,7 +1966,9 @@
       window.addEventListener("blur", this.onPointerLeave);
       this.resize();
       canvas.__ocean = this;
-      (_a = document.fonts) == null ? void 0 : _a.load(`600 16px ${getComputedStyle(canvas).fontFamily}`).then(() => {
+      const family = (_a = theme.font) != null ? _a : getComputedStyle(canvas).fontFamily;
+      const sample = theme.skin + theme.fin + theme.ridge + theme.edgeLight + theme.wisp + theme.eye + theme.fish;
+      (_b = document.fonts) == null ? void 0 : _b.load(`${theme.weight} 16px ${family}`, sample).then(() => {
         if (!this.disposed && this.reducedMotion.matches) this.drawStill();
       });
       this.schedule();
@@ -1769,6 +1984,18 @@
       const oy = clientY === void 0 ? rect.height / 2 : clientY - rect.top;
       this.world.setCalm(calm, instant || still, ox, oy);
       if (still) this.renderer.render(this.world, STEP);
+    }
+    /**
+     * Home: the koi circle this element (a box in client px), nose to tail.
+     * List views (setCalm(true)) break the circle and they roam.
+     */
+    setRing(rect) {
+      if (!rect) {
+        this.world.ring = null;
+        return;
+      }
+      const c = this.canvas.getBoundingClientRect();
+      this.world.setRing(rect.left - c.left + rect.width / 2, rect.top - c.top + rect.height / 2, rect.width / 2, rect.height / 2);
     }
     /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
     setTextRects(rects) {
@@ -1822,5 +2049,5 @@
 
   // assets/vendor/ascii-sharks/entry.ts
   var root = typeof window !== "undefined" ? window : globalThis;
-  root.OceanEngine = OceanEngine;
+  Object.assign(root, { OceanEngine, OceanThemes: { ASCII, GLYPH_DAY, GLYPH_NIGHT } });
 })();
