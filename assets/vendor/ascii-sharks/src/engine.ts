@@ -62,6 +62,12 @@ export class OceanEngine {
     if (still) this.renderer.render(this.world, STEP);
   }
 
+  /** Article pages: keep the koi to a page margin, x0..x1 in canvas px (null = whole pond). */
+  setLane(lane: [number, number] | null) {
+    this.world.setLane(lane);
+    if (this.reducedMotion.matches) this.renderer.render(this.world, STEP);
+  }
+
   destroy() {
     this.disposed = true;
     cancelAnimationFrame(this.raf);

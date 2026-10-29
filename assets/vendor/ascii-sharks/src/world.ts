@@ -84,6 +84,10 @@ export interface Shark {
   awayAt: number;
   /** Re-entry burst, 1 → 0, when a koi swims back in. */
   rush: number;
+  /** Lane mode: where the koi is heading next, and when to pick another spot. */
+  waypointX: number;
+  waypointY: number;
+  waypointAt: number;
 }
 
 export interface WorldEvent {
@@ -111,6 +115,11 @@ export class World {
    * one shrinks a little and slows down. Turning it off brings them back.
    */
   calm = false;
+  /**
+   * Article pages: the koi keep to this x range (a page margin) and wander
+   * between waypoints in it instead of circling the headline. null = whole pond.
+   */
+  lane: [number, number] | null = null;
 
   /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
   private perception = 60;
@@ -190,6 +199,9 @@ export class World {
         away: false,
         awayAt: 0,
         rush: 0,
+        waypointX: 0,
+        waypointY: 0,
+        waypointAt: 0,
         nodes,
         heading,
         speed: 30,
@@ -292,6 +304,37 @@ export class World {
         sh.away = false;
         if (sh.fade === 0) this.reenter(sh);
       }
+    }
+  }
+
+  /**
+   * Keep the koi inside [x0, x1]. A lane too narrow for a koi hides it; a koi
+   * outside the lane (first call, or after a resize) is dropped into it.
+   */
+  setLane(lane: [number, number] | null) {
+    this.lane = lane;
+    if (!lane) return;
+    const [x0, x1] = lane;
+    for (const sh of this.sharks) {
+      if (x1 - x0 < sh.baseLength * 0.9) {
+        sh.fade = 0;
+        continue;
+      }
+      if (sh.fade === 1 && sh.nodes[0] > x0 && sh.nodes[0] < x1) continue;
+      // Nose down the middle of the lane, body trailing straight behind.
+      const x = (x0 + x1) / 2;
+      const y = rand(0.25, 0.6) * this.height;
+      const heading = Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2;
+      const seg = sh.length / (SHARK_NODES - 1);
+      for (let n = 0; n < SHARK_NODES; n++) {
+        sh.nodes[n * 2] = x;
+        sh.nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
+      }
+      sh.heading = heading;
+      sh.fade = 1;
+      sh.away = false;
+      sh.scare = 0;
+      sh.waypointAt = 0;
     }
   }
 
@@ -607,6 +650,25 @@ export class World {
         dy += (ty / d) * w;
         hunting = true;
         closing = clamp(1 - d / (L * 0.9), 0, 1);
+      } else if (this.lane) {
+        // Lane: drift between spots in the margin, picking a new one now and then.
+        const [x0, x1] = this.lane;
+        if (time >= sh.waypointAt || Math.hypot(sh.waypointX - hx, sh.waypointY - hy) < L * 0.5) {
+          const m = Math.min(L * 0.45, (x1 - x0) / 2);
+          sh.waypointX = rand(x0 + m, x1 - m);
+          sh.waypointY = rand(H * 0.12, H * 0.88);
+          sh.waypointAt = time + rand(6, 12);
+        }
+        const tx = sh.waypointX - hx;
+        const ty = sh.waypointY - hy;
+        const d = Math.hypot(tx, ty) || 1;
+        dx += (tx / d) * 0.7;
+        dy += (ty / d) * 0.7;
+        // Look ahead: turn well before the snout reaches the lane's edge.
+        const ax = hx + Math.cos(sh.heading) * L * 0.6;
+        const edge = L * 0.35;
+        if (ax < x0 + edge) dx += clamp((x0 + edge - ax) / edge, 0, 2) * 2.5;
+        else if (ax > x1 - edge) dx -= clamp((ax - (x1 - edge)) / edge, 0, 2) * 2.5;
       } else {
         // Patrol: a lazy circuit around the headline.
         const rx = (hx - cxW) / (W / minSide);
@@ -645,7 +707,7 @@ export class World {
       const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
       const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
       const e2 = ex * ex + ey * ey;
-      if (e2 < 1 && !sh.away) {
+      if (e2 < 1 && !sh.away && !this.lane) {
         const e = Math.sqrt(e2) || 1e-3;
         const w = (1 - e) * (hunting ? 1 : 2.5);
         dx += (ex / e) * w;

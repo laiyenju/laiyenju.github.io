@@ -150,6 +150,11 @@
        * one shrinks a little and slows down. Turning it off brings them back.
        */
       __publicField(this, "calm", false);
+      /**
+       * Article pages: the koi keep to this x range (a page margin) and wander
+       * between waypoints in it instead of circling the headline. null = whole pond.
+       */
+      __publicField(this, "lane", null);
       /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
       __publicField(this, "perception", 60);
       /** Per-species personal space in px (x, y). */
@@ -215,6 +220,9 @@
           away: false,
           awayAt: 0,
           rush: 0,
+          waypointX: 0,
+          waypointY: 0,
+          waypointAt: 0,
           nodes,
           heading,
           speed: 30,
@@ -311,6 +319,35 @@
           sh.away = false;
           if (sh.fade === 0) this.reenter(sh);
         }
+      }
+    }
+    /**
+     * Keep the koi inside [x0, x1]. A lane too narrow for a koi hides it; a koi
+     * outside the lane (first call, or after a resize) is dropped into it.
+     */
+    setLane(lane) {
+      this.lane = lane;
+      if (!lane) return;
+      const [x0, x1] = lane;
+      for (const sh of this.sharks) {
+        if (x1 - x0 < sh.baseLength * 0.9) {
+          sh.fade = 0;
+          continue;
+        }
+        if (sh.fade === 1 && sh.nodes[0] > x0 && sh.nodes[0] < x1) continue;
+        const x = (x0 + x1) / 2;
+        const y = rand(0.25, 0.6) * this.height;
+        const heading = Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2;
+        const seg = sh.length / (SHARK_NODES - 1);
+        for (let n = 0; n < SHARK_NODES; n++) {
+          sh.nodes[n * 2] = x;
+          sh.nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
+        }
+        sh.heading = heading;
+        sh.fade = 1;
+        sh.away = false;
+        sh.scare = 0;
+        sh.waypointAt = 0;
       }
     }
     /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
@@ -582,6 +619,23 @@
           dy += ty / d * w;
           hunting = true;
           closing = clamp(1 - d / (L * 0.9), 0, 1);
+        } else if (this.lane) {
+          const [x0, x1] = this.lane;
+          if (time >= sh.waypointAt || Math.hypot(sh.waypointX - hx, sh.waypointY - hy) < L * 0.5) {
+            const m = Math.min(L * 0.45, (x1 - x0) / 2);
+            sh.waypointX = rand(x0 + m, x1 - m);
+            sh.waypointY = rand(H * 0.12, H * 0.88);
+            sh.waypointAt = time + rand(6, 12);
+          }
+          const tx = sh.waypointX - hx;
+          const ty = sh.waypointY - hy;
+          const d = Math.hypot(tx, ty) || 1;
+          dx += tx / d * 0.7;
+          dy += ty / d * 0.7;
+          const ax = hx + Math.cos(sh.heading) * L * 0.6;
+          const edge = L * 0.35;
+          if (ax < x0 + edge) dx += clamp((x0 + edge - ax) / edge, 0, 2) * 2.5;
+          else if (ax > x1 - edge) dx -= clamp((ax - (x1 - edge)) / edge, 0, 2) * 2.5;
         } else {
           const rx = (hx - cxW) / (W / minSide);
           const ry = hy - cyW;
@@ -612,7 +666,7 @@
         const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
         const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
         const e2 = ex * ex + ey * ey;
-        if (e2 < 1 && !sh.away) {
+        if (e2 < 1 && !sh.away && !this.lane) {
           const e = Math.sqrt(e2) || 1e-3;
           const w = (1 - e) * (hunting ? 1 : 2.5);
           dx += ex / e * w;
@@ -1736,6 +1790,11 @@
       const oy = clientY === void 0 ? rect.height / 2 : clientY - rect.top;
       this.world.setCalm(calm, instant || still, ox, oy);
       if (still) this.renderer.render(this.world, STEP);
+    }
+    /** Article pages: keep the koi to a page margin, x0..x1 in canvas px (null = whole pond). */
+    setLane(lane) {
+      this.world.setLane(lane);
+      if (this.reducedMotion.matches) this.renderer.render(this.world, STEP);
     }
     destroy() {
       this.disposed = true;
