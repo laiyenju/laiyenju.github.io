@@ -84,6 +84,8 @@ export interface Shark {
   awayAt: number;
   /** Re-entry burst, 1 → 0, when a koi swims back in. */
   rush: number;
+  /** Over text, 0 → 1: eases the koi up to a quicker pace until it's clear. */
+  hurry: number;
 }
 
 export interface WorldEvent {
@@ -111,6 +113,12 @@ export class World {
    * one shrinks a little and slows down. Turning it off brings them back.
    */
   calm = false;
+  /**
+   * Article pages: boxes of text (x0, y0, x1, y1, ...) in canvas px. A koi
+   * swimming over one speeds up so it never sits on the words for long.
+   * null = home, where the koi keep the headline clear instead.
+   */
+  textRects: Float32Array | null = null;
 
   /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
   private perception = 60;
@@ -190,6 +198,7 @@ export class World {
         away: false,
         awayAt: 0,
         rush: 0,
+        hurry: 0,
         nodes,
         heading,
         speed: 30,
@@ -618,6 +627,13 @@ export class World {
         dy += ((rx / r) * sh.orbitDir + (ry / r) * radial * 0.9) * 0.55;
       }
 
+      const onText = this.textAt(sh);
+      if (onText >= 0) {
+        // Over the words: lean toward the nearer side of the text box to get clear.
+        const r = this.textRects!;
+        dx += (hx < (r[onText] + r[onText + 2]) / 2 ? -1 : 1) * 0.9;
+      }
+
       if (sh.scare > 0) {
         // Startle: everything else is drowned out by the bolt away.
         dx += sh.fleeX * 8 * sh.scare;
@@ -645,7 +661,7 @@ export class World {
       const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
       const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
       const e2 = ex * ex + ey * ey;
-      if (e2 < 1 && !sh.away) {
+      if (e2 < 1 && !sh.away && !this.textRects) {
         const e = Math.sqrt(e2) || 1e-3;
         const w = (1 - e) * (hunting ? 1 : 2.5);
         dx += (ex / e) * w;
@@ -680,6 +696,8 @@ export class World {
       const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
       let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
       targetSpeed *= 1 + 2.5 * sh.rush;
+      sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
+      targetSpeed *= 1 + 4 * sh.hurry;
       if (sh.away) targetSpeed = Math.max(W, H) * 0.6;
       else if (sh.scare > 0) targetSpeed = Math.max(targetSpeed, cruise * (1 + 9 * sh.scare));
       sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (sh.scare > 0 ? 4 : 1.1));
@@ -721,6 +739,21 @@ export class World {
 
       if (sh.away) this.checkGone(sh);
     }
+  }
+
+  /** Index into textRects of a box under the koi's head, middle, or tail; -1 if none. */
+  private textAt(sh: Shark) {
+    const r = this.textRects;
+    if (!r) return -1;
+    const pad = 6;
+    for (const k of [0, SHARK_NODES >> 1, SHARK_NODES - 1]) {
+      const x = sh.nodes[k * 2];
+      const y = sh.nodes[k * 2 + 1];
+      for (let i = 0; i < r.length; i += 4) {
+        if (x > r[i] - pad && x < r[i + 2] + pad && y > r[i + 1] - pad && y < r[i + 3] + pad) return i;
+      }
+    }
+    return -1;
   }
 
   /** Hide a bolting koi once its whole body is out of frame (or it's taking too long). */

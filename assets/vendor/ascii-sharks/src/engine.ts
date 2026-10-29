@@ -62,6 +62,17 @@ export class OceanEngine {
     if (still) this.renderer.render(this.world, STEP);
   }
 
+  /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
+  setTextRects(rects: Float32Array | null) {
+    this.world.textRects = rects;
+  }
+
+  /** Article pages draw on plain paper, without the cell grid. */
+  setGrid(show: boolean) {
+    this.renderer.setGrid(show);
+    if (this.reducedMotion.matches) this.drawStill();
+  }
+
   destroy() {
     this.disposed = true;
     cancelAnimationFrame(this.raf);

@@ -377,6 +377,13 @@ export class AsciiRenderer {
     return this.ch;
   }
 
+  private showGrid = true;
+
+  setGrid(show: boolean) {
+    this.showGrid = show;
+    this.paintBackground();
+  }
+
   setFontFamily(family: string) {
     if (family) this.fontFamily = family;
   }
@@ -434,7 +441,7 @@ export class AsciiRenderer {
     const { width: W, height: H, dpr, cw, ch } = this;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, this.bg.width, this.bg.height);
-    paintGrid(g, W, H, cw, ch, dpr);
+    if (this.showGrid) paintGrid(g, W, H, cw, ch, dpr);
   }
 
   render(world: World, dt: number) {

@@ -150,6 +150,12 @@
        * one shrinks a little and slows down. Turning it off brings them back.
        */
       __publicField(this, "calm", false);
+      /**
+       * Article pages: boxes of text (x0, y0, x1, y1, ...) in canvas px. A koi
+       * swimming over one speeds up so it never sits on the words for long.
+       * null = home, where the koi keep the headline clear instead.
+       */
+      __publicField(this, "textRects", null);
       /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
       __publicField(this, "perception", 60);
       /** Per-species personal space in px (x, y). */
@@ -215,6 +221,7 @@
           away: false,
           awayAt: 0,
           rush: 0,
+          hurry: 0,
           nodes,
           heading,
           speed: 30,
@@ -591,6 +598,11 @@
           dx += (-ry / r * sh.orbitDir + rx / r * radial * 0.9) * 0.55;
           dy += (rx / r * sh.orbitDir + ry / r * radial * 0.9) * 0.55;
         }
+        const onText = this.textAt(sh);
+        if (onText >= 0) {
+          const r = this.textRects;
+          dx += (hx < (r[onText] + r[onText + 2]) / 2 ? -1 : 1) * 0.9;
+        }
         if (sh.scare > 0) {
           dx += sh.fleeX * 8 * sh.scare;
           dy += sh.fleeY * 8 * sh.scare;
@@ -612,7 +624,7 @@
         const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
         const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
         const e2 = ex * ex + ey * ey;
-        if (e2 < 1 && !sh.away) {
+        if (e2 < 1 && !sh.away && !this.textRects) {
           const e = Math.sqrt(e2) || 1e-3;
           const w = (1 - e) * (hunting ? 1 : 2.5);
           dx += ex / e * w;
@@ -639,6 +651,8 @@
         const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
         let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
         targetSpeed *= 1 + 2.5 * sh.rush;
+        sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
+        targetSpeed *= 1 + 4 * sh.hurry;
         if (sh.away) targetSpeed = Math.max(W, H) * 0.6;
         else if (sh.scare > 0) targetSpeed = Math.max(targetSpeed, cruise * (1 + 9 * sh.scare));
         sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (sh.scare > 0 ? 4 : 1.1));
@@ -673,6 +687,20 @@
         }
         if (sh.away) this.checkGone(sh);
       }
+    }
+    /** Index into textRects of a box under the koi's head, middle, or tail; -1 if none. */
+    textAt(sh) {
+      const r = this.textRects;
+      if (!r) return -1;
+      const pad = 6;
+      for (const k of [0, SHARK_NODES >> 1, SHARK_NODES - 1]) {
+        const x = sh.nodes[k * 2];
+        const y = sh.nodes[k * 2 + 1];
+        for (let i = 0; i < r.length; i += 4) {
+          if (x > r[i] - pad && x < r[i + 2] + pad && y > r[i + 1] - pad && y < r[i + 3] + pad) return i;
+        }
+      }
+      return -1;
     }
     /** Hide a bolting koi once its whole body is out of frame (or it's taking too long). */
     checkGone(sh) {
@@ -1041,6 +1069,7 @@
       /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
       __publicField(this, "fishBuckets", FISH_ALPHAS.map(() => []));
       __publicField(this, "fishStyles", FISH_ALPHAS.map((a) => `rgba(26,28,32,${a})`));
+      __publicField(this, "showGrid", true);
       const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) throw new Error("2D canvas unavailable");
       this.ctx = ctx;
@@ -1058,6 +1087,10 @@
     }
     get cellHeight() {
       return this.ch;
+    }
+    setGrid(show) {
+      this.showGrid = show;
+      this.paintBackground();
     }
     setFontFamily(family) {
       if (family) this.fontFamily = family;
@@ -1110,7 +1143,7 @@
       const { width: W, height: H, dpr, cw, ch } = this;
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.clearRect(0, 0, this.bg.width, this.bg.height);
-      paintGrid(g, W, H, cw, ch, dpr);
+      if (this.showGrid) paintGrid(g, W, H, cw, ch, dpr);
     }
     render(world, dt) {
       const { ctx, dpr, cols, ch } = this;
@@ -1736,6 +1769,15 @@
       const oy = clientY === void 0 ? rect.height / 2 : clientY - rect.top;
       this.world.setCalm(calm, instant || still, ox, oy);
       if (still) this.renderer.render(this.world, STEP);
+    }
+    /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
+    setTextRects(rects) {
+      this.world.textRects = rects;
+    }
+    /** Article pages draw on plain paper, without the cell grid. */
+    setGrid(show) {
+      this.renderer.setGrid(show);
+      if (this.reducedMotion.matches) this.drawStill();
     }
     destroy() {
       this.disposed = true;
