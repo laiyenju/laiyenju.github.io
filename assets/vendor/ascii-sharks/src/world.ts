@@ -18,17 +18,17 @@ import { pickSpecies, SPECIES } from "./species";
 
 export const SHARK_NODES = 20;
 
-export type SharkKind = "classic" | "hammerhead" | "zebra" | "tiger" | "greathammer" | "mako" | "thresher" | "nurse";
+export type SharkKind = "koi" | "classic" | "hammerhead" | "zebra" | "tiger" | "greathammer" | "mako" | "thresher" | "nurse";
 
 /** Which sharks to put in the water; size is relative to the biggest. */
 export type SharkSpec = { kind: SharkKind; size: number };
 
-// The landing hero: four of the same shark at different depths.
+// The landing hero: four koi at different depths.
 const DEFAULT_SHARKS: SharkSpec[] = [
-  { kind: "classic", size: 1 },
-  { kind: "classic", size: 0.7 },
-  { kind: "classic", size: 0.84 },
-  { kind: "classic", size: 0.77 },
+  { kind: "koi", size: 1 },
+  { kind: "koi", size: 0.7 },
+  { kind: "koi", size: 0.84 },
+  { kind: "koi", size: 0.77 },
 ];
 
 export interface Fish {
@@ -124,7 +124,8 @@ export class World {
     this.perception = Math.max(cellH * 3, cellW * 5.5);
     this.foreignSep = cellW * 3;
 
-    if (first || this.fish.length === 0) {
+    // Seed once; with no bait schools, fish.length stays 0 and must not reseed on every resize.
+    if (first || this.sharks.length === 0) {
       this.seed();
       return;
     }
@@ -145,7 +146,8 @@ export class World {
       const { kind, size } = this.sharkSpecs[i];
       // Spec sizes stay 1 / 0.84 / 0.77 / 0.7. Square them so the 0.7
       // body is about half the 1.0 and the steps read at a glance.
-      const length = baseLength * size * size;
+      // Koi keep the plain size steps; they read small enough already.
+      const length = kind === "koi" ? baseLength * size : baseLength * size * size;
       const orbitRadius = minSide * rand(0.28, 0.4);
       const a = (i / sharkCount) * TAU + rand(-0.4, 0.4);
       const orbitDir: 1 | -1 = i % 2 === 0 ? 1 : -1;
@@ -570,7 +572,8 @@ export class World {
       sh.heading += turned;
       sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
 
-      const cruise = 30 + L * 0.04;
+      // Koi drift; sharks cruise.
+      const cruise = sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04;
       const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
       sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
       sh.phase += dt * (2 + sh.speed / 24);

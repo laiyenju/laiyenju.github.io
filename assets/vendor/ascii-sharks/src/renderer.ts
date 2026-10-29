@@ -5,6 +5,8 @@
  *   3. fish as minimal ASCII dashes, one per cell, glinting on hard turns
  *   4. sharks rasterised cell-by-cell with supersampled edges: grey blocks
  *      shaded by the light, dense glyphs, and shimmering accent colours
+ *   5. koi use the same blocks, but their fin tips and tail fan thin out
+ *      into bare glyphs so the silhouette breathes
  */
 import { clamp, hash3, smoothstep } from "./math";
 import { SHARK_NODES, type Shark, type SharkKind, type World } from "./world";
@@ -42,6 +44,11 @@ const FLAG_EYE = 5;
 /** Dark skin markings: tiger bars, zebra-shark spots. */
 const FLAG_MARK = 6;
 const MARK_GLYPHS = "#%@";
+/** Bare glyph, no block: the trailing edges of koi fins and tail. */
+const FLAG_WISP = 7;
+/** Koi colour patch (kohaku red). */
+const FLAG_PATCH = 8;
+const WISP_GLYPHS = "~-=:~'";
 
 // Sub-cell sample offsets for anti-aliased silhouettes.
 const SUBSAMPLES = [0.25, 0.3, 0.75, 0.3, 0.25, 0.72, 0.75, 0.72];
@@ -53,6 +60,14 @@ function classicHalfWidth(s: number) {
   if (s < 0.84) return 0.019 + 0.087 * Math.pow(1 - (s - 0.3) / 0.54, 1.25);
   const k = (s - 0.84) / 0.16;
   return 0.019 * (1 - k) + 0.012 * Math.sin(k * Math.PI);
+}
+
+/** Koi top-down half-width: blunt round head, plump shoulders, slim tail stalk. The fan is drawn separately. */
+function koiHalfWidth(s: number) {
+  if (s < 0.1) return 0.09 * Math.pow(Math.sin(((s / 0.1) * Math.PI) / 2), 0.55);
+  if (s < 0.3) return 0.09 + 0.035 * smoothstep(0.1, 0.3, s);
+  if (s < 0.74) return 0.022 + 0.103 * Math.pow(1 - (s - 0.3) / 0.44, 1.2);
+  return 0.022 - 0.012 * smoothstep(0.74, 1, s);
 }
 
 /** Body outline and fin layout per species. All values are fractions of length. */
@@ -78,9 +93,29 @@ interface SharkShape {
   gills: [number, number];
   /** Skin colour multipliers (r, g, b). */
   tint: [number, number, number];
+  /** Koi: rounded paddle pectorals instead of triangles. */
+  roundFins?: boolean;
+  /** Koi: a flowing tail fan from `start` to the end, with a soft fork. Fractions of length. */
+  fan?: { start: number; spread: number; fork: number };
 }
 
 const SHAPES: Record<SharkKind, SharkShape> = {
+  // Koi from above: round head, broad paddle pectorals, a dorsal ridge down
+  // the back, and a wide soft tail fan. Warm grey with kohaku patches.
+  koi: {
+    halfWidth: koiHalfWidth,
+    pectoral: [0.15, 0.24, 0.36, 0.18],
+    falcate: false,
+    pelvic: [0.46, 0.51, 0.57, 0.055],
+    caudal: 0,
+    dorsal: [0.34, 0.62],
+    secondDorsal: [0, 0],
+    eye: [0.05, 0.09],
+    gills: [0, 0],
+    tint: [1.0, 0.98, 0.96],
+    roundFins: true,
+    fan: { start: 0.7, spread: 0.16, fork: 0.05 },
+  },
   classic: {
     halfWidth: classicHalfWidth,
     pectoral: [0.15, 0.43, 0.55, 0.26],
@@ -303,6 +338,7 @@ export class AsciiRenderer {
   private sharkId = 0;
   private finTipLeft = 0;
   private finTipRight = 0;
+  private fanFlex = 1;
   // Scratch outputs of sampleShark(), to avoid allocating per sample.
   private hitFlag = 0;
   private hitShade = 0;
@@ -515,13 +551,15 @@ export class AsciiRenderer {
     let bestSign = 1;
     let bestNx = 0;
     let bestNy = 0;
+    let beyond = false;
     for (let k = 0; k < N - 1; k++) {
       const ax = spine[k * 2];
       const ay = spine[k * 2 + 1];
       const sx = spine[(k + 1) * 2] - ax;
       const sy = spine[(k + 1) * 2 + 1] - ay;
       const len2 = sx * sx + sy * sy || 1;
-      const u = clamp(((px - ax) * sx + (py - ay) * sy) / len2, 0, 1);
+      const raw = ((px - ax) * sx + (py - ay) * sy) / len2;
+      const u = clamp(raw, 0, 1);
       const qx = ax + sx * u;
       const qy = ay + sy * u;
       const d2 = (px - qx) ** 2 + (py - qy) ** 2;
@@ -532,6 +570,7 @@ export class AsciiRenderer {
         bestSign = sx * (py - ay) - sy * (px - ax) >= 0 ? 1 : -1;
         bestNx = (-sy / len) * bestSign;
         bestNy = (sx / len) * bestSign;
+        beyond = k === N - 2 && raw > 1;
       }
     }
 
@@ -585,16 +624,49 @@ export class AsciiRenderer {
         // Zebra sharks carry pale ridges down the back.
         shade = Math.max(shade, 0.8);
       } else if (this.marked(s, a * bestSign, L, across)) {
-        flag = FLAG_MARK;
+        flag = shape === SHAPES.koi ? FLAG_PATCH : FLAG_MARK;
       }
       this.hitFlag = flag;
       this.hitShade = shade;
       return true;
     }
 
+    const fan = shape.fan;
+    if (fan && s > fan.start && !beyond) {
+      // Tail fan: opens out toward the end, with a shallow fork in the middle.
+      const k = (s - fan.start) / (1 - fan.start);
+      const spread = L * (0.018 + fan.spread * Math.pow(k, 0.75)) * this.fanFlex;
+      const fork = L * fan.fork * smoothstep(0.65, 1, k);
+      if (a <= spread && a >= fork) {
+        const out = Math.max(k, a / spread) + (hash3(Math.round(u / (L * 0.025)), Math.round(a / (L * 0.025)), this.sharkId) - 0.5) * 0.25;
+        this.hitFlag = out > 0.7 ? FLAG_WISP : FLAG_FIN;
+        this.hitShade = 0.5 - 0.3 * k;
+        return true;
+      }
+    }
+
     const tip = bestSign > 0 ? this.finTipRight : this.finTipLeft;
     const [p0, p1, p2] = shape.pectoral;
-    if (
+    if (shape.roundFins) {
+      // Paddle fin: an ellipse from the root on the flank, swept back toward the tip.
+      const rx = (L * (p0 + p1)) / 2;
+      const ry = L * 0.06;
+      const tx = L * p2 - rx;
+      const ty = tip - ry;
+      const len = Math.hypot(tx, ty) || 1;
+      const major = len * 0.6;
+      const minor = L * (p1 - p0) * 0.75;
+      const dx = u - (rx + tx / 2);
+      const dy = a - (ry + ty / 2);
+      const along = (dx * tx + dy * ty) / len;
+      const side = (-dx * ty + dy * tx) / len;
+      if ((along / major) ** 2 + (side / minor) ** 2 <= 1) {
+        const out = (along / major + 1) / 2 + (hash3(Math.round(u / (L * 0.025)), Math.round(a / (L * 0.025)), this.sharkId + 5) - 0.5) * 0.25;
+        this.hitFlag = out > 0.72 ? FLAG_WISP : FLAG_FIN;
+        this.hitShade = 0.38 + 0.22 * (1 - clamp(out, 0, 1));
+        return true;
+      }
+    } else if (
       inTriangle(u, a, L * p0, 0, L * p1, 0, L * p2, tip) &&
       // Falcate (sickle) fins get a concave trailing edge.
       !(shape.falcate && inTriangle(u, a, L * p1, 0, L * (p1 + (p2 - p1) * 0.33), tip * 0.55, L * p2, tip))
@@ -624,6 +696,16 @@ export class AsciiRenderer {
       const wobble = 0.35 * Math.sin((v / L) * 25 + s * 5);
       const bar = Math.sin(s * Math.PI * 2 * 9 + wobble);
       return bar > 0.65 - 0.5 * smoothstep(0.2, 0.42, s) + 0.4 * smoothstep(0.8, 0.9, s);
+    }
+    if (this.shape === SHAPES.koi) {
+      // Kohaku patches: soft blobs that ride along the body; each koi gets its own pattern.
+      if (s < 0.02 || s > 0.74) return false;
+      const id = this.sharkId;
+      const n =
+        Math.sin(s * 13 + id * 2.3) * 0.9 +
+        Math.sin((v / L) * 22 + s * 7 + id * 1.3) * 0.5 +
+        Math.sin(s * 29 + id * 5.1) * 0.25;
+      return n > 0.3;
     }
     if (this.shape === SHAPES.zebra) {
       // Leopard spots on a jittered grid, so they ride along with the skin.
@@ -687,6 +769,7 @@ export class AsciiRenderer {
       const reachFin = this.shape.pectoral[3];
       this.finTipRight = L * reachFin * flex * (1 - bank);
       this.finTipLeft = L * reachFin * flex * (1 + bank);
+      this.fanFlex = 1 + 0.1 * Math.sin(sh.phase * 0.8);
 
       let minX = Infinity;
       let minY = Infinity;
@@ -778,6 +861,24 @@ export class AsciiRenderer {
             ? ACCENTS[key % ACCENTS.length]
             : `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
         ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
+        continue;
+      }
+
+      if (flag === FLAG_WISP) {
+        // Fin tips and tail fan: ink only, so the cream shows through.
+        const g = (58 + (1 - shade) * 60) * dim;
+        ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
+        ctx.fillText(WISP_GLYPHS[(key >>> 8) % WISP_GLYPHS.length], x + cw / 2, y + ch / 2 + 1);
+        continue;
+      }
+
+      if (flag === FLAG_PATCH) {
+        // Kohaku red, lit like the rest of the back.
+        const lit = (0.72 + 0.4 * shade) * dim;
+        ctx.fillStyle = `rgb(${Math.min(255, Math.round(206 * lit))},${Math.round(88 * lit)},${Math.round(56 * lit)})`;
+        ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
+        ctx.fillStyle = roll < 0.1 ? "#fff5eb" : "#3a1a10";
+        ctx.fillText(SKIN_RAMP[clamp(Math.floor((1 - shade) * 6) + 1, 0, SKIN_RAMP.length - 1)], x + cw / 2, y + ch / 2 + 1);
         continue;
       }
 

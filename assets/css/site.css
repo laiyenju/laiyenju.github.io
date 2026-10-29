@@ -821,13 +821,6 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
   }
 }
 
-/* —— About page —— */
-.about-page {
-  padding: 72px 48px 96px;
-  max-width: var(--measure);
-  margin: 0 auto;
-}
-
 /* —— Mobile —— */
 @media (max-width: 799px) {
   body {

@@ -18,7 +18,6 @@
     <header class="home-nav" role="navigation" aria-label="Primary">
       <a href="notes/">notes</a>
       <a href="works/">works</a>
-      <a href="about/">about</a>
     </header>
 
     <div class="home-chrome">
@@ -37,7 +36,7 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var el = document.querySelector("canvas[data-koi]");
-      if (el && window.OceanEngine) new window.OceanEngine(el);
+      if (el && window.OceanEngine) new window.OceanEngine(el, undefined, 0);
       var roots = document.querySelectorAll(".home-nav, .home-copy");
       roots.forEach(function (root) {
         var texts = [];

@@ -123,10 +123,10 @@
   // assets/vendor/ascii-sharks/src/world.ts
   var SHARK_NODES = 20;
   var DEFAULT_SHARKS = [
-    { kind: "classic", size: 1 },
-    { kind: "classic", size: 0.7 },
-    { kind: "classic", size: 0.84 },
-    { kind: "classic", size: 0.77 }
+    { kind: "koi", size: 1 },
+    { kind: "koi", size: 0.7 },
+    { kind: "koi", size: 0.84 },
+    { kind: "koi", size: 0.77 }
   ];
   var FISH_SEPARATION_K = 420;
   var FISH_ALIGN_K = 1.4;
@@ -136,8 +136,8 @@
   var World = class {
     /** fishCount overrides the area-based population (the sidebar wants a single small school). */
     constructor(sharkSpecs = DEFAULT_SHARKS, fishCount) {
-      __publicField(this, "sharkSpecs", sharkSpecs);
-      __publicField(this, "fishCount", fishCount);
+      this.sharkSpecs = sharkSpecs;
+      this.fishCount = fishCount;
       __publicField(this, "width", 0);
       __publicField(this, "height", 0);
       __publicField(this, "time", 0);
@@ -167,7 +167,7 @@
       this.sepY = SPECIES.map((sp) => sp.spacing[1] * cellH);
       this.perception = Math.max(cellH * 3, cellW * 5.5);
       this.foreignSep = cellW * 3;
-      if (first || this.fish.length === 0) {
+      if (first || this.sharks.length === 0) {
         this.seed();
         return;
       }
@@ -185,7 +185,7 @@
       this.sharks = [];
       for (let i = 0; i < sharkCount; i++) {
         const { kind, size } = this.sharkSpecs[i];
-        const length = baseLength * size * size;
+        const length = kind === "koi" ? baseLength * size : baseLength * size * size;
         const orbitRadius = minSide * rand(0.28, 0.4);
         const a = i / sharkCount * TAU + rand(-0.4, 0.4);
         const orbitDir = i % 2 === 0 ? 1 : -1;
@@ -553,7 +553,7 @@
         const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
         sh.heading += turned;
         sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
-        const cruise = 30 + L * 0.04;
+        const cruise = sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04;
         const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
         sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
         sh.phase += dt * (2 + sh.speed / 24);
@@ -673,6 +673,9 @@
   var FLAG_EYE = 5;
   var FLAG_MARK = 6;
   var MARK_GLYPHS = "#%@";
+  var FLAG_WISP = 7;
+  var FLAG_PATCH = 8;
+  var WISP_GLYPHS = "~-=:~'";
   var SUBSAMPLES = [0.25, 0.3, 0.75, 0.3, 0.25, 0.72, 0.75, 0.72];
   function classicHalfWidth(s) {
     if (s < 0.13) return 0.09 * Math.pow(Math.sin(s / 0.13 * Math.PI / 2), 0.95);
@@ -681,7 +684,29 @@
     const k = (s - 0.84) / 0.16;
     return 0.019 * (1 - k) + 0.012 * Math.sin(k * Math.PI);
   }
+  function koiHalfWidth(s) {
+    if (s < 0.1) return 0.09 * Math.pow(Math.sin(s / 0.1 * Math.PI / 2), 0.55);
+    if (s < 0.3) return 0.09 + 0.035 * smoothstep(0.1, 0.3, s);
+    if (s < 0.74) return 0.022 + 0.103 * Math.pow(1 - (s - 0.3) / 0.44, 1.2);
+    return 0.022 - 0.012 * smoothstep(0.74, 1, s);
+  }
   var SHAPES = {
+    // Koi from above: round head, broad paddle pectorals, a dorsal ridge down
+    // the back, and a wide soft tail fan. Warm grey with kohaku patches.
+    koi: {
+      halfWidth: koiHalfWidth,
+      pectoral: [0.15, 0.24, 0.36, 0.18],
+      falcate: false,
+      pelvic: [0.46, 0.51, 0.57, 0.055],
+      caudal: 0,
+      dorsal: [0.34, 0.62],
+      secondDorsal: [0, 0],
+      eye: [0.05, 0.09],
+      gills: [0, 0],
+      tint: [1, 0.98, 0.96],
+      roundFins: true,
+      fan: { start: 0.7, spread: 0.16, fork: 0.05 }
+    },
     classic: {
       halfWidth: classicHalfWidth,
       pectoral: [0.15, 0.43, 0.55, 0.26],
@@ -860,7 +885,7 @@
   }
   var AsciiRenderer = class {
     constructor(canvas) {
-      __publicField(this, "canvas", canvas);
+      this.canvas = canvas;
       __publicField(this, "ctx");
       __publicField(this, "bg");
       __publicField(this, "dpr", 1);
@@ -896,6 +921,7 @@
       __publicField(this, "sharkId", 0);
       __publicField(this, "finTipLeft", 0);
       __publicField(this, "finTipRight", 0);
+      __publicField(this, "fanFlex", 1);
       // Scratch outputs of sampleShark(), to avoid allocating per sample.
       __publicField(this, "hitFlag", 0);
       __publicField(this, "hitShade", 0);
@@ -1080,13 +1106,15 @@
       let bestSign = 1;
       let bestNx = 0;
       let bestNy = 0;
+      let beyond = false;
       for (let k = 0; k < N - 1; k++) {
         const ax = spine[k * 2];
         const ay = spine[k * 2 + 1];
         const sx = spine[(k + 1) * 2] - ax;
         const sy = spine[(k + 1) * 2 + 1] - ay;
         const len2 = sx * sx + sy * sy || 1;
-        const u2 = clamp(((px - ax) * sx + (py - ay) * sy) / len2, 0, 1);
+        const raw = ((px - ax) * sx + (py - ay) * sy) / len2;
+        const u2 = clamp(raw, 0, 1);
         const qx = ax + sx * u2;
         const qy = ay + sy * u2;
         const d2 = (px - qx) ** 2 + (py - qy) ** 2;
@@ -1097,6 +1125,7 @@
           bestSign = sx * (py - ay) - sy * (px - ax) >= 0 ? 1 : -1;
           bestNx = -sy / len * bestSign;
           bestNy = sx / len * bestSign;
+          beyond = k === N - 2 && raw > 1;
         }
       }
       const a = Math.sqrt(best);
@@ -1139,15 +1168,45 @@
         } else if (shape === SHAPES.zebra && s > 0.08 && s < 0.55 && (across < 0.1 || Math.abs(across - 0.6) < 0.08)) {
           shade = Math.max(shade, 0.8);
         } else if (this.marked(s, a * bestSign, L, across)) {
-          flag = FLAG_MARK;
+          flag = shape === SHAPES.koi ? FLAG_PATCH : FLAG_MARK;
         }
         this.hitFlag = flag;
         this.hitShade = shade;
         return true;
       }
+      const fan = shape.fan;
+      if (fan && s > fan.start && !beyond) {
+        const k = (s - fan.start) / (1 - fan.start);
+        const spread = L * (0.018 + fan.spread * Math.pow(k, 0.75)) * this.fanFlex;
+        const fork = L * fan.fork * smoothstep(0.65, 1, k);
+        if (a <= spread && a >= fork) {
+          const out = Math.max(k, a / spread) + (hash3(Math.round(u / (L * 0.025)), Math.round(a / (L * 0.025)), this.sharkId) - 0.5) * 0.25;
+          this.hitFlag = out > 0.7 ? FLAG_WISP : FLAG_FIN;
+          this.hitShade = 0.5 - 0.3 * k;
+          return true;
+        }
+      }
       const tip = bestSign > 0 ? this.finTipRight : this.finTipLeft;
       const [p0, p1, p2] = shape.pectoral;
-      if (inTriangle(u, a, L * p0, 0, L * p1, 0, L * p2, tip) && // Falcate (sickle) fins get a concave trailing edge.
+      if (shape.roundFins) {
+        const rx = L * (p0 + p1) / 2;
+        const ry = L * 0.06;
+        const tx = L * p2 - rx;
+        const ty = tip - ry;
+        const len = Math.hypot(tx, ty) || 1;
+        const major = len * 0.6;
+        const minor = L * (p1 - p0) * 0.75;
+        const dx = u - (rx + tx / 2);
+        const dy = a - (ry + ty / 2);
+        const along = (dx * tx + dy * ty) / len;
+        const side = (-dx * ty + dy * tx) / len;
+        if ((along / major) ** 2 + (side / minor) ** 2 <= 1) {
+          const out = (along / major + 1) / 2 + (hash3(Math.round(u / (L * 0.025)), Math.round(a / (L * 0.025)), this.sharkId + 5) - 0.5) * 0.25;
+          this.hitFlag = out > 0.72 ? FLAG_WISP : FLAG_FIN;
+          this.hitShade = 0.38 + 0.22 * (1 - clamp(out, 0, 1));
+          return true;
+        }
+      } else if (inTriangle(u, a, L * p0, 0, L * p1, 0, L * p2, tip) && // Falcate (sickle) fins get a concave trailing edge.
       !(shape.falcate && inTriangle(u, a, L * p1, 0, L * (p1 + (p2 - p1) * 0.33), tip * 0.55, L * p2, tip))) {
         this.hitFlag = this.marked(s, a * bestSign, L, 0) ? FLAG_MARK : FLAG_FIN;
         this.hitShade = 0.38 + 0.22 * (1 - clamp(a / tip, 0, 1));
@@ -1169,6 +1228,12 @@
         const wobble = 0.35 * Math.sin(v / L * 25 + s * 5);
         const bar = Math.sin(s * Math.PI * 2 * 9 + wobble);
         return bar > 0.65 - 0.5 * smoothstep(0.2, 0.42, s) + 0.4 * smoothstep(0.8, 0.9, s);
+      }
+      if (this.shape === SHAPES.koi) {
+        if (s < 0.02 || s > 0.74) return false;
+        const id = this.sharkId;
+        const n = Math.sin(s * 13 + id * 2.3) * 0.9 + Math.sin(v / L * 22 + s * 7 + id * 1.3) * 0.5 + Math.sin(s * 29 + id * 5.1) * 0.25;
+        return n > 0.3;
       }
       if (this.shape === SHAPES.zebra) {
         if (s < 0.07) return false;
@@ -1223,6 +1288,7 @@
         const reachFin = this.shape.pectoral[3];
         this.finTipRight = L * reachFin * flex * (1 - bank);
         this.finTipLeft = L * reachFin * flex * (1 + bank);
+        this.fanFlex = 1 + 0.1 * Math.sin(sh.phase * 0.8);
         let minX = Infinity;
         let minY = Infinity;
         let maxX = -Infinity;
@@ -1299,6 +1365,20 @@
           const g = (70 + shade * 80) * dim;
           ctx.fillStyle = roll < 0.07 ? ACCENTS[key % ACCENTS.length] : `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
           ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
+          continue;
+        }
+        if (flag === FLAG_WISP) {
+          const g = (58 + (1 - shade) * 60) * dim;
+          ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
+          ctx.fillText(WISP_GLYPHS[(key >>> 8) % WISP_GLYPHS.length], x + cw / 2, y + ch / 2 + 1);
+          continue;
+        }
+        if (flag === FLAG_PATCH) {
+          const lit = (0.72 + 0.4 * shade) * dim;
+          ctx.fillStyle = `rgb(${Math.min(255, Math.round(206 * lit))},${Math.round(88 * lit)},${Math.round(56 * lit)})`;
+          ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
+          ctx.fillStyle = roll < 0.1 ? "#fff5eb" : "#3a1a10";
+          ctx.fillText(SKIN_RAMP[clamp(Math.floor((1 - shade) * 6) + 1, 0, SKIN_RAMP.length - 1)], x + cw / 2, y + ch / 2 + 1);
           continue;
         }
         let level;
@@ -1460,8 +1540,8 @@
   var STEP = 1 / 60;
   var MAX_STEPS = 4;
   var OceanEngine = class {
-    constructor(canvas, sharks) {
-      __publicField(this, "canvas", canvas);
+    constructor(canvas, sharks, fishCount) {
+      this.canvas = canvas;
       __publicField(this, "world");
       __publicField(this, "renderer");
       __publicField(this, "raf", 0);
@@ -1509,7 +1589,7 @@
         this.world.pointer.active = false;
       });
       var _a;
-      this.world = new World(sharks);
+      this.world = new World(sharks, fishCount);
       this.renderer = new AsciiRenderer(canvas);
       this.renderer.setFontFamily(getComputedStyle(canvas).fontFamily);
       this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
