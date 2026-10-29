@@ -31,6 +31,48 @@
     background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.16) 2px 3px);
   }
 
+  /* —— Notes: a one-column index. Year labels like type-case drawers, columns aligned like `ls -l`. —— */
+  .home-panel[data-view="notes"] .panel-list { grid-template-columns: 1fr; }
+  .note-year {
+    display: flex; align-items: center; gap: 12px;
+    margin: 18px 0 2px; font-size: 12px; letter-spacing: 0.08em; color: #8a857e;
+  }
+  .panel-list li:first-child .note-year { margin-top: 0; }
+  .note-year::after { content: ""; flex: 1; height: 1px; background: rgba(42, 36, 32, 0.22); }
+  .panel-list li.has-year { border-top: 0; }
+  .home-panel[data-view="notes"] .panel-list a {
+    display: grid; grid-template-columns: 5.5ch minmax(0, 1fr) auto; gap: 20px; align-items: baseline;
+    padding: 12px 0 13px;
+  }
+  .note-date, .note-count {
+    font-size: 12px; color: #8a857e; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .note-count { text-align: right; }
+
+  /* —— Works: a spec card per piece, led by its seal character. —— */
+  .home-panel[data-view="works"] .panel-list a {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start;
+  }
+  .work-seal {
+    display: grid; place-items: center; width: 34px; height: 34px; margin-top: 2px;
+    background: #b8332a; color: #f6efe4; border-radius: 2px;
+    font: 600 19px/1 "Noto Serif TC", "Songti TC", serif;
+  }
+  .work-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .work-status { font-size: 12px; color: #8a857e; white-space: nowrap; }
+  .work-status::before { content: "● "; font-size: 8px; vertical-align: 2px; color: var(--status, #8a857e); }
+  .work-status[data-status="進行中"] { --status: #4f8a4a; }
+  .work-status[data-status="實驗"] { --status: #c45c26; }
+
+  body.theme-night .note-year::after { background: rgba(236, 196, 136, 0.24); }
+  body.theme-night .note-year,
+  body.theme-night .note-date,
+  body.theme-night .note-count,
+  body.theme-night .work-status { color: #9c8462; }
+  body.theme-night .work-seal { background: #e8a852; color: #17130e; }
+  body.theme-night .work-status[data-status="進行中"] { --status: #9fd08a; }
+  body.theme-night .work-status[data-status="實驗"] { --status: #f0a868; }
+
   /* Prototype switcher: not part of the design. */
   .proto {
     position: fixed; z-index: 20; right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px));
@@ -72,8 +114,8 @@
           <span class="panel-lede">日常寫作紀錄 · everyday writing</span>
         </div>
         <ul class="panel-list">
-          <li><a href="#"><span class="panel-title">Markdown 樣式總覽</span><time class="panel-meta" datetime="2026-10-29">2026-10-29</time></a></li>
-          <li><a href="#"><span class="panel-title">你好，這是第一篇</span><time class="panel-meta" datetime="2026-03-08">2026-03-08</time></a></li>
+          <li class="has-year"><div class="note-year">2026</div><a href="#"><time class="note-date" datetime="2026-10-29">10-29</time><span class="panel-title">Markdown 樣式總覽</span><span class="note-count">860 字</span></a></li>
+          <li><a href="#"><time class="note-date" datetime="2026-03-08">03-08</time><span class="panel-title">你好，這是第一篇</span><span class="note-count">80 字</span></a></li>
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
       </section>
@@ -84,9 +126,9 @@
           <span class="panel-lede">作品集 · portfolio</span>
         </div>
         <ul class="panel-list">
-          <li><a href="#"><span class="panel-title">laiyenju.github.io</span><span class="panel-meta">This writing site — quiet pages in Jekyll.</span></a></li>
-          <li><a href="#"><span class="panel-title">字與空</span><span class="panel-meta">Experiments in measure and pause.</span></a></li>
-          <li><a href="#"><span class="panel-title">Sketchbook</span><span class="panel-meta">Small visual studies, unfinished on purpose.</span></a></li>
+          <li><a href="#"><span class="work-seal" aria-hidden="true">寫</span><span><span class="work-head"><span class="panel-title">laiyenju.github.io</span><span class="work-status" data-status="進行中">進行中</span></span><span class="panel-meta">This writing site — quiet pages in Jekyll.</span></span></a></li>
+          <li><a href="#"><span class="work-seal" aria-hidden="true">空</span><span><span class="work-head"><span class="panel-title">字與空</span><span class="work-status" data-status="實驗">實驗</span></span><span class="panel-meta">Experiments in measure and pause.</span></span></a></li>
+          <li><a href="#"><span class="work-seal" aria-hidden="true">畫</span><span><span class="work-head"><span class="panel-title">Sketchbook</span><span class="work-status" data-status="完成">完成</span></span><span class="panel-meta">Small visual studies, unfinished on purpose.</span></span></a></li>
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
       </section>
