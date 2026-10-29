@@ -459,8 +459,9 @@ body.theme-night .home-vignette {
 .sh-panel .panel-list { grid-template-columns: 1fr; }
 .sh-panel .panel-list li { border-top: 0; }
 .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sh-prompt { color: #4f8a4a; }
-.sh-path { color: #c45c26; }
+/* Prompt in ink tones only: the one accent (朱 by day, amber by night) is kept for what needs the eye. */
+.sh-prompt { color: #8a857e; }
+.sh-path { color: #2a2420; }
 .sh-dim { color: #8a857e; }
 .sh-cmd::after, .sh-caret::after {
   content: ""; display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px;
@@ -494,7 +495,7 @@ body.theme-night .home-vignette {
 .sh-panel .panel-list a:hover .ls-mark { color: inherit; }
 /* Back to home, said the shell way. */
 .home-panel .panel-back.sh-back { padding: 1px 6px; margin-left: -6px; border-radius: 1px; color: #8a857e; }
-.sh-back .sh-dollar { color: #4f8a4a; }
+.sh-back .sh-dollar { color: #8a857e; }
 .home-panel .panel-back.sh-back:hover,
 .home-panel .panel-back.sh-back:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
 .sh-back:hover .sh-dollar, .sh-back:focus-visible .sh-dollar { color: inherit; }
@@ -524,9 +525,10 @@ body.theme-night .home-vignette {
   display: grid; grid-template-columns: 1.5ch 10ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
 }
 .work-status { font-size: 12px; color: #8a857e; white-space: nowrap; }
-.work-status::before { content: "● "; color: var(--status, #8a857e); }
-.work-status[data-status="in progress"] { --status: #4f8a4a; }
-.work-status[data-status="experiment"] { --status: #c45c26; }
+/* Status by shape, not colour: ● in progress (the accent), ◐ experiment, ○ done. */
+.work-status::before { content: "○ "; }
+.work-status[data-status="experiment"]::before { content: "◐ "; }
+.work-status[data-status="in progress"]::before { content: "● "; color: #c45c26; }
 .work-desc { grid-column: 3 / -1; font-size: 12px; line-height: 1.6; color: #8a857e; padding-bottom: 4px; }
 @media (max-width: 560px) {
   .sh-works .panel-list a { grid-template-columns: 1.5ch minmax(0, 1fr) auto; column-gap: 10px; }
@@ -540,18 +542,17 @@ body.theme-night .sh-dim,
 body.theme-night .sh-keys,
 body.theme-night .work-status,
 body.theme-night .work-desc { color: #9c8462; }
-body.theme-night .sh-prompt { color: #9fd08a; }
-body.theme-night .sh-path { color: #f0a868; }
+body.theme-night .sh-prompt { color: #9c8462; }
+body.theme-night .sh-path { color: #ecc488; }
 body.theme-night .sh-keys kbd { border-color: rgba(236, 196, 136, 0.3); }
 body.theme-night .home-panel .panel-back.sh-back { color: #9c8462; }
-body.theme-night .sh-back .sh-dollar { color: #9fd08a; }
+body.theme-night .sh-back .sh-dollar { color: #9c8462; }
 body.theme-night .home-panel .panel-back.sh-back:hover,
 body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #ecc488; color: #14110d; }
 body.theme-night .sh-panel .panel-list a:hover,
 body.theme-night .sh-panel .panel-list a:focus-visible,
 body.theme-night .sh-panel .panel-list a.is-opening { background: #ecc488; color: #14110d; }
-body.theme-night .work-status[data-status="in progress"] { --status: #9fd08a; }
-body.theme-night .work-status[data-status="experiment"] { --status: #f0a868; }
+body.theme-night .work-status[data-status="in progress"]::before { color: #f0a868; }
 
 /* —— Home copy: a few terminal marks on a human page —— */
 /* The same underline cursor as article titles. */
@@ -1810,21 +1811,30 @@ body.has-rail .post {
       that renders Markdown (after Charm's Glow). Body text stays in the
       reading face; the terminal lives in the structure around it. —— */
 
-/* Header: $ cd .. back, the cat command, the title, date · chars.
+/* Header: the cat command with $ cd .. beside it, the title, date · chars.
    The title takes no cursor; the h2 cursors mark the section being read. */
 .post-title::after {
   content: none;
 }
+.post-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
 .post-back {
   display: inline-block;
+  flex: none;
   padding: 1px 6px;
-  margin-left: -6px;
+  margin-right: -6px;
 }
 .post-back .sh-dollar {
-  color: #4f8a4a;
+  color: #8a857e;
 }
 .post-cmd {
-  margin: 22px 0 0;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 13px;
   line-height: 1.6;
@@ -1833,7 +1843,7 @@ body.has-rail .post {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.post-cmd + .post-title {
+.post-bar + .post-title {
   margin-top: 14px;
 }
 .post-meta {
@@ -2050,7 +2060,7 @@ html.post-print .post-end.is-printed {
 body.post-body.theme-night {
   background: #17150f;
   color: #ddd5c7;
-  --link-sel-bg: #ddd5c7;
+  --link-sel-bg: #ecc488;
   --link-sel-fg: #17150f;
 }
 body.theme-night .post-prose {
@@ -2059,7 +2069,7 @@ body.theme-night .post-prose {
   --ink-faint: #857c6f;
   --rule: rgba(221, 213, 199, 0.14);
   --washi: #201d17;
-  --shu: #e08a5a;
+  --shu: #f0a868;
 }
 body.theme-night .post-back,
 body.theme-night .post-meta,
@@ -2071,12 +2081,12 @@ body.theme-night .post-end .sh-keys { color: #857c6f; }
 body.theme-night .post-title,
 body.theme-night .post-cmd,
 body.theme-night .post-end { color: #ddd5c7; }
-body.theme-night .post-prose h2::after { background: #e08a5a; }
+body.theme-night .post-prose h2::after { background: #f0a868; }
 body.theme-night .post-back .sh-dollar,
 body.theme-night .post-head .sh-prompt,
-body.theme-night .post-end .sh-prompt { color: #9fd08a; }
+body.theme-night .post-end .sh-prompt { color: #857c6f; }
 body.theme-night .post-head .sh-path,
-body.theme-night .post-end .sh-path { color: #e08a5a; }
+body.theme-night .post-end .sh-path { color: #ddd5c7; }
 body.theme-night .post-prose :not(pre) > code { background: rgba(221, 213, 199, 0.08); }
 body.theme-night .post-prose kbd { background: #201d17; color: #ddd5c7; border-color: rgba(221, 213, 199, 0.25); }
 body.theme-night .post-prose img { border-color: rgba(221, 213, 199, 0.1); }
@@ -2100,7 +2110,7 @@ body.theme-night .post-prose .highlight .bp,
 body.theme-night .post-prose .highlight .na { color: #c9a27a; }
 body.theme-night .post-note { color: #a39a8c; }
 body.theme-night .post-note.is-lit { color: #ddd5c7; }
-body.theme-night .post-note-n { color: #e08a5a; }
+body.theme-night .post-note-n { color: #f0a868; }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(221, 213, 199, 0.3); }
 
 /* —— Links: reverse video when pointed at, focused from the keyboard or
