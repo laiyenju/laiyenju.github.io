@@ -85,7 +85,16 @@
     markText();
   }
 
+  /** Label code blocks with their language (Rouge puts it in a class). */
+  function labelCode() {
+    document.querySelectorAll(".post-prose div.highlighter-rouge").forEach(function (el) {
+      var m = /\blanguage-([\w+#-]+)/.exec(el.className);
+      if (m && m[1] !== "plaintext") el.setAttribute("data-lang", m[1]);
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    labelCode();
     var canvas = document.querySelector("canvas[data-koi]");
     if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) {
       ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0);
