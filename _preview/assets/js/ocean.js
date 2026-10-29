@@ -209,6 +209,12 @@
           length,
           baseLength: length,
           fade: 1,
+          scare: 0,
+          fleeX: 0,
+          fleeY: 0,
+          away: false,
+          awayAt: 0,
+          rush: 0,
           nodes,
           heading,
           speed: 30,
@@ -268,14 +274,63 @@
         f.alarm = 1;
       }
     }
-    setCalm(calm, instant = false) {
+    /**
+     * Calm on: the koi startle away from (ox, oy), e.g. the click that opened a
+     * list. All but the smallest bolt out of frame; the smallest flinches,
+     * then settles and slows. Calm off: the others swim back in from the edges.
+     */
+    setCalm(calm, instant = false, ox = this.width / 2, oy = this.height / 2) {
+      if (calm === this.calm && !instant) return;
       this.calm = calm;
-      if (!instant) return;
       for (const sh of this.sharks) {
         const lead = sh === this.sharks[0];
-        sh.fade = calm && !lead ? 0 : 1;
-        sh.length = calm && lead ? sh.baseLength * 0.8 : sh.baseLength;
+        if (instant) {
+          sh.fade = calm && !lead ? 0 : 1;
+          sh.away = false;
+          sh.scare = 0;
+          sh.length = calm && lead ? sh.baseLength * 0.8 : sh.baseLength;
+          continue;
+        }
+        if (calm) {
+          let fx = sh.nodes[0] - ox;
+          let fy = sh.nodes[1] - oy;
+          const d = Math.hypot(fx, fy);
+          if (d < 1) {
+            fx = Math.cos(sh.heading);
+            fy = Math.sin(sh.heading);
+          } else {
+            fx /= d;
+            fy /= d;
+          }
+          sh.fleeX = fx;
+          sh.fleeY = fy;
+          sh.scare = lead ? 0.8 : 1;
+          sh.away = !lead;
+          sh.awayAt = this.time;
+        } else {
+          sh.away = false;
+          if (sh.fade === 0) this.reenter(sh);
+        }
       }
+    }
+    /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
+    reenter(sh) {
+      const { width: W, height: H } = this;
+      const side = randInt(0, 3);
+      const along = rand(0.2, 0.8);
+      const pad = sh.length * 0.1;
+      const x = side === 0 ? -pad : side === 1 ? W + pad : along * W;
+      const y = side === 2 ? -pad : side === 3 ? H + pad : along * H;
+      const heading = Math.atan2(H / 2 - y, W / 2 - x) + rand(-0.4, 0.4);
+      const seg = sh.length / (SHARK_NODES - 1);
+      for (let n = 0; n < SHARK_NODES; n++) {
+        sh.nodes[n * 2] = x - Math.cos(heading) * seg * n;
+        sh.nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
+      }
+      sh.heading = heading;
+      sh.fade = 1;
+      sh.scare = 0;
+      sh.rush = 1;
     }
     step(dt) {
       this.time += dt;
@@ -497,9 +552,10 @@
       const cyW = H / 2;
       for (const sh of sharks) {
         const lead = sh === sharks[0];
-        const ease = Math.min(1, dt * 1.6);
-        sh.fade += ((this.calm && !lead ? 0 : 1) - sh.fade) * ease;
-        sh.length += ((this.calm && lead ? sh.baseLength * 0.8 : sh.baseLength) - sh.length) * ease;
+        if (sh.fade === 0) continue;
+        sh.length += ((this.calm && lead ? sh.baseLength * 0.8 : sh.baseLength) - sh.length) * Math.min(1, dt * 1.6);
+        if (!sh.away) sh.scare = Math.max(0, sh.scare - dt * 1.4);
+        sh.rush = Math.max(0, sh.rush - dt * 0.45);
         const L = sh.length;
         const nodes = sh.nodes;
         const hx = nodes[0];
@@ -535,6 +591,10 @@
           dx += (-ry / r * sh.orbitDir + rx / r * radial * 0.9) * 0.55;
           dy += (rx / r * sh.orbitDir + ry / r * radial * 0.9) * 0.55;
         }
+        if (sh.scare > 0) {
+          dx += sh.fleeX * 8 * sh.scare;
+          dy += sh.fleeY * 8 * sh.scare;
+        }
         for (const other of sharks) {
           if (other === sh) continue;
           for (let k = 0; k < SHARK_NODES; k += 4) {
@@ -552,14 +612,14 @@
         const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
         const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
         const e2 = ex * ex + ey * ey;
-        if (e2 < 1) {
+        if (e2 < 1 && !sh.away) {
           const e = Math.sqrt(e2) || 1e-3;
           const w = (1 - e) * (hunting ? 1 : 2.5);
           dx += ex / e * w;
           dy += ey / e * w;
         }
         const over = Math.max(-hx, hx - W, -hy, hy - H);
-        if (over > -L * 0.05) {
+        if (over > -L * 0.05 && !sh.away) {
           const w = clamp((over + L * 0.05) / (L * 0.35), 0, 1) * 3.5;
           const toX = cxW - hx;
           const toY = cyW - hy;
@@ -568,14 +628,20 @@
           dy += toY / d * w;
         }
         const desired = Math.atan2(dy, dx);
-        const agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+        const agility = Math.max(
+          Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22)),
+          6 * sh.scare
+        );
         const maxTurn = agility * dt;
         const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
         sh.heading += turned;
         sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
         const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
-        const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
-        sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
+        let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
+        targetSpeed *= 1 + 2.5 * sh.rush;
+        if (sh.away) targetSpeed = Math.max(W, H) * 0.6;
+        else if (sh.scare > 0) targetSpeed = Math.max(targetSpeed, cruise * (1 + 9 * sh.scare));
+        sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (sh.scare > 0 ? 4 : 1.1));
         sh.phase += dt * (2 + sh.speed / 24);
         nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
         nodes[1] += Math.sin(sh.heading) * sh.speed * dt;
@@ -605,6 +671,26 @@
             }
           }
         }
+        if (sh.away) this.checkGone(sh);
+      }
+    }
+    /** Hide a bolting koi once its whole body is out of frame (or it's taking too long). */
+    checkGone(sh) {
+      const pad = 24;
+      let inside = false;
+      for (let k = 0; k < SHARK_NODES; k += 2) {
+        const x = sh.nodes[k * 2];
+        const y = sh.nodes[k * 2 + 1];
+        if (x > -pad && x < this.width + pad && y > -pad && y < this.height + pad) {
+          inside = true;
+          break;
+        }
+      }
+      if (!inside || this.time - sh.awayAt > 4) {
+        sh.fade = 0;
+        sh.away = false;
+        sh.scare = 0;
+        sh.speed = 30;
       }
     }
     /**
@@ -1639,10 +1725,16 @@
       });
       this.schedule();
     }
-    /** List views: one small koi drifting; off restores the full pond. */
-    setCalm(calm, instant = false) {
+    /**
+     * List views: the koi scatter from the click at (clientX, clientY) and
+     * one small koi stays; off brings the rest back in.
+     */
+    setCalm(calm, instant = false, clientX, clientY) {
       const still = this.reducedMotion.matches;
-      this.world.setCalm(calm, instant || still);
+      const rect = this.canvas.getBoundingClientRect();
+      const ox = clientX === void 0 ? rect.width / 2 : clientX - rect.left;
+      const oy = clientY === void 0 ? rect.height / 2 : clientY - rect.top;
+      this.world.setCalm(calm, instant || still, ox, oy);
       if (still) this.renderer.render(this.world, STEP);
     }
     destroy() {

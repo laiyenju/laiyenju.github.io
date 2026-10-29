@@ -49,10 +49,16 @@ export class OceanEngine {
     this.schedule();
   }
 
-  /** List views: one small koi drifting; off restores the full pond. */
-  setCalm(calm: boolean, instant = false) {
+  /**
+   * List views: the koi scatter from the click at (clientX, clientY) and
+   * one small koi stays; off brings the rest back in.
+   */
+  setCalm(calm: boolean, instant = false, clientX?: number, clientY?: number) {
     const still = this.reducedMotion.matches;
-    this.world.setCalm(calm, instant || still);
+    const rect = this.canvas.getBoundingClientRect();
+    const ox = clientX === undefined ? rect.width / 2 : clientX - rect.left;
+    const oy = clientY === undefined ? rect.height / 2 : clientY - rect.top;
+    this.world.setCalm(calm, instant || still, ox, oy);
     if (still) this.renderer.render(this.world, STEP);
   }
 

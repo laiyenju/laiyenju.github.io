@@ -3,10 +3,11 @@
 
   /* —— Home views: notes / works swap in place of the home copy.
         The nav stays put; the old view fades up and out, the new one
-        settles in from just below, list rows a beat apart. The pond
-        calms to one small koi while a list is open. —— */
+        settles in from just below, list rows a beat apart. The click
+        startles the koi: they bolt out of frame and one small koi stays.
+        The list waits a beat so the scatter reads first. —— */
 
-  var OUT_MS = 220;
+  var OUT_MS = 340;
   var LIST_LIMIT = 6;
   var TITLES = { home: "hey, I'm Yen.", notes: "Notes · Yen", works: "Works · Yen" };
 
@@ -66,7 +67,7 @@
     });
   }
 
-  function show(name, animate) {
+  function show(name, animate, x, y) {
     if (name === current) return;
     var from = viewEl(current);
     var to = viewEl(name);
@@ -75,7 +76,7 @@
     current = name;
     markNav(name);
     document.title = TITLES[name] || TITLES.home;
-    if (window.homeOcean) window.homeOcean.setCalm(name !== "home", !animate);
+    if (window.homeOcean) window.homeOcean.setCalm(name !== "home", !animate, x, y);
 
     function enter() {
       if (token !== busy) return;
@@ -100,10 +101,10 @@
     window.setTimeout(enter, OUT_MS);
   }
 
-  function go(name) {
+  function go(name, x, y) {
     if (name === current) return;
     history.pushState({ view: name }, "", urlFor(name));
-    show(name, !reduceMotion);
+    show(name, !reduceMotion, x, y);
   }
 
   function start() {
@@ -124,7 +125,7 @@
       e.preventDefault();
       var name = a.getAttribute("data-view-link");
       // A second click on the open section goes back home.
-      go(name === current && name !== "home" ? "home" : name);
+      go(name === current && name !== "home" ? "home" : name, e.clientX, e.clientY);
     });
 
     document.addEventListener("keydown", function (e) {
