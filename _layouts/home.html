@@ -217,6 +217,9 @@
               var x1 = Math.min(canvas.width - 1, Math.ceil((r.right - crect.left) * sx) + 1);
               var y1 = Math.min(canvas.height - 1, Math.ceil((r.bottom - crect.top) * sy) + 1);
               var hit = fishAt(data, canvas.width, canvas.height, x0, y0, x1, y1, isNight);
+              // A highlighted link already sits on its own block; a page-coloured patch would hide it.
+              var link = g.closest("a");
+              if (hit && link && link.matches(":hover, :focus-visible, :active")) hit = false;
               g.dataset.on = hit ? "1" : "";
               g.style.background = hit ? (isNight ? "#14110d" : "#fafaf7") : "";
             }
