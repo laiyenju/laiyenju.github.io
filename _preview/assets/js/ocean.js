@@ -123,7 +123,7 @@
   // assets/vendor/ascii-sharks/src/world.ts
   var SHARK_NODES = 20;
   var DEFAULT_SHARKS = [
-    { kind: "koi", size: 1.3 },
+    { kind: "koi", size: 1 },
     { kind: "koi", size: 0.7 },
     { kind: "koi", size: 0.84 },
     { kind: "koi", size: 0.77 }
@@ -145,6 +145,11 @@
       __publicField(this, "sharks", []);
       __publicField(this, "events", []);
       __publicField(this, "pointer", { x: 0, y: 0, active: false });
+      /**
+       * Calm mode (list views): every koi but the smallest fades out, and that
+       * one shrinks a little and slows down. Turning it off brings them back.
+       */
+      __publicField(this, "calm", false);
       /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
       __publicField(this, "perception", 60);
       /** Per-species personal space in px (x, y). */
@@ -202,6 +207,8 @@
           id: i + 1,
           kind,
           length,
+          baseLength: length,
+          fade: 1,
           nodes,
           heading,
           speed: 30,
@@ -259,6 +266,15 @@
         f.vx += dx / d * k;
         f.vy += dy / d * k;
         f.alarm = 1;
+      }
+    }
+    setCalm(calm, instant = false) {
+      this.calm = calm;
+      if (!instant) return;
+      for (const sh of this.sharks) {
+        const lead = sh === this.sharks[0];
+        sh.fade = calm && !lead ? 0 : 1;
+        sh.length = calm && lead ? sh.baseLength * 0.8 : sh.baseLength;
       }
     }
     step(dt) {
@@ -480,6 +496,10 @@
       const cxW = W / 2;
       const cyW = H / 2;
       for (const sh of sharks) {
+        const lead = sh === sharks[0];
+        const ease = Math.min(1, dt * 1.6);
+        sh.fade += ((this.calm && !lead ? 0 : 1) - sh.fade) * ease;
+        sh.length += ((this.calm && lead ? sh.baseLength * 0.8 : sh.baseLength) - sh.length) * ease;
         const L = sh.length;
         const nodes = sh.nodes;
         const hx = nodes[0];
@@ -523,14 +543,14 @@
             const d = Math.hypot(ox, oy);
             const range = (L + other.length) * 0.45;
             if (d < range && d > 1e-3) {
-              const w = (1 - d / range) * 3;
+              const w = (1 - d / range) * 3 * other.fade;
               dx += ox / d * w;
               dy += oy / d * w;
             }
           }
         }
-        const ex = (hx - cxW) / (W * 0.3);
-        const ey = (hy - cyW) / (H * 0.16);
+        const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
+        const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
         const e2 = ex * ex + ey * ey;
         if (e2 < 1) {
           const e = Math.sqrt(e2) || 1e-3;
@@ -553,7 +573,7 @@
         const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
         sh.heading += turned;
         sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
-        const cruise = sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04;
+        const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
         const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
         sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
         sh.phase += dt * (2 + sh.speed / 24);
@@ -912,6 +932,7 @@
       __publicField(this, "sharkKey", new Uint32Array(0));
       __publicField(this, "sharkDepth", new Float32Array(0));
       __publicField(this, "sharkKind", new Uint8Array(0));
+      __publicField(this, "sharkAlpha", new Float32Array(0));
       /** Cells darkened by a shark's shadow on the seabed. */
       __publicField(this, "sharkShadow", new Uint8Array(0));
       __publicField(this, "spine", new Float32Array(SHARK_NODES * 2));
@@ -984,6 +1005,7 @@
         this.sharkKey = new Uint32Array(n);
         this.sharkDepth = new Float32Array(n);
         this.sharkKind = new Uint8Array(n);
+        this.sharkAlpha = new Float32Array(n);
         this.sharkShadow = new Uint8Array(n);
         this.fishStamp = new Uint32Array(n);
       }
@@ -1024,6 +1046,7 @@
       this.drawHeat();
       this.drawFish();
       this.drawSharks(t);
+      ctx.globalAlpha = 1;
     }
     // ── simulation → field ──────────────────────────────────────────────
     cellIndex(x, y) {
@@ -1064,6 +1087,7 @@
         if (i >= 0) energy[i] = Math.min(1.6, energy[i] + 0.012 + f.alarm * 0.03);
       }
       for (const sh of world.sharks) {
+        if (sh.fade < 0.5) continue;
         for (let k = SHARK_NODES - 6; k < SHARK_NODES; k++) {
           const i = this.cellIndex(sh.nodes[k * 2], sh.nodes[k * 2 + 1]);
           if (i >= 0) energy[i] = Math.min(1.6, energy[i] + 0.05 + sh.speed * 12e-4);
@@ -1253,10 +1277,11 @@
      * Fully covered cells become solid skin; partial cells become edge glyphs.
      */
     rasterizeSharks(sharks, t) {
-      const { sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkShadow, spine, arc, cw, ch, cols, rows } = this;
+      const { sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha, sharkShadow, spine, arc, cw, ch, cols, rows } = this;
       sharkFlag.fill(0);
       sharkShadow.fill(0);
       for (const sh of sharks) {
+        if (sh.fade < 0.02) continue;
         const L = sh.length;
         const N = SHARK_NODES;
         const n = sh.nodes;
@@ -1329,6 +1354,7 @@
             sharkKey[i] = key;
             sharkDepth[i] = sh.depth;
             sharkKind[i] = kindIndex;
+            sharkAlpha[i] = sh.fade;
             if (centerHit && coverage >= 0.6) {
               sharkFlag[i] = flag;
               const flicker = (hash3(c, r, Math.floor(t * 6)) - 0.5) * 0.06;
@@ -1345,11 +1371,12 @@
       }
     }
     drawSharks(t) {
-      const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind } = this;
+      const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha } = this;
       const n = cols * rows;
       for (let i = 0; i < n; i++) {
         const flag = sharkFlag[i];
         if (!flag) continue;
+        ctx.globalAlpha = sharkAlpha[i];
         const col = i % cols;
         const row = i / cols | 0;
         const x = col * cw;
@@ -1611,6 +1638,12 @@
         if (!this.disposed && this.reducedMotion.matches) this.drawStill();
       });
       this.schedule();
+    }
+    /** List views: one small koi drifting; off restores the full pond. */
+    setCalm(calm, instant = false) {
+      const still = this.reducedMotion.matches;
+      this.world.setCalm(calm, instant || still);
+      if (still) this.renderer.render(this.world, STEP);
     }
     destroy() {
       this.disposed = true;

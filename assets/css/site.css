@@ -146,9 +146,9 @@ a:hover {
 body.home {
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-weight: 400;
-  overflow: hidden;
-  height: 100vh;
-  height: 100dvh;
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: #fafaf7;
   color: #2a2420;
 }
@@ -156,14 +156,13 @@ body.home {
 .home-stage {
   position: relative;
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: #fafaf7;
 }
 
 .home-puffer {
-  position: absolute;
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -175,59 +174,91 @@ body.home {
 }
 
 .home-vignette {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background: none;
 }
 
+/* Nav sits in the centred column, right above the copy, so every control
+   is within one short reach. It stays put when a list replaces the copy. */
+.home-chrome {
+  position: relative;
+  z-index: 5;
+  width: min(680px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: max(72px, calc(50vh - 128px)) 0 72px;
+  padding-top: max(72px, calc(50dvh - 128px));
+  text-align: center;
+  pointer-events: none;
+}
+.home-chrome a,
+.home-chrome button,
+.home-view {
+  pointer-events: auto;
+}
+
 .home-nav {
-  position: absolute;
-  top: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 4;
   display: flex;
+  justify-content: center;
   gap: 28px;
+  margin: 0 0 40px;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.02em;
   color: #2a2420;
 }
-.home-nav::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: min(360px, 70vw);
-  height: 52px;
-  z-index: -1;
-  pointer-events: none;
-  background: none;
-}
 .home-nav a {
   position: relative;
   color: inherit;
   text-decoration: none;
+  transition: color 240ms ease;
+}
+.home-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 320ms cubic-bezier(0.2, 0, 0, 1);
 }
 .home-nav a:hover {
   opacity: 1;
+}
+body[data-view="notes"] .home-nav a,
+body[data-view="works"] .home-nav a {
+  color: #9a948c;
+}
+body .home-nav a[aria-current="page"] {
   color: #2a2420;
 }
+.home-nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
 
-.home-chrome {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  bottom: auto;
-  transform: translate(-50%, -50%);
-  z-index: 5;
-  width: min(34ch, calc(100% - 48px));
-  max-width: 36ch;
-  text-align: center;
+/* View swap: out = fade + 6px up; in = from 8px below. No scale, no blur. */
+.home-view {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.home-view.is-out {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.home-view:not(.is-out) {
+  transition: opacity 420ms cubic-bezier(0.2, 0, 0, 1), transform 420ms cubic-bezier(0.2, 0, 0, 1);
+}
+.home-view.is-before {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: none;
+}
+.home-view:focus {
+  outline: none;
 }
 
 .home-dim {
@@ -236,10 +267,117 @@ body.home {
 
 .home-copy {
   position: relative;
+  max-width: 36ch;
+  margin: 0 auto;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-weight: 400;
   color: #2a2420;
   background: none;
+}
+
+/* —— Notes / works list, two columns —— */
+.home-panel {
+  text-align: left;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  color: #2a2420;
+  padding: 18px 20px 22px;
+  margin: -18px -20px 0;
+  background: rgba(250, 250, 247, 0.86);
+  /* Feathered, so the wash reads as paper, not a card. */
+  box-shadow: 0 0 28px 14px rgba(250, 250, 247, 0.86);
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #8a857e;
+}
+.panel-back {
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.panel-back:hover {
+  opacity: 1;
+  color: #2a2420;
+}
+.panel-lede {
+  text-align: right;
+}
+.panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 32px;
+}
+.panel-list li {
+  border-top: 1px solid rgba(42, 36, 32, 0.12);
+  transition: opacity 420ms cubic-bezier(0.2, 0, 0, 1), transform 420ms cubic-bezier(0.2, 0, 0, 1);
+  transition-delay: calc(var(--i, 0) * 40ms + 60ms);
+}
+.home-view.is-before .panel-list li,
+.panel-list li.is-before {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: none;
+}
+.panel-list a {
+  display: block;
+  padding: 14px 0 16px;
+  color: inherit;
+  text-decoration: none;
+}
+.panel-list a:hover {
+  opacity: 1;
+}
+.panel-list a:hover .panel-title {
+  color: #c45c26;
+}
+.panel-title {
+  display: block;
+  font-size: 14px;
+  line-height: 1.45;
+  transition: color 200ms ease;
+}
+.panel-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a857e;
+}
+.panel-more {
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: #c45c26;
+  cursor: pointer;
+}
+.panel-more:hover {
+  opacity: 0.8;
+}
+@media (max-width: 560px) {
+  .panel-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-view,
+  .home-view:not(.is-out),
+  .panel-list li,
+  .home-nav a,
+  .home-nav a::after {
+    transition: none;
+  }
 }
 
 .home-greeting {
@@ -301,15 +439,11 @@ body.home {
 
 @media (max-width: 640px) {
   .home-nav {
-    top: 18px;
-    gap: 18px;
-    font-size: 12px;
+    gap: 22px;
+    margin-bottom: 32px;
   }
   .home-chrome {
-    width: min(34ch, calc(100% - 40px));
-  }
-  body.home {
-    overflow: auto;
+    width: calc(100% - 40px);
   }
 }
 
@@ -831,9 +965,6 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
   }
   .sheet {
     width: 100%;
-  }
-  .home {
-    padding: 56px 28px 48px;
   }
   .home-header {
     margin-bottom: 28px;

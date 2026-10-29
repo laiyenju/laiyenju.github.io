@@ -329,6 +329,7 @@ export class AsciiRenderer {
   private sharkKey = new Uint32Array(0);
   private sharkDepth = new Float32Array(0);
   private sharkKind = new Uint8Array(0);
+  private sharkAlpha = new Float32Array(0);
   /** Cells darkened by a shark's shadow on the seabed. */
   private sharkShadow = new Uint8Array(0);
   private spine = new Float32Array(SHARK_NODES * 2);
@@ -411,6 +412,7 @@ export class AsciiRenderer {
       this.sharkKey = new Uint32Array(n);
       this.sharkDepth = new Float32Array(n);
       this.sharkKind = new Uint8Array(n);
+      this.sharkAlpha = new Float32Array(n);
       this.sharkShadow = new Uint8Array(n);
       this.fishStamp = new Uint32Array(n);
     }
@@ -460,6 +462,7 @@ export class AsciiRenderer {
     this.drawHeat();
     this.drawFish();
     this.drawSharks(t);
+    ctx.globalAlpha = 1;
   }
 
   // ── simulation → field ──────────────────────────────────────────────
@@ -505,6 +508,7 @@ export class AsciiRenderer {
       if (i >= 0) energy[i] = Math.min(1.6, energy[i] + 0.012 + f.alarm * 0.03);
     }
     for (const sh of world.sharks) {
+      if (sh.fade < 0.5) continue;
       // The tail sweeps the most water.
       for (let k = SHARK_NODES - 6; k < SHARK_NODES; k++) {
         const i = this.cellIndex(sh.nodes[k * 2], sh.nodes[k * 2 + 1]);
@@ -727,11 +731,12 @@ export class AsciiRenderer {
    * Fully covered cells become solid skin; partial cells become edge glyphs.
    */
   private rasterizeSharks(sharks: Shark[], t: number) {
-    const { sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkShadow, spine, arc, cw, ch, cols, rows } = this;
+    const { sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha, sharkShadow, spine, arc, cw, ch, cols, rows } = this;
     sharkFlag.fill(0);
     sharkShadow.fill(0);
 
     for (const sh of sharks) {
+      if (sh.fade < 0.02) continue;
       const L = sh.length;
       const N = SHARK_NODES;
       const n = sh.nodes;
@@ -816,6 +821,7 @@ export class AsciiRenderer {
           sharkKey[i] = key;
           sharkDepth[i] = sh.depth;
           sharkKind[i] = kindIndex;
+          sharkAlpha[i] = sh.fade;
 
           if (centerHit && coverage >= 0.6) {
             sharkFlag[i] = flag;
@@ -834,11 +840,12 @@ export class AsciiRenderer {
   }
 
   private drawSharks(t: number) {
-    const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind } = this;
+    const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind, sharkAlpha } = this;
     const n = cols * rows;
     for (let i = 0; i < n; i++) {
       const flag = sharkFlag[i];
       if (!flag) continue;
+      ctx.globalAlpha = sharkAlpha[i];
       const col = i % cols;
       const row = (i / cols) | 0;
       const x = col * cw;

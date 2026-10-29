@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: 'zh-Hant' }}">
 <head>
+  <base href="{{ '/' | relative_url }}">
   {% include head.html %}
 </head>
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
@@ -9,29 +10,59 @@
     <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
     <div class="home-vignette" aria-hidden="true"></div>
 
-    <header class="home-nav" role="navigation" aria-label="Primary">
-      <a href="{{ '/notes/' | relative_url }}">notes</a>
-      <a href="{{ '/works/' | relative_url }}">works</a>
-    </header>
-
     <div class="home-chrome">
-      <div class="home-dim" aria-hidden="true"></div>
-      <div class="home-copy">
+      <nav class="home-nav" aria-label="Primary">
+        <a href="notes/" data-view-link="notes">notes</a>
+        <a href="works/" data-view-link="works">works</a>
+      </nav>
+
+      <div class="home-view home-copy" data-view="home">
         <h1 class="home-greeting">hey, I'm Yen.</h1>
         <p class="home-sub">寫</p>
         <p class="home-role">Product manager @Taiwan</p>
         <p class="home-slogan">I build things, then make sense of them.</p>
         <p class="home-links"><a href="https://github.com/laiyenju">github</a>｜<a href="https://www.linkedin.com/in/laiyenju/">LinkedIn</a>｜<a href="https://x.com/theYenLai">X</a></p>
       </div>
+
+      <section class="home-view home-panel" data-view="notes" aria-label="Notes" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">日常寫作紀錄 · everyday writing</span>
+        </div>
+        <ul class="panel-list">
+        {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
+        {% for note in notes %}
+          {% if note.status == 'published' or note.layout == 'article' %}
+          <li><a href="{{ note.url | relative_url }}"><span class="panel-title">{{ note.title }}</span>{% if note.date %}<time class="panel-meta" datetime="{{ note.date | date_to_xmlschema }}">{{ note.date | date: "%Y-%m-%d" }}</time>{% endif %}</a></li>
+          {% endif %}
+        {% endfor %}
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
+
+      <section class="home-view home-panel" data-view="works" aria-label="Works" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">作品集 · portfolio</span>
+        </div>
+        <ul class="panel-list">
+        {% for work in site.data.works %}
+          <li><a href="{% if work.url and work.url != '#' %}{{ work.url | relative_url }}{% else %}#{% endif %}"><span class="panel-title">{{ work.title }}</span><span class="panel-meta">{{ work.one_liner }}</span></a></li>
+        {% endfor %}
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
     </div>
   </div>
 
   <script src="{{ '/assets/js/ocean.js' | relative_url }}" defer></script>
+  <script src="{{ '/assets/js/home.js' | relative_url }}" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var el = document.querySelector("canvas[data-koi]");
-      if (el && window.OceanEngine) new window.OceanEngine(el, undefined, 0);
+      if (el && window.OceanEngine) window.homeOcean = new window.OceanEngine(el, undefined, 0);
       var roots = document.querySelectorAll(".home-nav, .home-copy");
+      if (window.homeViews) window.homeViews.start();
       roots.forEach(function (root) {
         var texts = [];
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);

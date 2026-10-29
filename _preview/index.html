@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<base href="./">
 <link rel="stylesheet" href="assets/css/site.css">
 </head>
 <body class="lang-zh-Hant home">
@@ -15,29 +16,57 @@
     <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
     <div class="home-vignette" aria-hidden="true"></div>
 
-    <header class="home-nav" role="navigation" aria-label="Primary">
-      <a href="notes/">notes</a>
-      <a href="works/">works</a>
-    </header>
-
     <div class="home-chrome">
-      <div class="home-dim" aria-hidden="true"></div>
-      <div class="home-copy">
+      <nav class="home-nav" aria-label="Primary">
+        <a href="notes/" data-view-link="notes">notes</a>
+        <a href="works/" data-view-link="works">works</a>
+      </nav>
+
+      <div class="home-view home-copy" data-view="home">
         <h1 class="home-greeting">hey, I'm Yen.</h1>
         <p class="home-sub">寫</p>
         <p class="home-role">Product manager @Taiwan</p>
         <p class="home-slogan">I build things, then make sense of them.</p>
         <p class="home-links"><a href="https://github.com/laiyenju">github</a>｜<a href="https://www.linkedin.com/in/laiyenju/">LinkedIn</a>｜<a href="https://x.com/theYenLai">X</a></p>
       </div>
+
+      <section class="home-view home-panel" data-view="notes" aria-label="Notes" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">日常寫作紀錄 · everyday writing</span>
+        </div>
+        <ul class="panel-list">
+          <li><a href="published/2026-03-10-on-type/"><span class="panel-title">On type and the published path</span><time class="panel-meta" datetime="2026-03-10">2026-03-10</time></a></li>
+          <li><a href="published/2026-03-08-hello/"><span class="panel-title">你好，這是第一篇</span><time class="panel-meta" datetime="2026-03-08">2026-03-08</time></a></li>
+          <li><a href="published/2026-02-14-reading-writing/"><span class="panel-title">讀與寫</span><time class="panel-meta" datetime="2026-02-14">2026-02-14</time></a></li>
+          <li><a href="published/2026-01-20-blank-page/"><span class="panel-title">空白頁</span><time class="panel-meta" datetime="2026-01-20">2026-01-20</time></a></li>
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
+
+      <section class="home-view home-panel" data-view="works" aria-label="Works" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back" href="./" data-view-link="home">← home</a>
+          <span class="panel-lede">作品集 · portfolio</span>
+        </div>
+        <ul class="panel-list">
+          <li><a href="./"><span class="panel-title">laiyenju.github.io</span><span class="panel-meta">This writing site — quiet pages in Jekyll.</span></a></li>
+          <li><a href="#"><span class="panel-title">字與空</span><span class="panel-meta">Experiments in measure and pause.</span></a></li>
+          <li><a href="#"><span class="panel-title">Sketchbook</span><span class="panel-meta">Small visual studies, unfinished on purpose.</span></a></li>
+        </ul>
+        <button class="panel-more" type="button" hidden>view all</button>
+      </section>
     </div>
   </div>
 
   <script src="assets/js/ocean.js" defer></script>
+  <script src="assets/js/home.js" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       var el = document.querySelector("canvas[data-koi]");
-      if (el && window.OceanEngine) new window.OceanEngine(el, undefined, 0);
+      if (el && window.OceanEngine) window.homeOcean = new window.OceanEngine(el, undefined, 0);
       var roots = document.querySelectorAll(".home-nav, .home-copy");
+      if (window.homeViews) window.homeViews.start();
       roots.forEach(function (root) {
         var texts = [];
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);

@@ -23,9 +23,9 @@ export type SharkKind = "koi" | "classic" | "hammerhead" | "zebra" | "tiger" | "
 /** Which sharks to put in the water; size is relative to the biggest. */
 export type SharkSpec = { kind: SharkKind; size: number };
 
-// The landing hero: four koi at different depths; one clearly bigger, for layering.
+// The landing hero: four koi at different depths.
 const DEFAULT_SHARKS: SharkSpec[] = [
-  { kind: "koi", size: 1.3 },
+  { kind: "koi", size: 1 },
   { kind: "koi", size: 0.7 },
   { kind: "koi", size: 0.84 },
   { kind: "koi", size: 0.77 },
@@ -71,6 +71,10 @@ export interface Shark {
   retargetAt: number;
   /** 0 far / dim → 1 near / bright. */
   depth: number;
+  /** Length at seed; calm mode eases `length` away from it and back. */
+  baseLength: number;
+  /** 0 hidden → 1 shown. Eases toward 0 for the koi that leave in calm mode. */
+  fade: number;
 }
 
 export interface WorldEvent {
@@ -93,6 +97,11 @@ export class World {
   sharks: Shark[] = [];
   events: WorldEvent[] = [];
   pointer = { x: 0, y: 0, active: false };
+  /**
+   * Calm mode (list views): every koi but the smallest fades out, and that
+   * one shrinks a little and slows down. Turning it off brings them back.
+   */
+  calm = false;
 
   /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
   private perception = 60;
@@ -164,6 +173,8 @@ export class World {
         id: i + 1,
         kind,
         length,
+        baseLength: length,
+        fade: 1,
         nodes,
         heading,
         speed: 30,
@@ -226,6 +237,16 @@ export class World {
       f.vx += (dx / d) * k;
       f.vy += (dy / d) * k;
       f.alarm = 1;
+    }
+  }
+
+  setCalm(calm: boolean, instant = false) {
+    this.calm = calm;
+    if (!instant) return;
+    for (const sh of this.sharks) {
+      const lead = sh === this.sharks[0];
+      sh.fade = calm && !lead ? 0 : 1;
+      sh.length = calm && lead ? sh.baseLength * 0.8 : sh.baseLength;
     }
   }
 
@@ -480,6 +501,11 @@ export class World {
     const cyW = H / 2;
 
     for (const sh of sharks) {
+      // sharks[0] is the smallest (sorted at seed): the one that stays in calm mode.
+      const lead = sh === sharks[0];
+      const ease = Math.min(1, dt * 1.6);
+      sh.fade += ((this.calm && !lead ? 0 : 1) - sh.fade) * ease;
+      sh.length += ((this.calm && lead ? sh.baseLength * 0.8 : sh.baseLength) - sh.length) * ease;
       const L = sh.length;
       const nodes = sh.nodes;
       const hx = nodes[0];
@@ -534,7 +560,7 @@ export class World {
           const d = Math.hypot(ox, oy);
           const range = (L + other.length) * 0.45;
           if (d < range && d > 1e-3) {
-            const w = (1 - d / range) * 3;
+            const w = (1 - d / range) * 3 * other.fade;
             dx += (ox / d) * w;
             dy += (oy / d) * w;
           }
@@ -542,8 +568,9 @@ export class World {
       }
 
       // Keep the headline mostly clear: a soft elliptical no-swim zone.
-      const ex = (hx - cxW) / (W * 0.3);
-      const ey = (hy - cyW) / (H * 0.16);
+      // Calm mode keeps the koi off the wider list column.
+      const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
+      const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
       const e2 = ex * ex + ey * ey;
       if (e2 < 1) {
         const e = Math.sqrt(e2) || 1e-3;
@@ -573,7 +600,7 @@ export class World {
       sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
 
       // Koi drift; sharks cruise.
-      const cruise = sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04;
+      const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
       const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
       sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
       sh.phase += dt * (2 + sh.speed / 24);

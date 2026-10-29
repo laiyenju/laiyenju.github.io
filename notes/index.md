@@ -1,27 +1,18 @@
 ---
-layout: default
+layout: null
 title: Notes
-lang: en
 permalink: /notes/
 ---
-
-<div class="list-page">
-  <a class="back-link" href="{{ '/' | relative_url }}">←</a>
-  <h1 class="list-title">Notes</h1>
-  <p class="list-lede">日常寫作紀錄 · everyday writing</p>
-  <div class="amber-hairline" aria-hidden="true"></div>
-  <ul class="list-index">
-  {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
-  {% for note in notes %}
-    {% if note.status == 'published' or note.layout == 'article' %}
-    <li>
-      <a href="{{ note.url | relative_url }}">
-        <span class="list-item-title">{{ note.title }}</span>
-        {% if note.date %}<time datetime="{{ note.date | date_to_xmlschema }}">{{ note.date | date: "%Y-%m-%d" }}</time>{% endif %}
-      </a>
-    </li>
-    {% endif %}
-  {% endfor %}
-  </ul>
-  <p class="list-foot">Individual notes still live under <code>/published/&lt;slug&gt;/</code> for now; IA target is <code>/notes/&lt;slug&gt;</code>.</p>
-</div>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes · Yen</title>
+<meta name="robots" content="noindex">
+<script>location.replace("{{ '/' | relative_url }}?view=notes" + location.hash);</script>
+<meta http-equiv="refresh" content="0; url={{ '/' | relative_url }}?view=notes">
+<style>html{background:#fafaf7}</style>
+</head>
+<body></body>
+</html>

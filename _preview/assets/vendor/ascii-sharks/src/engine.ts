@@ -49,6 +49,13 @@ export class OceanEngine {
     this.schedule();
   }
 
+  /** List views: one small koi drifting; off restores the full pond. */
+  setCalm(calm: boolean, instant = false) {
+    const still = this.reducedMotion.matches;
+    this.world.setCalm(calm, instant || still);
+    if (still) this.renderer.render(this.world, STEP);
+  }
+
   destroy() {
     this.disposed = true;
     cancelAnimationFrame(this.raf);
