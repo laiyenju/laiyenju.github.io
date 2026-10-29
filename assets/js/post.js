@@ -17,9 +17,26 @@
   var TEXT = ".post-head, .post-prose > *, .post-note";
   var queued = false;
 
+  var heads = [];
+  var currentHead = null;
+
+  /** The cursor sits on the title, then on whichever h2 the reader has scrolled past. */
+  function markHead() {
+    var line = window.innerHeight * 0.4;
+    var next = heads[0] || null;
+    for (var i = 1; i < heads.length; i++) {
+      if (heads[i].getBoundingClientRect().top < line) next = heads[i];
+    }
+    if (next === currentHead) return;
+    if (currentHead) currentHead.classList.remove("is-current");
+    if (next) next.classList.add("is-current");
+    currentHead = next;
+  }
+
   /** Hand the koi the on-screen text boxes (the canvas is fixed, so client px = canvas px). */
   function markText() {
     queued = false;
+    markHead();
     if (!ocean) return;
     var boxes = [];
     var h = window.innerHeight;
@@ -95,6 +112,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     labelCode();
+    heads = Array.prototype.slice.call(document.querySelectorAll(".post-title, .post-prose h2"));
     var canvas = document.querySelector("canvas[data-koi]");
     if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) {
       ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0);
