@@ -10,7 +10,7 @@ import { clamp, hash3, smoothstep } from "./math";
 import { SHARK_NODES, type Shark, type SharkKind, type World } from "./world";
 
 const ALPHA_LEVELS = 6;
-const FISH_ALPHAS = [0.28, 0.42, 0.58, 0.74, 0.9];
+const FISH_ALPHAS = [0.82, 0.88, 0.93, 0.97, 1];
 
 // Dot colour classes: blue, green, red, pale; the last entry is the cyan wake.
 const DOT_RGB: [number, number, number][] = [
@@ -315,7 +315,7 @@ export class AsciiRenderer {
   private frameId = 0;
   /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
   private fishBuckets: number[][] = FISH_ALPHAS.map(() => []);
-  private fishStyles = FISH_ALPHAS.map((a) => `rgba(42,46,54,${a})`);
+  private fishStyles = FISH_ALPHAS.map((a) => `rgba(26,28,32,${a})`);
 
   constructor(private canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d", { alpha: true });
@@ -842,14 +842,24 @@ export class AsciiRenderer {
 
   private drawFish() {
     const { ctx, cw, ch, cols, fishBuckets } = this;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.font = `700 ${Math.max(12, Math.round(ch * 0.92))}px ${this.fontFamily}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const barH = Math.max(2, Math.round(ch * 0.16));
     for (let b = 0; b < fishBuckets.length; b++) {
       const bucket = fishBuckets[b];
       if (!bucket.length) continue;
       ctx.fillStyle = this.fishStyles[b];
       for (const i of bucket) {
-        ctx.fillText("-", (i % cols) * cw + cw / 2, ((i / cols) | 0) * ch + ch / 2 + 1);
+        const x = (i % cols) * cw;
+        const y = ((i / cols) | 0) * ch;
+        ctx.fillRect(x + cw * 0.16, y + (ch - barH) / 2, cw * 0.68, barH);
+        ctx.fillText("-", x + cw / 2, y + ch / 2);
       }
     }
+    ctx.restore();
   }
 
   private drawHeat() {

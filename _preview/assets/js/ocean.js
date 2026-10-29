@@ -637,7 +637,7 @@
 
   // assets/vendor/ascii-sharks/src/renderer.ts
   var ALPHA_LEVELS = 6;
-  var FISH_ALPHAS = [0.28, 0.42, 0.58, 0.74, 0.9];
+  var FISH_ALPHAS = [0.82, 0.88, 0.93, 0.97, 1];
   var DOT_RGB = [
     [48, 52, 235],
     [52, 205, 60],
@@ -894,7 +894,7 @@
       __publicField(this, "frameId", 0);
       /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
       __publicField(this, "fishBuckets", FISH_ALPHAS.map(() => []));
-      __publicField(this, "fishStyles", FISH_ALPHAS.map((a) => `rgba(42,46,54,${a})`));
+      __publicField(this, "fishStyles", FISH_ALPHAS.map((a) => `rgba(26,28,32,${a})`));
       const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) throw new Error("2D canvas unavailable");
       this.ctx = ctx;
@@ -1344,14 +1344,24 @@
     }
     drawFish() {
       const { ctx, cw, ch, cols, fishBuckets } = this;
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.font = `700 ${Math.max(12, Math.round(ch * 0.92))}px ${this.fontFamily}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const barH = Math.max(2, Math.round(ch * 0.16));
       for (let b = 0; b < fishBuckets.length; b++) {
         const bucket = fishBuckets[b];
         if (!bucket.length) continue;
         ctx.fillStyle = this.fishStyles[b];
         for (const i of bucket) {
-          ctx.fillText("-", i % cols * cw + cw / 2, (i / cols | 0) * ch + ch / 2 + 1);
+          const x = i % cols * cw;
+          const y = (i / cols | 0) * ch;
+          ctx.fillRect(x + cw * 0.16, y + (ch - barH) / 2, cw * 0.68, barH);
+          ctx.fillText("-", x + cw / 2, y + ch / 2);
         }
       }
+      ctx.restore();
     }
     drawHeat() {
       const { ctx, heat, cols, cw, ch } = this;
@@ -1493,6 +1503,7 @@
       document.documentElement.addEventListener("pointerleave", this.onPointerLeave);
       window.addEventListener("blur", this.onPointerLeave);
       this.resize();
+      canvas.__ocean = this;
       (_a = document.fonts) == null ? void 0 : _a.load(`600 16px ${getComputedStyle(canvas).fontFamily}`).then(() => {
         if (!this.disposed && this.reducedMotion.matches) this.drawStill();
       });
