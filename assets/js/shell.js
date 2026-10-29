@@ -72,9 +72,16 @@
         say("cd -      go back              回上一頁");
         say("cd " + other + (other === "notes" ? "  read notes           去看文章" : "  see works            去看作品"));
         say("ls        " + list);
+        say("theme     day / night / auto   切換日夜（auto 跟隨系統）");
         say("whoami    who is Yen           我是誰");
         say("clear     clear the screen     清除畫面，重新列出");
         say("help      show this list       列出這些指令");
+      },
+      theme: function (arg) {
+        var t = window.siteTheme;
+        if (!t) return say("theme: not available");
+        if (arg === "day" || arg === "night" || arg === "auto") { t.set(arg); return say("theme: " + arg); }
+        say("theme: " + t.pref() + "　（用法：theme day / night / auto）");
       },
       whoami: function () { say("yen — product manager @Taiwan. I build things, then make sense of them."); },
       pwd: function () { say("/home/yen/" + name); },
@@ -97,7 +104,7 @@
       if (words[0] === "ls") return relist();
       if (words[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
       if (words[0] === "exit" || words[0] === "home") return goTo("home");
-      if (COMMANDS[words[0]]) return COMMANDS[words[0]]();
+      if (COMMANDS[words[0]]) return COMMANDS[words[0]](words[1]);
       say("sh: command not found: " + words[0] + " — try help（輸入 help 看看可以做什麼）");
     }
     input.addEventListener("keydown", function (e) {

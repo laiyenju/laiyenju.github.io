@@ -1,0 +1,11 @@
+<script>
+  // Day or night before first paint, so a visit never flashes the wrong ground:
+  // a saved choice (theme: day / night, see theme.js), else the system setting.
+  (function () {
+    var p;
+    try { p = localStorage.getItem("theme"); } catch (e) {}
+    var night = p === "night" || (p !== "day" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    if (night) document.body.classList.add("theme-night");
+  })();
+</script>
+<button class="theme-toggle" type="button">theme: auto</button>
