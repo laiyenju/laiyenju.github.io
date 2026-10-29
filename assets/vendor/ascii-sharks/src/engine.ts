@@ -1,4 +1,5 @@
 import { AsciiRenderer } from "./renderer";
+import { ASCII, type GlyphTheme } from "./themes";
 import { World, type SharkSpec } from "./world";
 
 const STEP = 1 / 60;
@@ -20,9 +21,9 @@ export class OceanEngine {
   private intersectionObserver: IntersectionObserver;
   private disposed = false;
 
-  constructor(private canvas: HTMLCanvasElement, sharks?: SharkSpec[], fishCount?: number) {
+  constructor(private canvas: HTMLCanvasElement, sharks?: SharkSpec[], fishCount?: number, theme: GlyphTheme = ASCII) {
     this.world = new World(sharks, fishCount);
-    this.renderer = new AsciiRenderer(canvas);
+    this.renderer = new AsciiRenderer(canvas, theme);
     this.renderer.setFontFamily(getComputedStyle(canvas).fontFamily);
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -43,7 +44,9 @@ export class OceanEngine {
     this.resize();
     (canvas as HTMLCanvasElement & { __ocean?: OceanEngine }).__ocean = this;
     // Canvas text can't trigger a webfont load; once the mono face is in, redraw.
-    document.fonts?.load(`600 16px ${getComputedStyle(canvas).fontFamily}`).then(() => {
+    const family = theme.font ?? getComputedStyle(canvas).fontFamily;
+    const sample = theme.skin + theme.fin + theme.ridge + theme.edgeLight + theme.wisp + theme.eye + theme.fish;
+    document.fonts?.load(`${theme.weight} 16px ${family}`, sample).then(() => {
       if (!this.disposed && this.reducedMotion.matches) this.drawStill();
     });
     this.schedule();
@@ -60,6 +63,19 @@ export class OceanEngine {
     const oy = clientY === undefined ? rect.height / 2 : clientY - rect.top;
     this.world.setCalm(calm, instant || still, ox, oy);
     if (still) this.renderer.render(this.world, STEP);
+  }
+
+  /**
+   * Home: the koi circle this element (a box in client px), nose to tail.
+   * List views (setCalm(true)) break the circle and they roam.
+   */
+  setRing(rect: DOMRect | null) {
+    if (!rect) {
+      this.world.ring = null;
+      return;
+    }
+    const c = this.canvas.getBoundingClientRect();
+    this.world.setRing(rect.left - c.left + rect.width / 2, rect.top - c.top + rect.height / 2, rect.width / 2, rect.height / 2);
   }
 
   /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */

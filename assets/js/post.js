@@ -115,7 +115,9 @@
     heads = Array.prototype.slice.call(document.querySelectorAll(".post-title, .post-prose h2"));
     var canvas = document.querySelector("canvas[data-koi]");
     if (canvas && window.OceanEngine && window.innerWidth >= KOI_MIN) {
-      ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0);
+      // Article pages stay on paper, so the koi is drawn in the day radicals.
+      var theme = window.OceanThemes && window.OceanThemes.GLYPH_DAY;
+      ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, theme);
       ocean.setCalm(true, true);
       ocean.setGrid(false);
     }

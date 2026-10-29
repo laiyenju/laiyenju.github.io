@@ -6,6 +6,10 @@
 </head>
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">
+  <script>
+    // Night palette before first paint, so a dark-mode visit never flashes paper.
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.body.classList.add("theme-night");
+  </script>
   <div class="home-stage">
     <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
     <div class="home-vignette" aria-hidden="true"></div>
@@ -24,44 +28,110 @@
         <p class="home-links"><a href="https://github.com/laiyenju">github</a>｜<a href="https://www.linkedin.com/in/laiyenju/">LinkedIn</a>｜<a href="https://x.com/theYenLai">X</a></p>
       </div>
 
-      <section class="home-view home-panel" data-view="notes" aria-label="Notes" tabindex="-1" hidden>
-        <div class="panel-head">
-          <a class="panel-back" href="./" data-view-link="home">← home</a>
-          <span class="panel-lede">日常寫作紀錄 · everyday writing</span>
-        </div>
-        <ul class="panel-list">
-        {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
+      {% comment %}Being in published/ is the publish signal (see README).{% endcomment %}
+      {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
+      {% assign this_year = site.time | date: "%Y" %}
+      {% assign year_chars = 0 %}
+      {% assign year_posts = 0 %}
+      {% capture note_rows %}
         {% for note in notes %}
-          {% comment %}Being in published/ is the publish signal (see README).{% endcomment %}
-          <li><a href="{{ note.url | relative_url }}"><span class="panel-title">{{ note.title }}</span>{% if note.date %}<time class="panel-meta" datetime="{{ note.date | date_to_xmlschema }}">{{ note.date | date: "%Y-%m-%d" }}</time>{% endif %}</a></li>
+          {% comment %}Rough character count: rendered text without tags or whitespace.{% endcomment %}
+          {% assign chars = note.content | markdownify | strip_html | strip_newlines | remove: " " | size %}
+          {% assign note_year = note.date | date: "%Y" %}
+          {% if note_year == this_year %}
+            {% assign year_chars = year_chars | plus: chars %}
+            {% assign year_posts = year_posts | plus: 1 %}
+          {% endif %}
+          <li><a href="{{ note.url | relative_url }}"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span>{% if note.date %}<time class="ls-date" datetime="{{ note.date | date_to_xmlschema }}">{{ note.date | date: "%Y-%m-%d" }}</time>{% else %}<span class="ls-date"></span>{% endif %}<span class="panel-title">{{ note.title }}</span><span class="ls-size">{{ chars }} chars</span></a></li>
         {% endfor %}
+      {% endcapture %}
+      <section class="home-view home-panel sh-panel sh-notes" data-view="notes" data-path="~/notes" aria-label="Notes" tabindex="-1" hidden>
+        <div class="panel-head">
+          <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
+        </div>
+        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
+        <p class="sh-line sh-dim sh-total">total {{ year_chars }} chars · {{ year_posts }} {% if year_posts == 1 %}post{% else %}posts{% endif %} in {{ this_year }}</p>
+        <ul class="panel-list">
+          {{ note_rows }}
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
+        <div class="sh-out" aria-live="polite"></div>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><input class="sh-input" id="sh-input-notes" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <p class="sh-keys"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　輸入 <kbd>help</kbd> 看看</p>
       </section>
 
-      <section class="home-view home-panel" data-view="works" aria-label="Works" tabindex="-1" hidden>
+      {% assign works = site.data.works %}
+      {% assign works_active = works | where: "status", "in progress" | size %}
+      <section class="home-view home-panel sh-panel sh-works" data-view="works" data-path="~/works" aria-label="Works" tabindex="-1" hidden>
         <div class="panel-head">
-          <a class="panel-back" href="./" data-view-link="home">← home</a>
-          <span class="panel-lede">作品集 · portfolio</span>
+          <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
         </div>
+        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$ <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
+        <p class="sh-line sh-dim sh-total">total {{ works | size }} {% if works.size == 1 %}work{% else %}works{% endif %} · {{ works_active }} in progress</p>
         <ul class="panel-list">
-        {% for work in site.data.works %}
-          <li><a href="{% if work.url and work.url != '#' %}{{ work.url | relative_url }}{% else %}#{% endif %}"><span class="panel-title">{{ work.title }}</span><span class="panel-meta">{{ work.one_liner }}</span></a></li>
+        {% for work in works %}
+          <li><a href="{% if work.url and work.url != '#' %}{{ work.url | relative_url }}{% else %}#{% endif %}"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="panel-title">{{ work.title }}/</span>{% if work.status %}<span class="work-status" data-status="{{ work.status }}">{{ work.status }}</span>{% else %}<span></span>{% endif %}<span class="work-desc">{{ work.one_liner }}</span></a></li>
         {% endfor %}
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
+        <div class="sh-out" aria-live="polite"></div>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <p class="sh-keys"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　輸入 <kbd>help</kbd> 看看</p>
       </section>
     </div>
   </div>
 
   <script src="{{ '/assets/js/ocean.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script src="{{ '/assets/js/home.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+  <script src="{{ '/assets/js/shell.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      var el = document.querySelector("canvas[data-koi]");
-      if (el && window.OceanEngine) window.homeOcean = new window.OceanEngine(el, undefined, 0);
+      var canvas = document.querySelector("canvas[data-koi]");
+      var dark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+      var ringBox = null;
+
+      function view() { return document.body.getAttribute("data-view") || "home"; }
+      function night() { return document.body.classList.contains("theme-night"); }
+
+      // The koi circle the nav and the copy together. Measured on home only:
+      // in a list view the copy is hidden, so the last home measurement stands.
+      function measureRing() {
+        if (view() !== "home") return;
+        var a = document.querySelector(".home-nav").getBoundingClientRect();
+        var b = document.querySelector(".home-copy").getBoundingClientRect();
+        var l = Math.min(a.left, b.left), t = Math.min(a.top, b.top);
+        ringBox = new DOMRect(l, t, Math.max(a.right, b.right) - l, Math.max(a.bottom, b.bottom) - t);
+        if (window.homeOcean) window.homeOcean.setRing(ringBox);
+      }
+
+      // Lists: the koi hurry across the open panel instead of sitting on the rows.
+      function syncText() {
+        var o = window.homeOcean;
+        if (!o) return;
+        if (view() === "home") { o.setTextRects(null); return; }
+        var p = document.querySelector('.home-view[data-view="' + view() + '"]');
+        if (!p || p.hidden) return;
+        var r = p.getBoundingClientRect();
+        o.setTextRects(new Float32Array([r.left, r.top, r.right, r.bottom]));
+      }
+
+      // Day: Cangjie radicals in ink on paper. Night: dot-matrix radicals on an amber screen.
+      function startOcean() {
+        if (!canvas || !window.OceanEngine) return;
+        if (window.homeOcean) window.homeOcean.destroy();
+        var themes = window.OceanThemes;
+        window.homeOcean = new window.OceanEngine(canvas, undefined, 0, night() ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
+        if (ringBox) window.homeOcean.setRing(ringBox);
+        if (view() !== "home") window.homeOcean.setCalm(true, true);
+        syncText();
+      }
+
+      if (dark) dark.addEventListener("change", function (e) {
+        document.body.classList.toggle("theme-night", e.matches);
+        startOcean();
+      });
+
       var roots = document.querySelectorAll(".home-nav, .home-copy");
-      if (window.homeViews) window.homeViews.start();
       roots.forEach(function (root) {
         var texts = [];
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
@@ -86,15 +156,26 @@
           textNode.parentNode.replaceChild(frag, textNode);
         });
       });
+
+      startOcean();
+      measureRing();
+      if (window.homeViews) window.homeViews.start();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureRing);
+      window.addEventListener("resize", measureRing);
+      window.setInterval(syncText, 400);
+
+      // Copy over a koi flips colour so it stays legible: paper-coloured over
+      // dark ink by day, dark over lit amber by night.
       var glyphs = document.querySelectorAll(".home-glyph");
-      function fishCell(r, g, b, a) {
+      function fishCell(r, g, b, a, isNight) {
         if (a < 180) return false;
         var lum = (r * 3 + g * 4 + b) / 8;
+        if (isNight) return lum > 110;
         if (lum < 162) return true;
         if (r > b + 48 && lum < 168 && r > 155 && g < 200) return true;
         return false;
       }
-      function fishAt(data, w, h, x0, y0, x1, y1) {
+      function fishAt(data, w, h, x0, y0, x1, y1, isNight) {
         if (x1 < x0 || y1 < y0) return false;
         var stepX = Math.max(1, Math.round((x1 - x0) / 8));
         var stepY = Math.max(1, Math.round((y1 - y0) / 10));
@@ -109,18 +190,18 @@
             if (a < 180) continue;
             seen++;
             sum += (r * 3 + g * 4 + b) / 8;
-            if (fishCell(r, g, b, a)) hits++;
+            if (fishCell(r, g, b, a, isNight)) hits++;
           }
         }
         if (seen < 3) return false;
-        return hits >= 3 && hits / seen >= 0.42 && sum / seen < 186;
+        return hits >= 3 && hits / seen >= 0.42 && (isNight || sum / seen < 186);
       }
       function tick() {
-        var canvas = document.querySelector("canvas[data-koi]");
         if (canvas) {
           var ctx = canvas.getContext("2d");
           var crect = canvas.getBoundingClientRect();
           if (ctx && crect.width > 0) {
+            var isNight = night();
             var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             var sx = canvas.width / crect.width;
             var sy = canvas.height / crect.height;
@@ -131,9 +212,9 @@
               var y0 = Math.max(0, Math.floor((r.top - crect.top) * sy) - 1);
               var x1 = Math.min(canvas.width - 1, Math.ceil((r.right - crect.left) * sx) + 1);
               var y1 = Math.min(canvas.height - 1, Math.ceil((r.bottom - crect.top) * sy) + 1);
-              var hit = fishAt(data, canvas.width, canvas.height, x0, y0, x1, y1);
+              var hit = fishAt(data, canvas.width, canvas.height, x0, y0, x1, y1, isNight);
               g.dataset.on = hit ? "1" : "";
-              g.style.color = hit ? "#FFF5EB" : "";
+              g.style.color = hit ? (isNight ? "#14110d" : "#FFF5EB") : "";
             }
           }
         }

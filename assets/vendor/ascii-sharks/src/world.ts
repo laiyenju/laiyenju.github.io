@@ -119,6 +119,13 @@ export class World {
    * null = home, where the koi keep the headline clear instead.
    */
   textRects: Float32Array | null = null;
+  /**
+   * Home ring: the koi swim nose to tail around this ellipse (canvas px),
+   * spaced evenly, instead of patrolling. null = the original patrol.
+   */
+  ring: { cx: number; cy: number; rx: number; ry: number } | null = null;
+  /** With a ring set: true while a list is open, and the koi roam freely. */
+  free = false;
 
   /** Fish neighbourhood radius; the spatial hash bucket size matches it. */
   private perception = 60;
@@ -133,6 +140,8 @@ export class World {
   private bucketNext = new Int32Array(0);
   private lastSpawn = 0;
   private tmp = { x: 0, y: 0 };
+  /** Per-koi speed factor that evens out the ring. */
+  private pace = new Float32Array(0);
 
   /** fishCount overrides the area-based population (the sidebar wants a single small school). */
   constructor(
@@ -270,6 +279,21 @@ export class World {
    * then settles and slows. Calm off: the others swim back in from the edges.
    */
   setCalm(calm: boolean, instant = false, ox = this.width / 2, oy = this.height / 2) {
+    if (this.ring) {
+      // Ring mode: a list breaks the circle and every koi roams; home pulls them back into it.
+      if (calm === this.free && !instant) return;
+      this.free = calm;
+      if (!calm || instant) return;
+      for (const sh of this.sharks) {
+        const fx = sh.nodes[0] - ox;
+        const fy = sh.nodes[1] - oy;
+        const d = Math.hypot(fx, fy) || 1;
+        sh.fleeX = fx / d;
+        sh.fleeY = fy / d;
+        sh.scare = 0.55;
+      }
+      return;
+    }
     if (calm === this.calm && !instant) return;
     this.calm = calm;
     for (const sh of this.sharks) {
@@ -302,6 +326,32 @@ export class World {
         if (sh.fade === 0) this.reenter(sh);
       }
     }
+  }
+
+  /**
+   * Fit the home ring around a box (canvas px, centre and half sizes): far
+   * enough out that the bodies clear it, long enough for the whole school,
+   * and inside the frame.
+   */
+  setRing(cx: number, cy: number, halfW: number, halfH: number) {
+    const { width: W, height: H } = this;
+    let longest = 0;
+    let total = 0;
+    for (const sh of this.sharks) {
+      longest = Math.max(longest, sh.baseLength);
+      total += sh.baseLength;
+    }
+    let rx = halfW + longest * 0.3;
+    let ry = Math.max(halfH + longest * 0.3, rx * 0.62);
+    const perimeter = TAU * Math.sqrt((rx * rx + ry * ry) / 2);
+    const grow = Math.max(1, (total * 1.6) / perimeter);
+    const maxRx = W / 2 - longest * 0.12;
+    const maxRy = H / 2 - longest * 0.12;
+    // Narrow screens: no room at the sides, so stretch the ring tall instead.
+    if (rx * grow > maxRx) ry = Math.max(ry, maxRx * 1.7);
+    rx = Math.min(rx * grow, maxRx);
+    ry = Math.min(ry * grow, maxRy);
+    this.ring = { cx, cy, rx: Math.max(rx, halfW), ry: Math.max(ry, halfH) };
   }
 
   /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
@@ -574,7 +624,31 @@ export class World {
     const cxW = W / 2;
     const cyW = H / 2;
 
-    for (const sh of sharks) {
+    // Ring pacing: each koi speeds up when the gap to the one ahead is wide and
+    // eases off when it's tight, so the circle spreads out evenly.
+    const ring = this.ring;
+    const circling = ring !== null && !this.free;
+    if (this.pace.length !== sharks.length) this.pace = new Float32Array(sharks.length);
+    if (circling) {
+      const n = sharks.length;
+      const ideal = TAU / n;
+      for (let i = 0; i < n; i++) {
+        const a = sharks[i];
+        const ta = Math.atan2((a.nodes[1] - ring.cy) / ring.ry, (a.nodes[0] - ring.cx) / ring.rx);
+        let gap = TAU;
+        for (let j = 0; j < n; j++) {
+          if (j === i) continue;
+          const b = sharks[j];
+          const tb = Math.atan2((b.nodes[1] - ring.cy) / ring.ry, (b.nodes[0] - ring.cx) / ring.rx);
+          const d = (tb - ta + TAU * 2) % TAU;
+          if (d < gap) gap = d;
+        }
+        this.pace[i] = n > 1 ? clamp(1 + (0.8 * (gap - ideal)) / ideal, 0.55, 1.7) : 1;
+      }
+    }
+
+    for (let si = 0; si < sharks.length; si++) {
+      const sh = sharks[si];
       // sharks[0] is the smallest (sorted at seed): the one that stays in calm mode.
       const lead = sh === sharks[0];
       // Gone: parked off-screen until calm mode ends.
@@ -594,9 +668,11 @@ export class World {
       let dy = Math.sin(sh.heading);
 
       // Wander: a slowly drifting offset on a circle ahead of the snout.
+      // Circling koi hold their line; roaming koi wander more.
+      const wanderW = circling ? 0.12 : ring ? 0.6 : 0.45;
       sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 3.2, -1.1, 1.1);
-      dx += Math.cos(sh.heading + sh.wander) * 0.45;
-      dy += Math.sin(sh.heading + sh.wander) * 0.45;
+      dx += Math.cos(sh.heading + sh.wander) * wanderW;
+      dy += Math.sin(sh.heading + sh.wander) * wanderW;
 
       // Hunt.
       if (time >= sh.retargetAt) {
@@ -616,7 +692,21 @@ export class World {
         dy += (ty / d) * w;
         hunting = true;
         closing = clamp(1 - d / (L * 0.9), 0, 1);
-      } else {
+      } else if (circling) {
+        // Ring: follow the ellipse tangent (all the same way round) and
+        // steer back onto the line when drifting in or out.
+        const nx = (hx - ring.cx) / ring.rx;
+        const ny = (hy - ring.cy) / ring.ry;
+        const r = Math.hypot(nx, ny) || 1e-3;
+        let tx = (-ny / r) * ring.rx;
+        let ty = (nx / r) * ring.ry;
+        const tl = Math.hypot(tx, ty) || 1;
+        tx /= tl;
+        ty /= tl;
+        const radial = clamp(1 - r, -1, 1) * 2.4;
+        dx += tx * 1.6 + (nx / r) * radial;
+        dy += ty * 1.6 + (ny / r) * radial;
+      } else if (!ring) {
         // Patrol: a lazy circuit around the headline.
         const rx = (hx - cxW) / (W / minSide);
         const ry = hy - cyW;
@@ -661,7 +751,7 @@ export class World {
       const ex = (hx - cxW) / (W * (this.calm ? 0.34 : 0.3));
       const ey = (hy - cyW) / (H * (this.calm ? 0.26 : 0.16));
       const e2 = ex * ex + ey * ey;
-      if (e2 < 1 && !sh.away && !this.textRects) {
+      if (e2 < 1 && !sh.away && !this.textRects && !ring) {
         const e = Math.sqrt(e2) || 1e-3;
         const w = (1 - e) * (hunting ? 1 : 2.5);
         dx += (ex / e) * w;
@@ -694,7 +784,7 @@ export class World {
 
       // Koi drift; sharks cruise.
       const cruise = (sh.kind === "koi" ? 16 + L * 0.03 : 30 + L * 0.04) * (this.calm ? 0.6 : 1);
-      let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
+      let targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise * (circling ? this.pace[si] : 1);
       targetSpeed *= 1 + 2.5 * sh.rush;
       sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
       targetSpeed *= 1 + 4 * sh.hurry;

@@ -6,3 +6,5 @@ vendor/
 Gemfile.lock
 *.swp
 .DS_Store
+# …but keep the vendored sources the site is built from.
+!assets/vendor/

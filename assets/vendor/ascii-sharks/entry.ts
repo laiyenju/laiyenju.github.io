@@ -1,6 +1,7 @@
 import { OceanEngine } from "./src/engine";
+import { ASCII, GLYPH_DAY, GLYPH_NIGHT } from "./src/themes";
 
 const root = typeof window !== "undefined" ? window : globalThis;
-(root as unknown as { OceanEngine: typeof OceanEngine }).OceanEngine = OceanEngine;
+Object.assign(root, { OceanEngine, OceanThemes: { ASCII, GLYPH_DAY, GLYPH_NIGHT } });
 
 export { OceanEngine };
