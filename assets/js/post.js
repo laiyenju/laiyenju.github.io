@@ -5,8 +5,9 @@
         one small koi swims across it, once. Footnotes move into the right
         margin on wide screens. —— */
 
-  /* Column (680) + gap (28) + rail (200) = 908, plus a margin either side. */
-  var RAIL_MIN = 960;
+  /* The column (680) stays centred; the rail needs 28px + at least 160px + 16px
+     on its right: (680 + 2 × 204) = 1088. Narrower, the notes go to the end. */
+  var RAIL_MIN = 1088;
   var GAP = 12;
 
   var post = document.querySelector(".post");
@@ -129,7 +130,7 @@
 
     function typeBar(next) {
       show(bar);
-      if (root.classList.contains("from-notes") || !cmd) return next();
+      if (!cmd) return next();
       finishers.push(typeText(cmd, 26, function () { later(120, next); }));
     }
     function typeTitle(next) {
@@ -289,12 +290,11 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     labelCode();
-    // Arriving through the view transition: start typing once the carried
-    // command line has landed. pagereveal has fired by the first frame.
-    // Typing also waits for the fonts (at most 400ms), so the first characters
-    // don't stall while the Chinese face is still coming in.
+    // Start typing once any page transition has finished (pagereveal has fired
+    // by the first frame) and the fonts are in (at most 400ms), so the first
+    // characters don't stall while the Chinese face is still coming in.
     requestAnimationFrame(function () {
-      var landed = window.postArrival || (document.activeViewTransition && document.activeViewTransition.finished) || Promise.resolve();
+      var landed = (document.activeViewTransition && document.activeViewTransition.finished) || Promise.resolve();
       var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
       var cap = new Promise(function (res) { window.setTimeout(res, 400); });
       var go = function () { Promise.race([fonts, cap]).then(stream, stream); };
