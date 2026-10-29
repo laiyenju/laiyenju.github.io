@@ -9,7 +9,7 @@
 
   var OUT_MS = 340;
   var LIST_LIMIT = 6;
-  var TITLES = { home: "hey, I'm Yen.", notes: "Notes · Yen", works: "Works · Yen" };
+  var TITLES = { home: "hey, I'm Yen", notes: "Notes · Yen", works: "Works · Yen" };
 
   var reduceMotion =
     window.matchMedia &&

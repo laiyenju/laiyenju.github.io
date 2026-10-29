@@ -16,20 +16,24 @@
 
     <div class="home-chrome">
       <nav class="home-nav" aria-label="Primary">
-        <a href="notes/" data-view-link="notes">notes</a>
-        <a href="works/" data-view-link="works">works</a>
+        <a href="notes/" data-view-link="notes">notes/</a>
+        <a href="works/" data-view-link="works">works/</a>
       </nav>
-
-      <div class="home-view home-copy" data-view="home">
-        <h1 class="home-greeting">hey, I'm Yen.</h1>
-        <p class="home-sub">寫</p>
-        <p class="home-role">Product manager @Taiwan</p>
-        <p class="home-slogan">I build things, then make sense of them.</p>
-        <p class="home-links"><a href="https://github.com/laiyenju">github</a>｜<a href="https://www.linkedin.com/in/laiyenju/">LinkedIn</a>｜<a href="https://x.com/theYenLai">X</a></p>
-      </div>
 
       {% comment %}Being in published/ is the publish signal (see README).{% endcomment %}
       {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
+      {% assign last_note = notes | first %}
+      <div class="home-view home-copy" data-view="home">
+        <h1 class="home-greeting">hey, I'm Yen</h1>
+        <p class="home-sub"><span class="home-seal">寫</span></p>
+        <p class="home-role">Product manager @Taiwan</p>
+        <p class="home-slogan">I build things, then make sense of them.</p>
+        {% if last_note %}
+        <p class="home-last"><span class="home-last-label">last note</span> {% if last_note.date %}<time datetime="{{ last_note.date | date_to_xmlschema }}">{{ last_note.date | date: "%Y-%m-%d" }}</time> · {% endif %}<a href="{{ last_note.url | relative_url }}">{{ last_note.title }}</a></p>
+        {% endif %}
+        <p class="home-links"><a href="https://github.com/laiyenju">github</a> · <a href="https://www.linkedin.com/in/laiyenju/">linkedin</a> · <a href="https://x.com/theYenLai">x</a></p>
+      </div>
+
       {% assign this_year = site.time | date: "%Y" %}
       {% assign year_chars = 0 %}
       {% assign year_posts = 0 %}
@@ -137,6 +141,8 @@
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
         var node;
         while ((node = walker.nextNode())) {
+          // The seal keeps its own colours, so it is left whole.
+          if (node.parentNode.closest(".home-seal")) continue;
           if (node.nodeValue && node.nodeValue.trim()) texts.push(node);
         }
         texts.forEach(function (textNode) {
@@ -164,8 +170,8 @@
       window.addEventListener("resize", measureRing);
       window.setInterval(syncText, 400);
 
-      // Copy over a koi flips colour so it stays legible: paper-coloured over
-      // dark ink by day, dark over lit amber by night.
+      // Copy over a koi is cut out of it: the glyph gets a small patch of the
+      // page colour behind it, so it stays legible over any part of the body.
       var glyphs = document.querySelectorAll(".home-glyph");
       function fishCell(r, g, b, a, isNight) {
         if (a < 180) return false;
@@ -214,7 +220,7 @@
               var y1 = Math.min(canvas.height - 1, Math.ceil((r.bottom - crect.top) * sy) + 1);
               var hit = fishAt(data, canvas.width, canvas.height, x0, y0, x1, y1, isNight);
               g.dataset.on = hit ? "1" : "";
-              g.style.color = hit ? (isNight ? "#14110d" : "#FFF5EB") : "";
+              g.style.background = hit ? (isNight ? "#14110d" : "#fafaf7") : "";
             }
           }
         }

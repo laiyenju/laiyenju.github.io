@@ -1,4 +1,4 @@
 ---
 layout: home
-title: hey, I'm Yen.
+title: hey, I'm Yen
 ---

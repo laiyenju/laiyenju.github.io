@@ -572,6 +572,63 @@ body.theme-night .sh-panel .panel-list a:focus-visible { background: #ecc488; co
 body.theme-night .work-status[data-status="in progress"] { --status: #9fd08a; }
 body.theme-night .work-status[data-status="experiment"] { --status: #f0a868; }
 
+/* —— Home copy: a few terminal marks on a human page —— */
+/* The same underline cursor as article titles. */
+.home-greeting::after {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: max(2px, 0.1em);
+  margin-left: 0.2em;
+  vertical-align: -0.08em;
+  background: #c45c26;
+  animation: post-cursor 1.1s steps(1) infinite;
+}
+/* 寫 as a seal: a vermilion stamp, the same red as the koi patches. */
+.home-sub {
+  margin: 4px 0 14px;
+}
+.home-seal {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 2px;
+  background: #b8332a;
+  color: #f6efe4;
+  font: 600 18px/1 "Noto Serif TC", "Songti TC", serif;
+  letter-spacing: 0;
+}
+/* Like a login banner's "Last login": the newest note, linked. */
+.home-last {
+  margin: 0 auto 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #6e6a64;
+  font-variant-numeric: tabular-nums;
+}
+.home-last-label {
+  color: #9a948c;
+}
+.home-last a {
+  color: #2a2420;
+  border-bottom: 1px solid rgba(42, 36, 32, 0.25);
+}
+.home-last a:hover {
+  opacity: 1;
+  color: #c45c26;
+  border-bottom-color: currentColor;
+}
+body.theme-night .home-greeting::after { background: #f0a868; }
+body.theme-night .home-seal { background: #e8a852; color: #17130e; }
+body.theme-night .home-last { color: #9c8462; }
+body.theme-night .home-last-label { color: #7d6a50; }
+body.theme-night .home-last a { color: #ecc488; border-bottom-color: rgba(236, 196, 136, 0.3); }
+body.theme-night .home-last a:hover { color: #f0a868; }
+@media (prefers-reduced-motion: reduce) {
+  .home-greeting::after { animation: none; }
+}
+
 /* Legacy home column styles kept inert (no longer used by home layout) */
 .home-columns,
 .home-header,
