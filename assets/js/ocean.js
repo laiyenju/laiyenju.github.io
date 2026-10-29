@@ -133,6 +133,7 @@
   var FISH_COHESION_K = 1;
   var FISH_FLEE_K = 1100;
   var BLIND_COS = -0.6;
+  var PASS_SPEED = 1 / 3;
   var World = class {
     /** fishCount overrides the area-based population (the sidebar wants a single small school). */
     constructor(sharkSpecs = DEFAULT_SHARKS, fishCount) {
@@ -393,7 +394,7 @@
       sh.scare = 0;
       sh.rush = 0;
       sh.away = false;
-      sh.speed = Math.max(40, W / 7);
+      sh.speed = Math.max(120, W * PASS_SPEED);
       this.pass = { y, dir, at: this.time };
       this.passDone = false;
     }
@@ -768,7 +769,7 @@
         targetSpeed *= 1 + 2.5 * sh.rush;
         sh.hurry += ((onText >= 0 ? 1 : 0) - sh.hurry) * Math.min(1, dt * 2);
         targetSpeed *= 1 + 4 * sh.hurry;
-        if (pass) targetSpeed = Math.max(cruise, W / 7);
+        if (pass) targetSpeed = Math.max(120, W * PASS_SPEED);
         if (sh.away) targetSpeed = Math.max(W, H) * 0.6;
         else if (sh.scare > 0) targetSpeed = Math.max(targetSpeed, cruise * (1 + 9 * sh.scare));
         sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * (sh.scare > 0 ? 4 : 1.1));
