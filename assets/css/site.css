@@ -390,15 +390,6 @@ body .home-nav a[aria-current="page"] {
   color: #2a2420;
 }
 
-.home-sub {
-  margin: 0 0 8px;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  color: #6e6a64;
-}
-
 .home-role,
 .home-slogan {
   margin: 0 auto 8px;
@@ -460,7 +451,6 @@ body.theme-night .home-copy,
 body.theme-night .home-panel,
 body.theme-night .panel-back:hover,
 body.theme-night .home-nav a[aria-current="page"] { color: #ecc488; }
-body.theme-night .home-sub,
 body.theme-night .panel-head,
 body.theme-night .panel-meta { color: #9c8462; }
 body.theme-night[data-view="notes"] .home-nav a,
@@ -584,24 +574,14 @@ body.theme-night .work-status[data-status="experiment"] { --status: #f0a868; }
   background: #c45c26;
   animation: post-cursor 1.1s steps(1) infinite;
 }
-/* 寫 as a seal: a vermilion stamp, the same red as the koi patches. */
-.home-sub {
-  margin: 4px 0 14px;
-}
-.home-seal {
-  display: inline-grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 2px;
-  background: #b8332a;
-  color: #f6efe4;
-  font: 600 18px/1 "Noto Serif TC", "Songti TC", serif;
-  letter-spacing: 0;
-}
-/* Like a login banner's "Last login": the newest note, linked. */
+/* Like a login banner's "Last login": the newest note, linked. It sits
+   below the links behind a short rule, far enough apart that a tap on one
+   never lands on the other. */
 .home-last {
-  margin: 0 auto 10px;
+  display: inline-block;
+  margin: 32px auto 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(42, 36, 32, 0.14);
   font-size: 12px;
   line-height: 1.55;
   color: #6e6a64;
@@ -611,6 +591,8 @@ body.theme-night .work-status[data-status="experiment"] { --status: #f0a868; }
   color: #9a948c;
 }
 .home-last a {
+  display: inline-block;
+  padding: 4px 0;
   color: #2a2420;
   border-bottom: 1px solid rgba(42, 36, 32, 0.25);
 }
@@ -620,8 +602,7 @@ body.theme-night .work-status[data-status="experiment"] { --status: #f0a868; }
   border-bottom-color: currentColor;
 }
 body.theme-night .home-greeting::after { background: #f0a868; }
-body.theme-night .home-seal { background: #e8a852; color: #17130e; }
-body.theme-night .home-last { color: #9c8462; }
+body.theme-night .home-last { color: #9c8462; border-top-color: rgba(236, 196, 136, 0.18); }
 body.theme-night .home-last-label { color: #7d6a50; }
 body.theme-night .home-last a { color: #ecc488; border-bottom-color: rgba(236, 196, 136, 0.3); }
 body.theme-night .home-last a:hover { color: #f0a868; }

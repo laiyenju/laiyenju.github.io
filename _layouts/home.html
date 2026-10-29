@@ -25,13 +25,13 @@
       {% assign last_note = notes | first %}
       <div class="home-view home-copy" data-view="home">
         <h1 class="home-greeting">hey, I'm Yen</h1>
-        <p class="home-sub"><span class="home-seal">寫</span></p>
         <p class="home-role">Product manager @Taiwan</p>
         <p class="home-slogan">I build things, then make sense of them.</p>
+        <p class="home-links"><a href="https://github.com/laiyenju">github</a> · <a href="https://www.linkedin.com/in/laiyenju/">linkedin</a> · <a href="https://x.com/theYenLai">x</a></p>
+        {% comment %}Set apart from the links, like a status line, so neither is tapped by mistake.{% endcomment %}
         {% if last_note %}
         <p class="home-last"><span class="home-last-label">last note</span> {% if last_note.date %}<time datetime="{{ last_note.date | date_to_xmlschema }}">{{ last_note.date | date: "%Y-%m-%d" }}</time> · {% endif %}<a href="{{ last_note.url | relative_url }}">{{ last_note.title }}</a></p>
         {% endif %}
-        <p class="home-links"><a href="https://github.com/laiyenju">github</a> · <a href="https://www.linkedin.com/in/laiyenju/">linkedin</a> · <a href="https://x.com/theYenLai">x</a></p>
       </div>
 
       {% assign this_year = site.time | date: "%Y" %}
@@ -141,8 +141,6 @@
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
         var node;
         while ((node = walker.nextNode())) {
-          // The seal keeps its own colours, so it is left whole.
-          if (node.parentNode.closest(".home-seal")) continue;
           if (node.nodeValue && node.nodeValue.trim()) texts.push(node);
         }
         texts.forEach(function (textNode) {
