@@ -45,4 +45,4 @@ jekyll serve
 - notes 的字數由 Jekyll 建置時粗略計算（扣掉 HTML 標籤和空白後的字元數），`total` 只算今年的文章。
 - works 的狀態寫在 `_data/works.yml` 的 `status`：`in progress`（綠點）、`experiment`（橘點），其他值是灰點。
 - 文章頁（`_layouts/default.html`、`assets/js/post.js`）也是 terminal 風格：上方 `$ cd ..`、`cat 檔名.md`，標題下方是日期和字數；Markdown 的清單、程式碼、表格、分隔線、註腳用 terminal 的寫法呈現，內文維持一般字型。文章結尾是 `(END)`、上一篇／下一篇，以及可以輸入指令的提示字元。文章頁也跟著系統切換日間和夜間。
-- 從 notes 點文章時，提示字元會快速打出 `cat 檔名.md`，標題再滑進文章頁（瀏覽器支援 View Transitions 時）；文章第一個畫面的段落會依序印出來。系統設定「減少動態效果」時都會省略。
+- 從 notes 點文章時，提示字元會快速打出 `cat 檔名.md`，這一行再滑到文章頁上方（瀏覽器支援 View Transitions 時）；接著標題一個字一個字打出來、日期那行打出來，第一個畫面的內文一行一行印出來。按任何鍵、捲動或點擊會立刻顯示全文；系統設定「減少動態效果」時都會省略。

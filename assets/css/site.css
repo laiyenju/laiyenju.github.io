@@ -2020,35 +2020,94 @@ body.has-rail .post {
   border-radius: 2px;
 }
 
-/* Print: first-screen blocks appear one after another (see post.js). A
-   safety reveal shows everything after 1.2s should the script not run. */
+/* Arrival, like `cat` in a terminal (see post.js): the command line, then
+   the title typed character by character behind a block cursor, the date
+   line typed out, and the first screen of prose streamed in line by line.
+   Everything below the first screen is simply there. A key, a scroll or a
+   tap finishes it at once (.stream-done). Should the script not run, a
+   safety reveal shows everything after 4s. */
 html.post-print .post-head > *,
-html.post-print .post-prose > *,
 html.post-print .post-end {
   opacity: 0;
-  animation: post-print 1ms 1.2s steps(1) forwards;
+  animation: post-show 1ms 4s forwards;
 }
-html.post-print .post-head > .is-printed,
-html.post-print .post-prose > .is-printed,
-html.post-print .post-end.is-printed {
-  animation: post-print 1ms var(--print-delay, 0ms) steps(1) forwards;
+html.post-print .post-prose > * {
+  clip-path: inset(0 0 100% 0);
+  animation: post-unclip 1ms 4s forwards;
 }
-@keyframes post-print {
+/* Opened from the notes list: the command line is already there (it slides up from the list). */
+html.post-print.from-notes .post-head > .post-bar,
+html.post-print .post-head > .is-shown,
+html.post-print .post-end.is-shown {
+  opacity: 1;
+  animation: none;
+}
+html.post-print .post-prose > .is-streaming {
+  animation: post-unclip var(--stream-dur, 1ms) steps(var(--stream-lines, 1), end) var(--stream-delay, 0ms) both;
+}
+/* The date line is mono, so stepping its clip one character at a time reads as typing. */
+html.post-print .post-meta.is-shown {
+  width: fit-content;
+  animation: post-type var(--type-dur, 1ms) steps(var(--type-chars, 1), end) both;
+}
+html.post-print.stream-done .post-head > *,
+html.post-print.stream-done .post-end {
+  opacity: 1 !important;
+  animation: none !important;
+}
+html.post-print.stream-done .post-prose > * {
+  clip-path: none !important;
+  animation: none !important;
+}
+/* Typed text keeps its full width from the start; the untyped rest is hidden. */
+.type-rest {
+  visibility: hidden;
+}
+/* A block cursor while the title types (no blink; it goes once the title is out). */
+.type-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.95em;
+  margin-left: 0.06em;
+  vertical-align: -0.1em;
+  background: currentColor;
+}
+@keyframes post-show {
   to {
     opacity: 1;
   }
 }
+@keyframes post-unclip {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes post-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
 
-/* The title carries over from the notes row that opened it (cross-document view transition). */
+/* The typed `cat` line carries over from the notes prompt to the top of the
+   article (cross-document view transition). */
 @view-transition {
   navigation: auto;
 }
-.post-title {
-  view-transition-name: post-title;
+.post-cmd {
+  view-transition-name: post-cmd;
 }
 ::view-transition-group(*) {
   animation-duration: 260ms;
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+::view-transition-group(post-cmd) {
+  animation-duration: 380ms;
 }
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
