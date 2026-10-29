@@ -33,8 +33,8 @@
 
   /* —— Notes: a shell session. A prompt runs `ls -lt`, rows sit in `ls -l` columns,
         and the row under the pointer or keyboard turns reverse video like a TUI picker. —— */
-  .home-panel[data-view="notes"] .panel-list { grid-template-columns: 1fr; }
-  .home-panel[data-view="notes"] .panel-list li { border-top: 0; }
+  .sh-panel .panel-list { grid-template-columns: 1fr; }
+  .sh-panel .panel-list li { border-top: 0; }
   .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sh-prompt { color: #4f8a4a; }
   .sh-path { color: #c45c26; }
@@ -45,11 +45,11 @@
   }
   .sh-cmd:not(.is-typing)::after { display: none; }
   @keyframes sh-blink { 50% { opacity: 0; } }
-  .home-panel[data-view="notes"] .panel-list a {
+  .sh-panel .panel-list a { padding: 3px 6px; margin: 0 -6px; border-radius: 1px; font-size: 13px; line-height: 1.75; }
+  .sh-notes .panel-list a {
     display: grid; grid-template-columns: 1.5ch 10ch 10ch minmax(0, 1fr) 10ch; gap: 14px; align-items: baseline;
-    padding: 3px 6px; margin: 0 -6px; border-radius: 1px; font-size: 13px; line-height: 1.75;
   }
-  .home-panel[data-view="notes"] .panel-title { font-size: 13px; line-height: 1.75; }
+  .sh-panel .panel-title { font-size: 13px; line-height: 1.75; }
   .ls-mark { color: transparent; }
   .ls-perm, .ls-size, .ls-date { color: #8a857e; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ls-size { text-align: right; }
@@ -60,20 +60,20 @@
   .home-panel.is-listing .sh-out,
   .home-panel.is-listing .sh-live,
   .home-panel.is-listing .sh-keys { visibility: hidden; }
-  .home-panel[data-view="notes"] .panel-list a:hover,
-  .home-panel[data-view="notes"] .panel-list a:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
-  .home-panel[data-view="notes"] .panel-list a:hover *,
-  .home-panel[data-view="notes"] .panel-list a:focus-visible * { color: inherit; }
-  .home-panel[data-view="notes"] .panel-list a:hover .panel-title { color: inherit; }
-  .home-panel[data-view="notes"] .panel-list a:focus-visible .ls-mark,
-  .home-panel[data-view="notes"] .panel-list a:hover .ls-mark { color: inherit; }
+  .sh-panel .panel-list a:hover,
+  .sh-panel .panel-list a:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
+  .sh-panel .panel-list a:hover *,
+  .sh-panel .panel-list a:focus-visible * { color: inherit; }
+  .sh-panel .panel-list a:hover .panel-title { color: inherit; }
+  .sh-panel .panel-list a:focus-visible .ls-mark,
+  .sh-panel .panel-list a:hover .ls-mark { color: inherit; }
   /* Back to home, said the shell way. */
   .home-panel .panel-back.sh-back { padding: 1px 6px; margin-left: -6px; border-radius: 1px; color: #8a857e; }
   .sh-back .sh-dollar { color: #4f8a4a; }
   .home-panel .panel-back.sh-back:hover,
   .home-panel .panel-back.sh-back:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
   .sh-back:hover .sh-dollar, .sh-back:focus-visible .sh-dollar { color: inherit; }
-  .home-panel[data-view="notes"] .panel-head { justify-content: flex-start; }
+  .sh-panel .panel-head { justify-content: flex-start; }
 
   /* The last prompt takes commands (a small easter egg): cd ~, cd -, ls, help… */
   .sh-out { margin: 18px 0 0; display: grid; }
@@ -88,33 +88,40 @@
   .sh-keys { margin: 14px 0 0; font-size: 12px; color: #8a857e; }
   .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
   @media (max-width: 560px) {
-    .home-panel[data-view="notes"] .panel-list a { grid-template-columns: 1.5ch 10ch minmax(0, 1fr) 9ch; gap: 10px; }
+    .sh-notes .panel-list a { grid-template-columns: 1.5ch 10ch minmax(0, 1fr) 9ch; gap: 10px; }
     .ls-perm { display: none; }
     .sh-keys { display: none; }
   }
   @media (prefers-reduced-motion: reduce) { .sh-cmd::after { animation: none; } }
 
-  /* —— Works: a spec card per piece, led by its seal character. —— */
-  .home-panel[data-view="works"] .panel-list a {
-    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start;
+  /* —— Works: the same shell, listing directories. Each row leads with its seal character. —— */
+  .sh-works .panel-list a {
+    display: grid; grid-template-columns: 1.5ch 10ch 2.6ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
   }
   .work-seal {
-    display: grid; place-items: center; width: 34px; height: 34px; margin-top: 2px;
-    background: #b8332a; color: #f6efe4; border-radius: 2px;
-    font: 600 19px/1 "Noto Serif TC", "Songti TC", serif;
+    display: inline-grid; place-items: center; width: 2.2ch; height: 1.5em; align-self: center;
+    background: #b8332a; color: #f6efe4; border-radius: 1px;
+    font: 600 13px/1 "Noto Serif TC", "Songti TC", serif;
   }
-  .work-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .sh-panel .panel-list a:hover .work-seal,
+  .sh-panel .panel-list a:focus-visible .work-seal { color: #f6efe4; }
   .work-status { font-size: 12px; color: #8a857e; white-space: nowrap; }
-  .work-status::before { content: "● "; font-size: 8px; vertical-align: 2px; color: var(--status, #8a857e); }
+  .work-status::before { content: "● "; color: var(--status, #8a857e); }
   .work-status[data-status="進行中"] { --status: #4f8a4a; }
   .work-status[data-status="實驗"] { --status: #c45c26; }
+  .work-desc { grid-column: 4 / -1; font-size: 12px; line-height: 1.6; color: #8a857e; padding-bottom: 4px; }
+  @media (max-width: 560px) {
+    .sh-works .panel-list a { grid-template-columns: 1.5ch 2.6ch minmax(0, 1fr) auto; column-gap: 10px; }
+    .work-desc { grid-column: 3 / -1; }
+  }
 
   body.theme-night .ls-perm,
   body.theme-night .ls-size,
   body.theme-night .ls-date,
   body.theme-night .sh-dim,
   body.theme-night .sh-keys,
-  body.theme-night .work-status { color: #9c8462; }
+  body.theme-night .work-status,
+  body.theme-night .work-desc { color: #9c8462; }
   body.theme-night .sh-prompt { color: #9fd08a; }
   body.theme-night .sh-path { color: #f0a868; }
   body.theme-night .sh-keys kbd { border-color: rgba(236, 196, 136, 0.3); }
@@ -122,9 +129,11 @@
   body.theme-night .sh-back .sh-dollar { color: #9fd08a; }
   body.theme-night .home-panel .panel-back.sh-back:hover,
   body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #ecc488; color: #14110d; }
-  body.theme-night .home-panel[data-view="notes"] .panel-list a:hover,
-  body.theme-night .home-panel[data-view="notes"] .panel-list a:focus-visible { background: #ecc488; color: #14110d; }
-  body.theme-night .work-seal { background: #e8a852; color: #17130e; }
+  body.theme-night .sh-panel .panel-list a:hover,
+  body.theme-night .sh-panel .panel-list a:focus-visible { background: #ecc488; color: #14110d; }
+  body.theme-night .work-seal,
+  body.theme-night .sh-panel .panel-list a:hover .work-seal,
+  body.theme-night .sh-panel .panel-list a:focus-visible .work-seal { background: #e8a852; color: #17130e; }
   body.theme-night .work-status[data-status="進行中"] { --status: #9fd08a; }
   body.theme-night .work-status[data-status="實驗"] { --status: #f0a868; }
 
@@ -163,7 +172,7 @@
         <p class="home-links"><a href="https://github.com/laiyenju">github</a>｜<a href="https://www.linkedin.com/in/laiyenju/">LinkedIn</a>｜<a href="https://x.com/theYenLai">X</a></p>
       </div>
 
-      <section class="home-view home-panel" data-view="notes" aria-label="Notes" tabindex="-1" hidden>
+      <section class="home-view home-panel sh-panel sh-notes" data-view="notes" data-path="~/notes" aria-label="Notes" tabindex="-1" hidden>
         <div class="panel-head">
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
         </div>
@@ -174,21 +183,25 @@
           <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span><time class="ls-date" datetime="2026-03-08">2026-03-08</time><span class="panel-title">你好，這是第一篇</span><span class="ls-size">80 chars</span></a></li>
         </ul>
         <div class="sh-out" aria-live="polite"></div>
-        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><input class="sh-input" id="sh-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><input class="sh-input" id="sh-input-notes" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
         <p class="sh-keys"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　輸入 <kbd>help</kbd> 看看</p>
         <button class="panel-more" type="button" hidden>view all</button>
       </section>
 
-      <section class="home-view home-panel" data-view="works" aria-label="Works" tabindex="-1" hidden>
+      <section class="home-view home-panel sh-panel sh-works" data-view="works" data-path="~/works" aria-label="Works" tabindex="-1" hidden>
         <div class="panel-head">
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
-          <span class="panel-lede">作品集 · portfolio</span>
         </div>
+        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$ <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
+        <p class="sh-line sh-dim sh-total">total 3 works · 1 in progress</p>
         <ul class="panel-list">
-          <li><a href="#"><span class="work-seal" aria-hidden="true">寫</span><span><span class="work-head"><span class="panel-title">laiyenju.github.io</span><span class="work-status" data-status="進行中">進行中</span></span><span class="panel-meta">This writing site — quiet pages in Jekyll.</span></span></a></li>
-          <li><a href="#"><span class="work-seal" aria-hidden="true">空</span><span><span class="work-head"><span class="panel-title">字與空</span><span class="work-status" data-status="實驗">實驗</span></span><span class="panel-meta">Experiments in measure and pause.</span></span></a></li>
-          <li><a href="#"><span class="work-seal" aria-hidden="true">畫</span><span><span class="work-head"><span class="panel-title">Sketchbook</span><span class="work-status" data-status="完成">完成</span></span><span class="panel-meta">Small visual studies, unfinished on purpose.</span></span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="work-seal" aria-hidden="true">寫</span><span class="panel-title">laiyenju.github.io/</span><span class="work-status" data-status="進行中">進行中</span><span class="work-desc">This writing site — quiet pages in Jekyll.</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="work-seal" aria-hidden="true">空</span><span class="panel-title">字與空/</span><span class="work-status" data-status="實驗">實驗</span><span class="work-desc">Experiments in measure and pause.</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="work-seal" aria-hidden="true">畫</span><span class="panel-title">Sketchbook/</span><span class="work-status" data-status="完成">完成</span><span class="work-desc">Small visual studies, unfinished on purpose.</span></a></li>
         </ul>
+        <div class="sh-out" aria-live="polite"></div>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <p class="sh-keys"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　輸入 <kbd>help</kbd> 看看</p>
         <button class="panel-more" type="button" hidden>view all</button>
       </section>
     </div>
@@ -317,119 +330,125 @@
         requestAnimationFrame(tick);
       }
 
-      // —— Notes shell: type the command each time the list opens; arrow keys walk the rows. ——
-      var cmd = document.querySelector(".sh-cmd");
-      var typing = 0;
-      var notesPanel = document.querySelector('.home-panel[data-view="notes"]');
-      function typeCommand(then) {
-        var text = cmd.getAttribute("data-cmd");
-        var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        window.clearInterval(typing);
-        function done() {
-          cmd.classList.remove("is-typing");
-          notesPanel.classList.remove("is-listing");
-          if (then) then();
+      // —— Shell panels (notes, works): each types its command when it opens, then takes commands
+      //    on its last prompt. cd ~ / cd .. go home, cd - goes back to the page before. ——
+      var previous = "home";
+      var shown = view();
+      var shells = {};
+      Array.prototype.forEach.call(document.querySelectorAll(".sh-panel"), function (panel) {
+        var name = panel.getAttribute("data-view");
+        var cmd = panel.querySelector(".sh-cmd");
+        var out = panel.querySelector(".sh-out");
+        var input = panel.querySelector(".sh-input");
+        var path = panel.getAttribute("data-path");
+        var other = name === "notes" ? "works" : "notes";
+        var typing = 0;
+
+        function typeCommand(then) {
+          var text = cmd.getAttribute("data-cmd");
+          var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          window.clearInterval(typing);
+          function done() {
+            cmd.classList.remove("is-typing");
+            panel.classList.remove("is-listing");
+            if (then) then();
+          }
+          if (still) { cmd.textContent = text; done(); return; }
+          var n = 0;
+          cmd.textContent = "";
+          cmd.classList.add("is-typing");
+          panel.classList.add("is-listing");
+          typing = window.setInterval(function () {
+            cmd.textContent = text.slice(0, ++n);
+            if (n >= text.length) { window.clearInterval(typing); window.setTimeout(done, 180); }
+          }, 70);
         }
-        if (still) { cmd.textContent = text; done(); return; }
-        var n = 0;
-        cmd.textContent = "";
-        cmd.classList.add("is-typing");
-        notesPanel.classList.add("is-listing");
-        typing = window.setInterval(function () {
-          cmd.textContent = text.slice(0, ++n);
-          if (n >= text.length) { window.clearInterval(typing); window.setTimeout(done, 180); }
-        }, 70);
-      }
+        // Clear wipes the whole screen, list included, then the shell lists again.
+        function relist() {
+          out.innerHTML = "";
+          cmd.textContent = "";
+          panel.classList.add("is-listing");
+          window.setTimeout(function () { typeCommand(function () { input.focus({ preventScroll: true }); }); }, 260);
+        }
+        function say(text, prompt) {
+          var p = document.createElement("p");
+          if (prompt) {
+            p.innerHTML = '<span class="sh-prompt">yen@taiwan</span>:<span class="sh-path"></span>$ ';
+            p.querySelector(".sh-path").textContent = path;
+            p.appendChild(document.createTextNode(text));
+          } else {
+            p.className = "sh-dim";
+            p.textContent = text;
+          }
+          out.appendChild(p);
+          while (out.children.length > 14) out.removeChild(out.firstChild);
+        }
+        function goTo(to) {
+          window.setTimeout(function () {
+            var link = to === "home" ? panel.querySelector(".panel-back") : document.querySelector('.home-nav a[data-view-link="' + to + '"]');
+            if (link) link.click();
+          }, 260);
+        }
+        var list = name === "notes" ? "list notes again     重新列出文章" : "list works again     重新列出作品";
+        var COMMANDS = {
+          help: function () {
+            say("cd ~      go home              回首頁（也可以打 cd 或 cd ..）");
+            say("cd -      go back              回上一頁");
+            say("cd " + other + (other === "notes" ? "  read notes           去看文章" : "  see works            去看作品"));
+            say("ls        " + list);
+            say("whoami    who is Yen           我是誰");
+            say("clear     clear the screen     清除畫面，重新列出");
+            say("help      show this list       列出這些指令");
+          },
+          whoami: function () { say("yen — product manager @Taiwan. I build things, then make sense of them."); },
+          pwd: function () { say("/home/yen/" + name); },
+          ls: relist,
+          clear: relist,
+        };
+        function run(raw) {
+          var line = raw.trim().replace(/\s+/g, " ");
+          if (!line) return;
+          say(line, true);
+          var words = line.split(" ");
+          if (words[0] === "cd") {
+            var to = words[1] || "~";
+            if (to === "~" || to === ".." || to === "/" || to === "~/") return goTo("home");
+            if (to === "-") return goTo(previous === name ? "home" : previous);
+            if (to === "." || to === path || to === name) return;
+            if (to === other || to === "../" + other || to === "~/" + other) return goTo(other);
+            return say("cd: no such file or directory: " + to);
+          }
+          if (words[0] === "ls") return relist();
+          if (words[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
+          if (words[0] === "exit" || words[0] === "home") return goTo("home");
+          if (COMMANDS[words[0]]) return COMMANDS[words[0]]();
+          say("sh: command not found: " + words[0] + " — try help（輸入 help 看看可以做什麼）");
+        }
+        input.addEventListener("keydown", function (e) {
+          if (e.key !== "Enter") return;
+          e.preventDefault();
+          run(input.value);
+          input.value = "";
+        });
+        shells[name] = { open: function () { out.innerHTML = ""; typeCommand(); }, input: input };
+      });
+
       new MutationObserver(function () {
-        if (view() === "notes") typeCommand();
+        if (view() === shown) return;
+        previous = shown;
+        shown = view();
+        if (shells[shown]) shells[shown].open();
       }).observe(document.body, { attributes: true, attributeFilter: ["data-view"] });
+
       document.addEventListener("keydown", function (e) {
-        if (view() !== "notes" || (e.key !== "ArrowDown" && e.key !== "ArrowUp")) return;
-        if (e.target === input) return;
-        var rows = Array.prototype.slice.call(document.querySelectorAll('.home-panel[data-view="notes"] .panel-list li:not([hidden]) a'));
+        var sh = shells[view()];
+        if (!sh || (e.key !== "ArrowDown" && e.key !== "ArrowUp") || e.target === sh.input) return;
+        var rows = Array.prototype.slice.call(document.querySelectorAll('.home-panel[data-view="' + view() + '"] .panel-list li:not([hidden]) a'));
         if (!rows.length) return;
         e.preventDefault();
         var i = rows.indexOf(document.activeElement);
         i = i < 0 ? (e.key === "ArrowDown" ? 0 : rows.length - 1) : (i + (e.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length;
         rows[i].focus();
-      });
-
-      // —— The live prompt. cd ~ / cd .. go home, cd - goes back to the page before. ——
-      var input = document.getElementById("sh-input");
-      var out = document.querySelector(".sh-out");
-      var previous = "home";
-      var shown = view();
-      new MutationObserver(function () {
-        if (view() !== shown) { previous = shown; shown = view(); }
-      }).observe(document.body, { attributes: true, attributeFilter: ["data-view"] });
-
-      function say(text, prompt) {
-        var p = document.createElement("p");
-        if (prompt) {
-          p.innerHTML = '<span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ ';
-          p.appendChild(document.createTextNode(text));
-        } else {
-          p.className = "sh-dim";
-          p.textContent = text;
-        }
-        out.appendChild(p);
-        while (out.children.length > 14) out.removeChild(out.firstChild);
-      }
-      function goTo(name) {
-        window.setTimeout(function () {
-          var link = document.querySelector(name === "home" ? '.home-panel[data-view="notes"] .panel-back' : '.home-nav a[data-view-link="' + name + '"]');
-          if (link) link.click();
-        }, 260);
-      }
-      var COMMANDS = {
-        help: function () {
-          say("cd ~      go home              回首頁（也可以打 cd 或 cd ..）");
-          say("cd -      go back              回上一頁");
-          say("cd works  see works            去看作品");
-          say("ls        list notes again     重新列出文章");
-          say("whoami    who is Yen           我是誰");
-          say("clear     clear the screen     清除畫面，重新列出文章");
-          say("help      show this list       列出這些指令");
-        },
-        whoami: function () { say("yen — product manager @Taiwan. I build things, then make sense of them."); },
-        pwd: function () { say("/home/yen/notes"); },
-        ls: function () { relist(); },
-        // Clear wipes the whole screen, list included, then the shell lists the notes again.
-        clear: function () { relist(); },
-      };
-      function relist() {
-        out.innerHTML = "";
-        cmd.textContent = "";
-        notesPanel.classList.add("is-listing");
-        window.setTimeout(function () { typeCommand(function () { input.focus({ preventScroll: true }); }); }, 260);
-      }
-      function run(raw) {
-        var line = raw.trim().replace(/\s+/g, " ");
-        if (!line) return;
-        say(line, true);
-        var words = line.split(" ");
-        if (words[0] === "cd") {
-          var to = words[1] || "~";
-          if (to === "~" || to === ".." || to === "/" || to === "~/") return goTo("home");
-          if (to === "-") return goTo(previous === "notes" ? "home" : previous);
-          if (to === "." || to === "~/notes" || to === "notes") return;
-          if (to === "works" || to === "../works" || to === "~/works") return goTo("works");
-          return say("cd: no such file or directory: " + to);
-        }
-        if (line === "ls -lt" || line === "ls -l") return COMMANDS.ls();
-        if (words[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
-        if (words[0] === "exit" || words[0] === "home") return goTo("home");
-        if (COMMANDS[words[0]]) return COMMANDS[words[0]]();
-        say("sh: command not found: " + words[0] + " — try help（輸入 help 看看可以做什麼）");
-      }
-      input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          run(input.value);
-          input.value = "";
-        } else if (e.key === "Escape") {
-          input.blur();
-        }
       });
 
       var sample = "十大中口木日田金難心水手火月山土弓目丶丿乀乙ㄅㄆㄇ";
