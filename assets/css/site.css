@@ -88,6 +88,9 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Room for a scrollbar on every page, so the home and an article put their
+     text column at the same x whether or not either one scrolls. */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -183,7 +186,9 @@ body.home {
 .home-chrome {
   position: relative;
   z-index: 5;
-  width: min(680px, calc(100% - 48px));
+  /* The same measure as an article's text column (680 less 20 + 20), so a
+     note printed here lines up with its own page. */
+  width: min(640px, calc(100% - 40px));
   margin: 0 auto;
   padding: max(72px, calc(50vh - 128px)) 0 72px;
   padding-top: max(72px, calc(50dvh - 128px));
@@ -424,9 +429,6 @@ body .home-nav a[aria-current="page"] {
     gap: 22px;
     margin-bottom: 32px;
   }
-  .home-chrome {
-    width: calc(100% - 40px);
-  }
 }
 
 /* —— Home: night palette and the notes / works shell ——
@@ -480,8 +482,7 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 .home-panel.is-listing .panel-list,
 .home-panel.is-listing .panel-more,
 .home-panel.is-listing .sh-out,
-.home-panel.is-listing .sh-live,
-.home-panel.is-listing .sh-keys { visibility: hidden; }
+.home-panel.is-listing .sh-live { visibility: hidden; }
 .sh-panel .panel-list a:hover,
 .sh-panel .panel-list a:focus-visible,
 .sh-panel .panel-list a.is-opening { background: #2a2420; color: #fafaf7; outline: none; }
@@ -497,19 +498,21 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 .home-panel .panel-back.sh-back:hover,
 .home-panel .panel-back.sh-back:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
 .sh-back:hover .sh-dollar, .sh-back:focus-visible .sh-dollar { color: inherit; }
-.sh-panel .panel-head { justify-content: flex-start; }
 
 /* The last prompt takes commands (a small easter egg): cd ~, cd -, ls, help… */
 .sh-out { margin: 18px 0 0; display: grid; }
 .sh-out:empty { display: none; }
 .sh-out p { margin: 0; font-size: 13px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sh-live { margin-top: 18px; display: flex; align-items: baseline; cursor: text; }
+.sh-live[hidden] { display: none; }
 .sh-out:not(:empty) + .sh-live { margin-top: 0; }
 .sh-input {
   flex: 1; min-width: 0; margin-left: 0.6ch; padding: 0; border: 0; outline: none; background: none;
   font: inherit; color: inherit; caret-color: currentColor; caret-shape: block;
 }
-.sh-keys { margin: 14px 0 0; font-size: 12px; color: #8a857e; }
+/* Key hints sit up top beside $ cd ~, so the prompt can be the last line and print below it. */
+.sh-keys { margin: 0; font-size: 12px; color: #8a857e; }
+.sh-panel .panel-head { justify-content: space-between; }
 .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
 @media (max-width: 560px) {
   .sh-notes .panel-list a { grid-template-columns: 1.5ch 10ch minmax(0, 1fr) 9ch; gap: 10px; }
@@ -1720,11 +1723,13 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
 }
 
 /* Wide screens: footnotes move into the right margin, level with their reference. */
+/* The text column stays centred; the notes are added in the margin to its
+   right, 160–200px wide as the margin allows (see RAIL_MIN in post.js). */
 .post-rail {
   position: absolute;
   top: 0;
   left: calc(100% + 28px);
-  width: 200px;
+  width: clamp(160px, calc((100vw - 680px) / 2 - 44px), 200px);
 }
 .post-note {
   position: absolute;
@@ -1753,12 +1758,7 @@ html.reveal-js body.page-article .footnote-bottom.has-notes:not(.is-fn-visible) 
 body.has-rail .post-prose .footnotes {
   display: none;
 }
-/* With the rail, centre the column and the rail together (908px), so the
-   notes fit beside the text from 960px up instead of only on wide screens. */
-body.has-rail .post {
-  margin-left: max(16px, calc((100vw - 908px) / 2));
-  margin-right: auto;
-}
+
 
 @media (max-width: 640px) {
   .post {
@@ -1971,11 +1971,30 @@ body.has-rail .post {
 .post-end .sh-out:not(:empty) {
   margin: 0;
 }
+.post-end .sh-keys {
+  margin-top: 14px;
+}
 .post-end .sh-keys kbd {
   font: inherit;
   padding: 0 4px;
   border: 1px solid rgba(42, 36, 32, 0.25);
   border-radius: 2px;
+}
+
+/* A note printed in the notes shell before its page takes over (shell.js):
+   the article's own header and text, laid out exactly as on its page. */
+.sh-cat {
+  text-align: left;
+  pointer-events: none;
+}
+.sh-cat .post {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+canvas[data-koi].is-leaving {
+  opacity: 0;
+  transition: opacity 300ms ease;
 }
 
 /* Arrival, like `cat` in a terminal (see post.js): the command line, then
@@ -1994,7 +2013,6 @@ html.post-print .post-prose > * {
   animation: post-unclip 1ms 4s forwards;
 }
 /* Opened from the notes list: the command line is already there (it slides up from the list). */
-html.post-print.from-notes .post-head > .post-bar,
 html.post-print .post-head > .is-shown,
 html.post-print .post-end.is-shown {
   opacity: 1;
@@ -2052,31 +2070,11 @@ html.post-print.stream-done .post-prose > * {
   }
 }
 
-/* The typed `cat` line carries over from the notes prompt to the top of the
-   article (cross-document view transition). Both ends are just the line's
-   text at the same size, so it only moves; only the arriving copy is drawn,
-   so no doubled text. The old page leaves quickly, the new one comes in
-   behind the line, and the article starts typing once the line has landed. */
+/* Navigations between pages cross-fade briefly (old page out fast, new one in
+   behind it). A note opened from the list hands over with no transition at
+   all: it is already on screen (see the head script in default.html). */
 @view-transition {
   navigation: auto;
-}
-.post-cmd-line {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: bottom;
-  view-transition-name: post-cmd;
-}
-.sh-live.is-carrying {
-  display: inline-flex;
-  max-width: 100%;
-}
-.sh-live.is-carrying .sh-input {
-  display: none;
-}
-.sh-typed {
-  white-space: pre;
 }
 ::view-transition-group(*) {
   animation-duration: 240ms;
@@ -2087,16 +2085,6 @@ html.post-print.stream-done .post-prose > * {
 }
 ::view-transition-new(root) {
   animation: vt-in 220ms 100ms cubic-bezier(0, 0, 0.2, 1) both;
-}
-::view-transition-group(post-cmd) {
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-::view-transition-old(post-cmd) {
-  display: none;
-}
-::view-transition-new(post-cmd) {
-  animation: none;
 }
 @keyframes vt-out {
   to {

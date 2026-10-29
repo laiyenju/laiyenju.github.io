@@ -134,77 +134,180 @@
     rows[i].focus();
   });
 
-  /* —— Opening a note: the row stays lit, the prompt types `cat name.md`,
-        then the page changes. The prompt line carries the view-transition
-        name, so browsers that support cross-document transitions carry it up
-        to the same line at the top of the article, where the note then types
-        itself out (post.js). The article is told, through sessionStorage,
-        that the command has already been typed. —— */
+  /* —— Opening a note, the way `cat` works in a terminal: the row stays lit,
+        the prompt types `cat name.md`, the note prints out below it line by
+        line, and the screen scrolls up a line at a time until the command sits
+        where the article page has it. Then the article page takes over; it is
+        already on screen in the same place, so there is nothing to see (the
+        head script there skips its own typing and any transition). Only the
+        first screen is printed here. A key, a click or a scroll jumps straight
+        to the article. —— */
   var notesPanel = document.querySelector('.home-panel[data-view="notes"]');
   var opening = false;
+  var LINE = 30; // px the output advances per step: about one line of prose
+  var TICK = 24; // ms per step
+
+  // Each note is fetched once, as soon as its row is pointed at or focused.
+  var pages = {};
+  function load(href) {
+    if (!pages[href]) {
+      pages[href] = fetch(href, { credentials: "same-origin" }).then(function (r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.text();
+      });
+      pages[href].catch(function () { delete pages[href]; });
+    }
+    return pages[href];
+  }
+
+  /** The note's header and text, as the article page lays them out. */
+  function noteCopy(html) {
+    var doc = new DOMParser().parseFromString(html, "text/html");
+    var head = doc.querySelector(".post-head");
+    var prose = doc.querySelector(".post-prose");
+    if (!head || !prose) return null;
+    var wrap = document.createElement("div");
+    wrap.className = "sh-cat";
+    wrap.setAttribute("aria-hidden", "true");
+    var post = document.createElement("article");
+    post.className = "post";
+    post.appendChild(document.importNode(head, true));
+    post.appendChild(document.importNode(prose, true));
+    // No duplicate ids (footnotes) while it is on this page.
+    post.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
+    // What post.js adds on the article page, so code blocks match at the handoff.
+    post.querySelectorAll("div.highlighter-rouge").forEach(function (el) {
+      var m = /\blanguage-([\w+#-]+)/.exec(el.className);
+      if (m && m[1] !== "plaintext") el.setAttribute("data-lang", m[1]);
+    });
+    post.querySelectorAll("pre > code").forEach(function (code) {
+      var lines = code.textContent.replace(/\n$/, "").split("\n").length;
+      var gutter = document.createElement("span");
+      gutter.className = "code-gutter";
+      for (var i = 1; i <= lines; i++) gutter.textContent += (i > 1 ? "\n" : "") + i;
+      code.parentNode.insertBefore(gutter, code);
+      code.parentNode.classList.add("has-gutter");
+    });
+    wrap.appendChild(post);
+    return wrap;
+  }
+
+  function open(a) {
+    var url = new URL(a.href, location.href);
+    var go = function () {
+      try { sessionStorage.setItem("post-handoff", url.pathname); } catch (err) {}
+      location.href = url.href;
+    };
+    var plain = function () { location.href = url.href; };
+    var live = notesPanel.querySelector(".sh-live");
+    var input = notesPanel.querySelector(".sh-input");
+    var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (still || !live || !input) return plain();
+
+    var file = decodeURIComponent(url.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
+    var text = "cat " + file;
+    var page = load(url.href);
+    var chrome = document.querySelector(".home-chrome");
+    var canvas = document.querySelector("canvas[data-koi]");
+    var timers = [];
+    var done = false;
+
+    // Any key, click or scroll: straight to the article.
+    var SKIP = ["keydown", "wheel", "touchstart", "mousedown"];
+    function skip() { finish(plain); }
+    function finish(how) {
+      if (done) return;
+      done = true;
+      timers.forEach(window.clearTimeout);
+      SKIP.forEach(function (ev) { window.removeEventListener(ev, skip, true); });
+      how();
+    }
+    SKIP.forEach(function (ev) { window.addEventListener(ev, skip, { capture: true, passive: true }); });
+
+    // 1. Type the command.
+    var n = 0;
+    var per = Math.max(8, Math.min(16, Math.floor(280 / text.length)));
+    (function type() {
+      input.value = text.slice(0, ++n);
+      if (n < text.length) return timers.push(window.setTimeout(type, per));
+      page.then(function (html) {
+        if (done) return;
+        var copy = noteCopy(html);
+        if (!copy) return finish(plain);
+        timers.push(window.setTimeout(function () { print(copy); }, 90));
+      }, function () { finish(plain); });
+    })();
+
+    // 2. Print it below, scrolling a line at a time, until the command is where the article has it.
+    function print(copy) {
+      live.after(copy);
+      live.hidden = true; // the copy's own command line stands in for it, in the same text
+      if (canvas) canvas.classList.add("is-leaving");
+      var bar = copy.querySelector(".post-bar") || copy.firstChild;
+      var top = window.matchMedia("(max-width: 640px)").matches ? 48 : 72; // the article's top padding
+      var bottom = window.innerHeight;
+      var start = copy.getBoundingClientRect().top;
+      var chromeTop = chrome.getBoundingClientRect().top;
+      var end = start + copy.offsetHeight;
+      var target = Math.max(0, bar.getBoundingClientRect().top - top); // how far the screen scrolls
+      var shown = start + bar.offsetHeight; // the printed edge, in page coordinates
+      var shift = 0;
+      function frame() {
+        copy.style.clipPath = "inset(0 0 " + Math.max(0, end - shown) + "px 0)";
+        chrome.style.transform = shift ? "translateY(" + -shift + "px)" : "";
+        // The line `top` px down is the window's upper edge, as on the article
+        // page: whatever scrolls past it is gone, so nothing is left above the
+        // command when the page takes over.
+        chrome.style.clipPath = "inset(" + Math.max(0, top + shift - chromeTop) + "px 0 0 0)";
+      }
+      frame();
+      (function step() {
+        if (done) return;
+        if (shown < end) shown = Math.min(end, shown + LINE);
+        // Keep the printed edge on screen, like a terminal follows its output.
+        shift = Math.min(target, Math.max(shift, shown - bottom));
+        if (shown >= end && shift < target) shift = Math.min(target, shift + LINE);
+        frame();
+        if (shift >= target && (shown >= end || shown - shift >= bottom)) {
+          timers.push(window.setTimeout(function () { finish(go); }, 60));
+          return;
+        }
+        timers.push(window.setTimeout(step, TICK));
+      })();
+    }
+  }
+
   if (notesPanel) notesPanel.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest(".panel-list a");
     if (!a || opening || e.defaultPrevented || e.button !== 0) return;
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var url = new URL(a.href, location.href);
-    if (url.origin !== location.origin) return;
+    if (new URL(a.href, location.href).origin !== location.origin) return;
     e.preventDefault();
     opening = true;
-    var file = decodeURIComponent(url.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
     a.classList.add("is-opening");
-    prefetch(url.href);
-    var input = notesPanel.querySelector(".sh-input");
-    var live = notesPanel.querySelector(".sh-live");
-    try { sessionStorage.setItem("post-cmd-typed", url.pathname); } catch (err) {}
-    var text = "cat " + file;
-    var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (still || !input || !live) { location.href = url.href; return; }
-    // The line shrinks to just its text (a span stands in for the input), so it
-    // has the same size as the article's command line and only moves, never stretches.
-    var typed = document.createElement("span");
-    typed.className = "sh-typed";
-    live.appendChild(typed);
-    live.classList.add("is-carrying");
-    live.style.viewTransitionName = "post-cmd";
-    var n = 0;
-    var step = Math.max(8, Math.min(16, Math.floor(280 / text.length)));
-    var timer = window.setInterval(function () {
-      typed.textContent = " " + text.slice(0, ++n);
-      if (n < text.length) return;
-      window.clearInterval(timer);
-      window.setTimeout(function () { location.href = url.href; }, 90);
-    }, step);
+    open(a);
   });
-  // Back from the article (page restored from the cache): a clean prompt and no lingering transition name.
+
+  // Back from the article (page restored from the cache): the list as it was.
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted || !notesPanel) return;
     opening = false;
     var input = notesPanel.querySelector(".sh-input");
     if (input) input.value = "";
     var live = notesPanel.querySelector(".sh-live");
-    if (live) {
-      live.style.viewTransitionName = "";
-      live.classList.remove("is-carrying");
-      live.querySelectorAll(".sh-typed").forEach(function (t) { t.remove(); });
-    }
+    if (live) live.hidden = false;
+    notesPanel.querySelectorAll(".sh-cat").forEach(function (c) { c.remove(); });
+    var chrome = document.querySelector(".home-chrome");
+    if (chrome) { chrome.style.transform = ""; chrome.style.clipPath = ""; }
+    var canvas = document.querySelector("canvas[data-koi]");
+    if (canvas) canvas.classList.remove("is-leaving");
     notesPanel.querySelectorAll(".is-opening").forEach(function (a) { a.classList.remove("is-opening"); });
   });
 
-  // Fetch a note as soon as its row is pointed at or focused, so the page is
-  // ready by the time the command has typed out.
-  var fetched = {};
-  function prefetch(href) {
-    if (fetched[href]) return;
-    fetched[href] = true;
-    var link = document.createElement("link");
-    link.rel = "prefetch";
-    link.href = href;
-    document.head.appendChild(link);
-  }
   if (notesPanel) ["pointerenter", "focusin", "touchstart"].forEach(function (ev) {
     notesPanel.addEventListener(ev, function (e) {
       var a = e.target.closest && e.target.closest(".panel-list a");
-      if (a) prefetch(a.href);
+      if (a && new URL(a.href, location.href).origin === location.origin) load(a.href);
     }, { capture: true, passive: true });
   });
 })();
