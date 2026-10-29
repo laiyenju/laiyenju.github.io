@@ -123,7 +123,7 @@
   // assets/vendor/ascii-sharks/src/world.ts
   var SHARK_NODES = 20;
   var DEFAULT_SHARKS = [
-    { kind: "koi", size: 1 },
+    { kind: "koi", size: 1.3 },
     { kind: "koi", size: 0.7 },
     { kind: "koi", size: 0.84 },
     { kind: "koi", size: 0.77 }
@@ -213,7 +213,7 @@
           orbitRadius,
           target: null,
           retargetAt: 0,
-          depth: size
+          depth: Math.min(1, size)
         });
       }
       this.sharks.sort((a, b) => a.length - b.length);

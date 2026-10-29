@@ -23,9 +23,9 @@ export type SharkKind = "koi" | "classic" | "hammerhead" | "zebra" | "tiger" | "
 /** Which sharks to put in the water; size is relative to the biggest. */
 export type SharkSpec = { kind: SharkKind; size: number };
 
-// The landing hero: four koi at different depths.
+// The landing hero: four koi at different depths; one clearly bigger, for layering.
 const DEFAULT_SHARKS: SharkSpec[] = [
-  { kind: "koi", size: 1 },
+  { kind: "koi", size: 1.3 },
   { kind: "koi", size: 0.7 },
   { kind: "koi", size: 0.84 },
   { kind: "koi", size: 0.77 },
@@ -175,7 +175,7 @@ export class World {
         orbitRadius,
         target: null,
         retargetAt: 0,
-        depth: size,
+        depth: Math.min(1, size),
       });
     }
     // Smaller (farther) sharks draw first so the big one swims over them.
