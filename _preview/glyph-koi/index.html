@@ -36,23 +36,43 @@
     background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.16) 2px 3px);
   }
 
-  /* —— Notes: a one-column index. Year labels like type-case drawers, columns aligned like `ls -l`. —— */
+  /* —— Notes: a shell session. A prompt runs `ls -lt`, rows sit in `ls -l` columns,
+        and the row under the pointer or keyboard turns reverse video like a TUI picker. —— */
   .home-panel[data-view="notes"] .panel-list { grid-template-columns: 1fr; }
-  .note-year {
-    display: flex; align-items: center; gap: 12px;
-    margin: 18px 0 2px; font-size: 12px; letter-spacing: 0.08em; color: #8a857e;
+  .home-panel[data-view="notes"] .panel-list li { border-top: 0; }
+  .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sh-prompt { color: #4f8a4a; }
+  .sh-path { color: #c45c26; }
+  .sh-dim { color: #8a857e; }
+  .sh-cmd::after, .sh-caret::after {
+    content: ""; display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px;
+    vertical-align: -0.18em; background: currentColor; animation: sh-blink 1.1s steps(1) infinite;
   }
-  .panel-list li:first-child .note-year { margin-top: 0; }
-  .note-year::after { content: ""; flex: 1; height: 1px; background: rgba(42, 36, 32, 0.22); }
-  .panel-list li.has-year { border-top: 0; }
+  .sh-cmd:not(.is-typing)::after { display: none; }
+  @keyframes sh-blink { 50% { opacity: 0; } }
   .home-panel[data-view="notes"] .panel-list a {
-    display: grid; grid-template-columns: 5.5ch minmax(0, 1fr) auto; gap: 20px; align-items: baseline;
-    padding: 12px 0 13px;
+    display: grid; grid-template-columns: 1.5ch 10ch 6ch 10ch minmax(0, 1fr); gap: 14px; align-items: baseline;
+    padding: 3px 6px; margin: 0 -6px; border-radius: 1px; font-size: 13px; line-height: 1.75;
   }
-  .note-date, .note-count {
-    font-size: 12px; color: #8a857e; font-variant-numeric: tabular-nums; white-space: nowrap;
+  .home-panel[data-view="notes"] .panel-title { font-size: 13px; line-height: 1.75; }
+  .ls-mark { color: transparent; }
+  .ls-perm, .ls-size, .ls-date { color: #8a857e; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ls-size { text-align: right; }
+  .home-panel[data-view="notes"] .panel-list a:hover,
+  .home-panel[data-view="notes"] .panel-list a:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
+  .home-panel[data-view="notes"] .panel-list a:hover *,
+  .home-panel[data-view="notes"] .panel-list a:focus-visible * { color: inherit; }
+  .home-panel[data-view="notes"] .panel-list a:hover .panel-title { color: inherit; }
+  .home-panel[data-view="notes"] .panel-list a:focus-visible .ls-mark,
+  .home-panel[data-view="notes"] .panel-list a:hover .ls-mark { color: inherit; }
+  .sh-keys { margin: 14px 0 0; font-size: 12px; color: #8a857e; }
+  .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
+  @media (max-width: 560px) {
+    .home-panel[data-view="notes"] .panel-list a { grid-template-columns: 1.5ch 5ch 10ch minmax(0, 1fr); gap: 10px; }
+    .ls-perm { display: none; }
+    .sh-keys { display: none; }
   }
-  .note-count { text-align: right; }
+  @media (prefers-reduced-motion: reduce) { .sh-caret::after { animation: none; } }
 
   /* —— Works: a spec card per piece, led by its seal character. —— */
   .home-panel[data-view="works"] .panel-list a {
@@ -69,11 +89,17 @@
   .work-status[data-status="進行中"] { --status: #4f8a4a; }
   .work-status[data-status="實驗"] { --status: #c45c26; }
 
-  body.theme-night .note-year::after { background: rgba(236, 196, 136, 0.24); }
-  body.theme-night .note-year,
-  body.theme-night .note-date,
-  body.theme-night .note-count,
+  body.theme-night .ls-perm,
+  body.theme-night .ls-size,
+  body.theme-night .ls-date,
+  body.theme-night .sh-dim,
+  body.theme-night .sh-keys,
   body.theme-night .work-status { color: #9c8462; }
+  body.theme-night .sh-prompt { color: #9fd08a; }
+  body.theme-night .sh-path { color: #f0a868; }
+  body.theme-night .sh-keys kbd { border-color: rgba(236, 196, 136, 0.3); }
+  body.theme-night .home-panel[data-view="notes"] .panel-list a:hover,
+  body.theme-night .home-panel[data-view="notes"] .panel-list a:focus-visible { background: #ecc488; color: #14110d; }
   body.theme-night .work-seal { background: #e8a852; color: #17130e; }
   body.theme-night .work-status[data-status="進行中"] { --status: #9fd08a; }
   body.theme-night .work-status[data-status="實驗"] { --status: #f0a868; }
@@ -119,10 +145,14 @@
           <a class="panel-back" href="./" data-view-link="home">← home</a>
           <span class="panel-lede">日常寫作紀錄 · everyday writing</span>
         </div>
+        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
+        <p class="sh-line sh-dim">total 2 · 940 字</p>
         <ul class="panel-list">
-          <li class="has-year"><div class="note-year">2026</div><a href="#"><time class="note-date" datetime="2026-10-29">10-29</time><span class="panel-title">Markdown 樣式總覽</span><span class="note-count">860 字</span></a></li>
-          <li><a href="#"><time class="note-date" datetime="2026-03-08">03-08</time><span class="panel-title">你好，這是第一篇</span><span class="note-count">80 字</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span><span class="ls-size">860字</span><time class="ls-date" datetime="2026-10-29">2026-10-29</time><span class="panel-title">Markdown 樣式總覽</span></a></li>
+          <li><a href="#"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span><span class="ls-size">80字</span><time class="ls-date" datetime="2026-03-08">2026-03-08</time><span class="panel-title">你好，這是第一篇</span></a></li>
         </ul>
+        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="sh-caret"></span></p>
+        <p class="sh-keys"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回</p>
         <button class="panel-more" type="button" hidden>view all</button>
       </section>
 
@@ -269,6 +299,35 @@
         }
         requestAnimationFrame(tick);
       }
+
+      // —— Notes shell: type the command each time the list opens; arrow keys walk the rows. ——
+      var cmd = document.querySelector(".sh-cmd");
+      var typing = 0;
+      function typeCommand() {
+        var text = cmd.getAttribute("data-cmd");
+        var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.clearInterval(typing);
+        if (still) { cmd.textContent = text; return; }
+        var n = 0;
+        cmd.textContent = "";
+        cmd.classList.add("is-typing");
+        typing = window.setInterval(function () {
+          cmd.textContent = text.slice(0, ++n);
+          if (n >= text.length) { window.clearInterval(typing); cmd.classList.remove("is-typing"); }
+        }, 70);
+      }
+      new MutationObserver(function () {
+        if (view() === "notes") typeCommand();
+      }).observe(document.body, { attributes: true, attributeFilter: ["data-view"] });
+      document.addEventListener("keydown", function (e) {
+        if (view() !== "notes" || (e.key !== "ArrowDown" && e.key !== "ArrowUp")) return;
+        var rows = Array.prototype.slice.call(document.querySelectorAll('.home-panel[data-view="notes"] .panel-list li:not([hidden]) a'));
+        if (!rows.length) return;
+        e.preventDefault();
+        var i = rows.indexOf(document.activeElement);
+        i = i < 0 ? (e.key === "ArrowDown" ? 0 : rows.length - 1) : (i + (e.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length;
+        rows[i].focus();
+      });
 
       var sample = "十大中口木日田金難心水手火月山土弓目丶丿乀乙ㄅㄆㄇ";
       Promise.all([
