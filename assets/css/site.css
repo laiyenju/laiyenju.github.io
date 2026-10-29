@@ -170,7 +170,8 @@ body.home {
   z-index: 0;
   display: block;
   pointer-events: auto;
-  font-family: var(--font-mono);
+  background: transparent;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
 }
 
 .home-vignette {

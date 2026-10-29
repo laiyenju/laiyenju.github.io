@@ -18,19 +18,17 @@ import { pickSpecies, SPECIES } from "./species";
 
 export const SHARK_NODES = 20;
 
-export type SharkKind = "koi" | "classic" | "hammerhead" | "zebra" | "tiger" | "greathammer" | "mako" | "thresher" | "nurse";
+export type SharkKind = "classic" | "hammerhead" | "zebra" | "tiger" | "greathammer" | "mako" | "thresher" | "nurse";
 
 /** Which sharks to put in the water; size is relative to the biggest. */
 export type SharkSpec = { kind: SharkKind; size: number };
 
 // The landing hero: four of the same shark at different depths.
-/** Light-field koi school: one kind, several depths. Not the shark demo cast. */
 const DEFAULT_SHARKS: SharkSpec[] = [
-  { kind: "koi", size: 1 },
-  { kind: "koi", size: 0.78 },
-  { kind: "koi", size: 0.62 },
-  { kind: "koi", size: 0.5 },
-  { kind: "koi", size: 0.38 },
+  { kind: "classic", size: 1 },
+  { kind: "classic", size: 0.7 },
+  { kind: "classic", size: 0.84 },
+  { kind: "classic", size: 0.77 },
 ];
 
 export interface Fish {
@@ -146,18 +144,17 @@ export class World {
     for (let i = 0; i < sharkCount; i++) {
       const { kind, size } = this.sharkSpecs[i];
       const length = baseLength * size;
-      const orbitRadius = minSide * rand(0.22, 0.34);
-      const laneLeft = i % 2 === 0;
-      const orbitDir: 1 | -1 = laneLeft ? -1 : 1;
-      const slots = [0.42, 0.58, 0.72, 0.3, 0.84];
-      const x = laneLeft ? W * 0.16 : W * 0.84;
-      const y = H * (slots[i] ?? 0.5);
-      const heading = orbitDir > 0 ? 0 : Math.PI;
+      const orbitRadius = minSide * rand(0.28, 0.4);
+      const a = (i / sharkCount) * TAU + rand(-0.4, 0.4);
+      const orbitDir: 1 | -1 = i % 2 === 0 ? 1 : -1;
+      const x = W / 2 + Math.cos(a) * orbitRadius * (W / minSide) * 0.9;
+      const y = H / 2 + Math.sin(a) * orbitRadius;
+      const heading = a + (orbitDir * Math.PI) / 2;
       const nodes = new Float32Array(SHARK_NODES * 2);
       const seg = length / (SHARK_NODES - 1);
       for (let n = 0; n < SHARK_NODES; n++) {
         nodes[n * 2] = x - Math.cos(heading) * seg * n;
-        nodes[n * 2 + 1] = y;
+        nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
       }
       this.sharks.push({
         id: i + 1,
@@ -421,12 +418,8 @@ export class World {
       if (relayed > alarm) alarm += (relayed - alarm) * contagion;
       f.alarm = alarm;
 
-      // Soft walls. Keep the quiet center column clear even when the pointer scatters fry.
+      // Soft walls.
       const m = 36;
-      const colHalf = Math.min(190, W * 0.15);
-      if (Math.abs(f.x - W / 2) < colHalf && f.y > H * 0.26 && f.y < H * 0.74) {
-        ax += (f.x < W / 2 ? -1 : 1) * 90;
-      }
       if (f.x < m) ax += (m - f.x) * 7;
       else if (f.x > W - m) ax -= (f.x - (W - m)) * 7;
       if (f.y < m) ay += (m - f.y) * 7;
@@ -464,57 +457,116 @@ export class World {
   }
 
   private stepSharks(dt: number) {
-    const { sharks, width: W, height: H } = this;
-    const navFloor = Math.max(108, H * 0.16);
-    const slots = [0.42, 0.58, 0.72, 0.3, 0.84];
+    const { sharks, width: W, height: H, time } = this;
+    const minSide = Math.min(W, H);
+    const cxW = W / 2;
+    const cyW = H / 2;
 
     for (const sh of sharks) {
       const L = sh.length;
       const nodes = sh.nodes;
-      const laneLeft = sh.id % 2 === 1;
-      const laneY = clamp(H * (slots[sh.id - 1] ?? 0.5), navFloor + 20, H - 36);
-      const outer = laneLeft ? Math.max(56, W * 0.1) : Math.min(W - 56, W * 0.9);
-      const corridorInner = laneLeft ? W * 0.3 : W * 0.7;
-      const kiss = W * 0.45;
-      const inner = sh.id === 1 && sh.wander > 0.5 ? kiss : corridorInner;
       const hx = nodes[0];
       const hy = nodes[1];
-      let dir: 1 | -1 = sh.orbitDir;
-      const lead = 20;
 
-      if (laneLeft) {
-        if (dir < 0 && hx <= outer + lead) {
-          dir = 1;
-          if (sh.id === 1) sh.wander = 1;
-        }
-        if (dir > 0 && hx >= inner - 6) {
-          dir = -1;
-          sh.wander = 0;
-        }
-      } else {
-        if (dir > 0 && hx >= outer - lead) dir = -1;
-        if (dir < 0 && hx <= inner + 6) dir = 1;
+      sh.hunger = Math.min(1, sh.hunger + dt * 0.03);
+
+      // Momentum.
+      let dx = Math.cos(sh.heading);
+      let dy = Math.sin(sh.heading);
+
+      // Wander: a slowly drifting offset on a circle ahead of the snout.
+      sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 3.2, -1.1, 1.1);
+      dx += Math.cos(sh.heading + sh.wander) * 0.45;
+      dy += Math.sin(sh.heading + sh.wander) * 0.45;
+
+      // Hunt.
+      if (time >= sh.retargetAt) {
+        sh.target = this.findPrey(sh);
+        sh.retargetAt = time + 0.45;
       }
-      const turned = dir !== sh.orbitDir;
-      sh.orbitDir = dir;
-      if (turned) sh.speed *= 0.55;
+      const t = sh.target;
+      let hunting = false;
+      let closing = 0;
+      if (t && t.alive && sh.hunger > 0.3) {
+        // Pursuit: aim at where the fish is about to be.
+        const tx = t.x + t.vx * 0.35 - hx;
+        const ty = t.y + t.vy * 0.35 - hy;
+        const d = Math.hypot(tx, ty) || 1;
+        const w = 1.4 + 2.6 * sh.hunger;
+        dx += (tx / d) * w;
+        dy += (ty / d) * w;
+        hunting = true;
+        closing = clamp(1 - d / (L * 0.9), 0, 1);
+      } else {
+        // Patrol: a lazy circuit around the headline.
+        const rx = (hx - cxW) / (W / minSide);
+        const ry = hy - cyW;
+        const r = Math.hypot(rx, ry) || 1;
+        const radius = sh.orbitRadius * (1 + 0.15 * Math.sin(time * 0.05 + sh.id));
+        const radial = clamp((radius - r) / radius, -1, 1);
+        dx += ((-ry / r) * sh.orbitDir + (rx / r) * radial * 0.9) * 0.55;
+        dy += ((rx / r) * sh.orbitDir + (ry / r) * radial * 0.9) * 0.55;
+      }
 
-      const cruise = 34 + L * 0.018;
-      sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.4);
-      const desired = dir > 0 ? 0 : Math.PI;
-      const maxTurn = 1.85 * dt;
-      const dh = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
-      sh.heading += dh;
-      sh.turn = dh / Math.max(dt, 1e-4);
-      // Wave travels with swim speed so the body does not look like it is sliding.
-      sh.phase += dt * (sh.speed / Math.max(48, L * 0.22)) * 7.5;
+      // Give other sharks room.
+      for (const other of sharks) {
+        if (other === sh) continue;
+        for (let k = 0; k < SHARK_NODES; k += 4) {
+          const ox = hx - other.nodes[k * 2];
+          const oy = hy - other.nodes[k * 2 + 1];
+          const d = Math.hypot(ox, oy);
+          const range = (L + other.length) * 0.45;
+          if (d < range && d > 1e-3) {
+            const w = (1 - d / range) * 3;
+            dx += (ox / d) * w;
+            dy += (oy / d) * w;
+          }
+        }
+      }
 
-      const yPull = clamp(laneY - hy, -28, 28) * dt * 4.2;
-      nodes[0] = hx + Math.cos(sh.heading) * sh.speed * dt;
-      nodes[1] = hy + Math.sin(sh.heading) * sh.speed * dt * 0.16 + yPull;
+      // Keep the headline mostly clear: a soft elliptical no-swim zone.
+      const ex = (hx - cxW) / (W * 0.3);
+      const ey = (hy - cyW) / (H * 0.16);
+      const e2 = ex * ex + ey * ey;
+      if (e2 < 1) {
+        const e = Math.sqrt(e2) || 1e-3;
+        const w = (1 - e) * (hunting ? 1 : 2.5);
+        dx += (ex / e) * w;
+        dy += (ey / e) * w;
+      }
 
+      // Turn back once the snout leaves the frame, so bodies dip off-screen
+      // now and then but the sharks never wander away for good.
+      const over = Math.max(-hx, hx - W, -hy, hy - H);
+      if (over > -L * 0.05) {
+        const w = clamp((over + L * 0.05) / (L * 0.35), 0, 1) * 3.5;
+        const toX = cxW - hx;
+        const toY = cyW - hy;
+        const d = Math.hypot(toX, toY) || 1;
+        dx += (toX / d) * w;
+        dy += (toY / d) * w;
+      }
+
+      const desired = Math.atan2(dy, dx);
+      // Sharks can't pivot on the spot: the turning circle grows with speed.
+      const agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+      const maxTurn = agility * dt;
+      const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
+      sh.heading += turned;
+      sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
+
+      const cruise = 30 + L * 0.04;
+      const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
+      sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
+      sh.phase += dt * (2 + sh.speed / 24);
+
+      nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
+      nodes[1] += Math.sin(sh.heading) * sh.speed * dt;
+
+      // Follow-the-leader spine, with a stiffness limit per joint so the
+      // body bends into a C at most and never folds back on itself.
       const seg = L / (SHARK_NODES - 1);
-      const maxBend = 0.13;
+      const maxBend = 0.16;
       let prevAngle = sh.heading + Math.PI;
       for (let k = 1; k < SHARK_NODES; k++) {
         const px = nodes[(k - 1) * 2];
@@ -526,38 +578,24 @@ export class World {
         prevAngle = angle;
       }
 
-      let minX = Infinity;
-      let maxX = -Infinity;
-      let minY = Infinity;
-      let maxY = -Infinity;
-      for (let k = 0; k < SHARK_NODES; k++) {
-        minX = Math.min(minX, nodes[k * 2]);
-        maxX = Math.max(maxX, nodes[k * 2]);
-        minY = Math.min(minY, nodes[k * 2 + 1]);
-        maxY = Math.max(maxY, nodes[k * 2 + 1]);
-      }
-      let shiftX = 0;
-      let shiftY = 0;
-      if (minX < 14) shiftX = 14 - minX;
-      else if (maxX > W - 14) shiftX = W - 14 - maxX;
-      if (minY < navFloor) shiftY = navFloor - minY;
-      else if (maxY > H - 18) shiftY = H - 18 - maxY;
-      // Rear body stays in its corridor. The head may reach the title; the belly may not.
-      const bandL = W * 0.38;
-      const bandR = W * 0.62;
-      for (let k = 6; k < SHARK_NODES; k++) {
-        const x = nodes[k * 2];
-        if (laneLeft && x > bandL) shiftX = Math.min(shiftX, bandL - x);
-        if (!laneLeft && x < bandR) shiftX = Math.max(shiftX, bandR - x);
-      }
-      if (shiftX !== 0 || shiftY !== 0) {
-        for (let k = 0; k < SHARK_NODES; k++) {
-          nodes[k * 2] += shiftX;
-          nodes[k * 2 + 1] += shiftY;
+      // Feed.
+      if (sh.hunger > 0.15) {
+        const mouthR = L * 0.05 + 8;
+        const mx = nodes[0];
+        const my = nodes[1];
+        for (const f of this.fish) {
+          if (!f.alive) continue;
+          if ((f.x - mx) ** 2 + (f.y - my) ** 2 < mouthR * mouthR) {
+            f.alive = false;
+            f.respawnAt = time + rand(3, 8);
+            sh.hunger = Math.max(0, sh.hunger - 0.16);
+            this.events.push({ kind: "eat", x: f.x, y: f.y });
+          }
         }
       }
     }
   }
+
   /**
    * Pick prey in the shark's forward cone, preferring close fish in sparse
    * buckets (stragglers) over fish buried in a dense school.

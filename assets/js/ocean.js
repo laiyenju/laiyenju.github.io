@@ -40,18 +40,74 @@
   // assets/vendor/ascii-sharks/src/species.ts
   var SPECIES = [
     {
-      name: "koi-fry",
-      cruise: 14,
-      maxSpeed: 22,
-      minSpeed: 6,
+      name: "sardine",
+      cruise: 36,
+      maxSpeed: 64,
+      minSpeed: 18,
       weight: 3,
-      schoolSize: [4, 7],
-      spacing: [3.2, 2.2],
-      align: 0.4,
-      cohesion: 0.3,
-      jitter: 12,
+      schoolSize: [18, 28],
+      spacing: [1.8, 1.1],
+      align: 1.6,
+      cohesion: 1.6,
+      jitter: 40,
+      mill: 70,
+      verticalDrag: 0.5
+    },
+    {
+      name: "anchovy",
+      cruise: 46,
+      maxSpeed: 78,
+      minSpeed: 22,
+      weight: 3,
+      schoolSize: [20, 32],
+      spacing: [1.5, 1],
+      align: 3.2,
+      cohesion: 0.45,
+      jitter: 30,
       mill: 0,
-      verticalDrag: 1.2
+      verticalDrag: 1.4
+    },
+    {
+      name: "silverside",
+      cruise: 40,
+      maxSpeed: 70,
+      minSpeed: 20,
+      weight: 3,
+      schoolSize: [12, 20],
+      spacing: [2, 1.1],
+      align: 2.4,
+      cohesion: 1.1,
+      jitter: 35,
+      mill: 0,
+      verticalDrag: 1.6
+    },
+    {
+      name: "mackerel",
+      cruise: 32,
+      maxSpeed: 60,
+      minSpeed: 16,
+      weight: 2,
+      schoolSize: [5, 9],
+      spacing: [2.6, 1.3],
+      align: 2,
+      cohesion: 0.9,
+      jitter: 25,
+      mill: 0,
+      verticalDrag: 2
+    },
+    {
+      name: "goby",
+      cruise: 26,
+      maxSpeed: 56,
+      minSpeed: 10,
+      weight: 1,
+      schoolSize: [8, 12],
+      spacing: [1.4, 1.1],
+      align: 0.35,
+      cohesion: 1.4,
+      jitter: 110,
+      mill: 0,
+      verticalDrag: 0.3
     }
   ];
   var TOTAL_WEIGHT = SPECIES.reduce((sum, s) => sum + s.weight, 0);
@@ -67,11 +123,10 @@
   // assets/vendor/ascii-sharks/src/world.ts
   var SHARK_NODES = 20;
   var DEFAULT_SHARKS = [
-    { kind: "koi", size: 1 },
-    { kind: "koi", size: 0.78 },
-    { kind: "koi", size: 0.62 },
-    { kind: "koi", size: 0.5 },
-    { kind: "koi", size: 0.38 }
+    { kind: "classic", size: 1 },
+    { kind: "classic", size: 0.7 },
+    { kind: "classic", size: 0.84 },
+    { kind: "classic", size: 0.77 }
   ];
   var FISH_SEPARATION_K = 420;
   var FISH_ALIGN_K = 1.4;
@@ -122,7 +177,7 @@
       }
     }
     seed() {
-      var _a, _b;
+      var _a;
       const { width: W, height: H } = this;
       const minSide = Math.min(W, H);
       const baseLength = clamp(minSide * 0.44, 170, 430);
@@ -131,18 +186,17 @@
       for (let i = 0; i < sharkCount; i++) {
         const { kind, size } = this.sharkSpecs[i];
         const length = baseLength * size;
-        const orbitRadius = minSide * rand(0.22, 0.34);
-        const laneLeft = i % 2 === 0;
-        const orbitDir = laneLeft ? -1 : 1;
-        const slots = [0.42, 0.58, 0.72, 0.3, 0.84];
-        const x = laneLeft ? W * 0.16 : W * 0.84;
-        const y = H * ((_a = slots[i]) != null ? _a : 0.5);
-        const heading = orbitDir > 0 ? 0 : Math.PI;
+        const orbitRadius = minSide * rand(0.28, 0.4);
+        const a = i / sharkCount * TAU + rand(-0.4, 0.4);
+        const orbitDir = i % 2 === 0 ? 1 : -1;
+        const x = W / 2 + Math.cos(a) * orbitRadius * (W / minSide) * 0.9;
+        const y = H / 2 + Math.sin(a) * orbitRadius;
+        const heading = a + orbitDir * Math.PI / 2;
         const nodes = new Float32Array(SHARK_NODES * 2);
         const seg = length / (SHARK_NODES - 1);
         for (let n = 0; n < SHARK_NODES; n++) {
           nodes[n * 2] = x - Math.cos(heading) * seg * n;
-          nodes[n * 2 + 1] = y;
+          nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
         }
         this.sharks.push({
           id: i + 1,
@@ -163,7 +217,7 @@
         });
       }
       this.sharks.sort((a, b) => a.length - b.length);
-      const total = (_b = this.fishCount) != null ? _b : clamp(Math.round(W * H / 4400), 85, 340);
+      const total = (_a = this.fishCount) != null ? _a : clamp(Math.round(W * H / 4400), 85, 340);
       this.fish = [];
       while (this.fish.length < total) {
         const species = pickSpecies();
@@ -378,10 +432,6 @@
         if (relayed > alarm) alarm += (relayed - alarm) * contagion;
         f.alarm = alarm;
         const m = 36;
-        const colHalf = Math.min(190, W * 0.15);
-        if (Math.abs(f.x - W / 2) < colHalf && f.y > H * 0.26 && f.y < H * 0.74) {
-          ax += (f.x < W / 2 ? -1 : 1) * 90;
-        }
         if (f.x < m) ax += (m - f.x) * 7;
         else if (f.x > W - m) ax -= (f.x - (W - m)) * 7;
         if (f.y < m) ay += (m - f.y) * 7;
@@ -412,52 +462,92 @@
       }
     }
     stepSharks(dt) {
-      var _a;
-      const { sharks, width: W, height: H } = this;
-      const navFloor = Math.max(108, H * 0.16);
-      const slots = [0.42, 0.58, 0.72, 0.3, 0.84];
+      const { sharks, width: W, height: H, time } = this;
+      const minSide = Math.min(W, H);
+      const cxW = W / 2;
+      const cyW = H / 2;
       for (const sh of sharks) {
         const L = sh.length;
         const nodes = sh.nodes;
-        const laneLeft = sh.id % 2 === 1;
-        const laneY = clamp(H * ((_a = slots[sh.id - 1]) != null ? _a : 0.5), navFloor + 20, H - 36);
-        const outer = laneLeft ? Math.max(56, W * 0.1) : Math.min(W - 56, W * 0.9);
-        const corridorInner = laneLeft ? W * 0.3 : W * 0.7;
-        const kiss = W * 0.45;
-        const inner = sh.id === 1 && sh.wander > 0.5 ? kiss : corridorInner;
         const hx = nodes[0];
         const hy = nodes[1];
-        let dir = sh.orbitDir;
-        const lead = 20;
-        if (laneLeft) {
-          if (dir < 0 && hx <= outer + lead) {
-            dir = 1;
-            if (sh.id === 1) sh.wander = 1;
-          }
-          if (dir > 0 && hx >= inner - 6) {
-            dir = -1;
-            sh.wander = 0;
-          }
-        } else {
-          if (dir > 0 && hx >= outer - lead) dir = -1;
-          if (dir < 0 && hx <= inner + 6) dir = 1;
+        sh.hunger = Math.min(1, sh.hunger + dt * 0.03);
+        let dx = Math.cos(sh.heading);
+        let dy = Math.sin(sh.heading);
+        sh.wander = clamp(sh.wander + (Math.random() - 0.5) * dt * 3.2, -1.1, 1.1);
+        dx += Math.cos(sh.heading + sh.wander) * 0.45;
+        dy += Math.sin(sh.heading + sh.wander) * 0.45;
+        if (time >= sh.retargetAt) {
+          sh.target = this.findPrey(sh);
+          sh.retargetAt = time + 0.45;
         }
-        const turned = dir !== sh.orbitDir;
-        sh.orbitDir = dir;
-        if (turned) sh.speed *= 0.55;
-        const cruise = 34 + L * 0.018;
-        sh.speed += (cruise - sh.speed) * Math.min(1, dt * 2.4);
-        const desired = dir > 0 ? 0 : Math.PI;
-        const maxTurn = 1.85 * dt;
-        const dh = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
-        sh.heading += dh;
-        sh.turn = dh / Math.max(dt, 1e-4);
-        sh.phase += dt * (sh.speed / Math.max(48, L * 0.22)) * 7.5;
-        const yPull = clamp(laneY - hy, -28, 28) * dt * 4.2;
-        nodes[0] = hx + Math.cos(sh.heading) * sh.speed * dt;
-        nodes[1] = hy + Math.sin(sh.heading) * sh.speed * dt * 0.16 + yPull;
+        const t = sh.target;
+        let hunting = false;
+        let closing = 0;
+        if (t && t.alive && sh.hunger > 0.3) {
+          const tx = t.x + t.vx * 0.35 - hx;
+          const ty = t.y + t.vy * 0.35 - hy;
+          const d = Math.hypot(tx, ty) || 1;
+          const w = 1.4 + 2.6 * sh.hunger;
+          dx += tx / d * w;
+          dy += ty / d * w;
+          hunting = true;
+          closing = clamp(1 - d / (L * 0.9), 0, 1);
+        } else {
+          const rx = (hx - cxW) / (W / minSide);
+          const ry = hy - cyW;
+          const r = Math.hypot(rx, ry) || 1;
+          const radius = sh.orbitRadius * (1 + 0.15 * Math.sin(time * 0.05 + sh.id));
+          const radial = clamp((radius - r) / radius, -1, 1);
+          dx += (-ry / r * sh.orbitDir + rx / r * radial * 0.9) * 0.55;
+          dy += (rx / r * sh.orbitDir + ry / r * radial * 0.9) * 0.55;
+        }
+        for (const other of sharks) {
+          if (other === sh) continue;
+          for (let k = 0; k < SHARK_NODES; k += 4) {
+            const ox = hx - other.nodes[k * 2];
+            const oy = hy - other.nodes[k * 2 + 1];
+            const d = Math.hypot(ox, oy);
+            const range = (L + other.length) * 0.45;
+            if (d < range && d > 1e-3) {
+              const w = (1 - d / range) * 3;
+              dx += ox / d * w;
+              dy += oy / d * w;
+            }
+          }
+        }
+        const ex = (hx - cxW) / (W * 0.3);
+        const ey = (hy - cyW) / (H * 0.16);
+        const e2 = ex * ex + ey * ey;
+        if (e2 < 1) {
+          const e = Math.sqrt(e2) || 1e-3;
+          const w = (1 - e) * (hunting ? 1 : 2.5);
+          dx += ex / e * w;
+          dy += ey / e * w;
+        }
+        const over = Math.max(-hx, hx - W, -hy, hy - H);
+        if (over > -L * 0.05) {
+          const w = clamp((over + L * 0.05) / (L * 0.35), 0, 1) * 3.5;
+          const toX = cxW - hx;
+          const toY = cyW - hy;
+          const d = Math.hypot(toX, toY) || 1;
+          dx += toX / d * w;
+          dy += toY / d * w;
+        }
+        const desired = Math.atan2(dy, dx);
+        const agility = Math.min(hunting ? 1.7 + closing : 0.8, sh.speed / (L * 0.22));
+        const maxTurn = agility * dt;
+        const turned = clamp(angleDiff(sh.heading, desired), -maxTurn, maxTurn);
+        sh.heading += turned;
+        sh.turn += (turned / dt - sh.turn) * Math.min(1, dt * 3);
+        const cruise = 30 + L * 0.04;
+        const targetSpeed = hunting ? cruise * (1.45 + closing * 1.5) : cruise;
+        sh.speed += (targetSpeed - sh.speed) * Math.min(1, dt * 1.1);
+        sh.phase += dt * (2 + sh.speed / 24);
+        nodes[0] += Math.cos(sh.heading) * sh.speed * dt;
+        nodes[1] += Math.sin(sh.heading) * sh.speed * dt;
         const seg = L / (SHARK_NODES - 1);
-        const maxBend = 0.13;
+        const maxBend = 0.16;
         let prevAngle = sh.heading + Math.PI;
         for (let k = 1; k < SHARK_NODES; k++) {
           const px = nodes[(k - 1) * 2];
@@ -468,33 +558,18 @@
           nodes[k * 2 + 1] = py + Math.sin(angle) * seg;
           prevAngle = angle;
         }
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-        for (let k = 0; k < SHARK_NODES; k++) {
-          minX = Math.min(minX, nodes[k * 2]);
-          maxX = Math.max(maxX, nodes[k * 2]);
-          minY = Math.min(minY, nodes[k * 2 + 1]);
-          maxY = Math.max(maxY, nodes[k * 2 + 1]);
-        }
-        let shiftX = 0;
-        let shiftY = 0;
-        if (minX < 14) shiftX = 14 - minX;
-        else if (maxX > W - 14) shiftX = W - 14 - maxX;
-        if (minY < navFloor) shiftY = navFloor - minY;
-        else if (maxY > H - 18) shiftY = H - 18 - maxY;
-        const bandL = W * 0.38;
-        const bandR = W * 0.62;
-        for (let k = 6; k < SHARK_NODES; k++) {
-          const x = nodes[k * 2];
-          if (laneLeft && x > bandL) shiftX = Math.min(shiftX, bandL - x);
-          if (!laneLeft && x < bandR) shiftX = Math.max(shiftX, bandR - x);
-        }
-        if (shiftX !== 0 || shiftY !== 0) {
-          for (let k = 0; k < SHARK_NODES; k++) {
-            nodes[k * 2] += shiftX;
-            nodes[k * 2 + 1] += shiftY;
+        if (sh.hunger > 0.15) {
+          const mouthR = L * 0.05 + 8;
+          const mx = nodes[0];
+          const my = nodes[1];
+          for (const f of this.fish) {
+            if (!f.alive) continue;
+            if ((f.x - mx) ** 2 + (f.y - my) ** 2 < mouthR * mouthR) {
+              f.alive = false;
+              f.respawnAt = time + rand(3, 8);
+              sh.hunger = Math.max(0, sh.hunger - 0.16);
+              this.events.push({ kind: "eat", x: f.x, y: f.y });
+            }
           }
         }
       }
@@ -564,19 +639,20 @@
   var ALPHA_LEVELS = 6;
   var FISH_ALPHAS = [0.28, 0.42, 0.58, 0.74, 0.9];
   var DOT_RGB = [
-    [208, 204, 198],
-    [208, 204, 198],
-    [208, 204, 198],
-    [208, 204, 198],
-    [176, 172, 166]
+    [48, 52, 235],
+    [52, 205, 60],
+    [228, 50, 44],
+    [190, 212, 255],
+    [110, 230, 255]
   ];
-  var DOT_BASE_ALPHA = [0.28, 0.28, 0.28, 0.28, 0.22];
+  var DOT_BASE_ALPHA = [1, 1, 1, 1, 1];
   var WAKE = DOT_RGB.length - 1;
-  var SKIN_RAMP = ".S%X&";
-  var FIN_GLYPHS = "/\\|.)(";
-  var RIDGE_GLYPHS = "S%";
-  var EDGE_HEAVY = "/\\|";
-  var EDGE_LIGHT = ".( )";
+  var ACCENTS = ["#e0892c", "#e03a32", "#b44ae0", "#33c8cc", "#3cb54a", "#3150e8", "#d9c14a"];
+  var SKIN_RAMP = ":;t%SX8#@";
+  var FIN_GLYPHS = "%;tS:";
+  var RIDGE_GLYPHS = "@8%";
+  var EDGE_HEAVY = ":;";
+  var EDGE_LIGHT = ".',`";
   var FLAG_BODY = 1;
   var FLAG_EDGE = 2;
   var FLAG_FIN = 3;
@@ -592,30 +668,7 @@
     const k = (s - 0.84) / 0.16;
     return 0.019 * (1 - k) + 0.012 * Math.sin(k * Math.PI);
   }
-  function koiHalfWidth(s) {
-    if (s < 0.14) return 0.084 * Math.pow(Math.sin(s / 0.14 * Math.PI / 2), 0.55);
-    if (s < 0.36) return 0.084 + 0.016 * smoothstep(0.14, 0.36, s);
-    if (s < 0.68) return 0.02 + 0.08 * Math.pow(1 - (s - 0.36) / 0.52, 1.2);
-    if (s < 0.82) {
-      const k2 = (s - 0.68) / 0.14;
-      return 0.04 * (1 - k2) + 0.014;
-    }
-    const k = (s - 0.82) / 0.18;
-    return 0.014 * (1 - k);
-  }
   var SHAPES = {
-    koi: {
-      halfWidth: koiHalfWidth,
-      pectoral: [0.24, 0.32, 0.36, 0.048],
-      falcate: false,
-      pelvic: [0.56, 0.6, 0.63, 0.028],
-      caudal: 0.12,
-      dorsal: [0.3, 0.44],
-      secondDorsal: [0.62, 0.66],
-      eye: [0.07, 0.11],
-      gills: [0.16, 0.22],
-      tint: [1, 1, 1]
-    },
     classic: {
       halfWidth: classicHalfWidth,
       pectoral: [0.15, 0.43, 0.55, 0.26],
@@ -777,7 +830,7 @@
   }
   function paintGrid(g, W, H, cw, ch, dpr) {
     g.setTransform(1, 0, 0, 1, 0, 0);
-    g.strokeStyle = "rgba(74,71,68,0.045)";
+    g.strokeStyle = "rgba(42,36,32,0.08)";
     g.lineWidth = 1;
     g.beginPath();
     for (let c = 0; c <= Math.ceil(W / cw); c++) {
@@ -841,11 +894,8 @@
       __publicField(this, "frameId", 0);
       /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
       __publicField(this, "fishBuckets", FISH_ALPHAS.map(() => []));
-      __publicField(this, "fishStyles", FISH_ALPHAS.map((a) => `rgba(208,204,198,${(a * 0.45).toFixed(3)})`));
-      /** Quiet expanding rings. One event, 0.8s, then a same-point cooldown. */
-      __publicField(this, "ripples", []);
-      __publicField(this, "rippleCooldown", []);
-      const ctx = canvas.getContext("2d", { alpha: false });
+      __publicField(this, "fishStyles", FISH_ALPHAS.map((a) => `rgba(42,46,54,${a})`));
+      const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) throw new Error("2D canvas unavailable");
       this.ctx = ctx;
       this.bg = document.createElement("canvas");
@@ -856,12 +906,6 @@
           this.dotStyles.push(`rgba(${r},${g},${b},${a.toFixed(3)})`);
         }
       }
-    }
-    spawnRipple(_x, _y) {
-      return;
-    }
-    clearRipples() {
-      this.ripples.length = 0;
     }
     get cellWidth() {
       return this.cw;
@@ -907,7 +951,7 @@
       for (let i = 0; i < n; i++) {
         const col = i % this.cols;
         const row = i / this.cols | 0;
-        this.dotKind[i] = hash3(col, row, 5) > 0.94 ? 1 : 0;
+        this.dotKind[i] = 0;
         this.dotPhase[i] = hash3(col, row, 23) * Math.PI * 2;
         this.dotFreq[i] = 0.3 + hash3(col, row, 37) * 1.1;
       }
@@ -917,9 +961,8 @@
       const g = this.bg.getContext("2d");
       if (!g) return;
       const { width: W, height: H, dpr, cw, ch } = this;
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      g.fillStyle = "#FAFAF7";
-      g.fillRect(0, 0, W, H);
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.clearRect(0, 0, this.bg.width, this.bg.height);
       paintGrid(g, W, H, cw, ch, dpr);
     }
     render(world, dt) {
@@ -931,6 +974,7 @@
       this.depositWake(world);
       this.diffuse(dt);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       ctx.drawImage(this.bg, 0, 0);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.markFish(world);
@@ -943,46 +987,6 @@
       this.drawSharks(t);
     }
     // ── simulation → field ──────────────────────────────────────────────
-    drawRipples(dt) {
-      if (!this.ripples.length) return;
-      const { ctx, cw, ch } = this;
-      const keep = [];
-      ctx.save();
-      ctx.font = `500 ${Math.max(11, Math.round(ch * 0.95))}px ${this.fontFamily}`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      for (const rip of this.ripples) {
-        rip.age += dt;
-        if (rip.age >= rip.life) continue;
-        keep.push(rip);
-        const u = rip.age / rip.life;
-        const ease = 1 - (1 - u) * (1 - u);
-        const fade = (1 - ease) * (1 - ease);
-        const alphaGold = fade * 0.28;
-        const alphaGrey = fade * 0.16;
-        if (alphaGold < 0.03) continue;
-        for (let ring = 0; ring < 2; ring++) {
-          const radius = rip.maxR * (0.34 + 0.66 * ease) * (ring === 0 ? 1 : 0.66);
-          if (radius < cw * 0.5) continue;
-          const count = ring === 0 ? 22 : 14;
-          for (let i = 0; i < count; i++) {
-            if (hash3(i, ring + 2, (rip.x / cw | 0) + 5) < 0.12) continue;
-            const a = i / count * Math.PI * 2 + ring * 0.55;
-            const px = rip.x + Math.cos(a) * radius;
-            const py = rip.y + Math.sin(a) * radius;
-            const col = Math.floor(px / cw);
-            const row = Math.floor(py / ch);
-            if (col < 0 || row < 0 || col >= this.cols || row >= this.rows) continue;
-            const edge = ring === 0;
-            ctx.globalAlpha = edge ? alphaGold : alphaGrey;
-            ctx.fillStyle = edge ? "#E8A05C" : "#D0CCC6";
-            ctx.fillText(i % 2 === 0 ? "\xB7" : "\u02DA", col * cw + cw / 2, row * ch + ch / 2);
-          }
-        }
-      }
-      ctx.restore();
-      this.ripples = keep;
-    }
     cellIndex(x, y) {
       const c = Math.floor(x / this.cw);
       const r = Math.floor(y / this.ch);
@@ -1108,18 +1112,14 @@
         let shade = 0.58 - across * across * 0.42 + facing * 0.26;
         let flag = FLAG_BODY;
         if (s > shape.dorsal[0] && s < shape.dorsal[1] && across < 0.3) {
-          if (this.shape === SHAPES.koi) {
-            shade = Math.min(1, shade + 0.2);
-          } else {
-            flag = FLAG_RIDGE;
-            shade = 1;
-          }
-        } else if (this.shape !== SHAPES.koi && s > shape.secondDorsal[0] && s < shape.secondDorsal[1] && across < 0.4) {
+          flag = FLAG_RIDGE;
+          shade = 1;
+        } else if (s > shape.secondDorsal[0] && s < shape.secondDorsal[1] && across < 0.4) {
           shade = Math.max(shade, 0.82);
-        } else if (shape.eye && s > shape.eye[0] && s < shape.eye[1] && across > (this.shape === SHAPES.koi ? 0.48 : 0.42) && across < (this.shape === SHAPES.koi ? 0.78 : 0.78)) {
+        } else if (shape.eye && s > shape.eye[0] && s < shape.eye[1] && across > 0.6) {
           flag = FLAG_EYE;
-          shade = 0.9;
-        } else if (this.shape !== SHAPES.koi && s > shape.gills[0] && s < shape.gills[1] && across > 0.58) {
+          shade = 0;
+        } else if (s > shape.gills[0] && s < shape.gills[1] && across > 0.58) {
           if (Math.floor((s - shape.gills[0]) / (shape.gills[1] - shape.gills[0]) * 5) % 2 === 0) shade *= 0.45;
         } else if (s < 0.05) {
           shade = Math.max(shade, 0.7);
@@ -1127,9 +1127,6 @@
           shade = Math.max(shade, 0.8);
         } else if (this.marked(s, a * bestSign, L, across)) {
           flag = FLAG_MARK;
-        }
-        if (this.shape === SHAPES.koi && flag === FLAG_BODY && s > 0.04 && s < 0.26 && across < 0.8) {
-          shade = Math.min(shade, 0.3);
         }
         this.hitFlag = flag;
         this.hitShade = shade;
@@ -1143,18 +1140,9 @@
         this.hitShade = 0.38 + 0.22 * (1 - clamp(a / tip, 0, 1));
         return true;
       }
-      if (this.shape === SHAPES.koi && shape.caudal > 0) {
-        const reach = L * shape.caudal;
-        const lobe = inTriangle(u, a, L * 0.8, 0, L * 0.9, L * 0.012, L * 1, reach);
-        const notch = u > L * 0.93 && a < (u - L * 0.93) * 0.75;
-        if (lobe && !notch) {
-          this.hitFlag = FLAG_FIN;
-          this.hitShade = 0.55;
-          return true;
-        }
-      }
       const [v0, v1, v2, vr] = shape.pelvic;
-      if (inTriangle(u, a, L * v0, 0, L * v1, 0, L * v2, L * vr) || this.shape !== SHAPES.koi && shape.caudal > 0 && inTriangle(u, a, L * 0.86, 0, L * 0.95, 0, L, L * shape.caudal)) {
+      if (inTriangle(u, a, L * v0, 0, L * v1, 0, L * v2, L * vr) || // Forked caudal fin.
+      shape.caudal > 0 && inTriangle(u, a, L * 0.86, 0, L * 0.95, 0, L, L * shape.caudal)) {
         this.hitFlag = FLAG_FIN;
         this.hitShade = 0.36;
         return true;
@@ -1168,17 +1156,6 @@
         const wobble = 0.35 * Math.sin(v / L * 25 + s * 5);
         const bar = Math.sin(s * Math.PI * 2 * 9 + wobble);
         return bar > 0.65 - 0.5 * smoothstep(0.2, 0.42, s) + 0.4 * smoothstep(0.8, 0.9, s);
-      }
-      if (this.shape === SHAPES.koi) {
-        if (s < 0.28 || s > 0.6 || across < 0.34 || across > 0.66) return false;
-        const gu = s * L / (L * 0.13);
-        const gv = v / (L * 0.07);
-        const cu = Math.floor(gu);
-        const cv = Math.floor(gv);
-        if (hash3(cu, cv, this.sharkId + 4) < 0.55) return false;
-        const jx = hash3(cu, cv, this.sharkId) * 0.5 + 0.25;
-        const jy = hash3(cu, cv, this.sharkId + 11) * 0.5 + 0.25;
-        return (gu - cu - jx) ** 2 + (gv - cv - jy) ** 2 < 0.085;
       }
       if (this.shape === SHAPES.zebra) {
         if (s < 0.07) return false;
@@ -1218,9 +1195,8 @@
           const tl = Math.hypot(tx, ty) || 1;
           tx /= tl;
           ty /= tl;
-          const koiWave = sh.kind === "koi";
-          const amp = koiWave ? L * (8e-3 + 0.055 * Math.pow(s, 1.45)) * swim : L * 0.05 * (0.1 + 0.9 * Math.pow(s, 1.8)) * swim;
-          const off = amp * Math.sin(sh.phase - s * (koiWave ? 2.4 : 5.2));
+          const amp = L * 0.05 * (0.1 + 0.9 * Math.pow(s, 1.8)) * swim;
+          const off = amp * Math.sin(sh.phase - s * 5.2);
           spine[k * 2] = n[k * 2] - ty * off;
           spine[k * 2 + 1] = n[k * 2 + 1] + tx * off;
         }
@@ -1276,7 +1252,7 @@
             sharkKind[i] = kindIndex;
             if (centerHit && coverage >= 0.6) {
               sharkFlag[i] = flag;
-              const flicker = Math.sin(t * 1.15 + key % 64 * 0.08) * 0.02;
+              const flicker = (hash3(c, r, Math.floor(t * 6)) - 0.5) * 0.06;
               sharkShade[i] = clamp(shade + flicker, 0, 1);
               const sc = c + shadowDc;
               const sr = r + shadowDr;
@@ -1290,7 +1266,7 @@
       }
     }
     drawSharks(t) {
-      const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkKind } = this;
+      const { ctx, cols, rows, cw, ch, sharkFlag, sharkShade, sharkKey, sharkDepth, sharkKind } = this;
       const n = cols * rows;
       for (let i = 0; i < n; i++) {
         const flag = sharkFlag[i];
@@ -1301,58 +1277,47 @@
         const y = row * ch;
         const key = sharkKey[i];
         const shade = sharkShade[i];
+        const dim = 0.7 + 0.3 * sharkDepth[i];
         const [tr, tg, tb] = SHAPES[KINDS[sharkKind[i]]].tint;
-        const yNorm = row / Math.max(1, rows - 1);
-        const near = 1 - yNorm;
-        const alpha = clamp(0.99 - yNorm * 0.5, 0.45, 1);
-        const lifted = clamp(shade + (0.55 - near) * 0.82, 0, 1);
-        ctx.globalAlpha = alpha;
+        const tick = Math.floor(t * 2.4 + key % 997 / 97);
+        const roll = hash3(key, tick, 7);
         if (flag === FLAG_EDGE) {
           const set = shade >= 0.5 ? EDGE_HEAVY : EDGE_LIGHT;
-          ctx.globalAlpha = alpha * 0.72;
-          ctx.fillStyle = lifted > 0.55 ? "#C4C0B8" : "#8A8680";
+          const g = (70 + shade * 80) * dim;
+          ctx.fillStyle = roll < 0.07 ? ACCENTS[key % ACCENTS.length] : `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
           ctx.fillText(set[(key >>> 8) % set.length], x + cw / 2, y + ch / 2 + 1);
-          ctx.globalAlpha = 1;
           continue;
         }
-        let fill = lifted > 0.58 ? "#C4C0B8" : lifted > 0.3 ? "#8A8680" : "#4A4744";
-        if (shade > 0.9) fill = "#F7F5F0";
+        let level;
         let glyph;
-        let ink = lifted > 0.48 ? "#4A4744" : "#F7F5F0";
         if (flag === FLAG_RIDGE) {
-          fill = "#F7F5F0";
+          level = 226;
           glyph = RIDGE_GLYPHS[(key >>> 8) % RIDGE_GLYPHS.length];
-          ink = "#4A4744";
         } else if (flag === FLAG_EYE) {
-          fill = "#FFFEFA";
-          glyph = "\xB7";
-          ink = "#1A1816";
+          level = 12;
+          glyph = "o";
         } else if (flag === FLAG_MARK) {
-          const spot = hash3(key, 3, 11);
-          fill = spot > 0.93 ? "#C45C26" : shade > 0.72 || spot > 0.8 ? "#E8A05C" : "#D4894A";
+          level = 24 + shade * 22;
           glyph = MARK_GLYPHS[(key >>> 8) % MARK_GLYPHS.length];
-          ink = "#4A4744";
         } else if (flag === FLAG_FIN) {
-          fill = lifted > 0.5 ? "#C4C0B8" : "#8A8680";
-          if (hash3(key, 5, 2) > 0.92) fill = "#E8A05C";
+          level = 40 + shade * 120;
           glyph = FIN_GLYPHS[(key >>> 8) % FIN_GLYPHS.length];
-          ink = "#4A4744";
         } else {
+          level = 46 + shade * 160;
           const jitter = (key >>> 4) % 3 - 1;
-          glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * (SKIN_RAMP.length - 0.01)) + jitter, 0, SKIN_RAMP.length - 1)];
+          glyph = SKIN_RAMP[clamp(Math.floor((1 - shade) * 8.99) + jitter, 0, SKIN_RAMP.length - 1)];
         }
-        const breathe = flag === FLAG_BODY && hash3(key, 2, 8) > 0.78;
-        if (!breathe) {
-          ctx.fillStyle = fill;
-          ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
-        }
-        ctx.globalAlpha = breathe ? alpha * 0.55 : alpha;
-        ctx.fillStyle = ink;
+        level *= dim;
+        ctx.fillStyle = `rgb(${Math.min(255, Math.round(level * tr))},${Math.min(255, Math.round(level * tg))},${Math.min(255, Math.round(level * tb + 4))})`;
+        ctx.fillRect(x + 1, y + 1, cw - 1, ch - 1);
+        let color;
+        if (flag === FLAG_EYE) color = "#9aa0ad";
+        else if (flag === FLAG_MARK) color = `rgb(${Math.round(70 * tr)},${Math.round(70 * tg)},${Math.round(70 * tb)})`;
+        else if (roll < 0.09) color = ACCENTS[key % ACCENTS.length];
+        else if (roll < 0.13) color = "#ffffff";
+        else color = shade > 0.55 ? "#0e0f13" : "#1b1d24";
+        ctx.fillStyle = color;
         ctx.fillText(glyph, x + cw / 2, y + ch / 2 + 1);
-        ctx.globalAlpha = 1;
-        void tr;
-        void tg;
-        void tb;
       }
     }
     // ── fish, dots, heat ────────────────────────────────────────────────
@@ -1395,7 +1360,7 @@
         if (h < 0.08) continue;
         const col = i % cols;
         const row = i / cols | 0;
-        ctx.fillStyle = `rgba(208,204,198,${Math.min(0.45, h).toFixed(2)})`;
+        ctx.fillStyle = h > 0.5 ? `rgba(255,120,60,${h.toFixed(2)})` : `rgba(220,40,40,${(h * 1.6).toFixed(2)})`;
         ctx.fillText(h > 0.6 ? "*" : "\xB7", col * cw + cw / 2, row * ch + ch / 2 + 1);
       }
     }
@@ -1474,8 +1439,6 @@
       __publicField(this, "resizeObserver");
       __publicField(this, "intersectionObserver");
       __publicField(this, "disposed", false);
-      __publicField(this, "prevSpeed", /* @__PURE__ */ new Map());
-      __publicField(this, "closePairs", /* @__PURE__ */ new Set());
       __publicField(this, "frame", (now) => {
         const dt = Math.min(0.1, (now - this.last) / 1e3);
         this.last = now;
@@ -1487,7 +1450,6 @@
           steps++;
         }
         if (steps === MAX_STEPS) this.acc = 0;
-        this.senseRipples();
         this.renderer.render(this.world, dt);
         this.raf = requestAnimationFrame(this.frame);
       });
@@ -1514,7 +1476,7 @@
         this.world.pointer.active = false;
       });
       var _a;
-      this.world = new World(sharks, 22);
+      this.world = new World(sharks);
       this.renderer = new AsciiRenderer(canvas);
       this.renderer.setFontFamily(getComputedStyle(canvas).fontFamily);
       this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -1530,7 +1492,6 @@
       window.addEventListener("pointerdown", this.onPointerDown, { passive: true });
       document.documentElement.addEventListener("pointerleave", this.onPointerLeave);
       window.addEventListener("blur", this.onPointerLeave);
-      canvas.__ocean = this;
       this.resize();
       (_a = document.fonts) == null ? void 0 : _a.load(`600 16px ${getComputedStyle(canvas).fontFamily}`).then(() => {
         if (!this.disposed && this.reducedMotion.matches) this.drawStill();
@@ -1561,14 +1522,6 @@
       if (this.disposed || !this.visible || this.reducedMotion.matches) return;
       this.last = performance.now();
       this.raf = requestAnimationFrame(this.frame);
-    }
-    /** One quiet ring. Ignored when the reader prefers reduced motion. */
-    ripple(x, y) {
-      if (this.reducedMotion.matches) return;
-      this.renderer.spawnRipple(x, y);
-    }
-    senseRipples() {
-      return;
     }
     /** Reduced motion: let the ecosystem settle, then show a single frame. */
     drawStill() {

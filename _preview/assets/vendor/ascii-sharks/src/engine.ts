@@ -19,12 +19,9 @@ export class OceanEngine {
   private resizeObserver: ResizeObserver;
   private intersectionObserver: IntersectionObserver;
   private disposed = false;
-  private prevSpeed = new Map<number, number>();
-  private closePairs = new Set<string>();
 
   constructor(private canvas: HTMLCanvasElement, sharks?: SharkSpec[]) {
-    // Few grey dashes as quiet field particles; the koi school is the subject.
-    this.world = new World(sharks, 22);
+    this.world = new World(sharks);
     this.renderer = new AsciiRenderer(canvas);
     this.renderer.setFontFamily(getComputedStyle(canvas).fontFamily);
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -43,7 +40,6 @@ export class OceanEngine {
     document.documentElement.addEventListener("pointerleave", this.onPointerLeave);
     window.addEventListener("blur", this.onPointerLeave);
 
-    (canvas as HTMLCanvasElement & { __ocean?: OceanEngine }).__ocean = this;
     this.resize();
     // Canvas text can't trigger a webfont load; once the mono face is in, redraw.
     document.fonts?.load(`600 16px ${getComputedStyle(canvas).fontFamily}`).then(() => {
@@ -91,20 +87,10 @@ export class OceanEngine {
       steps++;
     }
     if (steps === MAX_STEPS) this.acc = 0;
-    this.senseRipples();
     this.renderer.render(this.world, dt);
     this.raf = requestAnimationFrame(this.frame);
   };
 
-  /** One quiet ring. Ignored when the reader prefers reduced motion. */
-  ripple(x: number, y: number) {
-    if (this.reducedMotion.matches) return;
-    this.renderer.spawnRipple(x, y);
-  }
-
-  private senseRipples() {
-    return;
-  }
   /** Reduced motion: let the ecosystem settle, then show a single frame. */
   private drawStill() {
     if (this.world.time < 4) {

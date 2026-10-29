@@ -58,7 +58,8 @@
         });
       });
       var glyphs = document.querySelectorAll(".home-glyph");
-      function fishCell(r, g, b) {
+      function fishCell(r, g, b, a) {
+        if (a < 180) return false;
         var lum = (r * 3 + g * 4 + b) / 8;
         if (lum < 162) return true;
         if (r > b + 48 && lum < 168 && r > 155 && g < 200) return true;
@@ -75,14 +76,14 @@
           var row = y * w;
           for (var x = x0; x <= x1; x += stepX) {
             var i = (row + x) * 4;
-            var r = data[i], g = data[i + 1], b = data[i + 2];
-            var lum = (r * 3 + g * 4 + b) / 8;
+            var r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+            if (a < 180) continue;
             seen++;
-            sum += lum;
-            if (fishCell(r, g, b)) hits++;
+            sum += (r * 3 + g * 4 + b) / 8;
+            if (fishCell(r, g, b, a)) hits++;
           }
         }
-        if (!seen) return false;
+        if (seen < 3) return false;
         return hits >= 3 && hits / seen >= 0.42 && sum / seen < 186;
       }
       function tick() {
