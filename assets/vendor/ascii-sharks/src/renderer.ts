@@ -840,6 +840,14 @@ export class AsciiRenderer {
     }
   }
 
+  private overType(x: number, y: number) {
+    const { width: W, height: H } = this;
+    const cx = W / 2;
+    if (y < Math.max(100, H * 0.15) && Math.abs(x - cx) < W * 0.36) return true;
+    if (Math.abs(x - cx) < Math.min(230, W * 0.19) && y > H * 0.22 && y < H * 0.8) return true;
+    return false;
+  }
+
   private drawFish() {
     const { ctx, cw, ch, cols, fishBuckets } = this;
     ctx.save();
@@ -853,8 +861,11 @@ export class AsciiRenderer {
       if (!bucket.length) continue;
       ctx.fillStyle = this.fishStyles[b];
       for (const i of bucket) {
-        const x = (i % cols) * cw;
-        const y = ((i / cols) | 0) * ch;
+        const col = i % cols;
+        const row = (i / cols) | 0;
+        const x = col * cw;
+        const y = row * ch;
+        if (this.overType(x + cw / 2, y + ch / 2)) continue;
         ctx.fillRect(x + cw * 0.16, y + (ch - barH) / 2, cw * 0.68, barH);
         ctx.fillText("-", x + cw / 2, y + ch / 2);
       }

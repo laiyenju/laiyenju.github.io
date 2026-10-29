@@ -143,7 +143,9 @@ export class World {
     this.sharks = [];
     for (let i = 0; i < sharkCount; i++) {
       const { kind, size } = this.sharkSpecs[i];
-      const length = baseLength * size;
+      // Spec sizes stay 1 / 0.84 / 0.77 / 0.7. Square them so the 0.7
+      // body is about half the 1.0 and the steps read at a glance.
+      const length = baseLength * size * size;
       const orbitRadius = minSide * rand(0.28, 0.4);
       const a = (i / sharkCount) * TAU + rand(-0.4, 0.4);
       const orbitDir: 1 | -1 = i % 2 === 0 ? 1 : -1;
@@ -418,8 +420,21 @@ export class World {
       if (relayed > alarm) alarm += (relayed - alarm) * contagion;
       f.alarm = alarm;
 
-      // Soft walls.
+      // Soft walls. Schools skirt the centered copy and the top nav.
       const m = 36;
+      const midX = W / 2;
+      const colHalf = Math.min(220, W * 0.18);
+      const inNav = f.y < Math.max(100, H * 0.15) && Math.abs(f.x - midX) < W * 0.36;
+      const inCopy = Math.abs(f.x - midX) < colHalf && f.y > H * 0.22 && f.y < H * 0.8;
+      if (inNav || inCopy) {
+        const side = f.x < midX ? -1 : 1;
+        ax += side * 220;
+        f.vx += side * 18;
+        if (inNav) {
+          ay += 120;
+          f.vy += 12;
+        }
+      }
       if (f.x < m) ax += (m - f.x) * 7;
       else if (f.x > W - m) ax -= (f.x - (W - m)) * 7;
       if (f.y < m) ay += (m - f.y) * 7;
