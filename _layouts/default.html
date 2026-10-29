@@ -7,22 +7,65 @@
   <meta name="description" content="{{ page.description | default: page.excerpt | default: site.description | strip_html | strip_newlines | truncate: 140 | escape }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600&family=DotGothic16&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}?v={{ site.time | date: '%s' }}">
+  <script>
+    // Print the first screen in block by block (post.js), unless motion is reduced.
+    if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) document.documentElement.classList.add("post-print");
+  </script>
 </head>
 <body class="post-body">
+  <script>
+    // Night palette before first paint, so a dark-mode visit never flashes paper.
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.body.classList.add("theme-night");
+  </script>
   <canvas data-koi class="post-pond" aria-hidden="true"></canvas>
+
+  {% comment %}The file this page was written as, without its date: 2026-10-29-markdown-styles.md → markdown-styles.md{% endcomment %}
+  {% assign name_parts = page.name | split: "-" %}
+  {% if name_parts.size > 3 and name_parts[0].size == 4 %}
+    {% assign file_name = name_parts | slice: 3, name_parts.size | join: "-" %}
+  {% else %}
+    {% assign file_name = page.name %}
+  {% endif %}
+  {% assign chars = content | strip_html | strip_newlines | remove: " " | size %}
+
+  {% comment %}Older and newer notes, for the pager at the end.{% endcomment %}
+  {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" %}
+  {% assign older = nil %}
+  {% assign newer = nil %}
+  {% for note in notes %}
+    {% if note.url == page.url %}
+      {% assign i_older = forloop.index0 | minus: 1 %}
+      {% if i_older >= 0 %}{% assign older = notes[i_older] %}{% endif %}
+      {% assign newer = notes[forloop.index] %}
+    {% endif %}
+  {% endfor %}
 
   <article class="post">
     <header class="post-head">
-      <a class="post-back" href="{{ '/notes/' | relative_url }}">← notes</a>
+      <a class="post-back" href="{{ '/notes/' | relative_url }}"><span class="sh-dollar">$</span> cd ..</a>
+      <p class="post-cmd"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ cat {{ file_name }}</p>
       <h1 class="post-title">{{ page.title }}</h1>
-      {% if page.date %}<p class="post-meta"><time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time></p>{% endif %}
+      <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>
     </header>
 
     <div class="post-prose">
       {{ content }}
     </div>
+
+    <footer class="post-end">
+      <p class="post-eof">(END)</p>
+      {% if older or newer %}
+      <nav class="post-pager" aria-label="More notes">
+        {% if newer %}<a href="{{ newer.url | relative_url }}" data-pager="next"><span class="post-pager-label">next</span><time datetime="{{ newer.date | date_to_xmlschema }}">{{ newer.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ newer.title }}</span></a>{% endif %}
+        {% if older %}<a href="{{ older.url | relative_url }}" data-pager="prev"><span class="post-pager-label">prev</span><time datetime="{{ older.date | date_to_xmlschema }}">{{ older.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ older.title }}</span></a>{% endif %}
+      </nav>
+      {% endif %}
+      <div class="sh-out" aria-live="polite"></div>
+      <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><input class="sh-input" id="post-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+      <p class="sh-keys">輸入 <kbd>help</kbd> 看看</p>
+    </footer>
   </article>
 
   <script src="{{ '/assets/js/ocean.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>

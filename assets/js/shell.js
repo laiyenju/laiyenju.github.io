@@ -126,4 +126,48 @@
     i = i < 0 ? (e.key === "ArrowDown" ? 0 : rows.length - 1) : (i + (e.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length;
     rows[i].focus();
   });
+
+  /* —— Opening a note: the row stays lit, the prompt types `cat name.md`,
+        then the page changes. The row's title carries the view-transition
+        name, so browsers that support cross-document transitions slide it
+        into the article title. Kept under half a second. —— */
+  var notesPanel = document.querySelector('.home-panel[data-view="notes"]');
+  var opening = false;
+  if (notesPanel) notesPanel.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest(".panel-list a");
+    if (!a || opening || e.defaultPrevented || e.button !== 0) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var url = new URL(a.href, location.href);
+    if (url.origin !== location.origin) return;
+    e.preventDefault();
+    opening = true;
+    var file = decodeURIComponent(url.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
+    var title = a.querySelector(".panel-title");
+    if (title) title.style.viewTransitionName = "post-title";
+    a.classList.add("is-opening");
+    var input = notesPanel.querySelector(".sh-input");
+    var text = "cat " + file;
+    var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (still || !input) { location.href = url.href; return; }
+    var n = 0;
+    var step = Math.max(8, Math.min(16, Math.floor(280 / text.length)));
+    var timer = window.setInterval(function () {
+      input.value = text.slice(0, ++n);
+      if (n < text.length) return;
+      window.clearInterval(timer);
+      window.setTimeout(function () { location.href = url.href; }, 90);
+    }, step);
+  });
+  // Back from the article (page restored from the cache): a clean prompt and no lingering title name.
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted || !notesPanel) return;
+    opening = false;
+    var input = notesPanel.querySelector(".sh-input");
+    if (input) input.value = "";
+    notesPanel.querySelectorAll(".is-opening").forEach(function (a) {
+      a.classList.remove("is-opening");
+      var t = a.querySelector(".panel-title");
+      if (t) t.style.viewTransitionName = "";
+    });
+  });
 })();
