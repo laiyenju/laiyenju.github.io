@@ -96,14 +96,15 @@ export const ASCII: GlyphTheme = {
   heatWarm: [220, 40, 40],
 };
 
-// Cangjie radicals ordered by ink density. Edges and fin tips thin out into
+// Cangjie radicals ordered by ink density. The outline keeps two-stroke
+// radicals (人卜乂) so the silhouette holds; only the fin tips thin out into
 // single strokes (丶丿乀), the way a brush lifts off the paper.
 const RADICALS = {
   skin: "十大中口木日田金難",
   fin: "心水手火月",
   ridge: "山土弓",
-  edgeHeavy: "人卜",
-  edgeLight: "丶丿乀一",
+  edgeHeavy: "木大人",
+  edgeLight: "人卜乂",
   wisp: "乀丿丶乙",
   mark: "竹戈女",
   eye: "目",
@@ -115,19 +116,19 @@ const RADICALS = {
 export const GLYPH_DAY: GlyphTheme = {
   ...RADICALS,
   aspect: 1,
-  cellDiv: 140,
-  cellMin: 9,
-  cellMax: 12,
+  cellDiv: 110,
+  cellMin: 12,
+  cellMax: 15,
   font: '"Noto Serif TC", "Songti TC", serif',
   weight: 600,
   glyphScale: 0.94,
   blocks: false,
   shadow: [29, 24, 19],
-  lit: [150, 138, 124],
+  lit: [112, 100, 88],
   ridgeColor: "#1d1813",
   eyeColor: "#1d1813",
   wash: [96, 78, 60],
-  washAlpha: 0.22,
+  washAlpha: 0.4,
   patchFill: [184, 51, 42],
   patchGlyph: "#f6efe4",
   patchGlint: "#ffd9c8",
@@ -144,9 +145,9 @@ export const GLYPH_DAY: GlyphTheme = {
 export const GLYPH_NIGHT: GlyphTheme = {
   ...RADICALS,
   aspect: 1,
-  cellDiv: 140,
-  cellMin: 9,
-  cellMax: 12,
+  cellDiv: 110,
+  cellMin: 12,
+  cellMax: 15,
   font: '"DotGothic16", "Noto Serif TC", monospace',
   weight: 400,
   glyphScale: 1,
@@ -156,7 +157,7 @@ export const GLYPH_NIGHT: GlyphTheme = {
   ridgeColor: "#ffe2a8",
   eyeColor: "#ffe2a8",
   wash: [242, 176, 80],
-  washAlpha: 0.18,
+  washAlpha: 0.3,
   patchFill: [232, 168, 82],
   patchGlyph: "#17130e",
   patchGlint: "#3a2a14",

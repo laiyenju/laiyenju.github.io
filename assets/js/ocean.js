@@ -958,8 +958,8 @@
     skin: "\u5341\u5927\u4E2D\u53E3\u6728\u65E5\u7530\u91D1\u96E3",
     fin: "\u5FC3\u6C34\u624B\u706B\u6708",
     ridge: "\u5C71\u571F\u5F13",
-    edgeHeavy: "\u4EBA\u535C",
-    edgeLight: "\u4E36\u4E3F\u4E40\u4E00",
+    edgeHeavy: "\u6728\u5927\u4EBA",
+    edgeLight: "\u4EBA\u535C\u4E42",
     wisp: "\u4E40\u4E3F\u4E36\u4E59",
     mark: "\u7AF9\u6208\u5973",
     eye: "\u76EE",
@@ -969,19 +969,19 @@
   var GLYPH_DAY = {
     ...RADICALS,
     aspect: 1,
-    cellDiv: 140,
-    cellMin: 9,
-    cellMax: 12,
+    cellDiv: 110,
+    cellMin: 12,
+    cellMax: 15,
     font: '"Noto Serif TC", "Songti TC", serif',
     weight: 600,
     glyphScale: 0.94,
     blocks: false,
     shadow: [29, 24, 19],
-    lit: [150, 138, 124],
+    lit: [112, 100, 88],
     ridgeColor: "#1d1813",
     eyeColor: "#1d1813",
     wash: [96, 78, 60],
-    washAlpha: 0.22,
+    washAlpha: 0.4,
     patchFill: [184, 51, 42],
     patchGlyph: "#f6efe4",
     patchGlint: "#ffd9c8",
@@ -996,9 +996,9 @@
   var GLYPH_NIGHT = {
     ...RADICALS,
     aspect: 1,
-    cellDiv: 140,
-    cellMin: 9,
-    cellMax: 12,
+    cellDiv: 110,
+    cellMin: 12,
+    cellMax: 15,
     font: '"DotGothic16", "Noto Serif TC", monospace',
     weight: 400,
     glyphScale: 1,
@@ -1008,7 +1008,7 @@
     ridgeColor: "#ffe2a8",
     eyeColor: "#ffe2a8",
     wash: [242, 176, 80],
-    washAlpha: 0.18,
+    washAlpha: 0.3,
     patchFill: [232, 168, 82],
     patchGlyph: "#17130e",
     patchGlint: "#3a2a14",
@@ -1034,6 +1034,22 @@
   var DOT_BASE_ALPHA = [1, 1, 1, 1, 1];
   var WAKE = DOT_RGB.length - 1;
   var mix = (a, b, k, alpha = 1) => `rgba(${Math.round(a[0] + (b[0] - a[0]) * k)},${Math.round(a[1] + (b[1] - a[1]) * k)},${Math.round(a[2] + (b[2] - a[2]) * k)},${alpha.toFixed(2)})`;
+  var Ramp = class {
+    constructor(a, b) {
+      this.a = a;
+      this.b = b;
+      __publicField(this, "cache", []);
+    }
+    get(k, alpha = 1) {
+      var _a;
+      const kq = Math.round(clamp(k, 0, 1) * 64);
+      const aq = Math.round(clamp(alpha, 0, 1) * 100);
+      const i = kq * 101 + aq;
+      return (_a = this.cache[i]) != null ? _a : this.cache[i] = mix(this.a, this.b, kq / 64, aq / 100);
+    }
+  };
+  var SOLID = new Uint8Array(9);
+  for (const f of [1, 3, 4, 5, 6, 8]) SOLID[f] = 1;
   var FLAG_BODY = 1;
   var FLAG_EDGE = 2;
   var FLAG_FIN = 3;
@@ -1302,10 +1318,16 @@
       /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
       __publicField(this, "fishBuckets", FISH_ALPHAS.map(() => []));
       __publicField(this, "fishStyles");
+      __publicField(this, "litToShadow");
+      __publicField(this, "shadowToLit");
+      __publicField(this, "washRamp");
       __publicField(this, "showGrid", true);
       DOT_RGB[WAKE] = theme.wake;
       if (theme.font) this.fontFamily = theme.font;
       this.fishStyles = FISH_ALPHAS.map((a) => mix(theme.fishInk, theme.fishInk, 0, a));
+      this.litToShadow = new Ramp(theme.lit, theme.shadow);
+      this.shadowToLit = new Ramp(theme.shadow, theme.lit);
+      this.washRamp = new Ramp(theme.wash, theme.wash);
       const ctx = canvas.getContext("2d", { alpha: true });
       if (!ctx) throw new Error("2D canvas unavailable");
       this.ctx = ctx;
@@ -1327,6 +1349,31 @@
     setGrid(show) {
       this.showGrid = show;
       this.paintBackground();
+    }
+    /**
+     * Share of the cells under a box (canvas px) that hold solid koi body,
+     * from the last rendered frame. Lets the page cut copy out of a koi
+     * without reading pixels back from the canvas.
+     */
+    coverage(x0, y0, x1, y1) {
+      const { cols, rows, cw, ch, sharkFlag, sharkAlpha } = this;
+      const c0 = Math.max(0, Math.floor(x0 / cw));
+      const c1 = Math.min(cols - 1, Math.floor(x1 / cw));
+      const r0 = Math.max(0, Math.floor(y0 / ch));
+      const r1 = Math.min(rows - 1, Math.floor(y1 / ch));
+      if (c1 < c0 || r1 < r0) return 0;
+      let hit = 0;
+      let seen = 0;
+      for (let r = r0; r <= r1; r++) {
+        for (let c = c0; c <= c1; c++) {
+          const i = r * cols + c;
+          const w = (Math.min(x1, (c + 1) * cw) - Math.max(x0, c * cw)) * (Math.min(y1, (r + 1) * ch) - Math.max(y0, r * ch));
+          if (w <= 0) continue;
+          seen += w;
+          if (SOLID[sharkFlag[i]] && sharkAlpha[i] > 0.5) hit += w;
+        }
+      }
+      return seen > 0 ? hit / seen : 0;
     }
     setFontFamily(family) {
       if (family && !this.theme.font) this.fontFamily = family;
@@ -1753,7 +1800,7 @@
           else if (th.blocks) {
             const g = (70 + shade * 80) * dim;
             ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
-          } else ctx.fillStyle = mix(th.lit, th.shadow, 0.25, 0.45 + 0.4 * shade);
+          } else ctx.fillStyle = this.litToShadow.get(0.25, 0.45 + 0.4 * shade);
           ctx.fillText(set[(key >>> 8) % set.length], gx, gy);
           continue;
         }
@@ -1761,7 +1808,7 @@
           if (th.blocks) {
             const g = (58 + (1 - shade) * 60) * dim;
             ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
-          } else ctx.fillStyle = mix(th.lit, th.shadow, 0.35, 0.75);
+          } else ctx.fillStyle = this.litToShadow.get(0.35, 0.75);
           ctx.fillText(th.wisp[(key >>> 8) % th.wisp.length], gx, gy);
           continue;
         }
@@ -1795,14 +1842,14 @@
         }
         if (!th.blocks) {
           const wash = th.washAlpha * (flag === FLAG_FIN ? 0.6 : 1 - 0.45 * shade) * dim;
-          ctx.fillStyle = mix(th.wash, th.wash, 0, wash);
+          ctx.fillStyle = this.washRamp.get(0, wash);
           ctx.fillRect(x, y, cw, ch);
           let color2;
           if (flag === FLAG_RIDGE) color2 = th.ridgeColor;
           else if (flag === FLAG_EYE) color2 = th.eyeColor;
           else if (roll < th.accentRate) color2 = accent;
-          else if (flag === FLAG_FIN) color2 = mix(th.shadow, th.lit, clamp(shade * 0.9 + 0.1, 0, 1), 0.85 * dim + 0.15);
-          else color2 = mix(th.shadow, th.lit, shade, 0.8 * dim + 0.2);
+          else if (flag === FLAG_FIN) color2 = this.shadowToLit.get(shade * 0.9 + 0.1, 0.85 * dim + 0.15);
+          else color2 = this.shadowToLit.get(shade, 0.8 * dim + 0.2);
           ctx.fillStyle = color2;
           ctx.fillText(glyph, gx, gy);
           continue;
@@ -2069,6 +2116,14 @@
     /** Article pages: text boxes in canvas px (x0, y0, x1, y1, ...); the koi hurry across them. */
     setTextRects(rects) {
       this.world.textRects = rects;
+    }
+    /**
+     * Share of a box (client px) the koi body covered in the last frame, 0–1.
+     * The home copy uses it to cut itself out of a passing koi.
+     */
+    koiCover(left, top, right, bottom) {
+      const c = this.canvas.getBoundingClientRect();
+      return this.renderer.coverage(left - c.left, top - c.top, right - c.left, bottom - c.top);
     }
     /** Article pages draw on plain paper, without the cell grid. */
     setGrid(show) {

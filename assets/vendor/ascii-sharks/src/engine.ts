@@ -93,6 +93,15 @@ export class OceanEngine {
     this.world.textRects = rects;
   }
 
+  /**
+   * Share of a box (client px) the koi body covered in the last frame, 0–1.
+   * The home copy uses it to cut itself out of a passing koi.
+   */
+  koiCover(left: number, top: number, right: number, bottom: number) {
+    const c = this.canvas.getBoundingClientRect();
+    return this.renderer.coverage(left - c.left, top - c.top, right - c.left, bottom - c.top);
+  }
+
   /** Article pages draw on plain paper, without the cell grid. */
   setGrid(show: boolean) {
     this.renderer.setGrid(show);

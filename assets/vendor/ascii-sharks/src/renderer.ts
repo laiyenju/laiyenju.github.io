@@ -32,6 +32,26 @@ const WAKE = DOT_RGB.length - 1;
 const mix = (a: RGB, b: RGB, k: number, alpha = 1) =>
   `rgba(${Math.round(a[0] + (b[0] - a[0]) * k)},${Math.round(a[1] + (b[1] - a[1]) * k)},${Math.round(a[2] + (b[2] - a[2]) * k)},${alpha.toFixed(2)})`;
 
+/**
+ * mix() for the per-cell glyph colours, memoised: k in 1/64 steps, alpha in
+ * 1/100 steps. A thousand body cells a frame would otherwise build a thousand
+ * new colour strings.
+ */
+class Ramp {
+  private cache: string[] = [];
+  constructor(private a: RGB, private b: RGB) {}
+  get(k: number, alpha = 1) {
+    const kq = Math.round(clamp(k, 0, 1) * 64);
+    const aq = Math.round(clamp(alpha, 0, 1) * 100);
+    const i = kq * 101 + aq;
+    return this.cache[i] ?? (this.cache[i] = mix(this.a, this.b, kq / 64, aq / 100));
+  }
+}
+
+/** Flags that read as solid koi body (not the thin edge or fin-tip strokes). */
+const SOLID = new Uint8Array(9);
+for (const f of [1, 3, 4, 5, 6, 8]) SOLID[f] = 1;
+
 const FLAG_BODY = 1;
 const FLAG_EDGE = 2;
 const FLAG_FIN = 3;
@@ -349,11 +369,17 @@ export class AsciiRenderer {
   /** Fish cells bucketed by brightness, so each bucket is one fillStyle. */
   private fishBuckets: number[][] = FISH_ALPHAS.map(() => []);
   private fishStyles: string[];
+  private litToShadow: Ramp;
+  private shadowToLit: Ramp;
+  private washRamp: Ramp;
 
   constructor(private canvas: HTMLCanvasElement, private theme: GlyphTheme = ASCII) {
     DOT_RGB[WAKE] = theme.wake;
     if (theme.font) this.fontFamily = theme.font;
     this.fishStyles = FISH_ALPHAS.map((a) => mix(theme.fishInk, theme.fishInk, 0, a));
+    this.litToShadow = new Ramp(theme.lit, theme.shadow);
+    this.shadowToLit = new Ramp(theme.shadow, theme.lit);
+    this.washRamp = new Ramp(theme.wash, theme.wash);
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) throw new Error("2D canvas unavailable");
     this.ctx = ctx;
@@ -381,6 +407,33 @@ export class AsciiRenderer {
   setGrid(show: boolean) {
     this.showGrid = show;
     this.paintBackground();
+  }
+
+  /**
+   * Share of the cells under a box (canvas px) that hold solid koi body,
+   * from the last rendered frame. Lets the page cut copy out of a koi
+   * without reading pixels back from the canvas.
+   */
+  coverage(x0: number, y0: number, x1: number, y1: number) {
+    const { cols, rows, cw, ch, sharkFlag, sharkAlpha } = this;
+    const c0 = Math.max(0, Math.floor(x0 / cw));
+    const c1 = Math.min(cols - 1, Math.floor(x1 / cw));
+    const r0 = Math.max(0, Math.floor(y0 / ch));
+    const r1 = Math.min(rows - 1, Math.floor(y1 / ch));
+    if (c1 < c0 || r1 < r0) return 0;
+    let hit = 0;
+    let seen = 0;
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const i = r * cols + c;
+        // Weight each cell by how much of it the box covers.
+        const w = (Math.min(x1, (c + 1) * cw) - Math.max(x0, c * cw)) * (Math.min(y1, (r + 1) * ch) - Math.max(y0, r * ch));
+        if (w <= 0) continue;
+        seen += w;
+        if (SOLID[sharkFlag[i]] && sharkAlpha[i] > 0.5) hit += w;
+      }
+    }
+    return seen > 0 ? hit / seen : 0;
   }
 
   setFontFamily(family: string) {
@@ -877,7 +930,7 @@ export class AsciiRenderer {
         else if (th.blocks) {
           const g = (70 + shade * 80) * dim;
           ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.min(255, Math.round(g * tb + 6))})`;
-        } else ctx.fillStyle = mix(th.lit, th.shadow, 0.25, 0.45 + 0.4 * shade);
+        } else ctx.fillStyle = this.litToShadow.get(0.25, 0.45 + 0.4 * shade);
         ctx.fillText(set[(key >>> 8) % set.length], gx, gy);
         continue;
       }
@@ -887,7 +940,7 @@ export class AsciiRenderer {
         if (th.blocks) {
           const g = (58 + (1 - shade) * 60) * dim;
           ctx.fillStyle = `rgb(${Math.round(g * tr)},${Math.round(g * tg)},${Math.round(g * tb)})`;
-        } else ctx.fillStyle = mix(th.lit, th.shadow, 0.35, 0.75);
+        } else ctx.fillStyle = this.litToShadow.get(0.35, 0.75);
         ctx.fillText(th.wisp[(key >>> 8) % th.wisp.length], gx, gy);
         continue;
       }
@@ -927,14 +980,14 @@ export class AsciiRenderer {
         // Ink on the page: the glyph's own density and tone carry the shading,
         // over a faint wash that keeps the body reading as one shape.
         const wash = th.washAlpha * (flag === FLAG_FIN ? 0.6 : 1 - 0.45 * shade) * dim;
-        ctx.fillStyle = mix(th.wash, th.wash, 0, wash);
+        ctx.fillStyle = this.washRamp.get(0, wash);
         ctx.fillRect(x, y, cw, ch);
         let color: string;
         if (flag === FLAG_RIDGE) color = th.ridgeColor;
         else if (flag === FLAG_EYE) color = th.eyeColor;
         else if (roll < th.accentRate) color = accent;
-        else if (flag === FLAG_FIN) color = mix(th.shadow, th.lit, clamp(shade * 0.9 + 0.1, 0, 1), 0.85 * dim + 0.15);
-        else color = mix(th.shadow, th.lit, shade, 0.8 * dim + 0.2);
+        else if (flag === FLAG_FIN) color = this.shadowToLit.get(shade * 0.9 + 0.1, 0.85 * dim + 0.15);
+        else color = this.shadowToLit.get(shade, 0.8 * dim + 0.2);
         ctx.fillStyle = color;
         ctx.fillText(glyph, gx, gy);
         continue;
