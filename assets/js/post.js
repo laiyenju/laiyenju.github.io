@@ -268,24 +268,24 @@
       if (w[0] === "exit" || w[0] === "home") return go(root);
       if (w[0] === "help" && window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
         // Touch screens: only what the buttons below can do (see shell.js).
-        say(t("tap a command below", "點下面的指令"));
+        say(t("tap a command below", "點選下方的指令"));
         say("top     " + t("back to the top", "回到頁首"));
         say("cd ..   " + t("back to notes", "回到文章列表"));
-        return say("theme   " + t("day / night / auto", "切換日夜"));
+        return say("theme   " + t("day / night / auto", "切換日夜主題模式"));
       }
       if (w[0] === "help") {
-        say("cd ..     " + t("back to notes (or ls)", "回到文章列表（也可以打 ls）"));
+        say("cd ..     " + t("back to notes (or ls)", "回到文章列表（也可以輸入 ls）"));
         say("cd ~      " + t("go home", "回首頁"));
         say("cd -      " + t("go back", "回上一頁"));
-        say("next      " + t("newer note", "下一篇（較新）"));
-        say("prev      " + t("older note", "上一篇（較舊）"));
+        say("next      " + t("newer note", "下一個（較新的文章）"));
+        say("prev      " + t("older note", "上一個（較舊的文章）"));
         say("top       " + t("back to the top", "回到頁首"));
-        say("theme     " + t("day / night / auto (auto follows the system)", "切換日夜（auto 跟隨系統）"));
-        say("whoami    " + t("who is Yen", "我是誰"));
+        say("theme     " + t("day / night / auto (auto follows the system)", "切換日夜主題模式（auto 跟隨系統）"));
+        say("whoami    " + t("who is Yen", "看網站作者是誰"));
         say("clear     " + t("clear the screen", "清除畫面"));
-        return say("help      " + t("show this list", "列出這些指令"));
+        return say("help      " + t("show this list", "查看操作指令"));
       }
-      say("sh: command not found: " + w[0] + t(" — try help", "（輸入 help 看看可以做什麼）"));
+      say("sh: command not found: " + w[0] + t(" — try help", "（輸入 help 查看操作指令）"));
     }
     input.addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;

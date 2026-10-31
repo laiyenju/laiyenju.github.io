@@ -90,24 +90,24 @@
         if (link) link.click();
       }, 260);
     }
-    var list = name === "notes" ? t("list notes again", "重新列出文章") : t("list works again", "重新列出作品");
+    var list = name === "notes" ? t("list notes again", "列出文章") : t("list works again", "列出作品");
     var COMMANDS = {
       help: function () {
         // Touch screens: only what the buttons below can do, short enough for a phone.
         if (touch()) {
-          say(t("tap a command below", "點下面的指令"));
-          say("whoami  " + t("who is Yen", "我是誰"));
-          say("theme   " + t("day / night / auto", "切換日夜"));
+          say(t("tap a command below", "點選下方的指令"));
+          say("whoami  " + t("who is Yen", "看網站作者是誰"));
+          say("theme   " + t("day / night / auto", "切換日夜主題模式"));
           return say("cd ~    " + t("go home", "回首頁"));
         }
-        say("cd ~      " + t("go home (or cd, cd ..)", "回首頁（也可以打 cd 或 cd ..）"));
+        say("cd ~      " + t("go home (or cd, cd ..)", "回首頁（也可以輸入 cd 或 cd ..）"));
         say("cd -      " + t("go back", "回上一頁"));
-        say("cd " + other + "  " + (other === "notes" ? t("read notes", "去看文章") : t("see works", "去看作品")));
+        say("cd " + other + "  " + (other === "notes" ? t("read notes", "查看文章") : t("see works", "查看作品")));
         say("ls        " + list);
-        say("theme     " + t("day / night / auto (auto follows the system)", "切換日夜（auto 跟隨系統）"));
-        say("whoami    " + t("who is Yen", "我是誰"));
-        say("clear     " + t("clear the screen", "清除畫面，重新列出"));
-        say("help      " + t("show this list", "列出這些指令"));
+        say("theme     " + t("day / night / auto (auto follows the system)", "切換日夜主題模式（auto 跟隨系統）"));
+        say("whoami    " + t("who is Yen", "看網站作者是誰"));
+        say("clear     " + t("clear the screen", "清除畫面並重新列出"));
+        say("help      " + t("show this list", "查看操作指令"));
       },
       theme: function (arg) {
         var th = window.siteTheme;
@@ -137,7 +137,7 @@
       if (words[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
       if (words[0] === "exit" || words[0] === "home") return goTo("home");
       if (COMMANDS[words[0]]) return COMMANDS[words[0]](words[1]);
-      say("sh: command not found: " + words[0] + t(" — try help", "（輸入 help 看看可以做什麼）"));
+      say("sh: command not found: " + words[0] + t(" — try help", "（輸入 help 查看操作指令）"));
     }
     input.addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;

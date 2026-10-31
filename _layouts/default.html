@@ -80,13 +80,13 @@
       <p class="post-eof">(END)</p>
       {% if older or newer %}
       <nav class="post-pager" aria-label="More notes">
-        {% if newer %}<a href="{{ newer.url | relative_url }}" data-pager="next"><span class="post-pager-label">next</span><time datetime="{{ newer.date | date_to_xmlschema }}">{{ newer.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ newer.title }}</span></a>{% endif %}
-        {% if older %}<a href="{{ older.url | relative_url }}" data-pager="prev"><span class="post-pager-label">prev</span><time datetime="{{ older.date | date_to_xmlschema }}">{{ older.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ older.title }}</span></a>{% endif %}
+        {% if newer %}<a href="{{ newer.url | relative_url }}" data-pager="next"><span class="post-pager-label"><span class="i-en">next</span><span class="i-zh">下一個</span></span><time datetime="{{ newer.date | date_to_xmlschema }}">{{ newer.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ newer.title }}</span></a>{% endif %}
+        {% if older %}<a href="{{ older.url | relative_url }}" data-pager="prev"><span class="post-pager-label"><span class="i-en">prev</span><span class="i-zh">上一個</span></span><time datetime="{{ older.date | date_to_xmlschema }}">{{ older.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ older.title }}</span></a>{% endif %}
       </nav>
       {% endif %}
       <div class="sh-out" aria-live="polite"></div>
       <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="post-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
-      <p class="sh-keys"><span class="i-en">type <kbd>help</kbd></span><span class="i-zh">輸入 <kbd>help</kbd> 看看</span></p>
+      <p class="sh-keys"><span class="i-en">type <kbd>help</kbd></span><span class="i-zh">輸入 <kbd>help</kbd> 查看操作指令</span></p>
     </footer>
   </article>
 

@@ -1291,6 +1291,10 @@ body.has-rail .post-prose .footnotes {
   margin: 0 -6px;
   line-height: 1.75;
 }
+/* 上一個 / 下一個 take six cells. */
+html.ui-zh .post-pager a {
+  grid-template-columns: 6ch 10ch minmax(0, 1fr);
+}
 .post-pager-label,
 .post-pager time {
   color: #736d66;

@@ -7,7 +7,7 @@
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">
   {% include theme-boot.html %}
-  <div class="theme-switch" role="radiogroup" aria-label="Theme" data-label-zh="日夜">
+  <div class="theme-switch" role="radiogroup" aria-label="Theme" data-label-zh="日夜主題模式">
     <button type="button" role="radio" aria-checked="true" data-theme-set="auto" title="Follow the system" data-title-zh="跟隨系統">auto</button>
     <button type="button" role="radio" aria-checked="false" data-theme-set="day" title="Day" data-title-zh="日間">day</button>
     <button type="button" role="radio" aria-checked="false" data-theme-set="night" title="Night" data-title-zh="夜間">night</button>
