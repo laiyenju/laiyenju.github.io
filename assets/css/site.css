@@ -37,8 +37,8 @@
               except the nav (notes/ works/), the way into everything.
      grey   — what describes or leaves: dates, sizes, hints, the way back,
               links out of the site (those also carry ↗).
-   Pointed at or focused: a thin frame closes in around a link; terminal rows
-   turn reverse video; links in a note go from dotted to solid (see "Links").
+   Pointed at: a link deepens its colour; terminal rows turn reverse video;
+   links in a note go from dotted to solid (see "Links").
    Filled (reverse video) always means "selected": a terminal row, the theme in use. */
 :root {
   --accent: #b5531e;
@@ -178,7 +178,7 @@ body.home {
   position: relative;
   color: inherit;
   text-decoration: none;
-  transition: color 240ms ease, outline-color 200ms ease, outline-offset 240ms cubic-bezier(0.2, 0, 0, 1);
+  transition: color 180ms ease;
 }
 .home-nav a::after {
   content: "";
@@ -1507,9 +1507,10 @@ body.theme-night .post-note.is-lit { color: #e8e6e3; }
 body.theme-night .post-note-n { color: #f5b942; }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
-/* —— Day / night switch (theme.js): three segments in a thin box at the
-      top right; the one in use is filled, like a selected row. It scrolls
-      away with the page. —— */
+/* —— Day / night switch (theme.js), on the home page only: three segments
+      in a thin box at the top right; the one in use is filled, like a
+      selected row. A note is left to its reader (the prompt at the end
+      still takes `theme`). —— */
 .theme-switch {
   position: absolute;
   z-index: 20;
@@ -1539,7 +1540,7 @@ body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3)
   cursor: default;
 }
 .theme-switch button:focus-visible {
-  outline: 1px solid var(--frame);
+  outline: 1px solid var(--focus-ring);
   outline-offset: 1px;
 }
 @media (hover: hover) {
@@ -1554,10 +1555,10 @@ body.theme-night .theme-switch button[aria-checked="true"] { color: var(--link-s
   body.theme-night .theme-switch button[aria-checked="false"]:hover { color: #e8e6e3; }
 }
 
-/* —— Links: a thin frame closes in around a link when it is pointed at,
-   focused from the keyboard or pressed, like the selected item of a game
-   menu (and the same box as the command buttons on touch screens). It is
-   an outline, so nothing moves. Two exceptions:
+/* —— Links: pointed at, a link only deepens its colour — grey goes to ink,
+   the accent to a deeper accent (by night: lighter). Keyboard focus adds
+   an underline as well, so focus never rests on colour alone. Two
+   exceptions:
    - terminal rows (the notes / works lists, $ cd ~, prev / next) turn
      reverse video, like the selected row of a terminal picker;
    - links inside a note keep the ink colour on a dotted line, which turns
@@ -1565,44 +1566,62 @@ body.theme-night .theme-switch button[aria-checked="true"] { color: var(--link-s
 :root {
   --link-sel-bg: #2a2420;
   --link-sel-fg: #fafaf7;
-  --frame: rgba(42, 36, 32, 0.45);
+  --hover-ink: #2a2420;
+  --hover-accent: #8a3d14;
+  --focus-ring: rgba(42, 36, 32, 0.45);
 }
 body.theme-night {
   --link-sel-bg: #f5b942;
   --link-sel-fg: #0d0f12;
-  --frame: rgba(232, 230, 227, 0.5);
+  --hover-ink: #f2f0ed;
+  --hover-accent: #ffd98c;
+  --focus-ring: rgba(232, 230, 227, 0.5);
 }
 a,
 .panel-more {
-  border-radius: 2px;
-  outline: 1px solid transparent;
-  outline-offset: 7px;
-  transition: color 200ms ease, outline-color 200ms ease, outline-offset 240ms cubic-bezier(0.2, 0, 0, 1);
+  transition: color 180ms ease;
 }
 a:focus-visible,
-a:active,
-.panel-more:focus-visible,
-.panel-more:active {
-  opacity: 1;
-  outline-color: var(--frame);
-  outline-offset: 3px;
+.panel-more:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
-/* Hover only where a pointer can hover, so a tapped link doesn't stay framed on phones. */
+/* Grey links deepen to ink; the accent ones to a deeper accent. */
+a:active,
+body .home-links a:active,
+body .post-back:active,
+body .post-prose a.reversefootnote:active,
+a:focus-visible,
+body .home-links a:focus-visible,
+body .post-back:focus-visible,
+body .post-prose a.reversefootnote:focus-visible {
+  color: var(--hover-ink);
+}
+body .home-nav a:is(:active, :focus-visible),
+body .home-last a:is(:active, :focus-visible),
+body .panel-more:is(:active, :focus-visible),
+body .post-prose a.footnote:is(:active, :focus-visible) {
+  color: var(--hover-accent);
+}
+/* Hover only where a pointer can hover, so a tapped link doesn't stay lit on phones. */
 @media (hover: hover) {
   a:hover,
-  .panel-more:hover {
-    opacity: 1;
-    outline-color: var(--frame);
-    outline-offset: 3px;
+  body .home-links a:hover,
+  body .post-back:hover,
+  body .post-prose a.reversefootnote:hover {
+    color: var(--hover-ink);
+  }
+  body .home-nav a:hover,
+  body .home-last a:hover,
+  body .panel-more:hover,
+  body .post-prose a.footnote:hover {
+    color: var(--hover-accent);
   }
 }
 
-/* Terminal rows: reverse video instead of a frame. */
-.sh-panel .panel-list a,
-.home-panel .panel-back,
-.post-pager a {
-  outline: none;
-}
+/* Terminal rows: reverse video. */
 .post-pager a:focus-visible,
 .post-pager a:active {
   background: var(--link-sel-bg);
@@ -1623,22 +1642,20 @@ a:active,
 }
 
 /* Links in a note: ink on a dotted line; solid when pointed at. The keyboard
-   still gets the frame, so focus is never shown by a line style alone. */
+   gets a thicker solid line, so focus differs from a passing pointer. */
 .post-prose a:not(.footnote):not(.reversefootnote) {
-  outline-offset: 3px;
   text-decoration-style: dotted;
-  transition: text-decoration-color 200ms ease, outline-color 200ms ease;
 }
 .post-prose a:not(.footnote):not(.reversefootnote):active {
-  outline-color: transparent;
   text-decoration-style: solid;
 }
 @media (hover: hover) {
   .post-prose a:not(.footnote):not(.reversefootnote):hover {
-    outline-color: transparent;
     text-decoration-style: solid;
   }
 }
 .post-prose a:not(.footnote):not(.reversefootnote):focus-visible {
-  text-decoration-style: solid;
+  text-decoration: underline solid var(--shu);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }

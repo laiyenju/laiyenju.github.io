@@ -7,6 +7,11 @@
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">
   {% include theme-boot.html %}
+  <div class="theme-switch" role="radiogroup" aria-label="Theme 日夜">
+    <button type="button" role="radio" aria-checked="true" data-theme-set="auto" title="跟隨系統">auto</button>
+    <button type="button" role="radio" aria-checked="false" data-theme-set="day" title="日間">day</button>
+    <button type="button" role="radio" aria-checked="false" data-theme-set="night" title="夜間">night</button>
+  </div>
   <div class="home-stage">
     <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
     <div class="home-vignette" aria-hidden="true"></div>
