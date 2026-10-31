@@ -5,9 +5,8 @@ url: https://laiyenju.github.io
 author:
   name: Yen Lai
   twitter: theYenLai
-# Share card for every page (source: assets/images/og.html).
-og_image: /assets/images/og.jpg
-og_image_alt: 墨藍浪頭中躍起的朱色錦鯉，木刻版畫風格，旁邊寫著 hey, I'm Yen 和 I write about how products get decided.
+# Share card when a page has none of its own (see scripts/og/).
+og_image: /assets/og/home.jpg
 lang: zh-Hant
 timezone: Asia/Taipei
 
@@ -26,7 +25,8 @@ exclude:
   - .jekyll-cache
   - "*.draft.md"
   - assets/vendor
-  - assets/images/og.html
+  - scripts
+  - assets/og/manifest.json
 
 defaults:
   - scope:

@@ -52,7 +52,9 @@ jekyll serve
 ## 分享卡片與 SEO
 
 - 每頁的 `<head>` 都會載入 `_includes/seo.html`，內容包括 canonical 網址、description、Open Graph／Twitter card、結構化資料（首頁是 Person，文章是 BlogPosting）和 favicon。文章的 description 預設取內文前 120 字；想自己寫的話，在 front matter 加 `description:`。
-- 全站共用一張分享圖 `assets/images/og.jpg`（1200 × 630，葛飾北齋木刻版畫風格）。原始檔是同一個資料夾的 `og.html`：改完後用瀏覽器以 1200 × 630 開啟，截圖存成 `og.jpg`。
+- 每篇文章有自己的分享卡片 `assets/og/<檔名>.jpg`（1200 × 630），首頁是 `home.jpg`。卡片上有 `cat 檔名.md` 指令列（`yen@taiwan` 用主題色）、標題、摘要（和 description 同一段文字）、日期，右下角一條用倉頡字根組成的小錦鯉（依標題決定形狀，同一篇永遠一樣）。
+- 卡片由 `scripts/og/build.js` 依 `scripts/og/card.html` 畫出來。push 到 `main` 時，GitHub Action（`.github/workflows/og.yml`）會自動畫好新的或改過的卡片並 commit 回來，所以平常不用做任何事。新文章的卡片產生之前，會先用首頁那張。
+- 想在本機畫：`npm install --no-save playwright && npx playwright install chromium && node scripts/og/build.js`
 - `favicon.svg`、`favicon-32.png`、`apple-touch-icon.png` 放在 `assets/icons/`，圖案是朱色印章。
 - `sitemap.xml` 只列首頁和 `published/` 的文章（`/notes/`、`/works/` 只是轉址）；`robots.txt` 指向它。
 

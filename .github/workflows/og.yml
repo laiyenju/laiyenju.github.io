@@ -1,0 +1,46 @@
+# Share cards: after a push that adds or changes a note, draw each note's
+# card (scripts/og/build.js) and commit any new or changed image to
+# assets/og/. Only cards whose text or design changed are redrawn.
+name: Share cards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "published/**"
+      - "index.md"
+      - "scripts/og/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: share-cards
+  cancel-in-progress: false
+
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Draw cards
+        run: node scripts/og/build.js
+      - name: Commit new cards
+        run: |
+          git add assets/og
+          if git diff --cached --quiet; then
+            echo "No card changed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update share cards"
+          git push
