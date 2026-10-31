@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- A vermilion seal with a Y carved out of it. -->
+  <rect x="1" y="1" width="30" height="30" rx="3" fill="#b5531e"/>
+  <rect x="3.5" y="3.5" width="25" height="25" rx="1.5" fill="none" stroke="#f5ecd7" stroke-width="1.4"/>
+  <path d="M9.5 8.5 L16 16.5 L22.5 8.5 M16 16.5 L16 24" fill="none" stroke="#f5ecd7" stroke-width="3.2" stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>

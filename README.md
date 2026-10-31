@@ -43,8 +43,15 @@ jekyll serve
 - 首頁錦鯉圍著中間的文字繞圈；點 notes / works 後自由游動。文章頁讀的時候沒有錦鯉，捲到 `(END)` 時才有一條游過去一次（`World.startPass`、`OceanEngine.swimAcross`）。
 - notes / works 是 terminal 風格（`assets/js/shell.js`），最後一行可以輸入指令，輸入 `help` 看有哪些。
 - notes 的字數由 Jekyll 建置時粗略計算（扣掉 HTML 標籤和空白後的字元數），`total` 只算今年的文章。
-- works 的狀態寫在 `_data/works.yml` 的 `status`：`in progress`（綠點）、`experiment`（橘點），其他值是灰點。
+- works 寫在 `_data/works.yml`（目前是空的 `[]`）。`status` 用形狀區分：`in progress` 是 ●（強調色）、`experiment` 是 ◐，其他值是 ○。
 - 文章頁（`_layouts/default.html`、`assets/js/post.js`）也是 terminal 風格：上方 `$ cd ..`、`cat 檔名.md`，標題下方是日期和字數；Markdown 的清單、程式碼、表格、分隔線、註腳用 terminal 的寫法呈現，內文維持一般字型。文章結尾是 `(END)`、上一篇／下一篇，以及可以輸入指令的提示字元。文章頁也跟著系統切換日間和夜間。
 - 從 notes 點文章時，提示字元打出 `cat 檔名.md`，文章就在指令下方一行一行印出來，整頁像 terminal 一樣往上捲，直到指令行到達文章頁的位置，再交給真正的文章頁（`assets/js/shell.js`）。因為兩邊畫面一樣，看不出換頁。按任何鍵、捲動或點擊會直接打開文章；系統設定「減少動態效果」時直接換頁。直接打開文章網址時，文章頁會自己把指令、標題和內文打出來。
 - 文章頁的內文欄永遠置中；視窗 1088px 以上，註腳放在右側（160–200px 寬），以下放在文末。
 - 日夜切換：每頁右上角的 `theme:` 按鈕，依序切換 `auto`（跟隨系統）、日間、夜間，選擇會記在瀏覽器裡（`assets/js/theme.js`）。notes／works／文章結尾的提示字元也可以輸入 `theme day`、`theme night`、`theme auto`。
+
+## 分享卡片與 SEO
+
+- 每頁的 `<head>` 都會載入 `_includes/seo.html`，內容包括 canonical 網址、description、Open Graph／Twitter card、結構化資料（首頁是 Person，文章是 BlogPosting）和 favicon。文章的 description 預設取內文前 120 字；想自己寫的話，在 front matter 加 `description:`。
+- 全站共用一張分享圖 `assets/images/og.jpg`（1200 × 630，葛飾北齋木刻版畫風格）。原始檔是同一個資料夾的 `og.html`：改完後用瀏覽器以 1200 × 630 開啟，截圖存成 `og.jpg`。
+- `favicon.svg`、`favicon-32.png`、`apple-touch-icon.png` 放在 `assets/icons/`，圖案是朱色印章。
+- `sitemap.xml` 只列首頁和 `published/` 的文章（`/notes/`、`/works/` 只是轉址）；`robots.txt` 指向它。

@@ -49,7 +49,7 @@
       <section class="home-view home-panel sh-panel sh-notes" data-view="notes" data-path="~/notes" aria-label="Notes" tabindex="-1" hidden>
         <div class="panel-head">
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
-          <p class="sh-keys"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　<kbd>help</kbd></p>
+          <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
         </div>
         <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
         <p class="sh-line sh-dim sh-total">total {{ year_chars }} chars · {{ year_posts }} {% if year_posts == 1 %}post{% else %}posts{% endif %} in {{ this_year }}</p>
@@ -66,7 +66,7 @@
       <section class="home-view home-panel sh-panel sh-works" data-view="works" data-path="~/works" aria-label="Works" tabindex="-1" hidden>
         <div class="panel-head">
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
-          <p class="sh-keys"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　<kbd>help</kbd></p>
+          <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
         </div>
         <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$ <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
         <p class="sh-line sh-dim sh-total">total {{ works | size }} {% if works.size == 1 %}work{% else %}works{% endif %} · {{ works_active }} in progress</p>
@@ -138,18 +138,26 @@
         while ((node = walker.nextNode())) {
           if (node.nodeValue && node.nodeValue.trim()) texts.push(node);
         }
+        // Screen readers get the words whole from a hidden copy; the glyphs are for the eye.
         texts.forEach(function (textNode) {
           var frag = document.createDocumentFragment();
           var value = textNode.nodeValue;
+          var said = document.createElement("span");
+          said.className = "sr-only";
+          said.textContent = value;
+          var shown = document.createElement("span");
+          shown.setAttribute("aria-hidden", "true");
+          frag.appendChild(said);
+          frag.appendChild(shown);
           for (var i = 0; i < value.length; i++) {
             var ch = value.charAt(i);
             if (ch === " " || ch === "\n" || ch === "\t") {
-              frag.appendChild(document.createTextNode(ch));
+              shown.appendChild(document.createTextNode(ch));
             } else {
               var span = document.createElement("span");
               span.className = "home-glyph";
               span.textContent = ch;
-              frag.appendChild(span);
+              shown.appendChild(span);
             }
           }
           textNode.parentNode.replaceChild(frag, textNode);

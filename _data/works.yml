@@ -1,15 +1,2 @@
-- title: laiyenju.github.io
-  one_liner: This writing site — quiet pages in Jekyll.
-  status: in progress
-  url: /
-  zh: false
-- title: 字與空
-  one_liner: Experiments in measure and pause.
-  status: experiment
-  url: "#"
-  zh: true
-- title: Sketchbook
-  one_liner: Small visual studies, unfinished on purpose.
-  status: done
-  url: "#"
-  zh: false
+# Each work: title, one_liner, status (in progress / experiment / done), url.
+[]
