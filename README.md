@@ -94,7 +94,7 @@ flowchart LR
    ---
    ```
 
-   `layout` 不用寫（`_config.yml` 預設 `default`）。`status` 只是給自己看的標記，程式不讀它。
+   `layout` 不用寫（`_config.yml` 預設 `default`）。
 4. `git push` 到 `main`，其他都是自動的。
 
 文章網址的規則：`published/2026-10-29-markdown-styles.md` → `/published/2026-10-29-markdown-styles.html`。notes 清單上顯示的檔名會去掉日期（`markdown-styles.md`）。
@@ -163,6 +163,7 @@ jekyll serve
 - `default.html` 改用 `_includes/head.html`，字型和 `site.css` 只寫在一個地方。`<title>`：首頁顯示自己的 `title`，其他頁是「標題 · Yen Lai」。
 - `head.html` 不再用不存在的 `site.author.greeting`。
 - `_config.yml` 刪掉重複的 `defaults`；`hello.md` 刪掉多餘的 `layout: default`。
+- 刪掉 `sample.draft.md`、文章 front matter 的 `status`、`exclude` 裡不存在的 `Gemfile`、`Gemfile.lock`、`vendor`。
 
 還沒處理：
 
@@ -170,9 +171,6 @@ jekyll serve
 |---|------|------|------|
 | 1 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡 | 第一篇正式文章上線後刪除 |
 | 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample.svg` | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
-| 3 | `sample.draft.md` | 草稿範例，不會上線 | 不再需要就刪除 |
-| 4 | Front matter 的 `status` | 沒有任何程式讀它 | 可以不寫 |
-| 5 | `_config.yml` 的 `exclude` | `Gemfile`、`Gemfile.lock`、`vendor` 在 repo 裡不存在 | 無害；要精簡可以刪 |
 
 ---
 

@@ -17,9 +17,6 @@ include:
 
 exclude:
   - README.md
-  - Gemfile
-  - Gemfile.lock
-  - vendor
   - node_modules
   - _site
   - .jekyll-cache

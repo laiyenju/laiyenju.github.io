@@ -1,7 +1,6 @@
 ---
 title: Markdown 樣式總覽
 date: 2026-10-29
-status: published
 ---
 
 這篇文章用來檢視 Markdown 的渲染結果，會把常見的語法都放一次。段落之間是一般的空行。中文與 English 混排時，要看字距、行高與標點是否自然。
