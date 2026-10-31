@@ -1107,7 +1107,8 @@ body.has-rail .post-prose .footnotes {
 /* Header: $ cd .. as a row of its own, the title, date · chars. The cat
    command that opened the note is not kept; it scrolled away like a
    terminal's. The row is built like prev / next at the end (same size,
-   padding and reach), so it turns reverse video across the whole line. */
+   padding and reach), so it turns reverse video across the whole line;
+   its words sit at the right. */
 .post-bar {
   display: block;
 }
@@ -1117,6 +1118,7 @@ body.has-rail .post-prose .footnotes {
   margin: 0 -6px;
   font-size: 13px;
   line-height: 1.75;
+  text-align: right;
 }
 .post-back .sh-dollar {
   color: #736d66;
