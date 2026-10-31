@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>share card</title>
+<!--
+  The share card (1200 × 630), one per note plus one for home. build.js opens
+  this page, calls render(data) and saves a screenshot to assets/og/.
+  It is the article page in small: paper, the shell line, the title, the
+  opening words, and a koi of Cangjie radicals swimming in from the right.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@600&display=block" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: "iA Writer Quattro";
+    src: url("../../assets/fonts/quattro/iAWriterQuattroS-Bold.woff2") format("woff2");
+    font-weight: 700;
+  }
+  @font-face {
+    font-family: "iA Writer Quattro";
+    src: url("../../assets/fonts/quattro/iAWriterQuattroS-Regular.woff2") format("woff2");
+    font-weight: 400;
+  }
+  :root {
+    --paper: #fafaf7;
+    --ink: #2a2420;
+    --ink-soft: #5a544e;
+    --ink-faint: #736d66;
+    --accent: #b5531e;
+    --mono: "JetBrains Mono", "Noto Sans TC", monospace;
+  }
+  html, body { margin: 0; }
+  body {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    position: relative;
+    box-sizing: border-box;
+    width: 1200px;
+    height: 630px;
+    padding: 64px 72px 56px;
+    display: flex;
+    flex-direction: column;
+    /* The home page's faint paper grid. */
+    background-image:
+      linear-gradient(rgba(42, 36, 32, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42, 36, 32, 0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+  #koi { position: absolute; left: 0; top: 0; width: 1200px; height: 630px; pointer-events: none; }
+  .text { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; max-width: 790px; }
+  .brand { display: flex; align-items: center; gap: 14px; font: 600 22px/1 var(--mono); }
+  .brand svg { width: 38px; height: 38px; display: block; }
+  .cmd { margin: 40px 0 0; font: 400 21px/1.4 var(--mono); color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cmd b { font-weight: 600; color: var(--ink); }
+  h1 {
+    margin: 18px 0 0;
+    font: 700 62px/1.22 "iA Writer Quattro", "Noto Sans TC", sans-serif;
+    letter-spacing: -0.005em;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  }
+  .summary {
+    margin: 22px 0 0;
+    font: 400 28px/1.6 "iA Writer Quattro", "Noto Sans TC", sans-serif;
+    color: var(--ink-soft);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  }
+  .foot {
+    position: relative; z-index: 1;
+    margin-top: auto;
+    display: flex; justify-content: space-between; align-items: baseline;
+    font: 400 20px/1 var(--mono); color: var(--ink-faint);
+  }
+  /* The accent marks the one thing to act on: the address to go to. */
+  .foot .url { color: var(--ink); padding-bottom: 6px; border-bottom: 2px solid var(--accent); }
+</style>
+</head>
+<body>
+<div class="card">
+  <canvas id="koi" width="2400" height="1260"></canvas>
+  <div class="text">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="1" y="1" width="30" height="30" rx="3" fill="#b5531e"/>
+        <rect x="3.5" y="3.5" width="25" height="25" rx="1.5" fill="none" stroke="#f5ecd7" stroke-width="1.4"/>
+        <path d="M9.5 8.5 L16 16.5 L22.5 8.5 M16 16.5 L16 24" fill="none" stroke="#f5ecd7" stroke-width="3.2"/>
+      </svg>
+      <span>Yen Lai</span>
+    </div>
+    <p class="cmd" id="cmd"></p>
+    <h1 id="title"></h1>
+    <p class="summary" id="summary"></p>
+  </div>
+  <div class="foot">
+    <span id="meta"></span>
+    <span class="url">laiyenju.github.io</span>
+  </div>
+</div>
+
+<script>
+  /* —— A koi drawn the way the home page draws it: a grid of Cangjie
+        radicals, ink on grey cells for the body, paper on vermilion for
+        its patches, bare grey radicals for fins and tail. The shape comes
+        from a path painted into a hidden mask and read back cell by cell.
+        Seeded, so a title always gets the same koi. —— */
+  var RADICALS = "日月金木水火土竹戈十大中一弓人心手口尸廿山女田卜";
+  var CELL = 22;
+
+  function rng(seed) {
+    var s = seed % 2147483647; if (s <= 0) s += 2147483646;
+    return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  }
+  function hash(text) {
+    var h = 2166136261;
+    for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return Math.abs(h) || 1;
+  }
+
+  function drawKoi(seed) {
+    var rnd = rng(seed);
+    var W = 1200, H = 630;
+    var cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
+    // Three masks: body, red patches, fins and tail.
+    function mask(paint) {
+      var c = document.createElement("canvas"); c.width = W; c.height = H;
+      var x = c.getContext("2d"); x.fillStyle = "#000"; paint(x);
+      return x.getImageData(0, 0, W, H).data;
+    }
+    // The koi rises along the right edge, clear of the text column, its
+    // body bent in a slow S. A spine from head (t = 0) to tail root (t = 1);
+    // the outline is the spine pushed out by a half-width that is round at
+    // the head, fullest a third of the way back, thin at the tail root.
+    var L = 340, BEND = 26 + rnd() * 14, WMAX = 74;
+    var cx = 1046, cy = 236, ang = -1.66 + rnd() * 0.1;
+    function spine(t) {
+      var x = L * (0.5 - t), y = BEND * Math.sin(Math.PI * (t * 1.3 - 0.15));
+      var dx = -L, dy = BEND * Math.PI * 1.3 * Math.cos(Math.PI * (t * 1.3 - 0.15));
+      var n = Math.hypot(dx, dy);
+      return { x: x, y: y, nx: -dy / n, ny: dx / n, tx: dx / n, ty: dy / n };
+    }
+    function half(t) {
+      if (t < 0.3) return WMAX * Math.sqrt(1 - Math.pow((0.3 - t) / 0.3, 2) * 0.9);
+      return 13 + (WMAX - 13) * Math.pow(Math.cos((t - 0.3) / 0.7 * Math.PI / 2), 1.1);
+    }
+    function place(x) { x.translate(cx, cy); x.rotate(ang); }
+    function bodyPath(x) {
+      x.beginPath();
+      var k, p, N = 40;
+      for (k = 0; k <= N; k++) { p = spine(k / N); x.lineTo(p.x + p.nx * half(k / N), p.y + p.ny * half(k / N)); }
+      for (k = N; k >= 0; k--) { p = spine(k / N); x.lineTo(p.x - p.nx * half(k / N), p.y - p.ny * half(k / N)); }
+      x.closePath();
+    }
+    function blob(x, t, side, r) {
+      var p = spine(t);
+      x.beginPath(); x.arc(p.x + p.nx * side, p.y + p.ny * side, r, 0, Math.PI * 2); x.fill();
+    }
+    var body = mask(function (x) { place(x); bodyPath(x); x.fill(); });
+    var spots = mask(function (x) {
+      place(x); bodyPath(x); x.clip();
+      blob(x, 0.08, 0, 30);                       // the crown of the head
+      blob(x, 0.42, -18 - rnd() * 14, 46);
+      blob(x, 0.72, 12, 24);
+    });
+    var fins = mask(function (x) {
+      place(x);
+      // Tail: a fan with a notch, back from the tail root.
+      var r = spine(1), bx = r.x, by = r.y, tx = r.tx, ty = r.ty;
+      x.beginPath();
+      x.moveTo(bx + r.nx * 12, by + r.ny * 12);
+      x.quadraticCurveTo(bx + tx * 50 + r.nx * 40, by + ty * 50 + r.ny * 40, bx + tx * 112 + r.nx * 84, by + ty * 112 + r.ny * 84);
+      x.quadraticCurveTo(bx + tx * 92 + r.nx * 20, by + ty * 92 + r.ny * 20, bx + tx * 70, by + ty * 70);
+      x.quadraticCurveTo(bx + tx * 92 - r.nx * 20, by + ty * 92 - r.ny * 20, bx + tx * 112 - r.nx * 84, by + ty * 112 - r.ny * 84);
+      x.quadraticCurveTo(bx + tx * 50 - r.nx * 40, by + ty * 50 - r.ny * 40, bx - r.nx * 12, by - r.ny * 12);
+      x.closePath(); x.fill();
+      // Pectoral fins, a pair just behind the head, swept back.
+      var f = spine(0.26);
+      [1, -1].forEach(function (side) {
+        var ox = f.x + f.nx * half(0.26) * side, oy = f.y + f.ny * half(0.26) * side;
+        x.beginPath();
+        x.moveTo(ox, oy);
+        x.quadraticCurveTo(ox + f.nx * 80 * side + f.tx * 6, oy + f.ny * 80 * side + f.ty * 6,
+                           ox + f.nx * 70 * side + f.tx * 84, oy + f.ny * 70 * side + f.ty * 84);
+        x.quadraticCurveTo(ox + f.nx * 24 * side + f.tx * 50, oy + f.ny * 24 * side + f.ty * 50, ox + f.tx * 44, oy + f.ty * 44);
+        x.closePath(); x.fill();
+      });
+    });
+    function at(data, gx, gy) {
+      var px = Math.min(W - 1, gx * CELL + CELL / 2), py = Math.min(H - 1, gy * CELL + CELL / 2);
+      return data[(py * W + px) * 4 + 3] > 0;
+    }
+    var cv = document.getElementById("koi");
+    var g = cv.getContext("2d");
+    g.scale(2, 2);
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = '600 16px "Noto Serif TC", serif';
+    for (var gy = 0; gy < rows; gy++) {
+      for (var gx = 0; gx < cols; gx++) {
+        var inBody = at(body, gx, gy), inSpot = inBody && at(spots, gx, gy), inFin = !inBody && at(fins, gx, gy);
+        if (!inBody && !inFin) continue;
+        var ch = RADICALS.charAt(Math.floor(rnd() * RADICALS.length));
+        var x0 = gx * CELL, y0 = gy * CELL;
+        if (inSpot) {
+          g.fillStyle = "#b5531e"; g.fillRect(x0 + 1, y0 + 1, CELL - 2, CELL - 2);
+          g.fillStyle = "#fafaf7";
+        } else if (inBody) {
+          g.fillStyle = "rgba(42, 36, 32, 0.13)"; g.fillRect(x0 + 1, y0 + 1, CELL - 2, CELL - 2);
+          g.fillStyle = "#2a2420";
+        } else {
+          g.fillStyle = "#9a948c";
+        }
+        g.fillText(ch, x0 + CELL / 2, y0 + CELL / 2 + 1);
+      }
+    }
+  }
+
+  // data: { title, summary, cmd, meta }
+  window.render = async function (data) {
+    document.getElementById("title").textContent = data.title;
+    document.getElementById("summary").textContent = data.summary;
+    document.getElementById("cmd").innerHTML = "";
+    var cmd = document.getElementById("cmd");
+    var who = document.createElement("b"); who.textContent = "yen@taiwan"; cmd.appendChild(who);
+    cmd.appendChild(document.createTextNode(":" + data.path + "$ " + data.cmd));
+    document.getElementById("meta").textContent = data.meta;
+    var all = data.title + data.summary + data.cmd + data.meta + "Yen Lai";
+    await Promise.all([
+      document.fonts.load('700 62px "iA Writer Quattro"', data.title),
+      document.fonts.load('700 62px "Noto Sans TC"', data.title),
+      document.fonts.load('400 28px "Noto Sans TC"', data.summary),
+      document.fonts.load('400 20px "JetBrains Mono"', all),
+      document.fonts.load('600 20px "JetBrains Mono"', all),
+      document.fonts.load('600 19px "Noto Serif TC"', RADICALS),
+    ]);
+    await document.fonts.ready;
+    drawKoi(hash(data.title));
+  };
+</script>
+</body>
+</html>
