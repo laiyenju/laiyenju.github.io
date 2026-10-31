@@ -51,7 +51,7 @@
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
           <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
         </div>
-        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
+        <p class="sh-line"><span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
         <p class="sh-line sh-dim sh-total">total {{ year_chars }} chars · {{ year_posts }} {% if year_posts == 1 %}post{% else %}posts{% endif %} in {{ this_year }}</p>
         <ul class="panel-list">
           {{ note_rows }}
@@ -68,7 +68,7 @@
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
           <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
         </div>
-        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$ <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
+        <p class="sh-line"><span class="sh-dir">~/works</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
         <p class="sh-line sh-dim sh-total">total {{ works | size }} {% if works.size == 1 %}work{% else %}works{% endif %} · {{ works_active }} in progress</p>
         <ul class="panel-list">
         {% for work in works %}
