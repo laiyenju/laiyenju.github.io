@@ -37,7 +37,9 @@
               except the nav (notes/ works/), the way into everything.
      grey   — what describes or leaves: dates, sizes, hints, the way back,
               links out of the site (those also carry ↗).
-   Any link, pointed at or focused, turns reverse video (see "Links" below). */
+   Pointed at or focused: a thin frame closes in around a link; terminal rows
+   turn reverse video; links in a note go from dotted to solid (see "Links").
+   Filled (reverse video) always means "selected": a terminal row, the theme in use. */
 :root {
   --accent: #b5531e;
   --paper: #fafaf7;
@@ -176,7 +178,7 @@ body.home {
   position: relative;
   color: inherit;
   text-decoration: none;
-  transition: color 240ms ease;
+  transition: color 240ms ease, outline-color 200ms ease, outline-offset 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 .home-nav a::after {
   content: "";
@@ -307,14 +309,8 @@ body .home-nav a {
   background: none;
   font: inherit;
   font-size: 12px;
-  color: #2a2420;
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 3px;
+  color: var(--accent);
   cursor: pointer;
-}
-.panel-more:hover {
-  opacity: 0.8;
 }
 @media (max-width: 560px) {
   .panel-list {
@@ -404,7 +400,7 @@ body.theme-night .home-nav a { color: var(--accent); }
 body.theme-night .panel-head { color: #8a8f99; }
 body.theme-night { --accent: #f5b942; }
 body.theme-night .home-links { color: #8a8f99; }
-body.theme-night .panel-more { color: #e8e6e3; }
+body.theme-night .panel-more { color: var(--accent); }
 body.theme-night .home-panel { background: rgba(13, 15, 18, 0.86); box-shadow: 0 0 28px 14px rgba(13, 15, 18, 0.86); }
 body.theme-night .panel-list li { border-top-color: rgba(232, 230, 227, 0.16); }
 body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0.45)); }
@@ -575,12 +571,11 @@ body.theme-night .sh-panel .panel-list a.is-opening { background: #e8e6e3; color
 .home-last a {
   display: inline-block;
   padding: 4px 0;
-  color: #2a2420;
-  border-bottom: 1px solid var(--accent);
+  color: var(--accent);
 }
 body.theme-night .home-last { color: #8a8f99; border-top-color: rgba(232, 230, 227, 0.18); }
 body.theme-night .home-last-label { color: #7f848e; }
-body.theme-night .home-last a { color: #e8e6e3; }
+body.theme-night .home-last a { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .home-greeting::after { animation: none; }
 }
@@ -1512,88 +1507,138 @@ body.theme-night .post-note.is-lit { color: #e8e6e3; }
 body.theme-night .post-note-n { color: #f5b942; }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
-/* —— Day / night switch (theme.js): a small mono button in the top right
-      that scrolls away with the page, highlighted like a link. —— */
-.theme-toggle {
+/* —— Day / night switch (theme.js): three segments in a thin box at the
+      top right; the one in use is filled, like a selected row. It scrolls
+      away with the page. —— */
+.theme-switch {
   position: absolute;
   z-index: 20;
-  top: max(14px, env(safe-area-inset-top, 0px));
+  top: max(12px, env(safe-area-inset-top, 0px));
   right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid rgba(42, 36, 32, 0.18);
+  border-radius: 3px;
+  font: 11px/1.5 "JetBrains Mono", ui-monospace, monospace;
+}
+.theme-switch button {
   margin: 0;
-  padding: 3px 6px;
+  padding: 2px 8px;
   border: 0;
-  border-radius: 1px;
+  border-radius: 2px;
   background: none;
-  font: 12px/1.5 "JetBrains Mono", ui-monospace, monospace;
+  font: inherit;
   color: #736d66;
   cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease;
 }
-body.theme-night .theme-toggle {
-  color: #8a8f99;
-}
-.theme-toggle:focus-visible,
-.theme-toggle:active {
-  outline: none;
+.theme-switch button[aria-checked="true"] {
   background: var(--link-sel-bg);
   color: var(--link-sel-fg);
+  cursor: default;
+}
+.theme-switch button:focus-visible {
+  outline: 1px solid var(--frame);
+  outline-offset: 1px;
 }
 @media (hover: hover) {
-  .theme-toggle:hover {
-    background: var(--link-sel-bg);
-    color: var(--link-sel-fg);
+  .theme-switch button[aria-checked="false"]:hover {
+    color: #2a2420;
   }
 }
+body.theme-night .theme-switch { border-color: rgba(232, 230, 227, 0.2); }
+body.theme-night .theme-switch button { color: #8a8f99; }
+body.theme-night .theme-switch button[aria-checked="true"] { color: var(--link-sel-fg); }
+@media (hover: hover) {
+  body.theme-night .theme-switch button[aria-checked="false"]:hover { color: #e8e6e3; }
+}
 
-/* —— Links: reverse video when pointed at, focused from the keyboard or
-   tapped, like the selected row of a terminal picker. Inline links keep
-   their underline at rest so they can be found in a sentence; when one
-   wraps, each line gets its own block. Night (home) uses amber.
-   The selected state outranks every palette rule (nav, panels, night),
-   hence !important on its colours. —— */
+/* —— Links: a thin frame closes in around a link when it is pointed at,
+   focused from the keyboard or pressed, like the selected item of a game
+   menu (and the same box as the command buttons on touch screens). It is
+   an outline, so nothing moves. Two exceptions:
+   - terminal rows (the notes / works lists, $ cd ~, prev / next) turn
+     reverse video, like the selected row of a terminal picker;
+   - links inside a note keep the ink colour on a dotted line, which turns
+     solid when pointed at. —— */
 :root {
   --link-sel-bg: #2a2420;
   --link-sel-fg: #fafaf7;
+  --frame: rgba(42, 36, 32, 0.45);
 }
 body.theme-night {
   --link-sel-bg: #f5b942;
   --link-sel-fg: #0d0f12;
+  --frame: rgba(232, 230, 227, 0.5);
 }
-a {
-  border-radius: 1px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+a,
+.panel-more {
+  border-radius: 2px;
+  outline: 1px solid transparent;
+  outline-offset: 7px;
+  transition: color 200ms ease, outline-color 200ms ease, outline-offset 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 a:focus-visible,
-a:active {
+a:active,
+.panel-more:focus-visible,
+.panel-more:active {
   opacity: 1;
-  outline: none;
-  background-color: var(--link-sel-bg) !important;
-  /* 5px of room each side, 2px above and below; a shadow, so nothing moves. */
-  box-shadow: -3px 0 0 2px var(--link-sel-bg), 3px 0 0 2px var(--link-sel-bg);
-  color: var(--link-sel-fg) !important;
-  text-decoration-color: transparent;
-  border-bottom-color: transparent;
+  outline-color: var(--frame);
+  outline-offset: 3px;
 }
-/* Hover only where a pointer can hover, so a tapped link doesn't stay lit on phones. */
+/* Hover only where a pointer can hover, so a tapped link doesn't stay framed on phones. */
 @media (hover: hover) {
-  a:hover {
+  a:hover,
+  .panel-more:hover {
     opacity: 1;
-    background-color: var(--link-sel-bg) !important;
-    box-shadow: -3px 0 0 2px var(--link-sel-bg), 3px 0 0 2px var(--link-sel-bg);
-    color: var(--link-sel-fg) !important;
-    text-decoration-color: transparent;
-    border-bottom-color: transparent;
+    outline-color: var(--frame);
+    outline-offset: 3px;
   }
-  a:hover * {
+}
+
+/* Terminal rows: reverse video instead of a frame. */
+.sh-panel .panel-list a,
+.home-panel .panel-back,
+.post-pager a {
+  outline: none;
+}
+.post-pager a:focus-visible,
+.post-pager a:active {
+  background: var(--link-sel-bg);
+  color: var(--link-sel-fg);
+}
+.post-pager a:focus-visible *,
+.post-pager a:active * {
+  color: inherit !important;
+}
+@media (hover: hover) {
+  .post-pager a:hover {
+    background: var(--link-sel-bg);
+    color: var(--link-sel-fg);
+  }
+  .post-pager a:hover * {
     color: inherit !important;
   }
 }
-a:focus-visible *,
-a:active * {
-  color: inherit !important;
+
+/* Links in a note: ink on a dotted line; solid when pointed at. The keyboard
+   still gets the frame, so focus is never shown by a line style alone. */
+.post-prose a:not(.footnote):not(.reversefootnote) {
+  outline-offset: 3px;
+  text-decoration-style: dotted;
+  transition: text-decoration-color 200ms ease, outline-color 200ms ease;
 }
-/* The current-page underline under a nav item keeps the highlight colour. */
-.home-nav a[aria-current="page"]:hover::after,
-.home-nav a[aria-current="page"]:focus-visible::after {
-  background: var(--link-sel-bg);
+.post-prose a:not(.footnote):not(.reversefootnote):active {
+  outline-color: transparent;
+  text-decoration-style: solid;
+}
+@media (hover: hover) {
+  .post-prose a:not(.footnote):not(.reversefootnote):hover {
+    outline-color: transparent;
+    text-decoration-style: solid;
+  }
+}
+.post-prose a:not(.footnote):not(.reversefootnote):focus-visible {
+  text-decoration-style: solid;
 }

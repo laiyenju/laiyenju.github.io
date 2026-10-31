@@ -188,9 +188,6 @@
           var g = glyphs[j];
           var r = g.getBoundingClientRect();
           var hit = !!r.width && o.koiCover(r.left, r.top, r.right, r.bottom) >= 0.5;
-          // A highlighted link already sits on its own block; a page-coloured patch would hide it.
-          var link = g.closest("a");
-          if (hit && link && link.matches(":hover, :focus-visible, :active")) hit = false;
           g.dataset.on = hit ? "1" : "";
           g.style.background = hit ? (isNight ? "#0d0f12" : "#fafaf7") : "";
         }
