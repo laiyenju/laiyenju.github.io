@@ -66,11 +66,49 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 外部資源只有 Google Fonts：JetBrains Mono、Noto Sans TC；錦鯉用的 Noto Serif TC、DotGothic16 用 `text=` 參數只下載字根。
 
+## 2. 要改什麼，去哪裡改
+
+「一起改」欄的內容寫在不只一個檔案裡，改一處就要全部改，否則畫面會不一致。
+
+| 想改的東西 | 主要檔案 | 一起改 |
+|---|---|---|
+| **內容** | | |
+| 寫、發布文章 | `published/`（見 3.1） | — |
+| 文章用的圖片 | `assets/images/` | — |
+| works 清單 | `_data/works.yml` | — |
+| 首頁自我介紹（名字、職稱、slogan） | `_layouts/home.html` | `whoami` 的回應：`assets/js/shell.js`、`assets/js/post.js`；首頁卡片文字：`scripts/og/build.js` |
+| 社群連結 | `_layouts/home.html` | `_includes/seo.html`（JSON-LD 的 `sameAs`）；X 帳號：`_config.yml` 的 `author.twitter` |
+| 首頁的分頁標題 | `index.md` 的 `title` | `assets/js/home.js` 的 `TITLES` |
+| 網站名稱、說明、網址 | `_config.yml` | — |
+| **SEO 與分享** | | |
+| 單篇文章的搜尋摘要 | 文章 front matter 的 `description` | — |
+| 自動摘要的規則（前 120 字） | `_includes/seo.html` | `scripts/og/build.js` 的 `plain()`、`truncate()` |
+| 分享卡片的版型 | `scripts/og/card.html` | — |
+| favicon | `assets/icons/` | — |
+| 搜尋引擎可以收錄哪些頁面 | `sitemap.xml`、`robots.txt` | — |
+| **外觀** | | |
+| 顏色 | `assets/css/site.css`（日間在開頭的 `:root`，夜間在 `body.theme-night`） | `scripts/og/card.html`；底色 `#fafaf7`／`#0d0f12`：`_includes/seo.html` 的 `theme-color`、`_layouts/home.html`、`notes/index.md`、`works/index.md` |
+| 版面、間距、標題樣式 | `assets/css/site.css` | — |
+| 網頁字型 | `_includes/head.html`（Google Fonts） | 文章內文字型：`assets/fonts/quattro/` + `site.css` 開頭的 `@font-face` |
+| 錦鯉的字元與配色 | `assets/vendor/ascii-sharks/src/themes.ts`（之後要打包，見 3.3） | 改了 `RADICALS`：`_includes/head.html` 的 Google Fonts `text=` 清單 |
+| 錦鯉的動作 | `assets/vendor/ascii-sharks/src/`（之後要打包，見 3.3） | — |
+| **互動** | | |
+| 首頁 notes／works 的切換、清單顯示幾篇（`LIST_LIMIT`） | `assets/js/home.js` | — |
+| notes／works 的指令、`help` 內容、觸控按鈕 | `assets/js/shell.js` | 文章頁也有同樣的指令：`assets/js/post.js` |
+| 文章頁的打字效果、註腳側欄寬度（`RAIL_MIN`）、結尾指令 | `assets/js/post.js` | — |
+| 從 notes 點文章的轉場 | `assets/js/shell.js` | `_layouts/default.html` 的 `post-handoff` |
+| 日夜切換 | `assets/js/theme.js` | `_includes/theme-boot.html`（畫面出現前先套用） |
+| 介面語言的判斷 | `_includes/theme-boot.html` | — |
+| 按鍵提示等介面文字 | `_layouts/*.html`（`i-en`／`i-zh` 各一份）、`assets/js/*.js`（`t()`） | — |
+| **建置** | | |
+| 哪些檔案要建置、哪些排除 | `_config.yml` 的 `include`／`exclude` | — |
+| 卡片 Action 什麼時候執行 | `.github/workflows/og.yml` 的 `paths` | — |
+
 ---
 
-## 2. 流程
+## 3. 流程
 
-### 2.1 寫作與發布
+### 3.1 寫作與發布
 
 ```mermaid
 flowchart LR
@@ -99,7 +137,7 @@ flowchart LR
 
 文章網址的規則：`published/2026-10-29-markdown-styles.md` → `/published/2026-10-29-markdown-styles.html`。notes 清單上顯示的檔名會去掉日期（`markdown-styles.md`）。
 
-### 2.2 分享卡片（自動）
+### 3.2 分享卡片（自動）
 
 ```mermaid
 flowchart TD
@@ -115,7 +153,7 @@ flowchart TD
   C --> G["GitHub Pages 再建置一次"]
 ```
 
-- 卡片文字和 `seo.html` 的 description 規則一致：front matter 的 `description`，沒有就取內文前 120 字。兩邊的規則改了要一起改。
+- 卡片的摘要和網頁的 description 是同一段文字。
 - 改了 `card.html`，所有卡片都會重畫。
 - 新文章的卡片還沒產生前，`seo.html` 會先用 `home.jpg`。
 - 也可以在 GitHub → Actions → Share cards → **Run workflow** 手動執行。
@@ -125,7 +163,7 @@ flowchart TD
   npm install --no-save playwright && npx playwright install chromium && node scripts/og/build.js
   ```
 
-### 2.3 錦鯉引擎（手動打包）
+### 3.3 錦鯉引擎（手動打包）
 
 ```mermaid
 flowchart LR
@@ -141,10 +179,9 @@ flowchart LR
 npx esbuild@0.24.0 assets/vendor/ascii-sharks/entry.ts --bundle --format=iife --target=es2019 --outfile=assets/js/ocean.js
 ```
 
-- 字元和配色在 `src/themes.ts`：`GLYPH_DAY`（日間，明體倉頡字根）、`GLYPH_NIGHT`（夜間，點陣字根、琥珀色）、`ASCII`（原版）。
-- 改了 `themes.ts` 的 `RADICALS`，也要更新 `head.html` 裡 Google Fonts 的 `text=` 清單。
+`themes.ts` 有三套：`GLYPH_DAY`（日間，明體倉頡字根）、`GLYPH_NIGHT`（夜間，點陣字根、琥珀色）、`ASCII`（原版）。
 
-### 2.4 本機預覽
+### 3.4 本機預覽
 
 ```bash
 jekyll serve
@@ -154,18 +191,7 @@ jekyll serve
 
 ---
 
-## 3. 檔案檢查結果（2026-10-31）
-
-`ocean.js` 已確認和 `src/` 重新打包的結果相同。
-
-已處理：
-
-- `default.html` 改用 `_includes/head.html`，字型和 `site.css` 只寫在一個地方。`<title>`：首頁顯示自己的 `title`，其他頁是「標題 · Yen Lai」。
-- `head.html` 不再用不存在的 `site.author.greeting`。
-- `_config.yml` 刪掉重複的 `defaults`；`hello.md` 刪掉多餘的 `layout: default`。
-- 刪掉 `sample.draft.md`、文章 front matter 的 `status`、`exclude` 裡不存在的 `Gemfile`、`Gemfile.lock`、`vendor`。
-
-還沒處理：
+## 4. 待處理
 
 | # | 項目 | 狀況 | 建議 |
 |---|------|------|------|
@@ -174,19 +200,18 @@ jekyll serve
 
 ---
 
-## 4. 設計規則（改樣式前先看）
+## 5. 設計規則（改樣式前先看）
 
-- **顏色**：每個顏色只代表一件事（`site.css` 開頭有註解）。
+- **顏色**：每個顏色只代表一件事。
   - 墨：要讀的東西（標題、內文、清單、內文連結加虛線）。
   - 強調色（日間朱 `#b5531e`、夜間琥珀 `#f5b942`）：可以操作的地方，或正在進行的事。只當記號，字本身保持墨色。
   - 灰：說明或離開（日期、字數、`cd ~`、外部連結 `↗`）。
 - **反白（實心）**：只代表「目前選中」。terminal 的列（清單、`$ cd ~`、`$ cd ..`、上一篇／下一篇）hover 時整列反白；一般連結只變深色。
 - **標題**：文章的所有標題和內文同樣大小，只用粗體，層次靠留白。
-- **註腳**：視窗 ≥ 1088px 放右側欄，較窄時放文末（`post.js` 的 `RAIL_MIN`）。
+- **註腳**：視窗 ≥ 1088px 放右側欄，較窄時放文末。
 - **works 狀態**：`in progress` ●（強調色）、`experiment` ◐、其他 ○。
-- **介面語言**：瀏覽器第一語言是中文就顯示中文，其他顯示英文（`theme-boot.html` 加上 `ui-zh` class）。
-  - HTML：`<span class="i-en">` / `<span class="i-zh">` 各寫一份。
-  - JS：`t("English", "中文")`。
+- **介面語言**：瀏覽器第一語言是中文就顯示中文，其他顯示英文。不提供切換。
+  - HTML：`<span class="i-en">` / `<span class="i-zh">` 各寫一份；JS：`t("English", "中文")`。
   - `aria-label` / `title`：預設英文，中文寫在 `data-label-zh` / `data-title-zh`。
 - **瀏覽器儲存**：`localStorage.theme`（日夜選擇）、`sessionStorage.post-handoff`（從 notes 點文章時，讓文章頁知道不要再打字一次）。
 - **觸控螢幕**：不顯示輸入框，改用指令按鈕（notes／works：`help` `whoami` `theme` `cd ~`；文章：`help` `top` `cd ..` `theme`）。
