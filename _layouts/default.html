@@ -41,13 +41,6 @@
   {% include theme-boot.html %}
   <canvas data-koi class="post-pond" aria-hidden="true"></canvas>
 
-  {% comment %}The file this page was written as, without its date: 2026-10-29-markdown-styles.md → markdown-styles.md{% endcomment %}
-  {% assign name_parts = page.name | split: "-" %}
-  {% if name_parts.size > 3 and name_parts[0].size == 4 %}
-    {% assign file_name = name_parts | slice: 3, name_parts.size | join: "-" %}
-  {% else %}
-    {% assign file_name = page.name %}
-  {% endif %}
   {% assign chars = content | strip_html | strip_newlines | remove: " " | size %}
 
   {% comment %}Older and newer notes, for the pager at the end.{% endcomment %}
@@ -65,7 +58,6 @@
   <article class="post">
     <header class="post-head">
       <div class="post-bar">
-        <p class="post-cmd"><span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> <span class="post-cmd-text">cat {{ file_name }}</span></p>
         <a class="post-back" href="{{ '/notes/' | relative_url }}"><span class="sh-dollar">$</span> cd ..</a>
       </div>
       <h1 class="post-title">{{ page.title }}</h1>

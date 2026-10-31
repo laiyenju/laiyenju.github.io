@@ -271,10 +271,11 @@
       }, function () { finish(plain); });
     })();
 
-    // 2. Print it below, scrolling a line at a time, until the command is where the article has it.
+    // 2. Print it below the command, scrolling a line at a time, until the
+    // note's header is where the article has it. The command scrolls away
+    // above, as in a terminal; the article does not keep it.
     function print(copy) {
       live.after(copy);
-      live.hidden = true; // the copy's own command line stands in for it, in the same text
       if (canvas) canvas.classList.add("is-leaving");
       var bar = copy.querySelector(".post-bar") || copy.firstChild;
       var top = window.matchMedia("(max-width: 640px)").matches ? 48 : 72; // the article's top padding
