@@ -1565,11 +1565,9 @@ a:focus-visible,
 /* Grey links deepen to ink; the accent ones to a deeper accent. */
 a:active,
 body .home-links a:active,
-body .post-back:active,
 body .post-prose a.reversefootnote:active,
 a:focus-visible,
 body .home-links a:focus-visible,
-body .post-back:focus-visible,
 body .post-prose a.reversefootnote:focus-visible {
   color: var(--hover-ink);
 }
@@ -1583,7 +1581,6 @@ body .post-prose a.footnote:is(:active, :focus-visible) {
 @media (hover: hover) {
   a:hover,
   body .home-links a:hover,
-  body .post-back:hover,
   body .post-prose a.reversefootnote:hover {
     color: var(--hover-ink);
   }
@@ -1595,22 +1592,23 @@ body .post-prose a.footnote:is(:active, :focus-visible) {
   }
 }
 
-/* Terminal rows: reverse video. */
-.post-pager a:focus-visible,
-.post-pager a:active {
+/* Terminal rows: reverse video. The article's $ cd .. at the top is one
+   too, the same as prev / next at the end. */
+body :is(.post-pager a, .post-back):focus-visible,
+body :is(.post-pager a, .post-back):active {
   background: var(--link-sel-bg);
   color: var(--link-sel-fg);
 }
-.post-pager a:focus-visible *,
-.post-pager a:active * {
+body :is(.post-pager a, .post-back):focus-visible *,
+body :is(.post-pager a, .post-back):active * {
   color: inherit !important;
 }
 @media (hover: hover) {
-  .post-pager a:hover {
+  body :is(.post-pager a, .post-back):hover {
     background: var(--link-sel-bg);
     color: var(--link-sel-fg);
   }
-  .post-pager a:hover * {
+  body :is(.post-pager a, .post-back):hover * {
     color: inherit !important;
   }
 }
