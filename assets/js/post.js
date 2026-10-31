@@ -229,11 +229,15 @@
       out.appendChild(p);
       while (out.children.length > 14) out.removeChild(out.firstChild);
     }
+    // Interface language, set before first paint (theme-boot.html).
+    var ZH = document.documentElement.classList.contains("ui-zh");
+    function t(en, zh) { return ZH ? zh : en; }
+    if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
     function theme(arg) {
-      var t = window.siteTheme;
-      if (!t) return say("theme: not available");
-      if (arg === "day" || arg === "night" || arg === "auto") { t.set(arg); return say("theme: " + arg); }
-      say("theme: " + t.pref() + "　（用法：theme day / night / auto）");
+      var th = window.siteTheme;
+      if (!th) return say("theme: not available");
+      if (arg === "day" || arg === "night" || arg === "auto") { th.set(arg); return say("theme: " + arg); }
+      say("theme: " + th.pref() + t("  (usage: theme day / night / auto)", "　（用法：theme day / night / auto）"));
     }
     function go(url) { window.setTimeout(function () { location.href = url; }, 260); }
     function run(raw) {
@@ -253,7 +257,7 @@
       if (w[0] === "next" || w[0] === "prev" || (w[0] === "cat" && (arg === "next" || arg === "prev"))) {
         var which = w[0] === "cat" ? arg : w[0];
         if (to[which]) return go(to[which]);
-        return say(which === "next" ? "this is the newest note. 這已經是最新的一篇。" : "this is the first note. 這是第一篇。");
+        return say(which === "next" ? t("this is the newest note.", "這已經是最新的一篇。") : t("this is the first note.", "這是第一篇。"));
       }
       if (w[0] === "top") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
       if (w[0] === "clear") { out.innerHTML = ""; return; }
@@ -264,24 +268,24 @@
       if (w[0] === "exit" || w[0] === "home") return go(root);
       if (w[0] === "help" && window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
         // Touch screens: only what the buttons below can do (see shell.js).
-        say("tap a command below　點下面的指令");
-        say("top     back to the top　回到頁首");
-        say("cd ..   back to notes　回到文章列表");
-        return say("theme   day / night / auto　切換日夜");
+        say(t("tap a command below", "點下面的指令"));
+        say("top     " + t("back to the top", "回到頁首"));
+        say("cd ..   " + t("back to notes", "回到文章列表"));
+        return say("theme   " + t("day / night / auto", "切換日夜"));
       }
       if (w[0] === "help") {
-        say("cd ..     back to notes        回到文章列表（也可以打 ls）");
-        say("cd ~      go home              回首頁");
-        say("cd -      go back              回上一頁");
-        say("next      newer note           下一篇（較新）");
-        say("prev      older note           上一篇（較舊）");
-        say("top       back to the top      回到頁首");
-        say("theme     day / night / auto   切換日夜（auto 跟隨系統）");
-        say("whoami    who is Yen           我是誰");
-        say("clear     clear the screen     清除畫面");
-        return say("help      show this list       列出這些指令");
+        say("cd ..     " + t("back to notes (or ls)", "回到文章列表（也可以打 ls）"));
+        say("cd ~      " + t("go home", "回首頁"));
+        say("cd -      " + t("go back", "回上一頁"));
+        say("next      " + t("newer note", "下一篇（較新）"));
+        say("prev      " + t("older note", "上一篇（較舊）"));
+        say("top       " + t("back to the top", "回到頁首"));
+        say("theme     " + t("day / night / auto (auto follows the system)", "切換日夜（auto 跟隨系統）"));
+        say("whoami    " + t("who is Yen", "我是誰"));
+        say("clear     " + t("clear the screen", "清除畫面"));
+        return say("help      " + t("show this list", "列出這些指令"));
       }
-      say("sh: command not found: " + w[0] + " — try help（輸入 help 看看可以做什麼）");
+      say("sh: command not found: " + w[0] + t(" — try help", "（輸入 help 看看可以做什麼）"));
     }
     input.addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;
