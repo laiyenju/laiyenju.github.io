@@ -1104,10 +1104,11 @@ body.has-rail .post-prose .footnotes {
       that renders Markdown (after Charm's Glow). Body text stays in the
       reading face; the terminal lives in the structure around it. —— */
 
-/* Header: the cat command with $ cd .. beside it, the title, date · chars. */
+/* Header: $ cd .. at the right, the title, date · chars. The cat command
+   that opened the note is not kept; it scrolled away like a terminal's. */
 .post-bar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: baseline;
   gap: 16px;
 }
@@ -1119,18 +1120,6 @@ body.has-rail .post-prose .footnotes {
 }
 .post-back .sh-dollar {
   color: #736d66;
-}
-.post-cmd {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #2a2420;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .post-bar + .post-title {
   margin-top: 20px;
@@ -1332,8 +1321,7 @@ canvas[data-koi].is-leaving {
   transition: opacity 300ms ease;
 }
 
-/* Arrival, like `cat` in a terminal (see post.js): the command line, then
-   the title typed character by character behind a block cursor, the date
+/* Arrival, like `cat` in a terminal (see post.js): the title typed character by character behind a block cursor, the date
    line typed out, and the first screen of prose streamed in line by line.
    Everything below the first screen is simply there. A key, a scroll or a
    tap finishes it at once (.stream-done). Should the script not run, a
@@ -1460,7 +1448,6 @@ body.theme-night .post-pager time,
 body.theme-night .post-end .sh-dim,
 body.theme-night .post-end .sh-keys { color: #8a8f99; }
 body.theme-night .post-title,
-body.theme-night .post-cmd,
 body.theme-night .post-end { color: #e8e6e3; }
 body.theme-night .post-back .sh-dollar { color: #8a8f99; }
 body.theme-night .post-head .sh-prompt,
@@ -1578,11 +1565,9 @@ a:focus-visible,
 /* Grey links deepen to ink; the accent ones to a deeper accent. */
 a:active,
 body .home-links a:active,
-body .post-back:active,
 body .post-prose a.reversefootnote:active,
 a:focus-visible,
 body .home-links a:focus-visible,
-body .post-back:focus-visible,
 body .post-prose a.reversefootnote:focus-visible {
   color: var(--hover-ink);
 }
@@ -1596,7 +1581,6 @@ body .post-prose a.footnote:is(:active, :focus-visible) {
 @media (hover: hover) {
   a:hover,
   body .home-links a:hover,
-  body .post-back:hover,
   body .post-prose a.reversefootnote:hover {
     color: var(--hover-ink);
   }
@@ -1608,22 +1592,23 @@ body .post-prose a.footnote:is(:active, :focus-visible) {
   }
 }
 
-/* Terminal rows: reverse video. */
-.post-pager a:focus-visible,
-.post-pager a:active {
+/* Terminal rows: reverse video. The article's $ cd .. at the top is one
+   too, the same as prev / next at the end. */
+body :is(.post-pager a, .post-back):focus-visible,
+body :is(.post-pager a, .post-back):active {
   background: var(--link-sel-bg);
   color: var(--link-sel-fg);
 }
-.post-pager a:focus-visible *,
-.post-pager a:active * {
+body :is(.post-pager a, .post-back):focus-visible *,
+body :is(.post-pager a, .post-back):active * {
   color: inherit !important;
 }
 @media (hover: hover) {
-  .post-pager a:hover {
+  body :is(.post-pager a, .post-back):hover {
     background: var(--link-sel-bg);
     color: var(--link-sel-fg);
   }
-  .post-pager a:hover * {
+  body :is(.post-pager a, .post-back):hover * {
     color: inherit !important;
   }
 }

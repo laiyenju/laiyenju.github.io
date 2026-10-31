@@ -77,8 +77,7 @@
     });
   }
 
-  /* —— Arrival, like `cat` in a terminal: the command (unless it was typed on
-        the notes list and carried up), the title typed character by
+  /* —— Arrival, like `cat` in a terminal: the title typed character by
         character, the date line typed out, then the first screen of prose
         streamed in line by line. Below the first screen everything is simply
         there. A key, a scroll or a tap finishes it at once. Off when motion
@@ -120,7 +119,6 @@
     var root = document.documentElement;
     if (!root.classList.contains("post-print")) return;
     var bar = document.querySelector(".post-bar");
-    var cmd = document.querySelector(".post-cmd-text");
     var title = document.querySelector(".post-title");
     var meta = document.querySelector(".post-meta");
     var end = document.querySelector(".post-end");
@@ -130,8 +128,7 @@
 
     function typeBar(next) {
       show(bar);
-      if (!cmd) return next();
-      finishers.push(typeText(cmd, 26, function () { later(120, next); }));
+      next();
     }
     function typeTitle(next) {
       if (!title) return next();
