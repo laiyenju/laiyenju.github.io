@@ -1,95 +1,189 @@
-# Yen Lai 的網站（GitHub Pages）
+# laiyenju.github.io
 
-極簡 Jekyll 站，沒有主題、沒有外掛。網站網址：<https://laiyenju.github.io>
+Yen Lai 的個人網站：<https://laiyenju.github.io>
 
-## 工作流程
+- 純 Jekyll，由 GitHub Pages 建置（`main` 分支、根目錄）。沒有主題，沒有外掛，沒有 `Gemfile`。
+- 只有兩個自動流程：**GitHub Pages 建置網站**、**GitHub Action 畫分享卡片**。
+- 只有一個手動步驟：改了錦鯉原始碼（`assets/vendor/ascii-sharks/src/`）之後，要重新打包 `assets/js/ocean.js`。
 
-1. **iA Writer** 寫稿  
-2. **Obsidian** 整理、改檔名、管理資料夾  
-3. **git push** 到這個 repo（`laiyenju.github.io`）  
-4. **GitHub Pages** 自動建置並發布
+---
 
-## 草稿 vs 發布
+## 1. 資料夾結構
 
-| 位置 | 意思 |
-|------|------|
-| repo **根目錄**，檔名 `*.draft.md` | 草稿；不會進網站 |
-| **`published/`** 資料夾 | 已發布；Jekyll 只建置這裡的文章 |
+```text
+.
+├── _config.yml              網站設定：網址、作者、語言、哪些檔案要建置 / 排除
+├── index.md                 首頁（layout: home）；首頁同時是 notes / works 的畫面
+├── published/               已發布的文章 ── 放進這裡 = 發布
+│   └── YYYY-MM-DD-題目.md
+├── *.draft.md               草稿（放在根目錄，_config.yml 排除，不會上線）
+├── notes/index.md           /notes/ → 轉址到 /?view=notes（保留舊網址用）
+├── works/index.md           /works/ → 轉址到 /?view=works
+├── sitemap.xml              Liquid 產生：首頁 + published/ 的文章
+├── robots.txt               Liquid 產生：指向 sitemap.xml
+│
+├── _layouts/
+│   ├── home.html            首頁：自我介紹、notes 清單、works 清單、日夜開關、錦鯉
+│   └── default.html         文章頁（published/ 的文章都用它）
+├── _includes/
+│   ├── head.html            <head> 共用內容（目前只有 home.html 用，見第 3 節）
+│   ├── seo.html             canonical、description、Open Graph / Twitter、JSON-LD、favicon
+│   └── theme-boot.html      畫面出現前執行：決定日夜主題與介面語言（避免閃爍）
+├── _data/
+│   └── works.yml            works 清單資料（title / one_liner / status / url），目前是 []
+│
+├── assets/
+│   ├── css/site.css         全站唯一的樣式表（顏色 token 註解在檔案開頭）
+│   ├── js/
+│   │   ├── theme.js         日夜切換（auto / day / night），存在 localStorage
+│   │   ├── ocean.js         錦鯉引擎的打包結果（⚠ 由 esbuild 產生，不要手改）
+│   │   ├── home.js          首頁 home ↔ notes ↔ works 的切換動畫
+│   │   ├── shell.js         notes / works 的 terminal 介面、指令、點文章時的 cat 轉場
+│   │   └── post.js          文章頁：打字效果、側欄註腳、結尾提示字元、(END) 錦鯉
+│   ├── vendor/ascii-sharks/ 錦鯉引擎 TypeScript 原始碼（Jekyll 排除，不會上線）
+│   │   ├── entry.ts         打包入口：把 OceanEngine、OceanThemes 掛到 window
+│   │   └── src/             engine / world / renderer / species / themes / math
+│   ├── og/                  分享卡片 1200×630 JPG（由 Action 產生）
+│   │   ├── home.jpg         首頁卡片，也是新文章卡片產生前的備用圖
+│   │   ├── <文章檔名>.jpg
+│   │   └── manifest.json    每張卡片的 hash，用來判斷要不要重畫（不會上線）
+│   ├── icons/               favicon.svg、favicon-32.png、apple-touch-icon.png（朱色印章）
+│   ├── fonts/quattro/       iA Writer Quattro（文章內文字型）+ 授權
+│   └── images/              文章用的圖片
+│
+├── scripts/og/              （Jekyll 排除）
+│   ├── build.js             用 Playwright 把 card.html 截圖成每篇文章的卡片
+│   └── card.html            卡片的版型
+└── .github/workflows/og.yml 分享卡片的 GitHub Action
+```
 
-Front matter 慣例：`title`、`date`、`status`（草稿預設 `draft`）。  
-**發布訊號 = 把檔案移進 `published/`**（可改名成 `YYYY-MM-DD-題目.md`），不必再手動改 `status`。
+### 頁面用到哪些檔案
 
-## 本機預覽（可選）
+| 頁面 | Layout | Include | JS（依載入順序） |
+|------|--------|---------|------------------|
+| 首頁 `/`（含 `?view=notes`、`?view=works`） | `home.html` | `head.html` → `seo.html`、`theme-boot.html` | `theme.js` → `ocean.js` → `home.js` → `shell.js` |
+| 文章 `/published/*.html` | `default.html` | `seo.html`、`theme-boot.html` | `theme.js` → `ocean.js` → `post.js` |
+
+外部資源只有 Google Fonts：JetBrains Mono、Noto Sans TC；錦鯉用的 Noto Serif TC、DotGothic16 用 `text=` 參數只下載字根。
+
+---
+
+## 2. 流程
+
+### 2.1 寫作與發布
+
+```mermaid
+flowchart LR
+  A["iA Writer 寫稿<br/>根目錄 xxx.draft.md"] --> B["Obsidian 整理"]
+  B --> C["移到 published/<br/>改名 YYYY-MM-DD-題目.md"]
+  C --> D["git push main"]
+  D --> E["GitHub Pages 建置上線"]
+  D --> F["og.yml 畫分享卡片<br/>commit 回 main"]
+  F --> E
+```
+
+1. 草稿放在根目錄，檔名結尾是 `.draft.md`，不會上線。
+2. 發布 = 把檔案移進 `published/`，檔名用 `YYYY-MM-DD-題目.md`。
+3. Front matter：
+
+   ```yaml
+   ---
+   title: 文章標題        # 必填
+   date: 2026-10-29       # 必填，排序、sitemap、卡片都用它
+   description: 一句話    # 選填；沒寫就取內文前 120 字
+   ---
+   ```
+
+   `layout` 不用寫（`_config.yml` 預設 `default`）。`status` 只是給自己看的標記，程式不讀它。
+4. `git push` 到 `main`，其他都是自動的。
+
+文章網址的規則：`published/2026-10-29-markdown-styles.md` → `/published/2026-10-29-markdown-styles.html`。notes 清單上顯示的檔名會去掉日期（`markdown-styles.md`）。
+
+### 2.2 分享卡片（自動）
+
+```mermaid
+flowchart TD
+  P["push 到 main<br/>改到 published/**、index.md 或 scripts/og/**"] --> W["og.yml"]
+  W --> N["安裝 Node 20 + Playwright 1.48.2 + Chromium"]
+  N --> B["node scripts/og/build.js"]
+  B --> H{"hash（card.html + 卡片文字）<br/>和 manifest.json 一樣？"}
+  H -- 一樣 --> S["跳過"]
+  H -- 不一樣 --> R["用 card.html 截圖<br/>寫入 assets/og/檔名.jpg"]
+  B --> X["刪掉已不存在文章的卡片"]
+  R --> M["更新 manifest.json"]
+  M --> C["有變動就 commit<br/>「Update share cards」並 push"]
+  C --> G["GitHub Pages 再建置一次"]
+```
+
+- 卡片文字和 `seo.html` 的 description 規則一致：front matter 的 `description`，沒有就取內文前 120 字。兩邊的規則改了要一起改。
+- 改了 `card.html`，所有卡片都會重畫。
+- 新文章的卡片還沒產生前，`seo.html` 會先用 `home.jpg`。
+- 也可以在 GitHub → Actions → Share cards → **Run workflow** 手動執行。
+- 本機執行：
+
+  ```bash
+  npm install --no-save playwright && npx playwright install chromium && node scripts/og/build.js
+  ```
+
+### 2.3 錦鯉引擎（手動打包）
+
+```mermaid
+flowchart LR
+  S["assets/vendor/ascii-sharks/src/*.ts"] --> E["entry.ts"]
+  E -- "esbuild（手動）" --> O["assets/js/ocean.js"]
+  O --> H["home.html"]
+  O --> D["default.html"]
+```
+
+改了 `src/` 或 `entry.ts` 之後，執行下面的指令，再把 `ocean.js` 一起 commit：
+
+```bash
+npx esbuild@0.24.0 assets/vendor/ascii-sharks/entry.ts --bundle --format=iife --target=es2019 --outfile=assets/js/ocean.js
+```
+
+- 字元和配色在 `src/themes.ts`：`GLYPH_DAY`（日間，明體倉頡字根）、`GLYPH_NIGHT`（夜間，點陣字根、琥珀色）、`ASCII`（原版）。
+- 改了 `themes.ts` 的 `RADICALS`，也要更新 `head.html` 和 `default.html` 裡 Google Fonts 的 `text=` 清單。
+
+### 2.4 本機預覽
 
 ```bash
 jekyll serve
 ```
 
-建置結果在 `_site/`（已列入 `.gitignore`）。
+輸出在 `_site/`（已在 `.gitignore`）。
 
-## 開啟 Pages
+---
 
-若網站還沒上線：Repo → **Settings** → **Pages** → Source 選 **Deploy from a branch** → Branch **`main`**、資料夾 **`/` (root)** → Save。
+## 3. 檔案檢查結果（2026-10-31）
 
-## 首頁錦鯉與 notes / works
+`ocean.js` 已確認和 `src/` 重新打包的結果相同。下面是檢查時發現的問題，還沒有處理：
 
-- 錦鯉引擎的原始碼在 `assets/vendor/ascii-sharks/src/`，網站載入的是打包後的 `assets/js/ocean.js`。改了原始碼要重新打包：
+| # | 項目 | 狀況 | 建議 |
+|---|------|------|------|
+| 1 | `_layouts/default.html` 與 `_includes/head.html` | 字型、`site.css` 的 `<link>` 重複寫了兩次；改字型時兩邊都要改 | `default.html` 改用 `head.html`，`<title>` 格式用參數區分 |
+| 2 | `_includes/head.html` 的 `site.author.greeting` | `_config.yml` 沒有這個值；首頁有 `title` 所以目前沒出錯 | 改成 `site.title` |
+| 3 | `_config.yml` 的 `defaults` | `path: "published"` 和 `path: ""` 設定一樣，前者多餘 | 只留 `path: ""` |
+| 4 | `_config.yml` 的 `exclude` | `Gemfile`、`Gemfile.lock`、`vendor` 在 repo 裡不存在 | 無害；要精簡可以刪 |
+| 5 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡；多寫了 `layout: default` | 第一篇正式文章上線後刪除 |
+| 6 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample.svg` | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
+| 7 | `sample.draft.md` | 草稿範例，不會上線 | 不再需要就刪除 |
+| 8 | Front matter 的 `status` | 沒有任何程式讀它 | 可以不寫 |
 
-  ```bash
-  npx esbuild@0.24.0 assets/vendor/ascii-sharks/entry.ts --bundle --format=iife --target=es2019 --outfile=assets/js/ocean.js
-  ```
+---
 
-- 字元和配色在 `src/themes.ts`：`GLYPH_DAY`（明體倉頡字根）、`GLYPH_NIGHT`（點陣字根、琥珀色），`ASCII` 是原本的樣子。首頁跟著系統的淺色／深色設定切換；文章頁固定用日間版。
-- 首頁錦鯉圍著中間的文字繞圈；點 notes / works 後自由游動。文章頁讀的時候沒有錦鯉，捲到 `(END)` 時才有一條游過去一次（`World.startPass`、`OceanEngine.swimAcross`）。
-- notes / works 是 terminal 風格（`assets/js/shell.js`），最後一行可以輸入指令，輸入 `help` 看有哪些。
-- notes 的字數由 Jekyll 建置時粗略計算（扣掉 HTML 標籤和空白後的字元數），`total` 只算今年的文章。
-- works 寫在 `_data/works.yml`（目前是空的 `[]`）。`status` 用形狀區分：`in progress` 是 ●（強調色）、`experiment` 是 ◐，其他值是 ○。
-- 文章頁（`_layouts/default.html`、`assets/js/post.js`）也是 terminal 風格：最上方是獨立一列的 `$ cd ..`，文字靠右（和結尾的上一個／下一個一樣整列反白），接著是標題，下方是日期和字數（打開文章的 `cat` 指令不會留在文章頁上）；Markdown 的清單、程式碼、表格、分隔線、註腳用 terminal 的寫法呈現，內文維持一般字型。文章結尾是 `(END)`、上一篇／下一篇，以及可以輸入指令的提示字元。文章頁也跟著系統切換日間和夜間。
-- 從 notes 點文章時，提示字元打出 `cat 檔名.md`，文章就在指令下方一行一行印出來，整頁像 terminal 一樣往上捲，指令捲出畫面上緣，直到文章的開頭到達文章頁的位置，再交給真正的文章頁（`assets/js/shell.js`）。因為兩邊畫面一樣，看不出換頁。按任何鍵、捲動或點擊會直接打開文章；系統設定「減少動態效果」時直接換頁。直接打開文章網址時，文章頁會自己把標題和內文打出來。
-- 文章頁的內文欄永遠置中；視窗 1088px 以上，註腳放在右側（160–200px 寬），以下放在文末。
-- 日夜切換：首頁右上角的分段開關 `auto｜day｜night`，正在用的那一格是實心的；選擇會記在瀏覽器裡（`assets/js/theme.js`），文章頁也會跟著。文章頁不放開關，以免打擾閱讀；文章結尾的提示字元仍然可以輸入 `theme day`、`theme night`、`theme auto`。notes／works／文章結尾的提示字元也可以輸入 `theme day`、`theme night`、`theme auto`。
+## 4. 設計規則（改樣式前先看）
 
-## 分享卡片與 SEO
-
-- 每頁的 `<head>` 都會載入 `_includes/seo.html`，內容包括 canonical 網址、description、Open Graph／Twitter card、結構化資料（首頁是 Person，文章是 BlogPosting）和 favicon。文章的 description 預設取內文前 120 字；想自己寫的話，在 front matter 加 `description:`。
-- 每篇文章有自己的分享卡片 `assets/og/<檔名>.jpg`（1200 × 630），首頁是 `home.jpg`。卡片上有 `cat 檔名.md` 指令列（`yen@taiwan` 用主題色）、標題、摘要（和 description 同一段文字）、日期，右下角一條用倉頡字根組成的小錦鯉（依標題決定形狀，同一篇永遠一樣）。
-- 卡片由 `scripts/og/build.js` 依 `scripts/og/card.html` 畫出來。push 到 `main` 時，GitHub Action（`.github/workflows/og.yml`）會自動畫好新的或改過的卡片並 commit 回來，所以平常不用做任何事。新文章的卡片產生之前，會先用首頁那張。
-- 想在本機畫：`npm install --no-save playwright && npx playwright install chromium && node scripts/og/build.js`
-- `favicon.svg`、`favicon-32.png`、`apple-touch-icon.png` 放在 `assets/icons/`，圖案是朱色印章。
-- `sitemap.xml` 只列首頁和 `published/` 的文章（`/notes/`、`/works/` 只是轉址）；`robots.txt` 指向它。
-
-## 顏色的意思
-
-每個顏色在每一頁、日夜兩種模式都只代表一件事（`assets/css/site.css` 開頭的 `--accent` 註解）：
-
-| 顏色 | 意思 | 例子 |
-|------|------|------|
-| 墨 | 要讀的東西 | 標題、清單列、內文、內文裡的連結（加虛線） |
-| 強調色（日間朱 `#b5531e`／夜間琥珀 `#f5b942`） | 站內可以操作的地方，或正在進行的事。只當記號，字本身維持墨色 | notes/ works/、last note、view all 的文字（不加底線；打開的分頁才有底線）、內文連結的虛線、可以輸入的那一行提示字元、註腳編號、`+`／`−`、in progress 的 ● |
-| 灰 | 說明，或離開 | 日期、字數、提示、`cd ~`、`theme:`、外部連結（加上 `↗`） |
-
-游標指到、鍵盤聚焦或手指按住時：
-
-- 一般連結：只有顏色變深一點：灰色變成墨色，主題色變成更深的朱色（夜間是更亮的琥珀）。用鍵盤聚焦時另外加一條底線。
-- terminal 的列（notes／works 清單、`$ cd ~`、文章上方的 `$ cd ..`、文章結尾的上一個／下一個）：整列反白。
-- 文章內文的連結：平常是墨色字加虛線，指到時變成實線（鍵盤聚焦時是較粗的實線）。
-
-實心（反白）永遠代表「目前選中」：terminal 選中的那一列、正在用的 theme。
-
-## 提示字元
-
-- 可以輸入的那一行是完整的 `yen@taiwan:~/notes$`，提示字元用強調色，後面有一個淡淡閃爍的方塊游標，點了就能打字。
-- 已經執行過的指令（`ls -lt`、指令紀錄）只留簡短的灰色提示：`~/notes ❯ ls -lt`，像 terminal 的 transient prompt。從 notes 點開文章時，`cat` 打在完整提示上，隨著文章印出來而捲出畫面。
-- 觸控螢幕不顯示輸入框，改成一排指令按鈕（notes／works：`help` `whoami` `theme` `cd ~`；文章：`help` `top` `cd ..` `theme`），所以不會跳出鍵盤。`theme` 按鈕會切到下一個設定；`help` 在觸控螢幕上只列出這些按鈕。
-
-## 介面語言
-
-操作說明（按鍵提示、`help`、指令回應、輸入框和日夜開關的說明文字）只顯示一種語言：瀏覽器或手機的第一語言是中文，就顯示中文，其他一律英文。不提供切換，文章內容維持原本的語言。判斷寫在 `_includes/theme-boot.html`，在畫面出現前就決定，所以不會閃。
-
-- HTML 裡的文字：兩種語言各包一個 `<span class="i-en">`／`<span class="i-zh">`，CSS 只顯示一種。
-- JS 裡的文字：`t("English", "中文")`。
-- 輸入框和日夜開關的 `aria-label`／`title` 預設英文，中文寫在 `data-label-zh`／`data-title-zh`。
-
-## 文章的標題
-
-文章頁像 `cat` 印出一個檔案：標題和內文的各級標題（`#` 到 `######`）都和內文同樣大小，只用粗體。層次靠留白：標題上方留大空間，下方緊貼它的內文。
+- **顏色**：每個顏色只代表一件事（`site.css` 開頭有註解）。
+  - 墨：要讀的東西（標題、內文、清單、內文連結加虛線）。
+  - 強調色（日間朱 `#b5531e`、夜間琥珀 `#f5b942`）：可以操作的地方，或正在進行的事。只當記號，字本身保持墨色。
+  - 灰：說明或離開（日期、字數、`cd ~`、外部連結 `↗`）。
+- **反白（實心）**：只代表「目前選中」。terminal 的列（清單、`$ cd ~`、`$ cd ..`、上一篇／下一篇）hover 時整列反白；一般連結只變深色。
+- **標題**：文章的所有標題和內文同樣大小，只用粗體，層次靠留白。
+- **註腳**：視窗 ≥ 1088px 放右側欄，較窄時放文末（`post.js` 的 `RAIL_MIN`）。
+- **works 狀態**：`in progress` ●（強調色）、`experiment` ◐、其他 ○。
+- **介面語言**：瀏覽器第一語言是中文就顯示中文，其他顯示英文（`theme-boot.html` 加上 `ui-zh` class）。
+  - HTML：`<span class="i-en">` / `<span class="i-zh">` 各寫一份。
+  - JS：`t("English", "中文")`。
+  - `aria-label` / `title`：預設英文，中文寫在 `data-label-zh` / `data-title-zh`。
+- **瀏覽器儲存**：`localStorage.theme`（日夜選擇）、`sessionStorage.post-handoff`（從 notes 點文章時，讓文章頁知道不要再打字一次）。
+- **觸控螢幕**：不顯示輸入框，改用指令按鈕（notes／works：`help` `whoami` `theme` `cd ~`；文章：`help` `top` `cd ..` `theme`）。
