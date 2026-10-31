@@ -44,7 +44,7 @@ jekyll serve
 - notes / works 是 terminal 風格（`assets/js/shell.js`），最後一行可以輸入指令，輸入 `help` 看有哪些。
 - notes 的字數由 Jekyll 建置時粗略計算（扣掉 HTML 標籤和空白後的字元數），`total` 只算今年的文章。
 - works 寫在 `_data/works.yml`（目前是空的 `[]`）。`status` 用形狀區分：`in progress` 是 ●（強調色）、`experiment` 是 ◐，其他值是 ○。
-- 文章頁（`_layouts/default.html`、`assets/js/post.js`）也是 terminal 風格：右上方是 `$ cd ..`，接著是標題，下方是日期和字數（打開文章的 `cat` 指令不會留在文章頁上）；Markdown 的清單、程式碼、表格、分隔線、註腳用 terminal 的寫法呈現，內文維持一般字型。文章結尾是 `(END)`、上一篇／下一篇，以及可以輸入指令的提示字元。文章頁也跟著系統切換日間和夜間。
+- 文章頁（`_layouts/default.html`、`assets/js/post.js`）也是 terminal 風格：最上方是獨立一列的 `$ cd ..`（和結尾的上一個／下一個一樣整列反白），接著是標題，下方是日期和字數（打開文章的 `cat` 指令不會留在文章頁上）；Markdown 的清單、程式碼、表格、分隔線、註腳用 terminal 的寫法呈現，內文維持一般字型。文章結尾是 `(END)`、上一篇／下一篇，以及可以輸入指令的提示字元。文章頁也跟著系統切換日間和夜間。
 - 從 notes 點文章時，提示字元打出 `cat 檔名.md`，文章就在指令下方一行一行印出來，整頁像 terminal 一樣往上捲，指令捲出畫面上緣，直到文章的開頭到達文章頁的位置，再交給真正的文章頁（`assets/js/shell.js`）。因為兩邊畫面一樣，看不出換頁。按任何鍵、捲動或點擊會直接打開文章；系統設定「減少動態效果」時直接換頁。直接打開文章網址時，文章頁會自己把標題和內文打出來。
 - 文章頁的內文欄永遠置中；視窗 1088px 以上，註腳放在右側（160–200px 寬），以下放在文末。
 - 日夜切換：首頁右上角的分段開關 `auto｜day｜night`，正在用的那一格是實心的；選擇會記在瀏覽器裡（`assets/js/theme.js`），文章頁也會跟著。文章頁不放開關，以免打擾閱讀；文章結尾的提示字元仍然可以輸入 `theme day`、`theme night`、`theme auto`。notes／works／文章結尾的提示字元也可以輸入 `theme day`、`theme night`、`theme auto`。
