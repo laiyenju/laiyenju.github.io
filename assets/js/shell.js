@@ -68,8 +68,10 @@
     function say(text, prompt) {
       var p = document.createElement("p");
       if (prompt) {
-        p.innerHTML = '<span class="sh-prompt">yen@taiwan</span>:<span class="sh-path"></span>$ ';
-        p.querySelector(".sh-path").textContent = path;
+        // A command that has run keeps only a short prompt; the full one is
+        // for the line you can still type on.
+        p.innerHTML = '<span class="sh-dir"></span> <span class="sh-arrow">❯</span> ';
+        p.querySelector(".sh-dir").textContent = path;
         p.appendChild(document.createTextNode(text));
       } else {
         p.className = "sh-dim";

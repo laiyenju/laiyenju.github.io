@@ -7,6 +7,11 @@
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">
   {% include theme-boot.html %}
+  <div class="theme-switch" role="radiogroup" aria-label="Theme 日夜">
+    <button type="button" role="radio" aria-checked="true" data-theme-set="auto" title="跟隨系統">auto</button>
+    <button type="button" role="radio" aria-checked="false" data-theme-set="day" title="日間">day</button>
+    <button type="button" role="radio" aria-checked="false" data-theme-set="night" title="夜間">night</button>
+  </div>
   <div class="home-stage">
     <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
     <div class="home-vignette" aria-hidden="true"></div>
@@ -51,7 +56,7 @@
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
           <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
         </div>
-        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
+        <p class="sh-line"><span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
         <p class="sh-line sh-dim sh-total">total {{ year_chars }} chars · {{ year_posts }} {% if year_posts == 1 %}post{% else %}posts{% endif %} in {{ this_year }}</p>
         <ul class="panel-list">
           {{ note_rows }}
@@ -68,7 +73,7 @@
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
           <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
         </div>
-        <p class="sh-line"><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$ <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
+        <p class="sh-line"><span class="sh-dir">~/works</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
         <p class="sh-line sh-dim sh-total">total {{ works | size }} {% if works.size == 1 %}work{% else %}works{% endif %} · {{ works_active }} in progress</p>
         <ul class="panel-list">
         {% for work in works %}
@@ -188,9 +193,6 @@
           var g = glyphs[j];
           var r = g.getBoundingClientRect();
           var hit = !!r.width && o.koiCover(r.left, r.top, r.right, r.bottom) >= 0.5;
-          // A highlighted link already sits on its own block; a page-coloured patch would hide it.
-          var link = g.closest("a");
-          if (hit && link && link.matches(":hover, :focus-visible, :active")) hit = false;
           g.dataset.on = hit ? "1" : "";
           g.style.background = hit ? (isNight ? "#0d0f12" : "#fafaf7") : "";
         }

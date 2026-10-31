@@ -220,7 +220,7 @@
     function say(text, prompt) {
       var p = document.createElement("p");
       if (prompt) {
-        p.innerHTML = '<span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$ ';
+        p.innerHTML = '<span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> '; // short, as in shell.js
         p.appendChild(document.createTextNode(text));
       } else {
         p.className = "sh-dim";
