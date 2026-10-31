@@ -29,11 +29,20 @@
   font-style: italic;
   font-display: swap;
 }
+/* Colour means one thing each, on every page and in both themes:
+     ink    — what you read: titles, rows, body text.
+     accent — 朱 by day, amber by night: where you can act inside this site,
+              or what is live right now. It marks (an underline, a number,
+              the live prompt, a status dot); the words themselves stay ink.
+     grey   — what describes or leaves: dates, sizes, hints, the way back,
+              links out of the site (those also carry ↗).
+   Any link, pointed at or focused, turns reverse video (see "Links" below). */
 :root {
+  --accent: #b5531e;
   --paper: #fafaf7;
   --ink: #000;
-  --font-latin: "Inter", system-ui, sans-serif;
-  --font-zh: "Noto Sans TC", "Inter", system-ui, sans-serif;
+  --font-latin: system-ui, sans-serif;
+  --font-zh: "Noto Sans TC", system-ui, sans-serif;
 }
 
 *,
@@ -77,6 +86,19 @@ body.lang-zh-Hant .latin {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Read aloud, never seen: the whole words behind the home page's split glyphs. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* —— Homepage (full-viewport ASCII 河豚 stage) —— */
@@ -162,22 +184,27 @@ body.home {
   right: 0;
   bottom: -6px;
   height: 1px;
-  background: currentColor;
-  transform: scaleX(0);
-  transition: transform 320ms cubic-bezier(0.2, 0, 0, 1);
+  background: var(--accent);
+  transition: height 200ms ease, background-color 200ms ease;
 }
 .home-nav a:hover {
   opacity: 1;
 }
 body[data-view="notes"] .home-nav a,
 body[data-view="works"] .home-nav a {
-  color: #9a948c;
+  color: #736d66;
 }
 body .home-nav a[aria-current="page"] {
   color: #2a2420;
 }
 .home-nav a[aria-current="page"]::after {
-  transform: scaleX(1);
+  height: 2px;
+  background: currentColor;
+}
+@media (min-width: 900px) {
+  .home-nav {
+    font-size: 15px;
+  }
 }
 
 /* View swap: out = fade + 6px up; in = from 8px below. No scale, no blur. */
@@ -228,7 +255,7 @@ body .home-nav a[aria-current="page"] {
   gap: 16px;
   margin: 0 0 14px;
   font-size: 12px;
-  color: #8a857e;
+  color: #736d66;
 }
 .panel-back {
   color: inherit;
@@ -282,7 +309,10 @@ body .home-nav a[aria-current="page"] {
   background: none;
   font: inherit;
   font-size: 12px;
-  color: #c45c26;
+  color: #2a2420;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 .panel-more:hover {
@@ -342,11 +372,15 @@ body .home-nav a[aria-current="page"] {
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.01em;
-  color: #c45c26;
+  color: #736d66;
 }
 .home-links a {
   color: inherit;
   text-decoration: none;
+}
+.home-links a::after {
+  content: "↗";
+  margin-left: 1px;
 }
 
 @media (max-width: 640px) {
@@ -371,9 +405,10 @@ body.theme-night .panel-back:hover,
 body.theme-night .home-nav a[aria-current="page"] { color: #e8e6e3; }
 body.theme-night .panel-head { color: #8a8f99; }
 body.theme-night[data-view="notes"] .home-nav a,
-body.theme-night[data-view="works"] .home-nav a { color: #626873; }
-body.theme-night .home-links,
-body.theme-night .panel-more { color: #f5b942; }
+body.theme-night[data-view="works"] .home-nav a { color: #7f848e; }
+body.theme-night { --accent: #f5b942; }
+body.theme-night .home-links { color: #8a8f99; }
+body.theme-night .panel-more { color: #e8e6e3; }
 body.theme-night .home-panel { background: rgba(13, 15, 18, 0.86); box-shadow: 0 0 28px 14px rgba(13, 15, 18, 0.86); }
 body.theme-night .panel-list li { border-top-color: rgba(232, 230, 227, 0.16); }
 body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0.45)); }
@@ -383,10 +418,11 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 .sh-panel .panel-list { grid-template-columns: 1fr; }
 .sh-panel .panel-list li { border-top: 0; }
 .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Prompt in ink tones only: the one accent (朱 by day, amber by night) is kept for what needs the eye. */
-.sh-prompt { color: #c45c26; font-weight: 600; }
+/* Prompt in ink; only the live one, where you can type, takes the accent. */
+.sh-prompt { color: #2a2420; font-weight: 600; }
+.sh-live .sh-prompt { color: var(--accent); }
 .sh-path { color: #2a2420; font-weight: 600; }
-.sh-dim { color: #8a857e; }
+.sh-dim { color: #736d66; }
 .sh-cmd::after {
   content: ""; display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px;
   vertical-align: -0.18em; background: currentColor; animation: sh-blink 1.1s steps(1) infinite;
@@ -399,7 +435,7 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 }
 .sh-panel .panel-title { font-size: 13px; line-height: 1.75; }
 .ls-mark { color: transparent; }
-.ls-perm, .ls-size, .ls-date { color: #8a857e; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ls-perm, .ls-size, .ls-date { color: #736d66; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ls-size { text-align: right; }
 /* While the command types itself out, the listing waits, as if the shell hasn't answered yet. */
 .home-panel.is-listing .sh-total,
@@ -417,8 +453,8 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 .sh-panel .panel-list a:focus-visible .ls-mark,
 .sh-panel .panel-list a:hover .ls-mark { color: inherit; }
 /* Back to home, said the shell way. */
-.home-panel .panel-back.sh-back { padding: 1px 6px; margin-left: -6px; border-radius: 1px; color: #8a857e; }
-.sh-back .sh-dollar { color: #8a857e; }
+.home-panel .panel-back.sh-back { padding: 1px 6px; margin-left: -6px; border-radius: 1px; color: #736d66; }
+.sh-back .sh-dollar { color: #736d66; }
 .home-panel .panel-back.sh-back:hover,
 .home-panel .panel-back.sh-back:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
 .sh-back:hover .sh-dollar, .sh-back:focus-visible .sh-dollar { color: inherit; }
@@ -434,8 +470,31 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
   flex: 1; min-width: 0; margin-left: 0.6ch; padding: 0; border: 0; outline: none; background: none;
   font: inherit; color: inherit; caret-color: currentColor; caret-shape: block;
 }
+.sh-caret {
+  display: inline-block; width: 0.6em; height: 1.05em; margin-left: 0.6ch;
+  vertical-align: -0.18em; background: currentColor; opacity: 0.55;
+  animation: sh-blink 1.1s steps(1) infinite;
+}
+.sh-live:focus-within .sh-caret { display: none; }
+.sh-taps { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .sh-live .sh-input { display: none; }
+  .sh-live { cursor: default; }
+  .sh-taps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .sh-live[hidden] + .sh-taps { display: none; }
+  .sh-taps button {
+    min-height: 36px; margin: 0; padding: 0 12px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px;
+    background: none; color: inherit; font: inherit; font-size: 13px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sh-taps button:active { background: var(--link-sel-bg); border-color: var(--link-sel-bg); color: var(--link-sel-fg); }
+  body.theme-night .sh-taps button { border-color: rgba(232, 230, 227, 0.3); }
+  .post-end .sh-keys { display: none; }
+}
+.home-panel.is-listing .sh-taps { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .sh-caret { animation: none; } }
 /* Key hints sit up top beside $ cd ~, so the prompt can be the last line and print below it. */
-.sh-keys { margin: 0; font-size: 12px; color: #8a857e; }
+.sh-keys { margin: 0; font-size: 12px; color: #736d66; }
 .sh-panel .panel-head { justify-content: space-between; }
 .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
 @media (max-width: 560px) {
@@ -443,18 +502,22 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
   .ls-perm { display: none; }
   .sh-keys { display: none; }
 }
+/* Touch screens have no arrow keys or esc: keep only the help hint. */
+@media (hover: none) and (pointer: coarse) {
+  .sh-keys-nav { display: none; }
+}
 @media (prefers-reduced-motion: reduce) { .sh-cmd::after { animation: none; } }
 
 /* —— Works: the same shell, listing directories. Each row leads with its seal character. —— */
 .sh-works .panel-list a {
   display: grid; grid-template-columns: 1.5ch 10ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
 }
-.work-status { font-size: 12px; color: #8a857e; white-space: nowrap; }
+.work-status { font-size: 12px; color: #736d66; white-space: nowrap; }
 /* Status by shape, not colour: ● in progress (the accent), ◐ experiment, ○ done. */
 .work-status::before { content: "○ "; }
 .work-status[data-status="experiment"]::before { content: "◐ "; }
-.work-status[data-status="in progress"]::before { content: "● "; color: #c45c26; }
-.work-desc { grid-column: 3 / -1; font-size: 12px; line-height: 1.6; color: #8a857e; padding-bottom: 4px; }
+.work-status[data-status="in progress"]::before { content: "● "; color: var(--accent); }
+.work-desc { grid-column: 3 / -1; font-size: 12px; line-height: 1.6; color: #736d66; padding-bottom: 4px; }
 @media (max-width: 560px) {
   .sh-works .panel-list a { grid-template-columns: 1.5ch minmax(0, 1fr) auto; column-gap: 10px; }
   .work-desc { grid-column: 2 / -1; }
@@ -467,7 +530,8 @@ body.theme-night .sh-dim,
 body.theme-night .sh-keys,
 body.theme-night .work-status,
 body.theme-night .work-desc { color: #8a8f99; }
-body.theme-night .sh-prompt { color: #f5b942; }
+body.theme-night .sh-prompt { color: #e8e6e3; }
+body.theme-night .sh-live .sh-prompt { color: var(--accent); }
 body.theme-night .sh-path { color: #e8e6e3; }
 body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 body.theme-night .home-panel .panel-back.sh-back { color: #8a8f99; }
@@ -477,7 +541,6 @@ body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #e8
 body.theme-night .sh-panel .panel-list a:hover,
 body.theme-night .sh-panel .panel-list a:focus-visible,
 body.theme-night .sh-panel .panel-list a.is-opening { background: #e8e6e3; color: #0d0f12; }
-body.theme-night .work-status[data-status="in progress"]::before { color: #f5b942; }
 
 /* —— Home copy: a few terminal marks on a human page —— */
 /* The same underline cursor as article titles. */
@@ -506,17 +569,17 @@ body.theme-night .work-status[data-status="in progress"]::before { color: #f5b94
   font-variant-numeric: tabular-nums;
 }
 .home-last-label {
-  color: #9a948c;
+  color: #736d66;
 }
 .home-last a {
   display: inline-block;
   padding: 4px 0;
   color: #2a2420;
-  border-bottom: 1px solid rgba(42, 36, 32, 0.25);
+  border-bottom: 1px solid var(--accent);
 }
 body.theme-night .home-last { color: #8a8f99; border-top-color: rgba(232, 230, 227, 0.18); }
-body.theme-night .home-last-label { color: #626873; }
-body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 230, 227, 0.3); }
+body.theme-night .home-last-label { color: #7f848e; }
+body.theme-night .home-last a { color: #e8e6e3; }
 @media (prefers-reduced-motion: reduce) {
   .home-greeting::after { animation: none; }
 }
@@ -553,7 +616,7 @@ body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 2
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 12px;
   letter-spacing: 0.01em;
-  color: #8a857e;
+  color: #736d66;
 }
 .post-back {
   color: inherit;
@@ -582,10 +645,10 @@ body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 2
 .post-prose {
   --ink: #2a2420;
   --ink-soft: #5a544e;
-  --ink-faint: #8a857e;
+  --ink-faint: #736d66;
   --rule: rgba(42, 36, 32, 0.14);
   --washi: #f2efe9;
-  --shu: #c45c26;
+  --shu: #b5531e;
   --mono: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 17px;
@@ -757,8 +820,8 @@ body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 2
   background: transparent;
 }
 .post-prose .task-list-item-checkbox:checked {
-  border-color: var(--shu);
-  background: var(--shu);
+  border-color: var(--ink-faint);
+  background: var(--ink-faint);
   box-shadow: inset 0 0 0 2px var(--washi);
 }
 .post-prose li.task-list-item:has(.task-list-item-checkbox:checked) {
@@ -806,7 +869,7 @@ body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 2
   margin: 1.8em 0;
   padding: 16px 18px;
   overflow-x: auto;
-  border-left: 2px solid var(--shu);
+  border-left: 2px solid var(--rule);
   background: var(--washi);
   font-size: 13.5px;
   line-height: 1.7;
@@ -824,7 +887,7 @@ body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 2
 .post-prose .highlight .cm,
 .post-prose .highlight .cs,
 .post-prose .highlight .sd {
-  color: #9a948c;
+  color: #736d66;
   font-style: italic;
 }
 .post-prose .highlight .k,
@@ -921,7 +984,7 @@ body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 2
   width: 33px;
   background:
     linear-gradient(var(--ink-faint), var(--ink-faint)) left / 5px 5px no-repeat,
-    linear-gradient(var(--shu), var(--shu)) center / 5px 5px no-repeat,
+    linear-gradient(var(--ink-soft), var(--ink-soft)) center / 5px 5px no-repeat,
     linear-gradient(var(--ink-faint), var(--ink-faint)) right / 5px 5px no-repeat;
 }
 
@@ -1040,7 +1103,7 @@ body.theme-night .home-last a { color: #e8e6e3; border-bottom-color: rgba(232, 2
   margin-right: 6px;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 11px;
-  color: #c45c26;
+  color: var(--accent);
 }
 .post-note.is-lit {
   color: #2a2420;
@@ -1076,7 +1139,7 @@ body.has-rail .post-prose .footnotes {
   margin-right: -6px;
 }
 .post-back .sh-dollar {
-  color: #8a857e;
+  color: #736d66;
 }
 .post-cmd {
   flex: 1;
@@ -1134,7 +1197,7 @@ body.has-rail .post-prose .footnotes {
 }
 .post-prose li.task-list-item:has(.task-list-item-checkbox:checked)::before {
   content: "[x]";
-  color: var(--shu);
+  color: var(--ink-faint);
 }
 .post-prose li.task-list-item {
   padding-left: 2.4em;
@@ -1234,7 +1297,7 @@ body.has-rail .post-prose .footnotes {
 }
 .post-eof {
   margin: 0 0 1.6em;
-  color: #8a857e;
+  color: #736d66;
 }
 .post-pager {
   display: grid;
@@ -1251,7 +1314,7 @@ body.has-rail .post-prose .footnotes {
 }
 .post-pager-label,
 .post-pager time {
-  color: #8a857e;
+  color: #736d66;
   font-variant-numeric: tabular-nums;
 }
 .post-end .sh-live {
@@ -1418,7 +1481,8 @@ body.theme-night .post-cmd,
 body.theme-night .post-end { color: #e8e6e3; }
 body.theme-night .post-back .sh-dollar { color: #8a8f99; }
 body.theme-night .post-head .sh-prompt,
-body.theme-night .post-end .sh-prompt { color: #f5b942; }
+body.theme-night .post-end .sh-prompt { color: #e8e6e3; }
+body.theme-night .post-end .sh-live .sh-prompt { color: var(--accent); }
 body.theme-night .post-head .sh-path,
 body.theme-night .post-end .sh-path { color: #e8e6e3; }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
@@ -1460,7 +1524,7 @@ body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3)
   border-radius: 1px;
   background: none;
   font: 12px/1.5 "JetBrains Mono", ui-monospace, monospace;
-  color: #8a857e;
+  color: #736d66;
   cursor: pointer;
 }
 body.theme-night .theme-toggle {

@@ -59,5 +59,5 @@
     label();
   });
 
-  window.siteTheme = { pref: pref, set: set };
+  window.siteTheme = { pref: pref, set: set, next: next };
 })();

@@ -258,10 +258,17 @@
       if (w[0] === "top") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
       if (w[0] === "clear") { out.innerHTML = ""; return; }
       if (w[0] === "theme") return theme(arg);
-      if (w[0] === "whoami") return say("yen — product manager @Taiwan. I build things, then make sense of them.");
+      if (w[0] === "whoami") return say("yen — product manager @Taiwan. I write about how products get decided.");
       if (w[0] === "pwd") return say("/home/yen/notes");
       if (w[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
       if (w[0] === "exit" || w[0] === "home") return go(root);
+      if (w[0] === "help" && window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+        // Touch screens: only what the buttons below can do (see shell.js).
+        say("tap a command below　點下面的指令");
+        say("top     back to the top　回到頁首");
+        say("cd ..   back to notes　回到文章列表");
+        return say("theme   day / night / auto　切換日夜");
+      }
       if (w[0] === "help") {
         say("cd ..     back to notes        回到文章列表（也可以打 ls）");
         say("cd ~      go home              回首頁");
@@ -282,6 +289,19 @@
       run(input.value);
       input.value = "";
     });
+    // Touch screens: the commands as buttons, so the keyboard never comes up (see shell.js).
+    var row = document.createElement("div");
+    row.className = "sh-taps";
+    ["help", "top", "cd ..", "theme"].forEach(function (cmd) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = cmd;
+      b.addEventListener("click", function () {
+        run(cmd === "theme" && window.siteTheme && window.siteTheme.next ? "theme " + window.siteTheme.next() : cmd);
+      });
+      row.appendChild(b);
+    });
+    input.closest(".sh-live").after(row);
     // Back from the next page: an empty prompt again.
     window.addEventListener("pageshow", function (e) {
       if (e.persisted) { input.value = ""; out.innerHTML = ""; }

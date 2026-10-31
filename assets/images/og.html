@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>og card source</title>
+<!--
+  Source of og.jpg, the share card (1200 × 630), in the manner of a Hokusai
+  woodblock print: Prussian-blue wave with claw foam, a vermilion koi leaping
+  from it, a far Fuji, a title cartouche and a seal. Re-render after a change:
+  open this file in a browser at 1200 × 630 and save a screenshot as og.jpg.
+-->
+<style>
+  @font-face {
+    font-family: "Quattro";
+    src: url("../fonts/quattro/iAWriterQuattroS-Regular.woff2") format("woff2");
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: "Quattro";
+    src: url("../fonts/quattro/iAWriterQuattroS-Bold.woff2") format("woff2");
+    font-weight: 700;
+  }
+  html, body { margin: 0; background: #efe4cc; }
+  svg { display: block; }
+  text { font-family: "Quattro", Georgia, serif; }
+</style>
+</head>
+<body>
+<svg id="card" width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Sky: a bokashi band, darker at the top, wiped by hand onto the block. -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdbb98"/>
+      <stop offset="0.28" stop-color="#e6d8ba"/>
+      <stop offset="0.6" stop-color="#efe4cc"/>
+    </linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22406a"/>
+      <stop offset="1" stop-color="#152a47"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d6688"/>
+      <stop offset="1" stop-color="#1c3556"/>
+    </linearGradient>
+    <linearGradient id="fuji" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a4a6e"/>
+      <stop offset="1" stop-color="#8aa7ba"/>
+    </linearGradient>
+    <!-- Paper grain and a little uneven ink, over everything. -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.55 -0.12"/>
+    </filter>
+    <filter id="fibres" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.18" numOctaves="2" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.3  0 0 0 0 0.24  0 0 0 0 0.15  0 0 0 0.25 -0.08"/>
+    </filter>
+    <clipPath id="waveClip"><path id="waveShapeClip"/></clipPath>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#sky)"/>
+
+  <!-- Far Fuji on the horizon, snow at the peak. -->
+  <g id="mountain">
+    <path d="M820 478 C870 450 905 420 935 392 L952 384 L968 392 C1000 420 1040 452 1100 478 Z" fill="url(#fuji)"/>
+    <path d="M935 392 L952 384 L968 392 C976 399 984 406 990 412 L978 408 L970 416 L960 406 L950 418 L942 407 L930 414 L922 409 C926 404 930 398 935 392 Z" fill="#f6f0e2"/>
+  </g>
+
+  <!-- The open sea: rolling swells, each with a foam lip. -->
+  <g id="swells"></g>
+
+  <!-- The great wave. -->
+  <g id="wave"></g>
+
+  <!-- Koi leaping out of the curl, with spray. -->
+  <g id="koi" transform="translate(680 352) rotate(-34) scale(0.86)">
+    <path d="M-120 0 C-90 -34 -20 -46 40 -36 C80 -29 110 -14 122 0 C110 14 80 29 40 36 C-20 46 -90 34 -120 0 Z" fill="#b5531e" stroke="#1a2233" stroke-width="3"/>
+    <!-- white patches, as on a kōhaku -->
+    <path d="M-60 -30 C-30 -40 0 -38 18 -30 C6 -16 -28 -10 -52 -16 Z" fill="#f6f0e2"/>
+    <path d="M30 18 C52 16 78 20 96 10 C90 24 66 34 44 34 Z" fill="#f6f0e2"/>
+    <!-- scales -->
+    <g id="scales" fill="none" stroke="#1a2233" stroke-width="1.6" opacity="0.55"></g>
+    <!-- tail -->
+    <path d="M-118 0 C-150 -18 -170 -46 -188 -58 C-176 -30 -170 -12 -168 0 C-170 12 -176 30 -188 58 C-170 46 -150 18 -118 0 Z" fill="#b5531e" stroke="#1a2233" stroke-width="3"/>
+    <path d="M-140 -14 L-176 -46 M-142 -6 L-172 -24 M-142 6 L-172 24 M-140 14 L-176 46" stroke="#1a2233" stroke-width="1.6" opacity="0.6"/>
+    <!-- fins -->
+    <path d="M-10 -40 C0 -70 30 -78 46 -70 C34 -58 26 -46 24 -37 Z" fill="#f6f0e2" stroke="#1a2233" stroke-width="2.5"/>
+    <path d="M30 34 C30 56 18 72 2 76 C8 60 10 48 8 38 Z" fill="#f6f0e2" stroke="#1a2233" stroke-width="2.5"/>
+    <!-- head: eye, gill, barbel -->
+    <path d="M78 -26 C70 -8 70 8 78 26" fill="none" stroke="#1a2233" stroke-width="2.4"/>
+    <circle cx="100" cy="-9" r="5.5" fill="#f6f0e2" stroke="#1a2233" stroke-width="2"/>
+    <circle cx="101" cy="-9" r="2.6" fill="#1a2233"/>
+    <path d="M118 6 C128 14 132 24 128 34" fill="none" stroke="#1a2233" stroke-width="1.8"/>
+  </g>
+  <g id="spray"></g>
+
+  <!-- Title cartouche, top right, as on a print. -->
+  <g id="cartouche">
+    <rect x="806" y="64" width="330" height="196" fill="#f5ecd7" stroke="#1a2233" stroke-width="3"/>
+    <rect x="816" y="74" width="310" height="176" fill="none" stroke="#1a2233" stroke-width="1.2"/>
+    <text x="840" y="136" font-size="38" font-weight="700" fill="#1a2233" letter-spacing="0.5">hey, I'm Yen</text>
+    <line x1="842" y1="160" x2="1100" y2="160" stroke="#1a2233" stroke-width="1" opacity="0.5"/>
+    <text x="842" y="194" font-size="22" fill="#2a2420">I write about how</text>
+    <text x="842" y="224" font-size="22" fill="#2a2420">products get decided.</text>
+  </g>
+
+  <!-- Seal: carved in vermilion, the letters left as paper. -->
+  <g id="seal" transform="translate(1072 276)">
+    <rect width="64" height="64" rx="3" fill="#b5531e"/>
+    <rect x="4" y="4" width="56" height="56" rx="2" fill="none" stroke="#f5ecd7" stroke-width="2"/>
+    <text x="32" y="29" font-size="20" font-weight="700" fill="#f5ecd7" text-anchor="middle" letter-spacing="1">YE</text>
+    <text x="32" y="51" font-size="20" font-weight="700" fill="#f5ecd7" text-anchor="middle">N</text>
+  </g>
+
+  <text x="1136" y="602" font-size="20" fill="#f5ecd7" text-anchor="end" letter-spacing="0.5">laiyenju.github.io</text>
+
+  <rect width="1200" height="630" filter="url(#fibres)" style="mix-blend-mode:multiply"/>
+  <rect width="1200" height="630" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+</svg>
+
+<script>
+  var NS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  // A small seeded random, so the print comes out the same every time.
+  var seed = 11;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+  /* —— Swells: rows of humped waves across the lower sea, back to front. —— */
+  var swells = document.getElementById("swells");
+  el("rect", { x: 0, y: 478, width: 1200, height: 152, fill: "url(#sea)" }, swells);
+  [
+    { y: 492, w: 120, h: 14, c: "#4f7798" },
+    { y: 522, w: 150, h: 20, c: "#36608a" },
+    { y: 562, w: 190, h: 26, c: "#27496f" },
+    { y: 606, w: 230, h: 30, c: "#1d3a5c" }
+  ].forEach(function (row, r) {
+    var d = "M-40 640 L-40 " + row.y;
+    var x = -40 + (r % 2) * row.w * 0.5;
+    d = "M" + (x - row.w) + " 640 L" + (x - row.w) + " " + row.y;
+    for (; x < 1260; x += row.w) {
+      d += " C" + (x - row.w * 0.6) + " " + (row.y - row.h) + " " + (x - row.w * 0.2) + " " + (row.y - row.h * 1.1) + " " + x + " " + row.y;
+    }
+    d += " L" + x + " 640 Z";
+    el("path", { d: d, fill: row.c, stroke: "#1a2233", "stroke-width": 1.5 }, swells);
+    // Foam lip and the lines that follow each swell.
+    for (var fx = -40 + (r % 2) * row.w * 0.5; fx < 1260; fx += row.w) {
+      var a = fx - row.w * 0.55, b = fx - row.w * 0.05;
+      el("path", {
+        d: "M" + a + " " + (row.y - row.h * 0.78) + " Q" + (a + b) / 2 + " " + (row.y - row.h * 1.25) + " " + b + " " + (row.y - row.h * 0.1),
+        fill: "none", stroke: "#f6f0e2", "stroke-width": 2.6, "stroke-linecap": "round"
+      }, swells);
+      for (var ln = 1; ln <= 2; ln++) {
+        el("path", {
+          d: "M" + (a + 8) + " " + (row.y - row.h * 0.78 + ln * 7) + " Q" + (a + b) / 2 + " " + (row.y - row.h * 1.25 + ln * 8) + " " + (b - 4) + " " + (row.y - row.h * 0.1 + ln * 6),
+          fill: "none", stroke: "#b9cdd6", "stroke-width": 1, opacity: 0.7
+        }, swells);
+      }
+    }
+  });
+
+  /* —— The great wave: a body that rises from the left, a crest that curls
+        over to the right, inner bands of lighter blue, and claw foam. —— */
+  var wave = document.getElementById("wave");
+  var body =
+    "M-10 640 L-10 360 C30 280 120 196 240 160 C350 128 470 136 548 196 " +
+    "C590 228 604 276 578 306 C556 330 516 326 506 300 C498 280 512 262 532 266 " +
+    "C500 252 462 270 446 316 C424 380 448 470 520 540 C560 578 600 610 640 640 Z";
+  el("path", { d: body, fill: "url(#deep)", stroke: "#1a2233", "stroke-width": 3 }, wave);
+  document.getElementById("waveShapeClip").setAttribute("d", body);
+
+  // Lighter bands inside the face, following its sweep: the "fingers" of water.
+  var bands = el("g", { "clip-path": "url(#waveClip)" }, wave);
+  for (var i = 0; i < 9; i++) {
+    var t = i / 8;
+    var off = 26 + i * 22;
+    el("path", {
+      d: "M" + (-20) + " " + (380 + off) + " C" + (60 + off * 0.2) + " " + (300 + off * 0.9) + " " + (170 + off * 0.6) + " " + (220 + off * 0.8) + " " + (300 + off * 0.4) + " " + (200 + off * 0.7) +
+         " C" + (380 + off * 0.2) + " " + (186 + off * 0.6) + " " + (420 - off * 0.1) + " " + (230 + off * 0.5) + " " + (430 - off * 0.2) + " " + (300 + off * 0.6),
+      fill: "none", stroke: i % 2 ? "#6f97b3" : "#b9cdd6", "stroke-width": 2.2 - t, opacity: 0.85 - t * 0.4, "stroke-linecap": "round"
+    }, bands);
+  }
+  // The pale underside of the curl.
+  el("path", {
+    d: "M446 316 C462 270 500 252 532 266 C512 262 498 280 506 300 C480 296 462 304 446 316 Z",
+    fill: "#6f97b3", stroke: "#1a2233", "stroke-width": 2
+  }, wave);
+
+  // Claw foam along the crest: white fingers that reach out and hook down.
+  var crest = el("path", {
+    d: "M120 220 C190 176 280 146 380 144 C450 144 520 168 560 210 C590 244 594 286 572 304",
+    fill: "none", stroke: "none"
+  }, wave);
+  var foam = el("g", {}, wave);
+  var len = crest.getTotalLength();
+  // A solid white crest band first.
+  el("path", {
+    d: "M120 220 C190 176 280 146 380 144 C450 144 520 168 560 210 C590 244 594 286 572 304",
+    fill: "none", stroke: "#f6f0e2", "stroke-width": 14, "stroke-linecap": "round"
+  }, foam);
+  // Each finger reaches up off the crest, then its tip hooks forward and back,
+  // with a smaller claw on its flank: the foam Hokusai cut as grasping hands.
+  function claw(p, ang, reach, width, curl) {
+    var tx = Math.cos(ang), ty = Math.sin(ang);   // along the crest, toward the lip
+    var nx = ty, ny = -tx;                        // out of the wave, toward the sky
+    var bx0 = p.x - tx * width, by0 = p.y - ty * width;
+    var bx1 = p.x + tx * width, by1 = p.y + ty * width;
+    var tipx = p.x + nx * reach + tx * reach * 0.55, tipy = p.y + ny * reach + ty * reach * 0.55;
+    var hookx = tipx + tx * reach * 0.12 - nx * reach * curl, hooky = tipy + ty * reach * 0.12 - ny * reach * curl;
+    var d = "M" + bx0 + " " + by0 +
+      " C" + (bx0 + nx * reach * 0.6) + " " + (by0 + ny * reach * 0.6) + " " + (tipx - tx * reach * 0.35) + " " + (tipy - ty * reach * 0.35) + " " + tipx + " " + tipy +
+      " C" + (tipx + tx * reach * 0.22) + " " + (tipy + ty * reach * 0.22) + " " + (hookx + tx * reach * 0.12) + " " + (hooky + ty * reach * 0.12) + " " + hookx + " " + hooky +
+      " C" + (hookx - tx * 4) + " " + (hooky - ty * 4) + " " + (tipx - nx * reach * 0.1) + " " + (tipy - ny * reach * 0.1) + " " + (p.x + nx * reach * 0.45 + tx * reach * 0.3) + " " + (p.y + ny * reach * 0.45 + ty * reach * 0.3) +
+      " C" + (bx1 + nx * reach * 0.25) + " " + (by1 + ny * reach * 0.25) + " " + bx1 + " " + by1 + " " + bx1 + " " + by1 + " Z";
+    el("path", { d: d, fill: "#f6f0e2", stroke: "#1a2233", "stroke-width": 1.5, "stroke-linejoin": "round" }, foam);
+  }
+  for (var s = 0; s <= len; s += 27) {
+    var p = crest.getPointAtLength(s);
+    var q = crest.getPointAtLength(Math.min(len, s + 1));
+    var ang = Math.atan2(q.y - p.y, q.x - p.x);
+    var k = s / len;
+    var reach = 20 + 44 * Math.pow(Math.sin(Math.PI * Math.min(1, 0.12 + k * 0.92)), 0.8) + rnd() * 10;
+    claw(p, ang, reach, 6, 0.55 + k * 0.3);
+    // A smaller claw on the flank of the bigger ones.
+    if (reach > 36) {
+      var p2 = crest.getPointAtLength(Math.min(len, s + 13));
+      claw(p2, ang + 0.3, reach * 0.48, 4, 0.6);
+    }
+  }
+  // Foam drops thrown off the lip.
+  for (var dI = 0; dI < 34; dI++) {
+    var dx = 470 + rnd() * 190, dy = 150 + rnd() * 150;
+    el("circle", { cx: dx, cy: dy, r: 1.8 + rnd() * 3.4, fill: "#f6f0e2", stroke: "#1a2233", "stroke-width": 0.9 }, foam);
+  }
+
+  /* —— Koi scales: rows of little arcs along the body. —— */
+  var scales = document.getElementById("scales");
+  for (var sx = -80; sx <= 60; sx += 16) {
+    for (var sy = -24; sy <= 24; sy += 12) {
+      var half = 36 * Math.sqrt(Math.max(0, 1 - Math.pow((sx + 20) / 110, 2)));
+      if (Math.abs(sy) > half - 8) continue;
+      el("path", { d: "M" + sx + " " + (sy - 6) + " A7 7 0 0 1 " + sx + " " + (sy + 6) }, scales);
+    }
+  }
+
+  /* —— Spray around the leaping koi. —— */
+  var spray = document.getElementById("spray");
+  for (var w = 0; w < 26; w++) {
+    var a2 = rnd() * Math.PI * 2, r2 = 30 + rnd() * 80;
+    el("circle", {
+      cx: 610 + Math.cos(a2) * r2 * 1.4, cy: 440 + Math.sin(a2) * r2 * 0.6,
+      r: 1.6 + rnd() * 3, fill: "#f6f0e2", stroke: "#1a2233", "stroke-width": 0.8
+    }, spray);
+  }
+</script>
+</body>
+</html>
