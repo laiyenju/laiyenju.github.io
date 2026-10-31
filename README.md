@@ -24,6 +24,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
 | `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的對應畫面（首頁選單的連結也指向這裡） |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
+| `CLAUDE.md` | 給 Claude 的工作規則（例如：改檔案時要同時更新 README） |
 
 ### 注意事項
 
@@ -32,7 +33,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `assets/js/ocean.js` | 打包產生的檔案，不要直接改。改 `assets/vendor/ascii-sharks/src/` 後重新打包（見 3.3） |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
-| 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
+| 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`CLAUDE.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
 | 文章網址 | `published/2026-10-29-題目.md` → `/published/2026-10-29-題目.html`。改檔名會改網址，舊連結會失效 |
 
 ---

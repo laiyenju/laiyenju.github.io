@@ -17,6 +17,7 @@ include:
 
 exclude:
   - README.md
+  - CLAUDE.md
   - node_modules
   - _site
   - .jekyll-cache
