@@ -13,7 +13,6 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 資料夾／檔案 | 處理什麼 |
 |---|---|
 | `published/` | 已發布的文章。放進這裡就是發布 |
-| 根目錄 `*.draft.md` | 草稿，不會上線 |
 | `index.md`、`_layouts/home.html` | 首頁。notes 和 works 也是首頁的一部分（`?view=notes`、`?view=works`） |
 | `_layouts/default.html` | 文章頁 |
 | `_includes/` | 每頁共用的 `<head>`、SEO 標籤、日夜主題與介面語言的初始設定 |
@@ -23,7 +22,8 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `assets/vendor/ascii-sharks/` | 錦鯉引擎的 TypeScript 原始碼，打包成 `assets/js/ocean.js` |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
-| `notes/`、`works/`、`sitemap.xml`、`robots.txt` | 舊網址轉址、給搜尋引擎的檔案 |
+| `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的對應畫面（首頁選單的連結也指向這裡） |
+| `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
 
 ### 注意事項
 
@@ -31,7 +31,8 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `assets/js/ocean.js` | 打包產生的檔案，不要直接改。改 `assets/vendor/ascii-sharks/src/` 後重新打包（見 3.3） |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
-| 不會上線的檔案 | `*.draft.md`、`README.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
+| 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
+| 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
 | 文章網址 | `published/2026-10-29-題目.md` → `/published/2026-10-29-題目.html`。改檔名會改網址，舊連結會失效 |
 
 ---
@@ -49,17 +50,17 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `url` | `https://laiyenju.github.io` | 換網域時要改 |
 | `author.name` | `Yen Lai` | 結構化資料的作者 |
 | `author.twitter` | `theYenLai` | X 分享卡片的帳號 |
-| `og_image` | `/assets/og/home.jpg` | 沒有自己卡片的頁面用這張 |
-| `lang` | `zh-Hant` | 頁面語言。單一頁面可以在 front matter 用 `lang` 覆蓋（首頁是 `en`） |
+| `og_image` | `/assets/og/home.jpg` | 文章的卡片還沒產生時，先用這張 |
+| `lang` | `zh-Hant` | 頁面語言。單一頁面可以在 front matter 用 `lang` 覆蓋（`index.md` 設成 `en`） |
 
 ### 2.2 文章：front matter
 
 | 欄位 | 必填 | 預設 | 說明 |
 |---|---|---|---|
 | `title` | 是 | — | 標題 |
-| `date` | 是 | — | 格式 `YYYY-MM-DD`。決定排序；`total` 字數只算今年的文章 |
+| `date` | 是 | — | 格式 `YYYY-MM-DD`。決定排序和顯示的日期（不是看檔名的日期）；`total` 字數只算今年的文章 |
 | `description` | 否 | 內文前 120 字 | 搜尋摘要，也是分享卡片上的摘要 |
-| `lang` | 否 | `zh-Hant` | 英文文章填 `en` |
+| `lang` | 否 | `zh-Hant` | 英文文章填 `en`，會改 `<html lang>` 和 `og:locale`。結構化資料的語言固定是 `zh-Hant`（`_includes/seo.html`） |
 
 ### 2.3 works 清單：`_data/works.yml`
 
@@ -74,14 +75,14 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 | 欄位 | 選項 | 說明 |
 |---|---|---|
-| `status` | `in progress` → ●（強調色）、`experiment` → ◐、其他值或不填 → ○ | 字會照原樣顯示 |
+| `status` | `in progress` → ●（強調色）、`experiment` → ◐、其他值（例如 `done`）→ ○ | 符號後面照原樣顯示文字。不填就沒有符號也沒有文字 |
 
 ### 2.4 首頁內容
 
 | 設定 | 位置 | 預設 | 注意 |
 |---|---|---|---|
-| 名字、職稱、slogan | `_layouts/home.html` | `hey, I'm Yen`／`Product manager @Taiwan`／`I write about how products get decided.` | `whoami` 的回應在 `assets/js/shell.js`、`assets/js/post.js`；首頁分享卡片文字在 `scripts/og/build.js`，要一起改 |
-| 社群連結 | `_layouts/home.html` | github、linkedin、x | `_includes/seo.html` 的 `sameAs` 要一起改 |
+| 名字、職稱、slogan | `_layouts/home.html` | `hey, I'm Yen`／`Product manager @Taiwan`／`I write about how products get decided.` | 一起改：`whoami` 的回應（`assets/js/shell.js`、`assets/js/post.js`）、首頁分享卡片文字（`scripts/og/build.js`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
+| 社群連結 | `_layouts/home.html` | github、linkedin、x | 一起改：`_includes/seo.html` 的 `sameAs`；X 帳號另有 `_config.yml` 的 `author.twitter` |
 | 瀏覽器分頁標題 | `assets/js/home.js` 的 `TITLES` | `hey, I'm Yen`／`Notes · Yen`／`Works · Yen` | 首頁的要和 `index.md` 的 `title` 一樣 |
 | 清單一次顯示幾篇 | `assets/js/home.js` 的 `LIST_LIMIT` | `6` | 超過的收進 `view all` |
 
@@ -91,9 +92,9 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|---|---|
 | 日夜主題 | 讀者自己選（首頁右上角） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`），分享卡片在 `scripts/og/card.html`，要一起改 |
-| 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 夜間色寫在多條規則裡，要全文搜尋取代。`seo.html` 的 `theme-color`、`notes/index.md`、`works/index.md`、`card.html` 也有 |
-| 錦鯉樣式 | `_layouts/home.html`、`assets/js/post.js` 的 `OceanEngine(…)` | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版英數字元）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
-| 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`） |
+| 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.md`、`works/index.md`、`scripts/og/card.html`（只有日間）也有 |
+| 錦鯉樣式 | `_layouts/home.html`、`assets/js/post.js` 的 `OceanEngine(…)` | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
+| 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；錦鯉用 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
 | 點文章時的捲動速度 | `assets/js/shell.js` 的 `LINE`、`TICK` | `30`（px）、`24`（ms） | `LINE` 越大、`TICK` 越小越快 |
 
@@ -115,7 +116,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 ```mermaid
 flowchart LR
-  A["iA Writer 寫稿<br/>根目錄 xxx.draft.md"] --> B["Obsidian 整理"]
+  A["iA Writer 寫稿"] --> B["Obsidian 整理"]
   B --> C["移到 published/<br/>改名 YYYY-MM-DD-題目.md"]
   C --> D["git push main"]
   D --> E["GitHub Pages 建置上線"]
@@ -123,12 +124,12 @@ flowchart LR
   F --> E
 ```
 
-1. 草稿放在根目錄，檔名結尾是 `.draft.md`，不會上線。
+1. 草稿可以不放進 repo；要放的話見第 1 節的「草稿」。
 2. 發布 = 把檔案移進 `published/`，檔名用 `YYYY-MM-DD-題目.md`。
 3. 寫好 front matter（見 2.2）。
 4. `git push` 到 `main`，其他都是自動的。
 
-文章網址的規則：`published/2026-10-29-markdown-styles.md` → `/published/2026-10-29-markdown-styles.html`。notes 清單上顯示的檔名會去掉日期（`markdown-styles.md`）。
+notes 清單顯示的是 `title`；從清單點開文章時，`cat` 指令和分享卡片上的檔名會去掉日期（`markdown-styles.md`）。
 
 ### 3.2 分享卡片（自動）
 
@@ -142,11 +143,11 @@ flowchart TD
   H -- 不一樣 --> R["用 card.html 截圖<br/>寫入 assets/og/檔名.jpg"]
   B --> X["刪掉已不存在文章的卡片"]
   R --> M["更新 manifest.json"]
-  M --> C["有變動就 commit<br/>「Update share cards」並 push"]
-  C --> G["GitHub Pages 再建置一次"]
+  M --> C["有變動就 commit<br/>「Update share cards」並 push 到 main"]
 ```
 
 - 改了 `card.html`，所有卡片都會重畫。新文章的卡片產生前，先用 `home.jpg`。
+- 目前的三張卡片是手動產生後 commit 的，Action 還沒有自己 commit 過卡片。第一篇新文章 push 後，到 GitHub → Actions 確認它有執行成功。
 - 也可以在 GitHub → Actions → Share cards → **Run workflow** 手動執行。
 - 本機執行：
 
