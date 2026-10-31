@@ -7,10 +7,10 @@
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">
   {% include theme-boot.html %}
-  <div class="theme-switch" role="radiogroup" aria-label="Theme 日夜">
-    <button type="button" role="radio" aria-checked="true" data-theme-set="auto" title="跟隨系統">auto</button>
-    <button type="button" role="radio" aria-checked="false" data-theme-set="day" title="日間">day</button>
-    <button type="button" role="radio" aria-checked="false" data-theme-set="night" title="夜間">night</button>
+  <div class="theme-switch" role="radiogroup" aria-label="Theme" data-label-zh="日夜">
+    <button type="button" role="radio" aria-checked="true" data-theme-set="auto" title="Follow the system" data-title-zh="跟隨系統">auto</button>
+    <button type="button" role="radio" aria-checked="false" data-theme-set="day" title="Day" data-title-zh="日間">day</button>
+    <button type="button" role="radio" aria-checked="false" data-theme-set="night" title="Night" data-title-zh="夜間">night</button>
   </div>
   <div class="home-stage">
     <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
@@ -54,7 +54,7 @@
       <section class="home-view home-panel sh-panel sh-notes" data-view="notes" data-path="~/notes" aria-label="Notes" tabindex="-1" hidden>
         <div class="panel-head">
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
-          <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
+          <p class="sh-keys"><span class="sh-keys-nav"><span class="i-en"><kbd>↑</kbd> <kbd>↓</kbd> select  <kbd>⏎</kbd> open  <kbd>esc</kbd> back  ·  </span><span class="i-zh"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span></span><kbd>help</kbd></p>
         </div>
         <p class="sh-line"><span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
         <p class="sh-line sh-dim sh-total">total {{ year_chars }} chars · {{ year_posts }} {% if year_posts == 1 %}post{% else %}posts{% endif %} in {{ this_year }}</p>
@@ -63,7 +63,7 @@
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
         <div class="sh-out" aria-live="polite"></div>
-        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-notes" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-notes" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
       </section>
 
       {% assign works = site.data.works %}
@@ -71,7 +71,7 @@
       <section class="home-view home-panel sh-panel sh-works" data-view="works" data-path="~/works" aria-label="Works" tabindex="-1" hidden>
         <div class="panel-head">
           <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
-          <p class="sh-keys"><span class="sh-keys-nav"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span><kbd>help</kbd></p>
+          <p class="sh-keys"><span class="sh-keys-nav"><span class="i-en"><kbd>↑</kbd> <kbd>↓</kbd> select  <kbd>⏎</kbd> open  <kbd>esc</kbd> back  ·  </span><span class="i-zh"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span></span><kbd>help</kbd></p>
         </div>
         <p class="sh-line"><span class="sh-dir">~/works</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
         <p class="sh-line sh-dim sh-total">total {{ works | size }} {% if works.size == 1 %}work{% else %}works{% endif %} · {{ works_active }} in progress</p>
@@ -82,7 +82,7 @@
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
         <div class="sh-out" aria-live="polite"></div>
-        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
       </section>
     </div>
   </div>

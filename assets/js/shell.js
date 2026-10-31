@@ -7,6 +7,9 @@
         clear, whoami, help. —— */
 
   function view() { return document.body.getAttribute("data-view") || "home"; }
+  // Interface language, set before first paint (theme-boot.html).
+  var ZH = document.documentElement.classList.contains("ui-zh");
+  function t(en, zh) { return ZH ? zh : en; }
   function touch() { return !!window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches; }
 
   /* Touch screens get a row of commands as buttons under the prompt, since
@@ -35,6 +38,7 @@
     var cmd = panel.querySelector(".sh-cmd");
     var out = panel.querySelector(".sh-out");
     var input = panel.querySelector(".sh-input");
+    if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
     var path = panel.getAttribute("data-path");
     var other = name === "notes" ? "works" : "notes";
     var typing = 0;
@@ -86,30 +90,30 @@
         if (link) link.click();
       }, 260);
     }
-    var list = name === "notes" ? "list notes again     重新列出文章" : "list works again     重新列出作品";
+    var list = name === "notes" ? t("list notes again", "重新列出文章") : t("list works again", "重新列出作品");
     var COMMANDS = {
       help: function () {
         // Touch screens: only what the buttons below can do, short enough for a phone.
         if (touch()) {
-          say("tap a command below　點下面的指令");
-          say("whoami  who is Yen　我是誰");
-          say("theme   day / night / auto　切換日夜");
-          return say("cd ~    go home　回首頁");
+          say(t("tap a command below", "點下面的指令"));
+          say("whoami  " + t("who is Yen", "我是誰"));
+          say("theme   " + t("day / night / auto", "切換日夜"));
+          return say("cd ~    " + t("go home", "回首頁"));
         }
-        say("cd ~      go home              回首頁（也可以打 cd 或 cd ..）");
-        say("cd -      go back              回上一頁");
-        say("cd " + other + (other === "notes" ? "  read notes           去看文章" : "  see works            去看作品"));
+        say("cd ~      " + t("go home (or cd, cd ..)", "回首頁（也可以打 cd 或 cd ..）"));
+        say("cd -      " + t("go back", "回上一頁"));
+        say("cd " + other + "  " + (other === "notes" ? t("read notes", "去看文章") : t("see works", "去看作品")));
         say("ls        " + list);
-        say("theme     day / night / auto   切換日夜（auto 跟隨系統）");
-        say("whoami    who is Yen           我是誰");
-        say("clear     clear the screen     清除畫面，重新列出");
-        say("help      show this list       列出這些指令");
+        say("theme     " + t("day / night / auto (auto follows the system)", "切換日夜（auto 跟隨系統）"));
+        say("whoami    " + t("who is Yen", "我是誰"));
+        say("clear     " + t("clear the screen", "清除畫面，重新列出"));
+        say("help      " + t("show this list", "列出這些指令"));
       },
       theme: function (arg) {
-        var t = window.siteTheme;
-        if (!t) return say("theme: not available");
-        if (arg === "day" || arg === "night" || arg === "auto") { t.set(arg); return say("theme: " + arg); }
-        say("theme: " + t.pref() + "　（用法：theme day / night / auto）");
+        var th = window.siteTheme;
+        if (!th) return say("theme: not available");
+        if (arg === "day" || arg === "night" || arg === "auto") { th.set(arg); return say("theme: " + arg); }
+        say("theme: " + th.pref() + t("  (usage: theme day / night / auto)", "　（用法：theme day / night / auto）"));
       },
       whoami: function () { say("yen — product manager @Taiwan. I write about how products get decided."); },
       pwd: function () { say("/home/yen/" + name); },
@@ -133,7 +137,7 @@
       if (words[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
       if (words[0] === "exit" || words[0] === "home") return goTo("home");
       if (COMMANDS[words[0]]) return COMMANDS[words[0]](words[1]);
-      say("sh: command not found: " + words[0] + " — try help（輸入 help 看看可以做什麼）");
+      say("sh: command not found: " + words[0] + t(" — try help", "（輸入 help 看看可以做什麼）"));
     }
     input.addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;

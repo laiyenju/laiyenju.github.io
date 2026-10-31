@@ -52,6 +52,11 @@
   if (media.addEventListener) media.addEventListener("change", function () { if (pref() === "auto") apply(); });
 
   document.addEventListener("DOMContentLoaded", function () {
+    // Labels for screen readers and tooltips, in the interface language.
+    if (document.documentElement.classList.contains("ui-zh")) {
+      document.querySelectorAll("[data-label-zh]").forEach(function (el) { el.setAttribute("aria-label", el.getAttribute("data-label-zh")); });
+      document.querySelectorAll("[data-title-zh]").forEach(function (el) { el.setAttribute("title", el.getAttribute("data-title-zh")); });
+    }
     choices = Array.prototype.slice.call(document.querySelectorAll("[data-theme-set]"));
     choices.forEach(function (b) {
       b.addEventListener("click", function () { set(b.getAttribute("data-theme-set")); });

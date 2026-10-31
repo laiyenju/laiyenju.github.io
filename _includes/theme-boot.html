@@ -1,6 +1,13 @@
 <script>
   // Day or night before first paint, so a visit never flashes the wrong ground:
   // a saved choice (theme: day / night, see theme.js), else the system setting.
+  // Words of the interface (hints, help, messages) in the reader's own
+  // language: Chinese if the browser's first language is Chinese, else
+  // English. The notes stay as written. No switch: there is nothing to choose.
+  (function () {
+    var langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ""];
+    if (/^zh\b/i.test(langs[0] || "")) document.documentElement.classList.add("ui-zh");
+  })();
   (function () {
     var p;
     try { p = localStorage.getItem("theme"); } catch (e) {}
