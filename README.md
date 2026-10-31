@@ -26,7 +26,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 │   ├── home.html            首頁：自我介紹、notes 清單、works 清單、日夜開關、錦鯉
 │   └── default.html         文章頁（published/ 的文章都用它）
 ├── _includes/
-│   ├── head.html            <head> 共用內容（目前只有 home.html 用，見第 3 節）
+│   ├── head.html            <head> 共用內容：meta、<title>、seo.html、字型、site.css
 │   ├── seo.html             canonical、description、Open Graph / Twitter、JSON-LD、favicon
 │   └── theme-boot.html      畫面出現前執行：決定日夜主題與介面語言（避免閃爍）
 ├── _data/
@@ -61,8 +61,8 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 | 頁面 | Layout | Include | JS（依載入順序） |
 |------|--------|---------|------------------|
-| 首頁 `/`（含 `?view=notes`、`?view=works`） | `home.html` | `head.html` → `seo.html`、`theme-boot.html` | `theme.js` → `ocean.js` → `home.js` → `shell.js` |
-| 文章 `/published/*.html` | `default.html` | `seo.html`、`theme-boot.html` | `theme.js` → `ocean.js` → `post.js` |
+| 首頁 `/`（含 `?view=notes`、`?view=works`） | `home.html` | `head.html`（含 `seo.html`）、`theme-boot.html` | `theme.js` → `ocean.js` → `home.js` → `shell.js` |
+| 文章 `/published/*.html` | `default.html` | `head.html`（含 `seo.html`）、`theme-boot.html` | `theme.js` → `ocean.js` → `post.js` |
 
 外部資源只有 Google Fonts：JetBrains Mono、Noto Sans TC；錦鯉用的 Noto Serif TC、DotGothic16 用 `text=` 參數只下載字根。
 
@@ -142,7 +142,7 @@ npx esbuild@0.24.0 assets/vendor/ascii-sharks/entry.ts --bundle --format=iife --
 ```
 
 - 字元和配色在 `src/themes.ts`：`GLYPH_DAY`（日間，明體倉頡字根）、`GLYPH_NIGHT`（夜間，點陣字根、琥珀色）、`ASCII`（原版）。
-- 改了 `themes.ts` 的 `RADICALS`，也要更新 `head.html` 和 `default.html` 裡 Google Fonts 的 `text=` 清單。
+- 改了 `themes.ts` 的 `RADICALS`，也要更新 `head.html` 裡 Google Fonts 的 `text=` 清單。
 
 ### 2.4 本機預覽
 
@@ -156,18 +156,23 @@ jekyll serve
 
 ## 3. 檔案檢查結果（2026-10-31）
 
-`ocean.js` 已確認和 `src/` 重新打包的結果相同。下面是檢查時發現的問題，還沒有處理：
+`ocean.js` 已確認和 `src/` 重新打包的結果相同。
+
+已處理：
+
+- `default.html` 改用 `_includes/head.html`，字型和 `site.css` 只寫在一個地方。`<title>`：首頁顯示自己的 `title`，其他頁是「標題 · Yen Lai」。
+- `head.html` 不再用不存在的 `site.author.greeting`。
+- `_config.yml` 刪掉重複的 `defaults`；`hello.md` 刪掉多餘的 `layout: default`。
+
+還沒處理：
 
 | # | 項目 | 狀況 | 建議 |
 |---|------|------|------|
-| 1 | `_layouts/default.html` 與 `_includes/head.html` | 字型、`site.css` 的 `<link>` 重複寫了兩次；改字型時兩邊都要改 | `default.html` 改用 `head.html`，`<title>` 格式用參數區分 |
-| 2 | `_includes/head.html` 的 `site.author.greeting` | `_config.yml` 沒有這個值；首頁有 `title` 所以目前沒出錯 | 改成 `site.title` |
-| 3 | `_config.yml` 的 `defaults` | `path: "published"` 和 `path: ""` 設定一樣，前者多餘 | 只留 `path: ""` |
-| 4 | `_config.yml` 的 `exclude` | `Gemfile`、`Gemfile.lock`、`vendor` 在 repo 裡不存在 | 無害；要精簡可以刪 |
-| 5 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡；多寫了 `layout: default` | 第一篇正式文章上線後刪除 |
-| 6 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample.svg` | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
-| 7 | `sample.draft.md` | 草稿範例，不會上線 | 不再需要就刪除 |
-| 8 | Front matter 的 `status` | 沒有任何程式讀它 | 可以不寫 |
+| 1 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡 | 第一篇正式文章上線後刪除 |
+| 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample.svg` | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
+| 3 | `sample.draft.md` | 草稿範例，不會上線 | 不再需要就刪除 |
+| 4 | Front matter 的 `status` | 沒有任何程式讀它 | 可以不寫 |
+| 5 | `_config.yml` 的 `exclude` | `Gemfile`、`Gemfile.lock`、`vendor` 在 repo 裡不存在 | 無害；要精簡可以刪 |
 
 ---
 

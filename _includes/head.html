@@ -1,6 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% if page.title and page.title != "" %}{{ page.title }}{% else %}{{ site.author.greeting }}{% endif %}</title>
+{% comment %}Home shows its own title; every other page is "Title · Yen Lai".{% endcomment %}
+<title>{% if page.layout == "home" %}{{ page.title | default: site.title }}{% elsif page.title %}{{ page.title }} · {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
 {% include seo.html %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -1,16 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: 'zh-Hant' }}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
-  {% include seo.html %}
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-  {% comment %}The koi's faces, cut down to the radicals it draws with (src/themes.ts, RADICALS). Update the text= list if those change.{% endcomment %}
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600&family=DotGothic16&text=%E5%8D%81%E5%A4%A7%E4%B8%AD%E5%8F%A3%E6%9C%A8%E6%97%A5%E7%94%B0%E9%87%91%E9%9B%A3%E5%BF%83%E6%B0%B4%E6%89%8B%E7%81%AB%E6%9C%88%E5%B1%B1%E5%9C%9F%E5%BC%93%E4%BA%BA%E5%8D%9C%E4%B8%B6%E4%B8%BF%E4%B9%80%E4%B9%82%E4%B8%80%E4%B9%99%E7%AB%B9%E6%88%88%E5%A5%B3%E7%9B%AE%E3%84%85%E3%84%86%E3%84%87%E3%84%88%E3%84%89%E3%84%8A%E7%B1%B3%E3%80%82&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}?v={{ site.time | date: '%s' }}">
+  {% include head.html %}
   <script>
     // Arrival. Opened from the notes list, the note has already been printed
     // there and scrolled into this very position (shell.js), so the page takes
