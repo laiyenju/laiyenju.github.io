@@ -23,7 +23,7 @@
       <div class="home-view home-copy" data-view="home">
         <h1 class="home-greeting">hey, I'm Yen</h1>
         <p class="home-role">Product manager @Taiwan</p>
-        <p class="home-slogan">I build things, then make sense of them.</p>
+        <p class="home-slogan">I write about how products get decided.</p>
         <p class="home-links"><a href="https://github.com/laiyenju">github</a> · <a href="https://www.linkedin.com/in/laiyenju/">linkedin</a> · <a href="https://x.com/theYenLai">x</a></p>
         {% comment %}Set apart from the links, like a status line, so neither is tapped by mistake.{% endcomment %}
         {% if last_note %}
@@ -58,7 +58,7 @@
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
         <div class="sh-out" aria-live="polite"></div>
-        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><input class="sh-input" id="sh-input-notes" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-notes" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
       </section>
 
       {% assign works = site.data.works %}
@@ -77,7 +77,7 @@
         </ul>
         <button class="panel-more" type="button" hidden>view all</button>
         <div class="sh-out" aria-live="polite"></div>
-        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
+        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="輸入指令，例如 help"></label>
       </section>
     </div>
   </div>

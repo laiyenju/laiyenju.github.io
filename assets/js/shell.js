@@ -7,6 +7,25 @@
         clear, whoami, help. —— */
 
   function view() { return document.body.getAttribute("data-view") || "home"; }
+  function touch() { return !!window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches; }
+
+  /* Touch screens get a row of commands as buttons under the prompt, since
+     typing would call up the keyboard and push the page up (CSS shows the
+     row and hides the input only there). "theme" runs as the next setting. */
+  function tapCommands(input, cmds, run) {
+    var row = document.createElement("div");
+    row.className = "sh-taps";
+    cmds.forEach(function (cmd) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = cmd;
+      b.addEventListener("click", function () {
+        run(cmd === "theme" && window.siteTheme && window.siteTheme.next ? "theme " + window.siteTheme.next() : cmd);
+      });
+      row.appendChild(b);
+    });
+    input.closest(".sh-live").after(row);
+  }
 
   var previous = "home";
   var shown = view();
@@ -68,6 +87,13 @@
     var list = name === "notes" ? "list notes again     重新列出文章" : "list works again     重新列出作品";
     var COMMANDS = {
       help: function () {
+        // Touch screens: only what the buttons below can do, short enough for a phone.
+        if (touch()) {
+          say("tap a command below　點下面的指令");
+          say("whoami  who is Yen　我是誰");
+          say("theme   day / night / auto　切換日夜");
+          return say("cd ~    go home　回首頁");
+        }
         say("cd ~      go home              回首頁（也可以打 cd 或 cd ..）");
         say("cd -      go back              回上一頁");
         say("cd " + other + (other === "notes" ? "  read notes           去看文章" : "  see works            去看作品"));
@@ -83,7 +109,7 @@
         if (arg === "day" || arg === "night" || arg === "auto") { t.set(arg); return say("theme: " + arg); }
         say("theme: " + t.pref() + "　（用法：theme day / night / auto）");
       },
-      whoami: function () { say("yen — product manager @Taiwan. I build things, then make sense of them."); },
+      whoami: function () { say("yen — product manager @Taiwan. I write about how products get decided."); },
       pwd: function () { say("/home/yen/" + name); },
       ls: relist,
       clear: relist,
@@ -113,6 +139,7 @@
       run(input.value);
       input.value = "";
     });
+    tapCommands(input, ["help", "whoami", "theme", "cd ~"], run);
     shells[name] = { open: function () { out.innerHTML = ""; typeCommand(); }, input: input };
   });
 

@@ -1,4 +1,4 @@
-# Yen 的寫作站（GitHub Pages）
+# Yen Lai 的網站（GitHub Pages）
 
 極簡 Jekyll 站，沒有主題、沒有外掛。網站網址：<https://laiyenju.github.io>
 
@@ -55,3 +55,20 @@ jekyll serve
 - 全站共用一張分享圖 `assets/images/og.jpg`（1200 × 630，葛飾北齋木刻版畫風格）。原始檔是同一個資料夾的 `og.html`：改完後用瀏覽器以 1200 × 630 開啟，截圖存成 `og.jpg`。
 - `favicon.svg`、`favicon-32.png`、`apple-touch-icon.png` 放在 `assets/icons/`，圖案是朱色印章。
 - `sitemap.xml` 只列首頁和 `published/` 的文章（`/notes/`、`/works/` 只是轉址）；`robots.txt` 指向它。
+
+## 顏色的意思
+
+每個顏色在每一頁、日夜兩種模式都只代表一件事（`assets/css/site.css` 開頭的 `--accent` 註解）：
+
+| 顏色 | 意思 | 例子 |
+|------|------|------|
+| 墨 | 要讀的東西 | 標題、清單列、內文 |
+| 強調色（日間朱 `#b5531e`／夜間琥珀 `#f5b942`） | 站內可以操作的地方，或正在進行的事。只當記號，字本身維持墨色 | notes/ works/ 的底線、文章連結底線、last note 底線、view all、可以輸入的那一行提示字元、註腳編號、`+`／`−`、in progress 的 ● |
+| 灰 | 說明，或離開 | 日期、字數、提示、`cd ~`、`theme:`、外部連結（加上 `↗`） |
+
+任何連結被指到或聚焦時都會反白（reverse video）。
+
+## 提示字元
+
+- 可以輸入的那一行，提示字元用強調色，後面有一個淡淡閃爍的方塊游標，點了就能打字。其他提示字元（指令紀錄、標題列）用墨色。
+- 觸控螢幕不顯示輸入框，改成一排指令按鈕（notes／works：`help` `whoami` `theme` `cd ~`；文章：`help` `top` `cd ..` `theme`），所以不會跳出鍵盤。`theme` 按鈕會切到下一個設定；`help` 在觸控螢幕上只列出這些按鈕。
