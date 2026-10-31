@@ -7,7 +7,7 @@
   The share card (1200 × 630), one per note plus one for home. build.js opens
   this page, calls render(data) and saves a screenshot to assets/og/.
   It is the article page in small: paper, the shell line, the title, the
-  opening words, and a koi of Cangjie radicals swimming in from the right.
+  opening words, the date, and a small koi of Cangjie radicals in the corner.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,7 +45,7 @@
     box-sizing: border-box;
     width: 1200px;
     height: 630px;
-    padding: 64px 72px 56px;
+    padding: 72px 72px 60px;
     display: flex;
     flex-direction: column;
     /* The home page's faint paper grid. */
@@ -56,11 +56,9 @@
     background-position: -1px -1px;
   }
   #koi { position: absolute; left: 0; top: 0; width: 1200px; height: 630px; pointer-events: none; }
-  .text { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; max-width: 790px; }
-  .brand { display: flex; align-items: center; gap: 14px; font: 600 22px/1 var(--mono); }
-  .brand svg { width: 38px; height: 38px; display: block; }
-  .cmd { margin: 40px 0 0; font: 400 21px/1.4 var(--mono); color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cmd b { font-weight: 600; color: var(--ink); }
+  .text { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; max-width: 900px; }
+  .cmd { margin: 0; font: 400 21px/1.4 var(--mono); color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cmd b { font-weight: 600; color: var(--accent); }
   h1 {
     margin: 18px 0 0;
     font: 700 62px/1.22 "iA Writer Quattro", "Noto Sans TC", sans-serif;
@@ -79,29 +77,18 @@
     display: flex; justify-content: space-between; align-items: baseline;
     font: 400 20px/1 var(--mono); color: var(--ink-faint);
   }
-  /* The accent marks the one thing to act on: the address to go to. */
-  .foot .url { color: var(--ink); padding-bottom: 6px; border-bottom: 2px solid var(--accent); }
 </style>
 </head>
 <body>
 <div class="card">
   <canvas id="koi" width="2400" height="1260"></canvas>
   <div class="text">
-    <div class="brand">
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <rect x="1" y="1" width="30" height="30" rx="3" fill="#b5531e"/>
-        <rect x="3.5" y="3.5" width="25" height="25" rx="1.5" fill="none" stroke="#f5ecd7" stroke-width="1.4"/>
-        <path d="M9.5 8.5 L16 16.5 L22.5 8.5 M16 16.5 L16 24" fill="none" stroke="#f5ecd7" stroke-width="3.2"/>
-      </svg>
-      <span>Yen Lai</span>
-    </div>
     <p class="cmd" id="cmd"></p>
     <h1 id="title"></h1>
     <p class="summary" id="summary"></p>
   </div>
   <div class="foot">
     <span id="meta"></span>
-    <span class="url">laiyenju.github.io</span>
   </div>
 </div>
 
@@ -112,7 +99,7 @@
         from a path painted into a hidden mask and read back cell by cell.
         Seeded, so a title always gets the same koi. —— */
   var RADICALS = "日月金木水火土竹戈十大中一弓人心手口尸廿山女田卜";
-  var CELL = 22;
+  var CELL = 12;
 
   function rng(seed) {
     var s = seed % 2147483647; if (s <= 0) s += 2147483646;
@@ -134,12 +121,12 @@
       var x = c.getContext("2d"); x.fillStyle = "#000"; paint(x);
       return x.getImageData(0, 0, W, H).data;
     }
-    // The koi rises along the right edge, clear of the text column, its
+    // A small koi in the bottom-right corner, heading up and left, its
     // body bent in a slow S. A spine from head (t = 0) to tail root (t = 1);
     // the outline is the spine pushed out by a half-width that is round at
     // the head, fullest a third of the way back, thin at the tail root.
     var L = 340, BEND = 26 + rnd() * 14, WMAX = 74;
-    var cx = 1046, cy = 236, ang = -1.66 + rnd() * 0.1;
+    var SIZE = 0.4, cx = 1066, cy = 506, ang = -2.5 + rnd() * 0.16;
     function spine(t) {
       var x = L * (0.5 - t), y = BEND * Math.sin(Math.PI * (t * 1.3 - 0.15));
       var dx = -L, dy = BEND * Math.PI * 1.3 * Math.cos(Math.PI * (t * 1.3 - 0.15));
@@ -150,7 +137,7 @@
       if (t < 0.3) return WMAX * Math.sqrt(1 - Math.pow((0.3 - t) / 0.3, 2) * 0.9);
       return 13 + (WMAX - 13) * Math.pow(Math.cos((t - 0.3) / 0.7 * Math.PI / 2), 1.1);
     }
-    function place(x) { x.translate(cx, cy); x.rotate(ang); }
+    function place(x) { x.translate(cx, cy); x.rotate(ang); x.scale(SIZE, SIZE); }
     function bodyPath(x) {
       x.beginPath();
       var k, p, N = 40;
@@ -201,7 +188,7 @@
     g.scale(2, 2);
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.font = '600 16px "Noto Serif TC", serif';
+    g.font = '600 10px "Noto Serif TC", serif';
     for (var gy = 0; gy < rows; gy++) {
       for (var gx = 0; gx < cols; gx++) {
         var inBody = at(body, gx, gy), inSpot = inBody && at(spots, gx, gy), inFin = !inBody && at(fins, gx, gy);
@@ -231,7 +218,7 @@
     var who = document.createElement("b"); who.textContent = "yen@taiwan"; cmd.appendChild(who);
     cmd.appendChild(document.createTextNode(":" + data.path + "$ " + data.cmd));
     document.getElementById("meta").textContent = data.meta;
-    var all = data.title + data.summary + data.cmd + data.meta + "Yen Lai";
+    var all = data.title + data.summary + data.cmd + data.meta;
     await Promise.all([
       document.fonts.load('700 62px "iA Writer Quattro"', data.title),
       document.fonts.load('700 62px "Noto Sans TC"', data.title),
