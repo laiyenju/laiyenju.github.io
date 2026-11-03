@@ -1293,9 +1293,10 @@
     }
     g.stroke();
   }
-  var REVEAL_TRAIL = 1.4;
-  var REVEAL_RAMP = 22;
-  var REVEAL_MAX = 6;
+  var REVEAL_START = 1.5;
+  var REVEAL_TRAIL = 3;
+  var REVEAL_RAMP = 5;
+  var REVEAL_MAX = 14;
   var AsciiRenderer = class {
     constructor(canvas, theme = ASCII) {
       this.canvas = canvas;
@@ -1413,7 +1414,7 @@
       this.revealT += dt;
       for (let i = 0; i < n; i++) if (sharkFlag[i]) gridOn[i] = 1;
       const t = this.revealT;
-      const rate = t < REVEAL_TRAIL ? 3 : 3 + (t - REVEAL_TRAIL) * REVEAL_RAMP;
+      const rate = REVEAL_START + Math.max(0, t - REVEAL_TRAIL) * REVEAL_RAMP;
       this.revealAcc += dt * rate;
       while (this.revealAcc >= 1) {
         this.revealAcc -= 1;
@@ -1429,7 +1430,7 @@
         gridOn.set(gridNext);
       }
       let done = true;
-      const ease = Math.min(1, dt * 7);
+      const ease = Math.min(1, dt * 4);
       for (let i = 0; i < n; i++) {
         gridAlpha[i] += (gridOn[i] - gridAlpha[i]) * ease;
         if (gridAlpha[i] < 0.99) done = false;

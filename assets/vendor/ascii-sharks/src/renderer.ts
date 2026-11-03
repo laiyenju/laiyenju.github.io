@@ -317,10 +317,15 @@ export function paintGrid(g: CanvasRenderingContext2D, W: number, H: number, cw:
   g.stroke();
 }
 
-/** Grid reveal: seconds the grid only follows the koi, how fast its spread then speeds up (cells/s²), and a cap. */
-const REVEAL_TRAIL = 1.4;
-const REVEAL_RAMP = 22;
-const REVEAL_MAX = 6;
+/**
+ * Grid reveal: how fast the grid spreads from what is laid at first (cells/s),
+ * the seconds it only follows the koi, how fast its spread then speeds up
+ * (cells/s²), and a cap in seconds.
+ */
+const REVEAL_START = 1.5;
+const REVEAL_TRAIL = 3;
+const REVEAL_RAMP = 5;
+const REVEAL_MAX = 14;
 
 export class AsciiRenderer {
   private ctx: CanvasRenderingContext2D;
@@ -448,10 +453,10 @@ export class AsciiRenderer {
     this.revealT += dt;
     // Where a koi is now, the grid is laid.
     for (let i = 0; i < n; i++) if (sharkFlag[i]) gridOn[i] = 1;
-    // And it spreads from what is laid: a few cells a second at first, so it
+    // And it spreads from what is laid: a cell or two a second at first, so it
     // reads as the koi's trail, then faster until the frame is covered.
     const t = this.revealT;
-    const rate = t < REVEAL_TRAIL ? 3 : 3 + (t - REVEAL_TRAIL) * REVEAL_RAMP;
+    const rate = REVEAL_START + Math.max(0, t - REVEAL_TRAIL) * REVEAL_RAMP;
     this.revealAcc += dt * rate;
     while (this.revealAcc >= 1) {
       this.revealAcc -= 1;
@@ -470,7 +475,7 @@ export class AsciiRenderer {
       gridOn.set(gridNext);
     }
     let done = true;
-    const ease = Math.min(1, dt * 7);
+    const ease = Math.min(1, dt * 4);
     for (let i = 0; i < n; i++) {
       gridAlpha[i] += (gridOn[i] - gridAlpha[i]) * ease;
       if (gridAlpha[i] < 0.99) done = false;
