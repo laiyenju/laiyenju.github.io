@@ -18,7 +18,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `_includes/` | 每頁共用的 `<head>`、SEO 標籤、日夜主題與介面語言的初始設定 |
 | `_data/works.yml` | works 清單 |
 | `_config.yml` | 網站資訊、哪些檔案要建置 |
-| `assets/css/`、`assets/js/` | 全站樣式和互動（日夜切換、terminal 介面、文章頁效果） |
+| `assets/css/`、`assets/js/` | 全站樣式和互動（日夜切換、terminal 介面、文章頁效果）。文章頁不載入錦鯉，Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
 | `assets/vendor/ascii-sharks/` | 錦鯉引擎的 TypeScript 原始碼，打包成 `assets/js/ocean.js` |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
@@ -59,6 +59,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 欄位 | 必填 | 預設 | 說明 |
 |---|---|---|---|
 | `title` | 是 | — | 標題 |
+| `subtitle` | 否 | 無 | 副標題，置中顯示在標題下方。不填就沒有這一行 |
 | `date` | 是 | — | 格式 `YYYY-MM-DD`。決定排序和顯示的日期（不是看檔名的日期）；`total` 字數只算今年的文章 |
 | `description` | 否 | 內文前 120 字 | 搜尋摘要，也是分享卡片上的摘要 |
 | `lang` | 否 | `zh-Hant` | 英文文章填 `en`，會改 `<html lang>` 和 `og:locale`。結構化資料的語言固定是 `zh-Hant`（`_includes/seo.html`） |
@@ -92,11 +93,13 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 設定 | 位置 | 預設 | 其他選項／注意 |
 |---|---|---|---|
 | 日夜主題 | 讀者自己選（首頁右上角） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
-| 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`），分享卡片在 `scripts/og/card.html`，要一起改 |
+| 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`，內文標題也用這個顏色），分享卡片在 `scripts/og/card.html`，要一起改 |
 | 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
-| 錦鯉樣式 | `_layouts/home.html`、`assets/js/post.js` 的 `OceanEngine(…)` | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
+| 錦鯉樣式 | `_layouts/home.html` 的 `OceanEngine(…)`（文章頁沒有錦鯉） | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
 | 首頁與 notes／works 字級 | `assets/css/site.css` 的 `.home-nav`、`.home-greeting`、`.home-role`、`.home-slogan`、`.home-links`、`.home-last`、`.home-panel .sh-line`、`.sh-panel .panel-list a`、`.work-desc` | 選單 15px（寬螢幕 17px）、問候 24–32px、職稱／slogan 15px（寬螢幕 17px）、清單 15px（手機 14px） | 文章頁底部的指令列另外保持 13px。改大後要看手機寬度的 notes 清單標題還放得下 |
 | 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；錦鯉用 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
+| 文章圖片排版 | `assets/css/site.css` 的 `.post-fig`、`.post-gallery` | 單張和內文同寬；直式圖片（高 > 寬 × 1.1）寬度 `80%`；同一段有兩張以上時並排，總寬 `960px`，間距 `20px`；手機（≤ 640px）上下排列 | 並排的圖片會伸到側欄，`post.js` 會把側欄註腳往下推，避開圖片 |
+| 圖片放大檢視 | `assets/css/site.css` 的 `.lb`（`assets/js/post.js` 的 `buildLightbox`） | 寬螢幕：左欄 `320px` 放關閉、圖說、上一張／張數／下一張，細線隔開右邊的圖片；窄螢幕（≤ 767px）：上面關閉和箭頭，下面張數和圖說 | 鍵盤：Esc 關閉、左右鍵切換；手機左右滑動切換；點圖片關閉。一篇文章的圖片會依序循環 |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
 | 點文章時的捲動速度 | `assets/js/shell.js` 的 `LINE`、`TICK` | `30`（px）、`24`（ms） | `LINE` 越大、`TICK` 越小越快 |
 | 首頁、notes、works 打字機般逐行印出的速度 | `assets/js/home.js` 的 `TYPE_MS`、`TYPE_MAX`；問候語是 `_layouts/home.html` 的 `data-type-ms` | 每字 `8`ms、每行最多 `260`ms；問候語每字 `40`ms | 每次進入這三個畫面都會印（載入、切換、從文章回來）；按任意鍵、點擊、捲動就一次印完。`ls -lt` 這類指令照人打字的速度（`assets/js/shell.js`，每字 70ms）。從文章回來時指令不重打，歷史多一行 `cat 檔名.md`，讀過的那列留著 ▸ |
@@ -133,6 +136,10 @@ flowchart LR
 3. 寫好 front matter（見 2.2）。
 4. `git push` 到 `main`，其他都是自動的。
 
+內文標題（`##` 到 `######`）後面接一般段落時，會併進那一段的開頭，用強調色顯示（`assets/js/post.js` 的 `runInHeadings`）；後面接清單、表格、圖片或另一個標題時，自己一行。標題不要寫得太長，讀起來才像段落的開頭。
+
+圖片的寫法：`![替代文字](/assets/images/檔名.jpg "圖說")`。引號裡的文字是圖說，不寫就沒有圖說。一張圖自己一段；要並排就把兩張以上的圖片放在同一段（連續幾行，中間不空行）。
+
 notes 清單顯示的是 `title`；從清單點開文章時，`cat` 指令和分享卡片上的檔名會去掉日期（`markdown-styles.md`）。
 
 ### 3.2 分享卡片（自動）
@@ -166,7 +173,6 @@ flowchart LR
   S["assets/vendor/ascii-sharks/src/*.ts"] --> E["entry.ts"]
   E -- "esbuild（手動）" --> O["assets/js/ocean.js"]
   O --> H["home.html"]
-  O --> D["default.html"]
 ```
 
 改了 `src/` 或 `entry.ts` 之後，執行下面的指令，再把 `ocean.js` 一起 commit：
@@ -190,4 +196,4 @@ jekyll serve
 | # | 項目 | 狀況 | 建議 |
 |---|------|------|------|
 | 1 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡 | 第一篇正式文章上線後刪除 |
-| 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample.svg` | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
+| 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample*.svg`（三張） | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |

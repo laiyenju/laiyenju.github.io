@@ -1,5 +1,6 @@
 ---
 title: Markdown 樣式總覽
+subtitle: 把常見的語法都放一次，檢查排版是否自然
 date: 2026-10-29
 ---
 
@@ -86,9 +87,20 @@ def slow_down(thought: str) -> str:
 
 ## 圖片
 
-![範例圖片的替代文字](/assets/images/markdown-sample.svg)
+單獨一張圖片，寬度和內文一樣。引號裡的文字（title）會成為圖說，顯示在圖片下方：
 
-圖片下方可以接一段說明文字。
+![範例圖片的替代文字](/assets/images/markdown-sample.svg "圖說寫在網址後面的引號裡，會顯示在圖片下方，點開大圖時也看得到。")
+
+直式的圖片會窄一些，免得超過一個螢幕高：
+
+![直式範例圖片](/assets/images/markdown-sample-tall.svg "直式圖片：寬度是內文的八成。")
+
+同一段裡連續放兩張以上的圖片，會並排顯示，比內文寬；手機上改成上下排列：
+
+![並排範例圖片一](/assets/images/markdown-sample-grid.svg "並排的第一張圖。")
+![並排範例圖片二](/assets/images/markdown-sample.svg "並排的第二張圖，圖說各自放在圖片下方。")
+
+點任何一張圖片都可以放大，用左右鍵或箭頭切換，按 Esc 關閉。
 
 ## 註腳
 

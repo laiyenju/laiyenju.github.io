@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#efece6"/>
+  <g fill="none" stroke="#c45c26" stroke-width="2">
+    <rect x="300" y="160" width="600" height="400"/>
+    <path d="M300 360h600M600 160v400"/>
+  </g>
+  <text x="600" y="680" fill="#8a857e" font-family="monospace" font-size="28" text-anchor="middle">sample image · 1200 × 800</text>
+</svg>
