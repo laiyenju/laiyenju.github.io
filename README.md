@@ -99,6 +99,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；錦鯉用 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
 | 點文章時的捲動速度 | `assets/js/shell.js` 的 `LINE`、`TICK` | `30`（px）、`24`（ms） | `LINE` 越大、`TICK` 越小越快 |
+| 首頁、notes、works 打字機般逐行印出的速度 | `assets/js/home.js` 的 `TYPE_MS`、`TYPE_MAX`；問候語是 `_layouts/home.html` 的 `data-type-ms` | 每字 `8`ms、每行最多 `260`ms；問候語每字 `40`ms | 每次進入這三個畫面都會印（載入、切換、從文章回來）；按任意鍵、點擊、捲動就一次印完。`ls -lt` 這類指令照人打字的速度（`assets/js/shell.js`，每字 70ms）。從文章回來時指令不重打，歷史多一行 `cat 檔名.md`，讀過的那列留著 ▸ |
 
 ### 2.6 介面語言
 
