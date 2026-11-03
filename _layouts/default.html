@@ -52,6 +52,7 @@
         <a class="post-back" href="{{ '/' | relative_url }}?view=notes"><span class="sh-dollar">$</span> cd ..</a>
       </div>
       <h1 class="post-title">{{ page.title }}</h1>
+      {% if page.subtitle %}<p class="post-subtitle">{{ page.subtitle }}</p>{% endif %}
       <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>
     </header>
 

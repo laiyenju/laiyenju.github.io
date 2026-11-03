@@ -11,6 +11,149 @@
 
   var post = document.querySelector(".post");
   var prose = document.querySelector(".post-prose");
+  // Interface language, set before first paint (theme-boot.html).
+  var ZH = document.documentElement.classList.contains("ui-zh");
+  function t(en, zh) { return ZH ? zh : en; }
+
+  /* —— Images. A paragraph holding only images becomes figures: one image
+        on its own, two or more side by side (.post-gallery). The caption is
+        the image's title, ![alt](src "caption"). Built before the arrival
+        measures the first screen. —— */
+  var figures = [];
+  function buildFigures() {
+    if (!prose) return;
+    prose.querySelectorAll(":scope > p").forEach(function (p) {
+      var imgs = p.querySelectorAll(":scope > img");
+      if (!imgs.length) return;
+      var onlyImages = Array.prototype.every.call(p.childNodes, function (n) {
+        return (n.nodeType === 1 && (n.tagName === "IMG" || n.tagName === "BR")) || (n.nodeType === 3 && !n.textContent.trim());
+      });
+      if (!onlyImages) return;
+      var box = imgs.length > 1 ? document.createElement("div") : null;
+      if (box) box.className = "post-gallery";
+      var made = Array.prototype.map.call(imgs, function (img) {
+        var fig = document.createElement("figure");
+        fig.className = "post-fig";
+        var cap = img.getAttribute("title") || "";
+        img.removeAttribute("title");
+        fig.appendChild(img);
+        if (cap) {
+          var fc = document.createElement("figcaption");
+          fc.textContent = cap;
+          fig.appendChild(fc);
+        }
+        // A tall image alone is set narrower, so it doesn't fill more than a screen.
+        function measure() {
+          if (!box && img.naturalHeight > img.naturalWidth * 1.1) fig.classList.add("is-tall");
+        }
+        if (img.complete) measure(); else img.addEventListener("load", measure);
+        figures.push({ img: img, cap: cap });
+        return fig;
+      });
+      var node = box || made[0];
+      if (box) made.forEach(function (f) { box.appendChild(f); });
+      p.replaceWith(node);
+    });
+  }
+  buildFigures();
+
+  /* —— Enlarged view: click an image. Esc or a click on the image closes;
+        arrows, the buttons or a swipe go to the other images of the note. —— */
+  var ICON = {
+    close: '<svg viewBox="0 0 44 44" aria-hidden="true"><path d="M2 2 42 42M42 2 2 42"/></svg>',
+    prev: '<svg viewBox="0 0 44 44" aria-hidden="true"><path d="M42 22H2M22 2 2 22l20 20"/></svg>',
+    next: '<svg viewBox="0 0 44 44" aria-hidden="true"><path d="M2 22h40M22 2l20 20-20 20"/></svg>',
+  };
+  var lb = null;
+  var lbAt = 0;
+  var lbReturn = null;
+  function lbButton(cls, icon, en, zh) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = cls;
+    b.setAttribute("aria-label", t(en, zh));
+    b.innerHTML = ICON[icon];
+    return b;
+  }
+  function buildLightbox() {
+    if (!figures.length) return;
+    lb = document.createElement("div");
+    lb.className = "lb";
+    lb.hidden = true;
+    lb.setAttribute("role", "dialog");
+    lb.setAttribute("aria-modal", "true");
+    lb.setAttribute("aria-label", t("Image", "圖片"));
+    lb.tabIndex = -1;
+    var close = lbButton("lb-close", "close", "Close", "關閉");
+    var prev = lbButton("lb-prev", "prev", "Previous image", "上一張");
+    var next = lbButton("lb-next", "next", "Next image", "下一張");
+    var count = document.createElement("p");
+    count.className = "lb-count";
+    count.setAttribute("aria-live", "polite");
+    var cap = document.createElement("p");
+    cap.className = "lb-cap";
+    var stage = document.createElement("div");
+    stage.className = "lb-stage";
+    var img = document.createElement("img");
+    img.className = "lb-img";
+    img.alt = "";
+    stage.appendChild(img);
+    [close, cap, prev, count, next, stage].forEach(function (el) { lb.appendChild(el); });
+    lb.classList.toggle("is-single", figures.length < 2);
+    document.body.appendChild(lb);
+
+    close.addEventListener("click", closeLightbox);
+    stage.addEventListener("click", closeLightbox);
+    prev.addEventListener("click", function () { showAt(lbAt - 1); });
+    next.addEventListener("click", function () { showAt(lbAt + 1); });
+    lb.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { e.preventDefault(); closeLightbox(); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); showAt(lbAt - 1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); showAt(lbAt + 1); }
+      else if (e.key === "Tab") {
+        // Keep focus inside: close, prev, next.
+        var f = [close, prev, next].filter(function (b) { return getComputedStyle(b).visibility !== "hidden"; });
+        var i = f.indexOf(document.activeElement);
+        e.preventDefault();
+        f[(i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+      }
+    });
+    var x0 = null;
+    stage.addEventListener("touchstart", function (e) { x0 = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+    stage.addEventListener("touchend", function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 50 && figures.length > 1) { e.preventDefault(); showAt(lbAt + (dx < 0 ? 1 : -1)); }
+    });
+
+    function showAt(i) {
+      lbAt = (i + figures.length) % figures.length;
+      var f = figures[lbAt];
+      img.src = f.img.currentSrc || f.img.src;
+      img.alt = f.img.alt || "";
+      cap.textContent = f.cap;
+      count.textContent = lbAt + 1 + " / " + figures.length;
+    }
+    function openAt(i) {
+      lbReturn = document.activeElement;
+      showAt(i);
+      lb.hidden = false;
+      document.documentElement.classList.add("lb-lock");
+      requestAnimationFrame(function () { lb.classList.add("is-open"); });
+      // Focus the dialog itself: keys work at once, and no ring around close after a click.
+      lb.focus();
+    }
+    function closeLightbox() {
+      lb.classList.remove("is-open");
+      document.documentElement.classList.remove("lb-lock");
+      lb.hidden = true;
+      if (lbReturn && lbReturn.focus) lbReturn.focus();
+    }
+    figures.forEach(function (f, i) {
+      f.img.addEventListener("click", function () { openAt(i); });
+    });
+  }
 
   /* Kramdown footnotes: <sup><a class="footnote" href="#fn:1"> in the text,
      <div class="footnotes"><ol><li id="fn:1"> at the end. */
@@ -47,11 +190,18 @@
     if (!wide) return;
     var top = post.getBoundingClientRect().top;
     var floor = 0;
+    // Rows of images reach into the margin; a note never sits beside one.
+    var rows = Array.prototype.map.call(prose.querySelectorAll(".post-gallery"), function (g) {
+      var r = g.getBoundingClientRect();
+      return { top: r.top - top, bottom: r.bottom - top };
+    });
     notes.forEach(function (n) {
       // Level with the reference's line; push down if the previous note is still there.
       var y = Math.max(n.ref.getBoundingClientRect().top - top - 2, floor);
+      var h = n.note.offsetHeight;
+      rows.forEach(function (r) { if (y < r.bottom + GAP && y + h > r.top - GAP) y = r.bottom + GAP; });
       n.note.style.top = y + "px";
-      floor = y + n.note.offsetHeight + GAP;
+      floor = y + h + GAP;
     });
   }
 
@@ -102,6 +252,7 @@
     if (!root.classList.contains("post-print")) return;
     var bar = document.querySelector(".post-bar");
     var title = document.querySelector(".post-title");
+    var sub = document.querySelector(".post-subtitle");
     var meta = document.querySelector(".post-meta");
     var end = document.querySelector(".post-end");
     var h = window.innerHeight;
@@ -120,6 +271,7 @@
       finishers.push(typeText(title, per, next, true));
     }
     function typeMeta(next) {
+      show(sub);
       if (!meta) return next();
       var chars = meta.textContent.length;
       meta.style.setProperty("--type-chars", chars);
@@ -187,9 +339,6 @@
       out.appendChild(p);
       while (out.children.length > 14) out.removeChild(out.firstChild);
     }
-    // Interface language, set before first paint (theme-boot.html).
-    var ZH = document.documentElement.classList.contains("ui-zh");
-    function t(en, zh) { return ZH ? zh : en; }
     if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
     function theme(arg) {
       var th = window.siteTheme;
@@ -327,6 +476,7 @@
     });
     setupShell();
     buildRail();
+    buildLightbox();
     layout();
     window.addEventListener("resize", layout);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);

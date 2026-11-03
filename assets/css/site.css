@@ -627,20 +627,42 @@ body.theme-night .home-last a { color: var(--accent); }
   text-decoration: none;
   transition: color 200ms ease;
 }
-/* The title is the first line of the file `cat` prints: body size, bold. */
+/* Head: title, subtitle and date centred in the reading column, above a
+   left-aligned body. They stay inside the column's edges and wrap into even
+   lines, and a short hairline (the same as a break in the prose) hands over
+   from the centred head to the text. */
+.post-head {
+  text-align: center;
+}
+.post-head::after {
+  content: "";
+  display: block;
+  width: 2.5em;
+  margin: 40px auto 48px;
+  border-top: 1px solid rgba(42, 36, 32, 0.3);
+}
 .post-title {
-  margin: 28px 0 2px;
+  margin: 28px auto 0;
+  font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: #2a2420;
+  text-wrap: balance;
+}
+.post-subtitle {
+  margin: 10px auto 0;
+  max-width: 34em;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 17px;
-  font-weight: 700;
-  line-height: 1.8;
-  color: #2a2420;
+  line-height: 1.7;
+  color: #5a544e;
+  text-wrap: balance;
 }
 .post-meta {
-  margin: 0;
-}
-.post-head {
-  margin-bottom: 44px;
+  width: fit-content;
+  margin: 16px auto 0;
 }
 
 /* Prose: ink on paper, and as little else as possible. Structure is marked
@@ -882,18 +904,164 @@ body.theme-night .home-last a { color: var(--accent); }
   padding-right: 0;
 }
 
-/* Images: sit on the paper, a hairline edge, no shadow. */
+/* Images: sit on the paper, a hairline edge, no shadow. A paragraph of
+   images becomes figures (post.js); the image's title is the caption, small
+   and left-aligned under it. One image fills the column, a tall one is
+   narrower; two or more stand side by side, wider than the text. Click to
+   enlarge. */
 .post-prose img {
   display: block;
   max-width: 100%;
   height: auto;
-  margin: 2em auto 0.8em;
+  margin: 2em auto;
   border: 1px solid rgba(42, 36, 32, 0.08);
 }
-.post-prose p:has(> img:only-child) + p {
-  font-size: 13px;
-  color: var(--ink-faint);
+.post-fig {
+  margin: 2.4em auto;
 }
+.post-fig img {
+  width: 100%;
+  margin: 0;
+  cursor: zoom-in;
+}
+.post-fig.is-tall {
+  max-width: 80%;
+}
+.post-fig figcaption {
+  padding-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  text-align: left;
+}
+.post-gallery {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  width: min(960px, calc(100vw - 40px));
+  margin: 2.4em 0 2.4em calc(50% - min(480px, 50vw - 20px));
+}
+.post-gallery .post-fig {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .post-gallery {
+    flex-direction: column;
+    gap: 2em;
+    width: auto;
+    margin-left: 0;
+  }
+  .post-gallery .post-fig { width: 100%; }
+  .post-fig.is-tall { max-width: 100%; }
+}
+
+/* Enlarged: plain paper over the page. Wide screens: a side column with
+   close, the caption and prev · n / total · next, a hairline, then the image.
+   Phones: close and the arrows on top, the count and caption below. */
+.lb {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: 64px 192px 64px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "close . . stage"
+    "cap cap cap stage"
+    "prev count next stage";
+  background: #fafaf7;
+  color: #2a2420;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.lb[hidden] { display: none; }
+.lb.is-open { opacity: 1; }
+.lb button {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.lb button svg {
+  width: 44px;
+  height: 44px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.lb button:focus-visible { outline: 1px solid currentColor; outline-offset: -8px; }
+.lb-close { grid-area: close; }
+.lb-prev { grid-area: prev; }
+.lb-next { grid-area: next; justify-self: end; }
+.lb:focus { outline: none; }
+.lb-count {
+  grid-area: count;
+  align-self: center;
+  margin: 0;
+  line-height: 1.6;
+  text-align: center;
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.lb-cap {
+  grid-area: cap;
+  margin: 16px 0 0;
+  padding: 0 12px 0 16px;
+  font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+.lb-stage {
+  grid-area: stage;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 40px;
+  border-left: 1px solid rgba(42, 36, 32, 0.9);
+  cursor: zoom-out;
+}
+.lb-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.lb.is-single .lb-prev,
+.lb.is-single .lb-next,
+.lb.is-single .lb-count { visibility: hidden; }
+@media (max-width: 767px) {
+  .lb {
+    grid-template-columns: 56px 1fr 56px 56px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "close . prev next"
+      "stage stage stage stage"
+      "count cap cap cap";
+  }
+  .lb button { width: 56px; height: 56px; }
+  .lb button svg { width: 36px; height: 36px; }
+  .lb-next { justify-self: center; }
+  .lb-stage { padding: 0; border-left: 0; }
+  .lb-count { align-self: start; padding: 0 0 20px 12px; font-size: 14px; text-align: left; white-space: nowrap; }
+  .lb-cap { margin: 0; padding: 0 16px 20px 8px; max-height: 30vh; }
+  .lb.is-single .lb-count { display: none; }
+  .lb.is-single .lb-cap { grid-column: 1 / -1; padding-left: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb { transition: none; }
+}
+html.lb-lock { overflow: hidden; }
 
 /* Break: mostly space, one short hairline. */
 .post-prose hr {
@@ -1028,6 +1196,15 @@ body.has-rail .post-prose .footnotes {
   .post-prose {
     font-size: 16px;
   }
+  .post-title {
+    font-size: 22px;
+  }
+  .post-subtitle {
+    font-size: 16px;
+  }
+  .post-head::after {
+    margin: 32px auto 40px;
+  }
 }
 
 /* —— Article, terminal pass: the page reads like `cat note.md` in a shell
@@ -1054,7 +1231,7 @@ body.has-rail .post-prose .footnotes {
   color: #736d66;
 }
 .post-bar + .post-title {
-  margin-top: 20px;
+  margin-top: 40px;
 }
 .post-meta {
   font-variant-numeric: tabular-nums;
@@ -1340,6 +1517,10 @@ body.theme-night .post-head .sh-path,
 body.theme-night .post-end .sh-path { color: #e8e6e3; }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
+body.theme-night .post-subtitle { color: #b6b9bf; }
+body.theme-night .post-head::after { border-color: rgba(232, 230, 227, 0.3); }
+body.theme-night .lb { background: #0d0f12; color: #e8e6e3; }
+body.theme-night .lb-stage { border-color: rgba(232, 230, 227, 0.8); }
 body.theme-night .post-note { color: #a3a7af; }
 body.theme-night .post-note.is-lit { color: #e8e6e3; }
 body.theme-night .post-note-n { color: #8a8f99; }
