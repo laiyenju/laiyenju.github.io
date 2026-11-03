@@ -22,7 +22,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `assets/vendor/ascii-sharks/` | 錦鯉引擎的 TypeScript 原始碼，打包成 `assets/js/ocean.js` |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
-| `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的對應畫面（首頁選單的連結也指向這裡） |
+| `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的對應畫面（首頁選單的連結也指向這裡）。文章頁的 `cd ..` 不經過這裡：從 notes 清單點進來的文章用瀏覽器的「上一頁」回去，其他情況直接連到 `/?view=notes`（`assets/js/post.js` 的 `backToNotes`） |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
 | `CLAUDE.md` | 給 Claude 的工作規則（例如：改檔案時要同時更新 README） |
 
@@ -93,7 +93,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|---|---|
 | 日夜主題 | 讀者自己選（首頁右上角） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`），分享卡片在 `scripts/og/card.html`，要一起改 |
-| 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.md`、`works/index.md`、`scripts/og/card.html`（只有日間）也有 |
+| 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
 | 錦鯉樣式 | `_layouts/home.html`、`assets/js/post.js` 的 `OceanEngine(…)` | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
 | 首頁與 notes／works 字級 | `assets/css/site.css` 的 `.home-nav`、`.home-greeting`、`.home-role`、`.home-slogan`、`.home-links`、`.home-last`、`.home-panel .sh-line`、`.sh-panel .panel-list a`、`.work-desc` | 選單 15px（寬螢幕 17px）、問候 24–32px、職稱／slogan 15px（寬螢幕 17px）、清單 15px（手機 14px） | 文章頁底部的指令列另外保持 13px。改大後要看手機寬度的 notes 清單標題還放得下 |
 | 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；錦鯉用 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |

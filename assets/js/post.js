@@ -213,7 +213,7 @@
       next: link('.post-pager a[data-pager="next"]'),
       prev: link('.post-pager a[data-pager="prev"]'),
     };
-    var root = new URL("./", to.notes || location.href).href.replace(/notes\/$/, "");
+    var root = new URL("./", to.notes || location.href).href;
     function say(text, prompt) {
       var p = document.createElement("p");
       if (prompt) {
@@ -245,12 +245,12 @@
       var arg = w[1] || "";
       if (w[0] === "cd") {
         if (arg === "" || arg === "~" || arg === "~/" || arg === "/") return go(root);
-        if (arg === ".." || arg === "../" || arg === "~/notes" || arg === "notes") return go(to.notes);
+        if (arg === ".." || arg === "../" || arg === "~/notes" || arg === "notes") return window.setTimeout(backToNotes, 260);
         if (arg === "-") return window.setTimeout(function () { history.back(); }, 260);
-        if (arg === "works" || arg === "../works" || arg === "~/works") return go(root + "works/");
+        if (arg === "works" || arg === "../works" || arg === "~/works") return go(root + "?view=works");
         return say("cd: no such file or directory: " + arg);
       }
-      if (w[0] === "ls") return go(to.notes);
+      if (w[0] === "ls") return window.setTimeout(backToNotes, 260);
       if (w[0] === "next" || w[0] === "prev" || (w[0] === "cat" && (arg === "next" || arg === "prev"))) {
         var which = w[0] === "cat" ? arg : w[0];
         if (to[which]) return go(to[which]);
@@ -308,6 +308,32 @@
       if (e.persisted) { input.value = ""; out.innerHTML = ""; }
     });
   }
+
+  /* —— Back to the list. Opened from the notes list, the list is still one
+        step back in history, and the browser keeps that page as it was
+        (back/forward cache): going back shows it at once, koi and all, with
+        no reload. Opened any other way (a shared link, a new tab, next/prev),
+        follow the link to the home page's notes view. —— */
+  function cameFromNotes() {
+    var from;
+    try { from = new URL(document.referrer); } catch (e) { return false; }
+    if (from.origin !== location.origin) return false;
+    if (!/\/notes\/?$/.test(from.pathname) && from.searchParams.get("view") !== "notes") return false;
+    var nav = window.navigation;
+    return nav && typeof nav.canGoBack === "boolean" ? nav.canGoBack : history.length > 1;
+  }
+  function backToNotes() {
+    if (cameFromNotes()) { history.back(); return; }
+    var a = document.querySelector(".post-back");
+    location.href = a ? a.href : new URL("./?view=notes", document.baseURI).href;
+  }
+  var back = document.querySelector(".post-back");
+  if (back) back.addEventListener("click", function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (!cameFromNotes()) return; // the link itself goes to the notes view
+    e.preventDefault();
+    history.back();
+  });
 
   document.addEventListener("DOMContentLoaded", function () {
     labelCode();

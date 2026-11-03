@@ -49,7 +49,8 @@
   <article class="post">
     <header class="post-head">
       <div class="post-bar">
-        <a class="post-back" href="{{ '/notes/' | relative_url }}"><span class="sh-dollar">$</span> cd ..</a>
+        {% comment %}Straight to the home page's notes view: /notes/ is only a redirect, a second page load.{% endcomment %}
+        <a class="post-back" href="{{ '/' | relative_url }}?view=notes"><span class="sh-dollar">$</span> cd ..</a>
       </div>
       <h1 class="post-title">{{ page.title }}</h1>
       <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>
