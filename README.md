@@ -18,7 +18,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `_includes/` | 每頁共用的 `<head>`、SEO 標籤、日夜主題與介面語言的初始設定 |
 | `_data/works.yml` | works 清單 |
 | `_config.yml` | 網站資訊、哪些檔案要建置 |
-| `assets/css/`、`assets/js/` | 全站樣式和互動（日夜切換、terminal 介面、文章頁效果） |
+| `assets/css/`、`assets/js/` | 全站樣式和互動（日夜切換、terminal 介面、文章頁效果）。文章頁不載入錦鯉，Markdown 樣式在 `site.css` 的 `.post-prose` |
 | `assets/vendor/ascii-sharks/` | 錦鯉引擎的 TypeScript 原始碼，打包成 `assets/js/ocean.js` |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
@@ -94,7 +94,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 日夜主題 | 讀者自己選（首頁右上角） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`），分享卡片在 `scripts/og/card.html`，要一起改 |
 | 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
-| 錦鯉樣式 | `_layouts/home.html`、`assets/js/post.js` 的 `OceanEngine(…)` | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
+| 錦鯉樣式 | `_layouts/home.html` 的 `OceanEngine(…)`（文章頁沒有錦鯉） | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
 | 首頁與 notes／works 字級 | `assets/css/site.css` 的 `.home-nav`、`.home-greeting`、`.home-role`、`.home-slogan`、`.home-links`、`.home-last`、`.home-panel .sh-line`、`.sh-panel .panel-list a`、`.work-desc` | 選單 15px（寬螢幕 17px）、問候 24–32px、職稱／slogan 15px（寬螢幕 17px）、清單 15px（手機 14px） | 文章頁底部的指令列另外保持 13px。改大後要看手機寬度的 notes 清單標題還放得下 |
 | 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；錦鯉用 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
@@ -166,7 +166,6 @@ flowchart LR
   S["assets/vendor/ascii-sharks/src/*.ts"] --> E["entry.ts"]
   E -- "esbuild（手動）" --> O["assets/js/ocean.js"]
   O --> H["home.html"]
-  O --> D["default.html"]
 ```
 
 改了 `src/` 或 `entry.ts` 之後，執行下面的指令，再把 `ocean.js` 一起 commit：

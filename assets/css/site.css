@@ -600,26 +600,15 @@ body.theme-night .home-last a { color: var(--accent); }
 }
 
 /* —— Article (Jekyll default layout): a quiet reading column on plain
-      paper. The pond stays empty while reading; one small koi swims across
-      when (END) comes into view. Footnotes sit in the right margin on wide
-      screens and at the end on narrow ones. —— */
+      paper, no koi. Footnotes sit in the right margin on wide screens and
+      at the end on narrow ones. —— */
 .post-body {
   margin: 0;
   background: #fafaf7;
   color: #2a2420;
 }
-.post-pond {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  display: block;
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-}
 .post {
   position: relative;
-  z-index: 1;
   box-sizing: border-box;
   max-width: 680px;
   margin: 0 auto;
@@ -654,9 +643,8 @@ body.theme-night .home-last a { color: var(--accent); }
   margin-bottom: 44px;
 }
 
-/* Prose: washi paper, sumi ink, one vermilion (朱) accent. Structure is
-   marked the way the home page marks it: a terminal cursor, small square
-   cells, and mono labels, never colour blocks or shadows. */
+/* Prose: ink on paper, and as little else as possible. Structure is marked
+   with space, weight and a few hairlines; no colour except the link hover. */
 .post-prose {
   --ink: #2a2420;
   --ink-soft: #5a544e;
@@ -699,10 +687,13 @@ body.theme-night .home-last a { color: var(--accent); }
 .post-prose a {
   color: inherit;
   text-decoration: underline;
-  text-decoration-color: var(--shu);
+  text-decoration-color: var(--ink-faint);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
-  transition: color 200ms ease;
+  transition: text-decoration-color 200ms ease;
+}
+.post-prose a:hover {
+  text-decoration-color: var(--shu);
 }
 .post-prose strong {
   font-weight: 700;
@@ -712,21 +703,15 @@ body.theme-night .home-last a { color: var(--accent); }
   text-decoration-color: var(--ink-faint);
 }
 .post-prose mark {
-  /* A brush of vermilion under the words, not a highlighter block. */
   color: inherit;
-  background: linear-gradient(transparent 58%, rgba(196, 92, 38, 0.2) 58%, rgba(196, 92, 38, 0.2) 92%, transparent 92%);
+  background: var(--washi);
 }
 .post-prose kbd {
-  display: inline-block;
-  padding: 0 0.45em;
+  padding: 0 0.3em;
   font-family: var(--mono);
-  font-size: 0.78em;
-  line-height: 1.7;
-  color: var(--ink);
-  background: #fdfcf9;
-  border: 1px solid rgba(42, 36, 32, 0.22);
-  border-bottom-width: 2px;
-  border-radius: 3px;
+  font-size: 0.82em;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
 }
 .post-prose sub,
 .post-prose sup {
@@ -734,7 +719,7 @@ body.theme-night .home-last a { color: var(--accent); }
   line-height: 0;
 }
 
-/* Lists: square cells for bullets, zero-padded mono numbers. */
+/* Lists. */
 .post-prose ul,
 .post-prose ol {
   margin: 0 0 1.25em;
@@ -780,8 +765,6 @@ body.theme-night .home-last a { color: var(--accent); }
   padding-left: 2.1em;
 }
 .post-prose ol > li::marker {
-  font-family: var(--mono);
-  font-size: 0.78em;
   color: var(--ink-faint);
 }
 .post-prose ol ol {
@@ -835,7 +818,7 @@ body.theme-night .home-last a { color: var(--accent); }
   border-left-color: var(--rule);
 }
 
-/* Code: washi panel, mono, a quiet sumi palette with vermilion for literals. */
+/* Code: a pale panel, mono, one colour. Only comments step back. */
 .post-prose code {
   font-family: var(--mono);
   font-size: 0.84em;
@@ -847,21 +830,10 @@ body.theme-night .home-last a { color: var(--accent); }
   position: relative;
   margin: 1.8em 0;
 }
-.post-prose div.highlighter-rouge[data-lang]::before {
-  content: attr(data-lang);
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  color: var(--ink-faint);
-}
 .post-prose pre {
   margin: 1.8em 0;
   padding: 16px 18px;
   overflow-x: auto;
-  border-left: 2px solid var(--rule);
   background: var(--washi);
   font-size: 13.5px;
   line-height: 1.7;
@@ -879,50 +851,10 @@ body.theme-night .home-last a { color: var(--accent); }
 .post-prose .highlight .cm,
 .post-prose .highlight .cs,
 .post-prose .highlight .sd {
-  color: #736d66;
-  font-style: italic;
-}
-.post-prose .highlight .k,
-.post-prose .highlight .kd,
-.post-prose .highlight .kn,
-.post-prose .highlight .kr,
-.post-prose .highlight .kc,
-.post-prose .highlight .kt,
-.post-prose .highlight .ow {
-  color: var(--ink);
-  font-weight: 600;
-}
-.post-prose .highlight .s,
-.post-prose .highlight .s1,
-.post-prose .highlight .s2,
-.post-prose .highlight .sh,
-.post-prose .highlight .sb,
-.post-prose .highlight .dl,
-.post-prose .highlight .se {
-  color: #6b7a4f; /* moss */
-}
-.post-prose .highlight .m,
-.post-prose .highlight .mi,
-.post-prose .highlight .mf,
-.post-prose .highlight .mh {
-  color: var(--shu);
-}
-.post-prose .highlight .nf,
-.post-prose .highlight .nc,
-.post-prose .highlight .fm {
-  color: #3f5a78; /* ai, indigo */
-}
-.post-prose .highlight .nb,
-.post-prose .highlight .bp,
-.post-prose .highlight .na {
-  color: #7a5a3a;
-}
-.post-prose .highlight .p,
-.post-prose .highlight .o {
   color: var(--ink-faint);
 }
 
-/* Tables: mono labels for the head, hairlines only. */
+/* Tables: body face, a hairline under each row, nothing else. */
 .post-prose table {
   width: 100%;
   margin: 1.8em 0;
@@ -933,11 +865,7 @@ body.theme-night .home-last a { color: var(--accent); }
 .post-prose th {
   padding: 0 12px 8px;
   border-bottom: 1px solid var(--ink-faint);
-  font-family: var(--mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--ink-faint);
+  font-weight: 700;
   text-align: left;
 }
 .post-prose td {
@@ -963,51 +891,39 @@ body.theme-night .home-last a { color: var(--accent); }
   border: 1px solid rgba(42, 36, 32, 0.08);
 }
 .post-prose p:has(> img:only-child) + p {
-  font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-faint);
 }
 
-/* Break: three koi cells. */
+/* Break: mostly space, one short hairline. */
 .post-prose hr {
-  height: 5px;
+  width: 2.5em;
+  height: 0;
   margin: 3em auto;
   border: 0;
-  width: 33px;
-  background:
-    linear-gradient(var(--ink-faint), var(--ink-faint)) left / 5px 5px no-repeat,
-    linear-gradient(var(--ink-soft), var(--ink-soft)) center / 5px 5px no-repeat,
-    linear-gradient(var(--ink-faint), var(--ink-faint)) right / 5px 5px no-repeat;
+  border-top: 1px solid var(--ink-faint);
 }
 
-/* Definition list: the term as a mono label, the meaning set in below it. */
+/* Definition list: the term in bold, the meaning set in below it. */
 .post-prose dl {
   margin: 1.6em 0;
 }
 .post-prose dt {
   margin-top: 1em;
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink);
+  font-weight: 700;
 }
 .post-prose dd {
   margin: 0.2em 0 0 1.5em;
   color: var(--ink-soft);
 }
 
-/* Details: hairlines above and below, a mono +/− instead of the triangle. */
+/* Details: a quiet +/− instead of the triangle. */
 .post-prose details {
   margin: 1.8em 0;
-  padding: 0.6em 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
 }
 .post-prose summary {
   display: block;
   cursor: pointer;
-  font-family: var(--mono);
-  font-size: 13px;
   color: var(--ink-soft);
   list-style: none;
 }
@@ -1017,8 +933,8 @@ body.theme-night .home-last a { color: var(--accent); }
 .post-prose summary::before {
   content: "+";
   display: inline-block;
-  width: 1.4em;
-  color: var(--shu);
+  width: 1.2em;
+  color: var(--ink-faint);
 }
 .post-prose details[open] summary::before {
   content: "−";
@@ -1035,7 +951,7 @@ body.theme-night .home-last a { color: var(--accent); }
   margin-left: 2px;
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--shu);
+  color: var(--ink-faint);
   text-decoration: none;
 }
 .post-prose .footnotes {
@@ -1050,7 +966,7 @@ body.theme-night .home-last a { color: var(--accent); }
   margin: 0;
 }
 .post-prose .footnotes li::marker {
-  color: var(--shu);
+  color: var(--ink-faint);
 }
 .post-prose .footnotes p {
   margin: 0.3em 0;
@@ -1095,7 +1011,7 @@ body.theme-night .home-last a { color: var(--accent); }
   margin-right: 6px;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 11px;
-  color: var(--accent);
+  color: #8a847d;
 }
 .post-note.is-lit {
   color: #2a2420;
@@ -1186,73 +1102,8 @@ body.has-rail .post-prose .footnotes {
   padding-left: 2.4em;
 }
 
-/* Code blocks: a ── lang ── rule on top, a line-number gutter, no accent bar. */
-.post-prose div.highlighter-rouge::before,
-.post-prose div.highlighter-rouge[data-lang]::before {
-  content: "── code ────────────────────────────────────────────────────────────────────────────────";
-  position: static;
-  display: block;
-  overflow: hidden;
-  white-space: nowrap;
-  margin-bottom: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0;
-  color: var(--ink-faint);
-}
-.post-prose div.highlighter-rouge[data-lang]::before {
-  content: "── " attr(data-lang) " ────────────────────────────────────────────────────────────────────────────────";
-}
-.post-prose pre {
-  border-left: 0;
-}
-.post-prose pre.has-gutter {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 16px;
-}
-.code-gutter {
-  white-space: pre;
-  text-align: right;
-  color: var(--ink-faint);
-  opacity: 0.6;
-  user-select: none;
-  -webkit-user-select: none;
-}
 
-/* Tables: mono, boxed in hairlines like a terminal table. */
-.post-prose table {
-  font-family: var(--mono);
-  font-size: 13px;
-}
-.post-prose th,
-.post-prose td,
-.post-prose th:first-child,
-.post-prose td:first-child,
-.post-prose th:last-child,
-.post-prose td:last-child {
-  padding: 6px 12px;
-  border: 1px solid var(--rule);
-}
-.post-prose th {
-  border-bottom-color: var(--ink-faint);
-}
 
-/* Break: a short box-drawing rule. */
-.post-prose hr {
-  width: auto;
-  height: auto;
-  margin: 3em 0;
-  background: none;
-  text-align: center;
-  overflow: visible;
-}
-.post-prose hr::before {
-  content: "────────";
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--ink-faint);
-}
 
 /* Footnote references read [1]. */
 .post-prose a.footnote::before,
@@ -1487,29 +1338,10 @@ body.theme-night .post-end .sh-live .sh-prompt { color: var(--accent); }
 body.theme-night .post-head .sh-path,
 body.theme-night .post-end .sh-path { color: #e8e6e3; }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
-body.theme-night .post-prose kbd { background: #151820; color: #e8e6e3; border-color: rgba(232, 230, 227, 0.25); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
-body.theme-night .post-prose .highlight .c,
-body.theme-night .post-prose .highlight .c1,
-body.theme-night .post-prose .highlight .cm,
-body.theme-night .post-prose .highlight .cs,
-body.theme-night .post-prose .highlight .sd { color: #8a8f99; }
-body.theme-night .post-prose .highlight .s,
-body.theme-night .post-prose .highlight .s1,
-body.theme-night .post-prose .highlight .s2,
-body.theme-night .post-prose .highlight .sh,
-body.theme-night .post-prose .highlight .sb,
-body.theme-night .post-prose .highlight .dl,
-body.theme-night .post-prose .highlight .se { color: #a6d6a8; }
-body.theme-night .post-prose .highlight .nf,
-body.theme-night .post-prose .highlight .nc,
-body.theme-night .post-prose .highlight .fm { color: #8db7ff; }
-body.theme-night .post-prose .highlight .nb,
-body.theme-night .post-prose .highlight .bp,
-body.theme-night .post-prose .highlight .na { color: #c8a8ff; }
 body.theme-night .post-note { color: #a3a7af; }
 body.theme-night .post-note.is-lit { color: #e8e6e3; }
-body.theme-night .post-note-n { color: #f5b942; }
+body.theme-night .post-note-n { color: #8a8f99; }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
 /* —— Day / night switch (theme.js), on the home page only: three segments

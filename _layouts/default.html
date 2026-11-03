@@ -30,7 +30,6 @@
 </head>
 <body class="post-body">
   {% include theme-boot.html %}
-  <canvas data-koi class="post-pond" aria-hidden="true"></canvas>
 
   {% assign chars = content | strip_html | strip_newlines | remove: " " | size %}
 
@@ -75,7 +74,6 @@
   </article>
 
   <script src="{{ '/assets/js/theme.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
-  <script src="{{ '/assets/js/ocean.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
   <script src="{{ '/assets/js/post.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
 </body>
 </html>

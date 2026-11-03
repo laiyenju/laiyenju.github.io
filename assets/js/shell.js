@@ -257,19 +257,6 @@
     post.appendChild(document.importNode(prose, true));
     // No duplicate ids (footnotes) while it is on this page.
     post.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
-    // What post.js adds on the article page, so code blocks match at the handoff.
-    post.querySelectorAll("div.highlighter-rouge").forEach(function (el) {
-      var m = /\blanguage-([\w+#-]+)/.exec(el.className);
-      if (m && m[1] !== "plaintext") el.setAttribute("data-lang", m[1]);
-    });
-    post.querySelectorAll("pre > code").forEach(function (code) {
-      var lines = code.textContent.replace(/\n$/, "").split("\n").length;
-      var gutter = document.createElement("span");
-      gutter.className = "code-gutter";
-      for (var i = 1; i <= lines; i++) gutter.textContent += (i > 1 ? "\n" : "") + i;
-      code.parentNode.insertBefore(gutter, code);
-      code.parentNode.classList.add("has-gutter");
-    });
     wrap.appendChild(post);
     return wrap;
   }

@@ -1,9 +1,8 @@
 (function () {
   "use strict";
 
-  /* —— Article pages: plain paper while reading. When (END) comes into view,
-        one small koi swims across it, once. Footnotes move into the right
-        margin on wide screens. —— */
+  /* —— Article pages: plain paper, nothing moving while reading. Footnotes
+        move into the right margin on wide screens. —— */
 
   /* The column (680) stays centred; the rail needs 28px + at least 160px + 16px
      on its right: (680 + 2 × 204) = 1088. Narrower, the notes go to the end. */
@@ -58,23 +57,6 @@
 
   function layout() {
     layoutRail();
-  }
-
-  /** Label code blocks with their language (Rouge puts it in a class), and give each a line-number gutter. */
-  function labelCode() {
-    document.querySelectorAll(".post-prose div.highlighter-rouge").forEach(function (el) {
-      var m = /\blanguage-([\w+#-]+)/.exec(el.className);
-      if (m && m[1] !== "plaintext") el.setAttribute("data-lang", m[1]);
-    });
-    document.querySelectorAll(".post-prose pre > code").forEach(function (code) {
-      var lines = code.textContent.replace(/\n$/, "").split("\n").length;
-      var gutter = document.createElement("span");
-      gutter.className = "code-gutter";
-      gutter.setAttribute("aria-hidden", "true");
-      for (var i = 1; i <= lines; i++) gutter.textContent += (i > 1 ? "\n" : "") + i;
-      code.parentNode.insertBefore(gutter, code);
-      code.parentNode.classList.add("has-gutter");
-    });
   }
 
   /* —— Arrival, like `cat` in a terminal: the title typed character by
@@ -179,27 +161,6 @@
     SKIP.forEach(function (ev) { window.addEventListener(ev, done, { capture: true, passive: true }); });
 
     typeBar(function () { typeTitle(function () { typeMeta(streamProse); }); });
-  }
-
-  /* —— The end: once (END) is fully in view, a koi swims across it, once per
-        visit, from a random side; day or night radicals to match the page.
-        The engine stops and clears itself when the koi is out. Skipped when
-        motion is reduced. —— */
-  function watchEnd(canvas) {
-    var eof = document.querySelector(".post-eof");
-    if (!canvas || !eof || !window.OceanEngine || !("IntersectionObserver" in window)) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var io = new IntersectionObserver(function (entries) {
-      if (!entries[0].isIntersecting) return;
-      io.disconnect();
-      var themes = window.OceanThemes || {};
-      var night = document.body.classList.contains("theme-night");
-      var ocean = new window.OceanEngine(canvas, [{ kind: "koi", size: 0.62 }], 0, night ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
-      ocean.setGrid(false);
-      var r = eof.getBoundingClientRect();
-      ocean.swimAcross(r.top + r.height / 2, Math.random() < 0.5 ? 1 : -1);
-    }, { threshold: 1 });
-    io.observe(eof);
   }
 
   /* —— The prompt after (END): a few commands, like the notes shell. —— */
@@ -311,7 +272,7 @@
 
   /* —— Back to the list. Opened from the notes list, the list is still one
         step back in history, and the browser keeps that page as it was
-        (back/forward cache): going back shows it at once, koi and all, with
+        (back/forward cache): going back shows it at once, as it was, with
         no reload. Opened any other way (a shared link, a new tab, next/prev),
         follow the link to the home page's notes view. —— */
   function cameFromNotes() {
@@ -354,7 +315,6 @@
   });
 
   document.addEventListener("DOMContentLoaded", function () {
-    labelCode();
     // Start typing once any page transition has finished (pagereveal has fired
     // by the first frame) and the fonts are in (at most 400ms), so the first
     // characters don't stall while the Chinese face is still coming in.
@@ -366,7 +326,6 @@
       landed.then(go, go);
     });
     setupShell();
-    watchEnd(document.querySelector("canvas[data-koi]"));
     buildRail();
     layout();
     window.addEventListener("resize", layout);
