@@ -236,7 +236,7 @@
       if (arg === "day" || arg === "night" || arg === "auto") { th.set(arg); return say("theme: " + arg); }
       say("theme: " + th.pref() + t("  (usage: theme day / night / auto)", "　（用法：theme day / night / auto）"));
     }
-    function go(url) { window.setTimeout(function () { location.href = url; }, 260); }
+    function go(url) { window.setTimeout(function () { markReturn(); location.href = url; }, 260); }
     function run(raw) {
       var line = raw.trim().replace(/\s+/g, " ");
       if (!line) return;
@@ -323,16 +323,34 @@
     return nav && typeof nav.canGoBack === "boolean" ? nav.canGoBack : history.length > 1;
   }
   function backToNotes() {
+    markReturn();
     if (cameFromNotes()) { history.back(); return; }
     var a = document.querySelector(".post-back");
     location.href = a ? a.href : new URL("./?view=notes", document.baseURI).href;
   }
+  // $ cd .. stays lit in reverse video for a beat, as a list row does when it
+  // opens, then the page is gone in one cut (no fade: see home.html).
   var back = document.querySelector(".post-back");
   if (back) back.addEventListener("click", function (e) {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (!cameFromNotes()) return; // the link itself goes to the notes view
     e.preventDefault();
-    history.back();
+    back.classList.add("is-opening");
+    window.setTimeout(backToNotes, 90);
+  });
+
+  /* —— Leaving: the home page reads this, so it can come back the way a
+        shell does when a pager quits: no fade, the notes list as it was with
+        `cat <file>` in its history, and other views printed line by line.
+        Set on every way out (the link, a typed command, the back button). —— */
+  var FILE = decodeURIComponent(location.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
+  function markReturn() {
+    try { sessionStorage.setItem("post-return", JSON.stringify({ path: location.pathname, file: FILE, t: Date.now() })); } catch (e) {}
+  }
+  window.addEventListener("pagehide", markReturn);
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    if (back) back.classList.remove("is-opening");
+    try { sessionStorage.removeItem("post-return"); } catch (err) {}
   });
 
   document.addEventListener("DOMContentLoaded", function () {

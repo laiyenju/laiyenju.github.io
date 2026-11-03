@@ -9,6 +9,7 @@
 
   var OUT_MS = 340;
   var LIST_LIMIT = 6;
+  var PRINT_TICK = 28; // ms per line when a view prints itself, back from an article
   var TITLES = { home: "hey, I'm Yen", notes: "Notes · Yen", works: "Works · Yen" };
 
   var reduceMotion =
@@ -101,6 +102,30 @@
     window.setTimeout(enter, OUT_MS);
   }
 
+  /* Back from an article to home or works: the view prints a line at a
+     time, top to bottom, like command output. No fade, no slide. */
+  function linesOf(view) {
+    var out = [];
+    Array.prototype.forEach.call(view.children, function (el) {
+      if (el.hidden) return;
+      if (el.classList.contains("panel-list")) {
+        Array.prototype.forEach.call(el.children, function (li) { if (!li.hidden) out.push(li); });
+      } else out.push(el);
+    });
+    return out;
+  }
+  function print(name) {
+    var lines = [document.querySelector(".home-nav")].concat(linesOf(viewEl(name)));
+    lines.forEach(function (el) { el.classList.add("pr-wait"); });
+    document.documentElement.classList.remove("post-return-print");
+    if (reduceMotion) { lines.forEach(function (el) { el.classList.remove("pr-wait"); }); return; }
+    var i = 0;
+    (function step() {
+      lines[i++].classList.remove("pr-wait");
+      if (i < lines.length) window.setTimeout(step, PRINT_TICK);
+    })();
+  }
+
   function go(name, x, y) {
     if (name === current) return;
     history.pushState({ view: name }, "", urlFor(name));
@@ -117,6 +142,9 @@
     history.replaceState({ view: initial }, "", urlFor(initial));
     markNav("home");
     show(initial, false);
+    if (document.documentElement.classList.contains("post-return-print")) print(initial);
+    // The note is for this arrival only (shell.js reads it first, for the lists).
+    window.setTimeout(function () { window.postReturn = null; }, 0);
 
     document.addEventListener("click", function (e) {
       var a = e.target.closest && e.target.closest("a[data-view-link]");
