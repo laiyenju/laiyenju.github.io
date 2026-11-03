@@ -41,33 +41,58 @@
     if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
     var path = panel.getAttribute("data-path");
     var other = name === "notes" ? "works" : "notes";
-    var typing = 0;
+    var printer = window.homePrint;
+    var cmdLine = cmd.closest(".sh-line");
 
-    function typeCommand(then) {
+    /* The command types at a person's pace (input); what it prints types
+       out fast, a line at a time (output: home.js's printer). */
+    function typeTask() {
       var text = cmd.getAttribute("data-cmd");
-      var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      window.clearInterval(typing);
-      function done() {
+      var timers = [];
+      function finish() {
+        timers.forEach(window.clearTimeout);
+        cmd.textContent = text;
         cmd.classList.remove("is-typing");
-        panel.classList.remove("is-listing");
-        if (then) then();
       }
-      if (still) { cmd.textContent = text; done(); return; }
-      var n = 0;
+      return {
+        start: function (next) {
+          var n = 0;
+          cmd.textContent = "";
+          cmd.classList.add("is-typing");
+          (function step() {
+            cmd.textContent = text.slice(0, ++n);
+            if (n < text.length) return timers.push(window.setTimeout(step, 70));
+            timers.push(window.setTimeout(function () { finish(); next(); }, 180));
+          })();
+        },
+        finish: finish,
+      };
+    }
+    /** Everything below the command: total, rows, output, the prompt. */
+    function below() {
+      var lines = [];
+      var on = false;
+      Array.prototype.forEach.call(panel.children, function (el) {
+        if (el === cmdLine) { on = true; return; }
+        if (!on || el.hidden) return;
+        if (el.classList.contains("panel-list") || el.classList.contains("sh-out")) {
+          Array.prototype.forEach.call(el.children, function (c) { if (!c.hidden) lines.push(c); });
+        } else lines.push(el);
+      });
+      return lines;
+    }
+    /** Run the listing command again: type it, then print what it lists. */
+    function listing(then) {
       cmd.textContent = "";
-      cmd.classList.add("is-typing");
-      panel.classList.add("is-listing");
-      typing = window.setInterval(function () {
-        cmd.textContent = text.slice(0, ++n);
-        if (n >= text.length) { window.clearInterval(typing); window.setTimeout(done, 180); }
-      }, 70);
+      printer.task(typeTask());
+      printer.lines(below());
+      if (then) printer.task({ start: function (next) { then(); next(); }, finish: then });
     }
     // Clear wipes the whole screen, list included, then the shell lists again.
     function relist() {
       out.innerHTML = "";
-      cmd.textContent = "";
-      panel.classList.add("is-listing");
-      window.setTimeout(function () { typeCommand(function () { input.focus({ preventScroll: true }); }); }, 260);
+      printer.flush();
+      listing(function () { input.focus({ preventScroll: true }); });
     }
     function say(text, prompt) {
       var p = document.createElement("p");
@@ -146,40 +171,38 @@
       input.value = "";
     });
     tapCommands(input, ["help", "whoami", "theme", "cd ~"], run);
-    /* Back from an article: the list is already on screen, as when a pager
-       quits (home.js prints works line by line; notes is simply there). The
-       command is not typed again; the note read is in the history, and its
-       row keeps the ▸ like a picker's last choice. */
-    function returned(r) {
-      window.clearInterval(typing);
+    /* The panel comes on screen (home.js). Opened: the head prints, the
+       command types, the listing prints. Back from an article: the screen
+       is redrawn as it stood, the command already run, every line printed
+       again, with `cat <the note>` in the history and the ▸ left on its row,
+       like a picker's last choice. */
+    function arrive(back) {
+      out.innerHTML = "";
+      var head = panel.querySelector(".panel-head");
+      if (!back) {
+        printer.lines([head]);
+        cmd.textContent = "";
+        printer.lines([cmdLine]);
+        listing();
+        return;
+      }
       cmd.textContent = cmd.getAttribute("data-cmd");
       cmd.classList.remove("is-typing");
-      panel.classList.remove("is-listing");
-      out.innerHTML = "";
-      if (name !== "notes" || !r.path) return;
-      panel.querySelectorAll(".panel-list a").forEach(function (a) {
-        a.classList.toggle("is-last", new URL(a.href, location.href).pathname === r.path);
-      });
-      if (r.file) say("cat " + r.file, true);
+      if (name === "notes" && back.path) {
+        panel.querySelectorAll(".panel-list a").forEach(function (a) {
+          a.classList.toggle("is-last", new URL(a.href, location.href).pathname === back.path);
+        });
+        if (back.file) say("cat " + back.file, true);
+      }
+      printer.lines([head, cmdLine].concat(below()));
     }
-    shells[name] = {
-      open: function () {
-        var r = window.postReturn;
-        window.postReturn = null;
-        if (r) return returned(r);
-        out.innerHTML = "";
-        typeCommand();
-      },
-      returned: returned,
-      input: input,
-    };
+    shells[name] = { arrive: arrive, input: input };
   });
 
   new MutationObserver(function () {
     if (view() === shown) return;
     previous = shown;
     shown = view();
-    if (shells[shown]) shells[shown].open();
   }).observe(document.body, { attributes: true, attributeFilter: ["data-view"] });
 
   document.addEventListener("keydown", function (e) {
@@ -356,12 +379,13 @@
   // Back from the article (page restored from the cache): the list as it was.
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted || !notesPanel) return;
+    // Lines the printer had hidden when the page was left stay hidden no more.
+    if (window.homePrint) window.homePrint.flush();
     // The row that was opened says which note this is a return from, even
     // when the back button, not the article's cd .., brought the reader here.
     var lit = notesPanel.querySelector(".panel-list a.is-opening");
-    var r = window.postReturn || (lit && { path: new URL(lit.href, location.href).pathname, file: fileOf(lit.href) });
-    window.postReturn = null;
-    if (r && view() === "notes" && shells.notes) shells.notes.returned(r);
+    // home.js prints the list again after this (its pageshow runs next).
+    if (!window.postReturn && lit) window.postReturn = { path: new URL(lit.href, location.href).pathname, file: fileOf(lit.href) };
     opening = false;
     var input = notesPanel.querySelector(".sh-input");
     if (input) input.value = "";
@@ -381,4 +405,5 @@
       if (a && new URL(a.href, location.href).origin === location.origin) load(a.href);
     }, { capture: true, passive: true });
   });
+  window.homeShells = shells;
 })();
