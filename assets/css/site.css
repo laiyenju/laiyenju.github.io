@@ -628,9 +628,11 @@ body.theme-night .home-last a { color: var(--accent); }
   transition: color 200ms ease;
 }
 /* Head: title, subtitle and date centred in the reading column, above a
-   left-aligned body. They stay inside the column's edges and wrap into even
-   lines, and a short hairline (the same as a break in the prose) hands over
-   from the centred head to the text. */
+   left-aligned body, like a typewritten page: everything at the body size,
+   the title only bold. They stay inside the column's edges and wrap into
+   even lines, and a short hairline (the same as a break in the prose) hands
+   over from the centred head to the text. Headings in the prose are
+   centred the same way. */
 .post-head {
   text-align: center;
 }
@@ -644,19 +646,17 @@ body.theme-night .home-last a { color: var(--accent); }
 .post-title {
   margin: 28px auto 0;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
-  font-size: 26px;
+  font-size: 17px;
   font-weight: 700;
-  line-height: 1.45;
-  letter-spacing: 0.01em;
+  line-height: 1.8;
   color: #2a2420;
   text-wrap: balance;
 }
 .post-subtitle {
-  margin: 10px auto 0;
-  max-width: 34em;
+  margin: 0 auto;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 17px;
-  line-height: 1.7;
+  line-height: 1.8;
   color: #5a544e;
   text-wrap: balance;
 }
@@ -700,6 +700,8 @@ body.theme-night .home-last a { color: var(--accent); }
   font-weight: 700;
   line-height: 1.8;
   color: var(--ink);
+  text-align: center;
+  text-wrap: balance;
 }
 /* A heading straight after another (## then ###) stays close to it. */
 .post-prose :is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
@@ -1196,9 +1198,7 @@ body.has-rail .post-prose .footnotes {
   .post-prose {
     font-size: 16px;
   }
-  .post-title {
-    font-size: 22px;
-  }
+  .post-title,
   .post-subtitle {
     font-size: 16px;
   }
