@@ -205,6 +205,14 @@
 
       startOcean();
       measureRing();
+      // Back from an article: the koi swim in from the edges and lay the grid
+      // where they pass (home.js clears postReturn in start(), so ask first).
+      if (window.postReturn && window.homeOcean) window.homeOcean.arrive();
+      // The same when this page comes back from the back/forward cache
+      // (registered before home.js's own pageshow, which clears postReturn).
+      window.addEventListener("pageshow", function (e) {
+        if (e.persisted && window.postReturn && window.homeOcean) window.homeOcean.arrive();
+      });
       if (window.homeViews) window.homeViews.start();
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureRing);
       window.addEventListener("resize", measureRing);

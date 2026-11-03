@@ -102,6 +102,16 @@ export class OceanEngine {
     return this.renderer.coverage(left - c.left, top - c.top, right - c.left, bottom - c.top);
   }
 
+  /**
+   * Back on the home page from an article: the koi swim in from the edges
+   * and the grid is laid where they pass, then fills the frame.
+   */
+  arrive() {
+    if (this.reducedMotion.matches) return;
+    this.world.enterFromEdges();
+    this.renderer.startReveal();
+  }
+
   /** Article pages draw on plain paper, without the cell grid. */
   setGrid(show: boolean) {
     this.renderer.setGrid(show);

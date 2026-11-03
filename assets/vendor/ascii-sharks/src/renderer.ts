@@ -317,6 +317,11 @@ export function paintGrid(g: CanvasRenderingContext2D, W: number, H: number, cw:
   g.stroke();
 }
 
+/** Grid reveal: seconds the grid only follows the koi, how fast its spread then speeds up (cells/s²), and a cap. */
+const REVEAL_TRAIL = 1.4;
+const REVEAL_RAMP = 22;
+const REVEAL_MAX = 6;
+
 export class AsciiRenderer {
   private ctx: CanvasRenderingContext2D;
   private bg: HTMLCanvasElement;
@@ -409,6 +414,104 @@ export class AsciiRenderer {
     this.paintBackground();
   }
 
+  /*
+   * Grid reveal (back on the home page from an article): the grid starts
+   * empty and is laid a cell at a time where the koi swim, then spreads out
+   * from there until it covers the frame. Per cell: `gridOn` is whether the
+   * cell has been reached, `gridAlpha` eases towards it. The grid is drawn
+   * through a cols × rows mask, scaled up without smoothing, so whole cells
+   * come in, never half a line.
+   */
+  private revealing = false;
+  private revealT = 0;
+  private revealAcc = 0;
+  private gridOn = new Uint8Array(0);
+  private gridAlpha = new Float32Array(0);
+  private gridNext = new Uint8Array(0);
+  private mask: HTMLCanvasElement | null = null;
+  private maskData: ImageData | null = null;
+  private through: HTMLCanvasElement | null = null;
+
+  /** Start the grid empty and let the koi lay it down. */
+  startReveal() {
+    if (!this.showGrid) return;
+    this.revealing = true;
+    this.revealT = 0;
+    this.revealAcc = 0;
+    this.gridOn.fill(0);
+    this.gridAlpha.fill(0);
+  }
+
+  private stepReveal(dt: number) {
+    const { cols, rows, gridOn, gridAlpha, gridNext, sharkFlag } = this;
+    const n = cols * rows;
+    this.revealT += dt;
+    // Where a koi is now, the grid is laid.
+    for (let i = 0; i < n; i++) if (sharkFlag[i]) gridOn[i] = 1;
+    // And it spreads from what is laid: a few cells a second at first, so it
+    // reads as the koi's trail, then faster until the frame is covered.
+    const t = this.revealT;
+    const rate = t < REVEAL_TRAIL ? 3 : 3 + (t - REVEAL_TRAIL) * REVEAL_RAMP;
+    this.revealAcc += dt * rate;
+    while (this.revealAcc >= 1) {
+      this.revealAcc -= 1;
+      gridNext.set(gridOn);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const i = r * cols + c;
+          if (gridOn[i]) continue;
+          const near =
+            (c > 0 && gridOn[i - 1]) || (c < cols - 1 && gridOn[i + 1]) ||
+            (r > 0 && gridOn[i - cols]) || (r < rows - 1 && gridOn[i + cols]);
+          // Not every neighbour every step, so the edge stays ragged, like ink.
+          if (near && Math.random() < 0.6) gridNext[i] = 1;
+        }
+      }
+      gridOn.set(gridNext);
+    }
+    let done = true;
+    const ease = Math.min(1, dt * 7);
+    for (let i = 0; i < n; i++) {
+      gridAlpha[i] += (gridOn[i] - gridAlpha[i]) * ease;
+      if (gridAlpha[i] < 0.99) done = false;
+    }
+    if (done || t > REVEAL_MAX) this.revealing = false;
+  }
+
+  /** The grid as far as it has been laid. */
+  private drawRevealedGrid() {
+    const { cols, rows, cw, ch, dpr, gridAlpha } = this;
+    if (!this.mask || this.mask.width !== cols || this.mask.height !== rows) {
+      this.mask = document.createElement("canvas");
+      this.mask.width = cols;
+      this.mask.height = rows;
+      this.maskData = null;
+    }
+    const mg = this.mask.getContext("2d");
+    if (!mg) return;
+    if (!this.maskData) this.maskData = mg.createImageData(cols, rows);
+    const px = this.maskData.data;
+    for (let i = 0; i < cols * rows; i++) px[i * 4 + 3] = Math.round(gridAlpha[i] * 255);
+    mg.putImageData(this.maskData, 0, 0);
+
+    if (!this.through) this.through = document.createElement("canvas");
+    const th = this.through;
+    if (th.width !== this.canvas.width || th.height !== this.canvas.height) {
+      th.width = this.canvas.width;
+      th.height = this.canvas.height;
+    }
+    const tg = th.getContext("2d");
+    if (!tg) return;
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    tg.globalCompositeOperation = "copy";
+    tg.drawImage(this.bg, 0, 0);
+    tg.globalCompositeOperation = "destination-in";
+    tg.imageSmoothingEnabled = false;
+    tg.drawImage(this.mask, 0, 0, Math.round(cols * cw * dpr), Math.round(rows * ch * dpr));
+    tg.globalCompositeOperation = "source-over";
+    this.ctx.drawImage(th, 0, 0);
+  }
+
   /**
    * Share of the cells under a box (canvas px) that hold solid koi body,
    * from the last rendered frame. Lets the page cut copy out of a koi
@@ -475,6 +578,9 @@ export class AsciiRenderer {
       this.sharkAlpha = new Float32Array(n);
       this.sharkShadow = new Uint8Array(n);
       this.fishStamp = new Uint32Array(n);
+      this.gridOn = new Uint8Array(n).fill(this.revealing ? 0 : 1);
+      this.gridAlpha = new Float32Array(n).fill(this.revealing ? 0 : 1);
+      this.gridNext = new Uint8Array(n);
     }
 
     for (let i = 0; i < n; i++) {
@@ -509,7 +615,10 @@ export class AsciiRenderer {
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.drawImage(this.bg, 0, 0);
+    if (this.revealing) {
+      this.stepReveal(dt);
+      this.drawRevealedGrid();
+    } else ctx.drawImage(this.bg, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     this.markFish(world);
