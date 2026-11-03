@@ -3,6 +3,41 @@
 <head>
   <base href="{{ '/' | relative_url }}">
   {% include head.html %}
+  <script>
+    // Back from an article (post.js leaves a note in sessionStorage): the way
+    // a shell comes back when a pager quits. No cross-fade, one cut. The notes
+    // list is just there, as it was; home and works print line by line
+    // (home.js), so they stay hidden until that starts.
+    (function () {
+      var root = document.documentElement;
+      function take() {
+        var r = null;
+        try {
+          r = JSON.parse(sessionStorage.getItem("post-return") || "null");
+          sessionStorage.removeItem("post-return");
+        } catch (e) {}
+        return r && Date.now() - r.t < 10000 ? r : null;
+      }
+      window.postReturn = take();
+      var cut = !!window.postReturn; // kept here: the scripts clear postReturn once they have used it
+      var toNotes = /\/notes\/?$/.test(location.pathname) || /[?&]view=notes\b/.test(location.search);
+      if (window.postReturn && !toNotes) root.classList.add("post-return-print");
+      // Restored from the back/forward cache: the page is as it was left.
+      window.addEventListener("pageshow", function (e) {
+        if (!e.persisted) return;
+        window.postReturn = take() || window.postReturn;
+        // The back button from a note, too: the row that opened it is still lit.
+        cut = !!window.postReturn || !!document.querySelector(".sh-panel .panel-list a.is-opening");
+      });
+      window.addEventListener("pagereveal", function (e) {
+        var vt = e.viewTransition;
+        if (!vt || !cut) return;
+        cut = false;
+        vt.ready.catch(function () {}); // skipping rejects ready; that is expected here
+        vt.skipTransition();
+      });
+    })();
+  </script>
 </head>
 {% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
 <body class="lang-{{ page_lang }} home">

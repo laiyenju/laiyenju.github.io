@@ -146,7 +146,33 @@
       input.value = "";
     });
     tapCommands(input, ["help", "whoami", "theme", "cd ~"], run);
-    shells[name] = { open: function () { out.innerHTML = ""; typeCommand(); }, input: input };
+    /* Back from an article: the list is already on screen, as when a pager
+       quits (home.js prints works line by line; notes is simply there). The
+       command is not typed again; the note read is in the history, and its
+       row keeps the ▸ like a picker's last choice. */
+    function returned(r) {
+      window.clearInterval(typing);
+      cmd.textContent = cmd.getAttribute("data-cmd");
+      cmd.classList.remove("is-typing");
+      panel.classList.remove("is-listing");
+      out.innerHTML = "";
+      if (name !== "notes" || !r.path) return;
+      panel.querySelectorAll(".panel-list a").forEach(function (a) {
+        a.classList.toggle("is-last", new URL(a.href, location.href).pathname === r.path);
+      });
+      if (r.file) say("cat " + r.file, true);
+    }
+    shells[name] = {
+      open: function () {
+        var r = window.postReturn;
+        window.postReturn = null;
+        if (r) return returned(r);
+        out.innerHTML = "";
+        typeCommand();
+      },
+      returned: returned,
+      input: input,
+    };
   });
 
   new MutationObserver(function () {
@@ -225,6 +251,12 @@
     return wrap;
   }
 
+  /** …/2026-10-29-markdown-styles.html → markdown-styles.md, as `cat` names it. */
+  function fileOf(href) {
+    var path = new URL(href, location.href).pathname;
+    return decodeURIComponent(path.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
+  }
+
   function open(a) {
     var url = new URL(a.href, location.href);
     var go = function () {
@@ -237,8 +269,7 @@
     var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (still || !live || !input) return plain();
 
-    var file = decodeURIComponent(url.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
-    var text = "cat " + file;
+    var text = "cat " + fileOf(url.href);
     var page = load(url.href);
     var chrome = document.querySelector(".home-chrome");
     var canvas = document.querySelector("canvas[data-koi]");
@@ -325,6 +356,12 @@
   // Back from the article (page restored from the cache): the list as it was.
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted || !notesPanel) return;
+    // The row that was opened says which note this is a return from, even
+    // when the back button, not the article's cd .., brought the reader here.
+    var lit = notesPanel.querySelector(".panel-list a.is-opening");
+    var r = window.postReturn || (lit && { path: new URL(lit.href, location.href).pathname, file: fileOf(lit.href) });
+    window.postReturn = null;
+    if (r && view() === "notes" && shells.notes) shells.notes.returned(r);
     opening = false;
     var input = notesPanel.querySelector(".sh-input");
     if (input) input.value = "";

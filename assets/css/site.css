@@ -443,6 +443,8 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 .home-panel .sh-line,
 .home-panel .sh-out p { font-size: 15px; }
 .ls-mark { color: transparent; }
+/* Back from a note: its row keeps the ▸, like a picker's last choice. */
+.sh-panel .panel-list a.is-last .ls-mark { color: var(--accent); }
 .ls-perm, .ls-size, .ls-date { color: #736d66; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ls-size { text-align: right; }
 /* While the command types itself out, the listing waits, as if the shell hasn't answered yet. */
@@ -1406,6 +1408,22 @@ html.post-print.stream-done .post-prose > * {
   }
 }
 
+/* Back from an article to home or works: the page prints itself a line at a
+   time (home.js), so it waits blank until then. Should the script not run,
+   it shows anyway after a moment. */
+html.post-return-print .home-chrome {
+  visibility: hidden;
+  animation: pr-safety 0s 1.2s forwards;
+}
+@keyframes pr-safety {
+  to {
+    visibility: visible;
+  }
+}
+.pr-wait {
+  visibility: hidden !important;
+}
+
 /* Navigations between pages cross-fade briefly (old page out fast, new one in
    behind it). A note opened from the list hands over with no transition at
    all: it is already on screen (see the head script in default.html). */
@@ -1608,12 +1626,14 @@ body .post-prose a.footnote:is(:active, :focus-visible) {
 /* Terminal rows: reverse video. The article's $ cd .. at the top is one
    too, the same as prev / next at the end. */
 body :is(.post-pager a, .post-back):focus-visible,
-body :is(.post-pager a, .post-back):active {
+body :is(.post-pager a, .post-back):active,
+body .post-back.is-opening {
   background: var(--link-sel-bg);
   color: var(--link-sel-fg);
 }
 body :is(.post-pager a, .post-back):focus-visible *,
-body :is(.post-pager a, .post-back):active * {
+body :is(.post-pager a, .post-back):active *,
+body .post-back.is-opening * {
   color: inherit !important;
 }
 @media (hover: hover) {
