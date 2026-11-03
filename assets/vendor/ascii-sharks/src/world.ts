@@ -387,6 +387,35 @@ export class World {
     this.passDone = false;
   }
 
+  /**
+   * Back on the home page: every koi on show starts outside the frame, one
+   * from each side in turn, and swims in. Each starts a little farther out
+   * than the last, so they come in one after another.
+   */
+  enterFromEdges() {
+    const { width: W, height: H } = this;
+    const shown = this.sharks.filter((sh) => sh.fade > 0);
+    const first = randInt(0, 3);
+    shown.forEach((sh, i) => {
+      const side = (first + i) % 4;
+      const along = rand(0.2, 0.8);
+      const pad = sh.length * (0.05 + i * 0.22);
+      const x = side === 0 ? -pad : side === 1 ? W + pad : along * W;
+      const y = side === 2 ? -pad : side === 3 ? H + pad : along * H;
+      const heading = Math.atan2(H / 2 - y, W / 2 - x) + rand(-0.35, 0.35);
+      const seg = sh.length / (SHARK_NODES - 1);
+      for (let n = 0; n < SHARK_NODES; n++) {
+        sh.nodes[n * 2] = x - Math.cos(heading) * seg * n;
+        sh.nodes[n * 2 + 1] = y - Math.sin(heading) * seg * n;
+      }
+      sh.heading = heading;
+      sh.wander = 0;
+      sh.scare = 0;
+      sh.away = false;
+      sh.rush = 0.6;
+    });
+  }
+
   /** Put a hidden koi just outside a random edge, nose in, and bring it back fast. */
   private reenter(sh: Shark) {
     const { width: W, height: H } = this;
