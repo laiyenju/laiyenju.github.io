@@ -93,7 +93,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 設定 | 位置 | 預設 | 其他選項／注意 |
 |---|---|---|---|
 | 日夜主題 | 讀者自己選（首頁右上角） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
-| 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`），分享卡片在 `scripts/og/card.html`，要一起改 |
+| 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`，內文標題也用這個顏色），分享卡片在 `scripts/og/card.html`，要一起改 |
 | 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
 | 錦鯉樣式 | `_layouts/home.html` 的 `OceanEngine(…)`（文章頁沒有錦鯉） | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
 | 首頁與 notes／works 字級 | `assets/css/site.css` 的 `.home-nav`、`.home-greeting`、`.home-role`、`.home-slogan`、`.home-links`、`.home-last`、`.home-panel .sh-line`、`.sh-panel .panel-list a`、`.work-desc` | 選單 15px（寬螢幕 17px）、問候 24–32px、職稱／slogan 15px（寬螢幕 17px）、清單 15px（手機 14px） | 文章頁底部的指令列另外保持 13px。改大後要看手機寬度的 notes 清單標題還放得下 |
@@ -135,6 +135,8 @@ flowchart LR
 2. 發布 = 把檔案移進 `published/`，檔名用 `YYYY-MM-DD-題目.md`。
 3. 寫好 front matter（見 2.2）。
 4. `git push` 到 `main`，其他都是自動的。
+
+內文標題（`##` 到 `######`）後面接一般段落時，會併進那一段的開頭，用強調色顯示（`assets/js/post.js` 的 `runInHeadings`）；後面接清單、表格、圖片或另一個標題時，自己一行。標題不要寫得太長，讀起來才像段落的開頭。
 
 圖片的寫法：`![替代文字](/assets/images/檔名.jpg "圖說")`。引號裡的文字是圖說，不寫就沒有圖說。一張圖自己一段；要並排就把兩張以上的圖片放在同一段（連續幾行，中間不空行）。
 

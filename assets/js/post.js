@@ -57,6 +57,26 @@
   }
   buildFigures();
 
+  /* —— Headings run in: a heading followed by a paragraph becomes the
+        start of that paragraph. It stays a heading for screen readers
+        (role, level) and keeps its id, so links to it still work. —— */
+  function runInHeadings() {
+    if (!prose) return;
+    prose.querySelectorAll(":scope > :is(h1, h2, h3, h4, h5, h6)").forEach(function (h) {
+      var p = h.nextElementSibling;
+      if (!p || p.tagName !== "P") return;
+      var s = document.createElement("span");
+      s.className = "post-runin";
+      s.setAttribute("role", "heading");
+      s.setAttribute("aria-level", h.tagName.charAt(1));
+      if (h.id) s.id = h.id;
+      s.innerHTML = h.innerHTML;
+      p.insertBefore(s, p.firstChild);
+      h.remove();
+    });
+  }
+  runInHeadings();
+
   /* —— Enlarged view: click an image. Esc or a click on the image closes;
         arrows, the buttons or a swipe go to the other images of the note. —— */
   var ICON = {

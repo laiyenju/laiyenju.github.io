@@ -631,8 +631,7 @@ body.theme-night .home-last a { color: var(--accent); }
    left-aligned body, like a typewritten page: everything at the body size,
    the title only bold. They stay inside the column's edges and wrap into
    even lines, and a short hairline (the same as a break in the prose) hands
-   over from the centred head to the text. Headings in the prose are
-   centred the same way. */
+   over from the centred head to the text. */
 .post-head {
   text-align: center;
 }
@@ -694,14 +693,24 @@ body.theme-night .home-last a { color: var(--accent); }
 /* Headings: one size, the body's, in bold, as a terminal prints a file.
    Space does the work size used to: a wide gap above a heading, a narrow
    one below, so each heading reads as the start of what follows it. */
+/* Headings run in: a heading followed by a paragraph opens that paragraph
+   (post.js), set apart only by the accent colour and a little more room
+   before the text. The paragraph takes the space a heading had above it.
+   A heading followed by anything else keeps a line of its own, looking the
+   same. */
 .post-prose :is(h1, h2, h3, h4, h5, h6) {
   margin: 2.6em 0 0.2em;
   font-size: 1em;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.8;
-  color: var(--ink);
-  text-align: center;
-  text-wrap: balance;
+  color: var(--shu);
+}
+.post-runin {
+  margin-inline-end: 0.75em;
+  color: var(--shu);
+}
+.post-prose p:has(> .post-runin:first-child) {
+  margin-top: 2.6em;
 }
 /* A heading straight after another (## then ###) stays close to it. */
 .post-prose :is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
