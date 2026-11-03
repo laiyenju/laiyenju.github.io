@@ -175,7 +175,7 @@ body.home {
   gap: 28px;
   margin: 0 0 40px;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
   letter-spacing: 0.02em;
   color: #2a2420;
@@ -209,7 +209,7 @@ body .home-nav a {
 }
 @media (min-width: 900px) {
   .home-nav {
-    font-size: 15px;
+    font-size: 17px;
   }
 }
 
@@ -235,7 +235,7 @@ body .home-nav a {
 
 .home-copy {
   position: relative;
-  max-width: 36ch;
+  max-width: 42ch;
   margin: 0 auto;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-weight: 400;
@@ -260,7 +260,7 @@ body .home-nav a {
   align-items: baseline;
   gap: 16px;
   margin: 0 0 14px;
-  font-size: 12px;
+  font-size: 13px;
   color: #736d66;
 }
 .panel-back {
@@ -314,7 +314,7 @@ body .home-nav a {
   border: 0;
   background: none;
   font: inherit;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--accent);
   cursor: pointer;
 }
@@ -337,7 +337,7 @@ body .home-nav a {
 .home-greeting {
   margin: 0 0 8px;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: clamp(22px, 2.6vw, 28px);
+  font-size: clamp(24px, 3vw, 32px);
   /* Medium weight and no tightening, so the mono cells show. */
   font-weight: 500;
   letter-spacing: 0;
@@ -349,7 +349,7 @@ body .home-nav a {
 .home-slogan {
   margin: 0 auto 8px;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
   line-height: 1.55;
   letter-spacing: -0.01em;
@@ -361,7 +361,7 @@ body .home-nav a {
 @media (min-width: 900px) {
   .home-role,
   .home-slogan {
-    font-size: 15px;
+    font-size: 17px;
     line-height: 1.58;
   }
 }
@@ -369,7 +369,7 @@ body .home-nav a {
 .home-links {
   margin: 0;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   letter-spacing: 0.01em;
   color: #736d66;
@@ -387,6 +387,10 @@ body .home-nav a {
   .home-nav {
     gap: 22px;
     margin-bottom: 32px;
+  }
+  /* One step down on phones, so the slogan stays on one line. */
+  .home-slogan {
+    font-size: 14px;
   }
 }
 
@@ -430,11 +434,14 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 }
 .sh-cmd:not(.is-typing)::after { display: none; }
 @keyframes sh-blink { 50% { opacity: 0; } }
-.sh-panel .panel-list a { padding: 3px 6px; margin: 0 -6px; border-radius: 1px; font-size: 13px; line-height: 1.75; }
+.sh-panel .panel-list a { padding: 3px 6px; margin: 0 -6px; border-radius: 1px; font-size: 15px; line-height: 1.75; }
 .sh-notes .panel-list a {
   display: grid; grid-template-columns: 1.5ch 10ch 10ch minmax(0, 1fr) 10ch; gap: 14px; align-items: baseline;
 }
-.sh-panel .panel-title { font-size: 13px; line-height: 1.75; }
+.sh-panel .panel-title { font-size: inherit; line-height: 1.75; }
+/* Home lists read a size up from the article's footer prompt, which keeps 13px. */
+.home-panel .sh-line,
+.home-panel .sh-out p { font-size: 15px; }
 .ls-mark { color: transparent; }
 .ls-perm, .ls-size, .ls-date { color: #736d66; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ls-size { text-align: right; }
@@ -496,9 +503,13 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 @media (prefers-reduced-motion: reduce) { .sh-caret { animation: none; } }
 /* Key hints sit up top beside $ cd ~, so the prompt can be the last line and print below it. */
 .sh-keys { margin: 0; font-size: 12px; color: #736d66; }
+.home-panel .sh-keys { font-size: 13px; }
 .sh-panel .panel-head { justify-content: space-between; }
 .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
 @media (max-width: 560px) {
+  .home-panel .sh-line,
+  .home-panel .sh-out p,
+  .sh-panel .panel-list a { font-size: 14px; }
   .sh-notes .panel-list a { grid-template-columns: 1.5ch 10ch minmax(0, 1fr) 9ch; gap: 10px; }
   .ls-perm { display: none; }
   .sh-keys { display: none; }
@@ -513,12 +524,12 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 .sh-works .panel-list a {
   display: grid; grid-template-columns: 1.5ch 10ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
 }
-.work-status { font-size: 12px; color: #736d66; white-space: nowrap; }
+.work-status { font-size: 13px; color: #736d66; white-space: nowrap; }
 /* Status by shape, not colour: ● in progress (the accent), ◐ experiment, ○ done. */
 .work-status::before { content: "○ "; }
 .work-status[data-status="experiment"]::before { content: "◐ "; }
 .work-status[data-status="in progress"]::before { content: "● "; color: var(--accent); }
-.work-desc { grid-column: 3 / -1; font-size: 12px; line-height: 1.6; color: #736d66; padding-bottom: 4px; }
+.work-desc { grid-column: 3 / -1; font-size: 14px; line-height: 1.6; color: #736d66; padding-bottom: 4px; }
 @media (max-width: 560px) {
   .sh-works .panel-list a { grid-template-columns: 1.5ch minmax(0, 1fr) auto; column-gap: 10px; }
   .work-desc { grid-column: 2 / -1; }
@@ -566,7 +577,7 @@ body.theme-night .sh-panel .panel-list a.is-opening { background: #e8e6e3; color
   margin: 32px auto 0;
   padding-top: 14px;
   border-top: 1px solid rgba(42, 36, 32, 0.14);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
   color: #6e6a64;
   font-variant-numeric: tabular-nums;
