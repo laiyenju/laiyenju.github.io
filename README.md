@@ -95,6 +95,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`），分享卡片在 `scripts/og/card.html`，要一起改 |
 | 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.md`、`works/index.md`、`scripts/og/card.html`（只有日間）也有 |
 | 錦鯉樣式 | `_layouts/home.html`、`assets/js/post.js` 的 `OceanEngine(…)` | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
+| 首頁與 notes／works 字級 | `assets/css/site.css` 的 `.home-nav`、`.home-greeting`、`.home-role`、`.home-slogan`、`.home-links`、`.home-last`、`.home-panel .sh-line`、`.sh-panel .panel-list a`、`.work-desc` | 選單 15px（寬螢幕 17px）、問候 24–32px、職稱／slogan 15px（寬螢幕 17px）、清單 15px（手機 14px） | 文章頁底部的指令列另外保持 13px。改大後要看手機寬度的 notes 清單標題還放得下 |
 | 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；錦鯉用 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
 | 點文章時的捲動速度 | `assets/js/shell.js` 的 `LINE`、`TICK` | `30`（px）、`24`（ms） | `LINE` 越大、`TICK` 越小越快 |
