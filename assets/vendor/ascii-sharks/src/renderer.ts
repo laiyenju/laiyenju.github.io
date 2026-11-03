@@ -318,14 +318,16 @@ export function paintGrid(g: CanvasRenderingContext2D, W: number, H: number, cw:
 }
 
 /**
- * Grid reveal: how fast the grid spreads from what is laid at first (cells/s),
- * the seconds it only follows the koi, how fast its spread then speeds up
- * (cells/s²), and a cap in seconds.
+ * Grid reveal: the grid is laid only where the koi swim, so it fills along
+ * their paths. REVEAL_BRUSH: how readily the cells one and two away from a
+ * koi's body are laid as it passes (per second). REVEAL_CREEP: how many cells
+ * a second the laid grid creeps on its own, so the spots no koi reaches
+ * still fill in, slowly. REVEAL_MAX: after this many seconds, the rest fades
+ * in softly over a few seconds.
  */
-const REVEAL_START = 1.5;
-const REVEAL_TRAIL = 3;
-const REVEAL_RAMP = 5;
-const REVEAL_MAX = 14;
+const REVEAL_BRUSH = [3, 0.8];
+const REVEAL_CREEP = 0.6;
+const REVEAL_MAX = 40;
 
 export class AsciiRenderer {
   private ctx: CanvasRenderingContext2D;
@@ -451,36 +453,56 @@ export class AsciiRenderer {
     const { cols, rows, gridOn, gridAlpha, gridNext, sharkFlag } = this;
     const n = cols * rows;
     this.revealT += dt;
-    // Where a koi is now, the grid is laid.
-    for (let i = 0; i < n; i++) if (sharkFlag[i]) gridOn[i] = 1;
-    // And it spreads from what is laid: a cell or two a second at first, so it
-    // reads as the koi's trail, then faster until the frame is covered.
-    const t = this.revealT;
-    const rate = REVEAL_START + Math.max(0, t - REVEAL_TRAIL) * REVEAL_RAMP;
-    this.revealAcc += dt * rate;
-    while (this.revealAcc >= 1) {
-      this.revealAcc -= 1;
-      gridNext.set(gridOn);
+    const settling = this.revealT > REVEAL_MAX;
+    if (settling) gridOn.fill(1);
+    else {
+      // Under a koi the grid is laid; around it, now and then, so the trail's edge is ragged.
+      const p1 = 1 - Math.exp(-REVEAL_BRUSH[0] * dt);
+      const p2 = 1 - Math.exp(-REVEAL_BRUSH[1] * dt);
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          const i = r * cols + c;
-          if (gridOn[i]) continue;
-          const near =
-            (c > 0 && gridOn[i - 1]) || (c < cols - 1 && gridOn[i + 1]) ||
-            (r > 0 && gridOn[i - cols]) || (r < rows - 1 && gridOn[i + cols]);
-          // Not every neighbour every step, so the edge stays ragged, like ink.
-          if (near && Math.random() < 0.6) gridNext[i] = 1;
+          if (!sharkFlag[r * cols + c]) continue;
+          gridOn[r * cols + c] = 1;
+          for (let dr = -2; dr <= 2; dr++) {
+            const rr = r + dr;
+            if (rr < 0 || rr >= rows) continue;
+            for (let dc = -2; dc <= 2; dc++) {
+              const cc = c + dc;
+              const d = Math.abs(dr) + Math.abs(dc);
+              if (cc < 0 || cc >= cols || d === 0 || d > 2) continue;
+              const k = rr * cols + cc;
+              if (!gridOn[k] && Math.random() < (d === 1 ? p1 : p2)) gridOn[k] = 1;
+            }
+          }
         }
       }
-      gridOn.set(gridNext);
+      // The laid grid creeps outward a little on its own, never faster.
+      this.revealAcc += dt * REVEAL_CREEP;
+      while (this.revealAcc >= 1) {
+        this.revealAcc -= 1;
+        gridNext.set(gridOn);
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const i = r * cols + c;
+            if (gridOn[i]) continue;
+            const near =
+              (c > 0 && gridOn[i - 1]) || (c < cols - 1 && gridOn[i + 1]) ||
+              (r > 0 && gridOn[i - cols]) || (r < rows - 1 && gridOn[i + cols]);
+            // Not every neighbour every step, so the edge stays ragged, like ink.
+            if (near && Math.random() < 0.5) gridNext[i] = 1;
+          }
+        }
+        gridOn.set(gridNext);
+      }
     }
     let done = true;
-    const ease = Math.min(1, dt * 4);
+    // Each cell fades in; the last of them, after REVEAL_MAX, more slowly still.
+    const ease = Math.min(1, dt * (settling ? 0.7 : 3));
     for (let i = 0; i < n; i++) {
       gridAlpha[i] += (gridOn[i] - gridAlpha[i]) * ease;
-      if (gridAlpha[i] < 0.99) done = false;
+      if (gridAlpha[i] < 0.995) done = false;
     }
-    if (done || t > REVEAL_MAX) this.revealing = false;
+    if (done) this.revealing = false;
   }
 
   /** The grid as far as it has been laid. */

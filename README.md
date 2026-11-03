@@ -100,7 +100,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
 | 點文章時的捲動速度 | `assets/js/shell.js` 的 `LINE`、`TICK` | `30`（px）、`24`（ms） | `LINE` 越大、`TICK` 越小越快 |
 | 首頁、notes、works 打字機般逐行印出的速度 | `assets/js/home.js` 的 `TYPE_MS`、`TYPE_MAX`；問候語是 `_layouts/home.html` 的 `data-type-ms` | 每字 `8`ms、每行最多 `260`ms；問候語每字 `40`ms | 每次進入這三個畫面都會印（載入、切換、從文章回來）；按任意鍵、點擊、捲動就一次印完。`ls -lt` 這類指令照人打字的速度（`assets/js/shell.js`，每字 70ms）。從文章回來時指令不重打，歷史多一行 `cat 檔名.md`，讀過的那列留著 ▸ |
-| 從文章回來時錦鯉游進來、格線鋪滿 | `assets/vendor/ascii-sharks/src/renderer.ts` 的 `REVEAL_START`、`REVEAL_TRAIL`、`REVEAL_RAMP`、`REVEAL_MAX`；進場位置與速度在 `src/world.ts` 的 `enterFromEdges` | 一開始每秒擴散 `1.5` 格；前 `3` 秒格線只跟著錦鯉鋪，之後擴散加速（每秒² `5` 格），桌機約 9 秒、手機約 7.5 秒鋪滿，最多 `14` 秒；錦鯉從四邊輪流進來（`rush` `0.6`） | 只在從文章回到首頁、notes、works 時發生。改了要重新打包 `ocean.js`（見 3.3） |
+| 從文章回來時錦鯉游進來、格線鋪滿 | `assets/vendor/ascii-sharks/src/renderer.ts` 的 `REVEAL_BRUSH`、`REVEAL_CREEP`、`REVEAL_MAX`；進場位置與速度在 `src/world.ts` 的 `enterFromEdges` | 格線只沿著錦鯉游過的路徑鋪（身體下方必鋪，旁邊一、兩格每秒機率 `3`、`0.8`）；已鋪的地方每秒自己往外爬 `0.6` 格，讓錦鯉游不到的角落也慢慢補上；`40` 秒後剩下的部分柔和淡入 | 只在從文章回到首頁、notes、works 時發生。改了要重新打包 `ocean.js`（見 3.3） |
 
 ### 2.6 介面語言
 

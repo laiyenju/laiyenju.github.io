@@ -1293,10 +1293,9 @@
     }
     g.stroke();
   }
-  var REVEAL_START = 1.5;
-  var REVEAL_TRAIL = 3;
-  var REVEAL_RAMP = 5;
-  var REVEAL_MAX = 14;
+  var REVEAL_BRUSH = [3, 0.8];
+  var REVEAL_CREEP = 0.6;
+  var REVEAL_MAX = 40;
   var AsciiRenderer = class {
     constructor(canvas, theme = ASCII) {
       this.canvas = canvas;
@@ -1412,30 +1411,50 @@
       const { cols, rows, gridOn, gridAlpha, gridNext, sharkFlag } = this;
       const n = cols * rows;
       this.revealT += dt;
-      for (let i = 0; i < n; i++) if (sharkFlag[i]) gridOn[i] = 1;
-      const t = this.revealT;
-      const rate = REVEAL_START + Math.max(0, t - REVEAL_TRAIL) * REVEAL_RAMP;
-      this.revealAcc += dt * rate;
-      while (this.revealAcc >= 1) {
-        this.revealAcc -= 1;
-        gridNext.set(gridOn);
+      const settling = this.revealT > REVEAL_MAX;
+      if (settling) gridOn.fill(1);
+      else {
+        const p1 = 1 - Math.exp(-REVEAL_BRUSH[0] * dt);
+        const p2 = 1 - Math.exp(-REVEAL_BRUSH[1] * dt);
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
-            const i = r * cols + c;
-            if (gridOn[i]) continue;
-            const near = c > 0 && gridOn[i - 1] || c < cols - 1 && gridOn[i + 1] || r > 0 && gridOn[i - cols] || r < rows - 1 && gridOn[i + cols];
-            if (near && Math.random() < 0.6) gridNext[i] = 1;
+            if (!sharkFlag[r * cols + c]) continue;
+            gridOn[r * cols + c] = 1;
+            for (let dr = -2; dr <= 2; dr++) {
+              const rr = r + dr;
+              if (rr < 0 || rr >= rows) continue;
+              for (let dc = -2; dc <= 2; dc++) {
+                const cc = c + dc;
+                const d = Math.abs(dr) + Math.abs(dc);
+                if (cc < 0 || cc >= cols || d === 0 || d > 2) continue;
+                const k = rr * cols + cc;
+                if (!gridOn[k] && Math.random() < (d === 1 ? p1 : p2)) gridOn[k] = 1;
+              }
+            }
           }
         }
-        gridOn.set(gridNext);
+        this.revealAcc += dt * REVEAL_CREEP;
+        while (this.revealAcc >= 1) {
+          this.revealAcc -= 1;
+          gridNext.set(gridOn);
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const i = r * cols + c;
+              if (gridOn[i]) continue;
+              const near = c > 0 && gridOn[i - 1] || c < cols - 1 && gridOn[i + 1] || r > 0 && gridOn[i - cols] || r < rows - 1 && gridOn[i + cols];
+              if (near && Math.random() < 0.5) gridNext[i] = 1;
+            }
+          }
+          gridOn.set(gridNext);
+        }
       }
       let done = true;
-      const ease = Math.min(1, dt * 4);
+      const ease = Math.min(1, dt * (settling ? 0.7 : 3));
       for (let i = 0; i < n; i++) {
         gridAlpha[i] += (gridOn[i] - gridAlpha[i]) * ease;
-        if (gridAlpha[i] < 0.99) done = false;
+        if (gridAlpha[i] < 0.995) done = false;
       }
-      if (done || t > REVEAL_MAX) this.revealing = false;
+      if (done) this.revealing = false;
     }
     /** The grid as far as it has been laid. */
     drawRevealedGrid() {
