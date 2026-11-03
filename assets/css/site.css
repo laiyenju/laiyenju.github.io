@@ -976,10 +976,11 @@ body.theme-night .home-last a { color: var(--accent); }
   color: var(--ink-faint);
 }
 
+/* Phones: the table keeps the column's full width; long cells wrap. */
 @media (max-width: 640px) {
-  .post-prose table {
-    display: block;
-    overflow-x: auto;
+  .post-prose td,
+  .post-prose th {
+    overflow-wrap: anywhere;
   }
 }
 
