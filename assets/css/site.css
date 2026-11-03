@@ -1408,10 +1408,10 @@ html.post-print.stream-done .post-prose > * {
   }
 }
 
-/* Back from an article to home or works: the page prints itself a line at a
-   time (home.js), so it waits blank until then. Should the script not run,
-   it shows anyway after a moment. */
-html.post-return-print .home-chrome {
+/* The home, notes and works print themselves a line at a time (home.js),
+   so the page waits blank until then. Should the script not run, it shows
+   anyway after a moment. */
+html.print-pending .home-chrome {
   visibility: hidden;
   animation: pr-safety 0s 1.2s forwards;
 }

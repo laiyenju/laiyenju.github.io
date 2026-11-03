@@ -4,10 +4,10 @@
   <base href="{{ '/' | relative_url }}">
   {% include head.html %}
   <script>
-    // Back from an article (post.js leaves a note in sessionStorage): the way
-    // a shell comes back when a pager quits. No cross-fade, one cut. The notes
-    // list is just there, as it was; home and works print line by line
-    // (home.js), so they stay hidden until that starts.
+    // Every visit prints the page out line by line (home.js), so it stays
+    // blank until that starts. Back from an article (post.js leaves a note
+    // in sessionStorage), it comes in one cut, no cross-fade, like a shell
+    // when a pager quits, and the list's history shows the note read.
     (function () {
       var root = document.documentElement;
       function take() {
@@ -20,8 +20,7 @@
       }
       window.postReturn = take();
       var cut = !!window.postReturn; // kept here: the scripts clear postReturn once they have used it
-      var toNotes = /\/notes\/?$/.test(location.pathname) || /[?&]view=notes\b/.test(location.search);
-      if (window.postReturn && !toNotes) root.classList.add("post-return-print");
+      if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) root.classList.add("print-pending");
       // Restored from the back/forward cache: the page is as it was left.
       window.addEventListener("pageshow", function (e) {
         if (!e.persisted) return;
@@ -61,7 +60,7 @@
       {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
       {% assign last_note = notes | first %}
       <div class="home-view home-copy" data-view="home">
-        <h1 class="home-greeting">hey, I'm Yen</h1>
+        <h1 class="home-greeting" data-type-ms="40">hey, I'm Yen</h1>
         <p class="home-role">Product manager @Taiwan</p>
         <p class="home-slogan">I write about how products get decided.</p>
         <p class="home-links"><a href="https://github.com/laiyenju">github</a> · <a href="https://www.linkedin.com/in/laiyenju/">linkedin</a> · <a href="https://x.com/theYenLai">x</a></p>
