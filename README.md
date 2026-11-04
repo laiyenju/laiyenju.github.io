@@ -92,8 +92,8 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 | 欄位 | 必填 | 說明 |
 |---|---|---|
-| `date` | 是 | `"YYYY-MM-DD"`，要加引號 |
-| `scene` | 是 | 建築模型的名字，要先在 `assets/js/day.js` 的 `SCENES` 裡有這個模型。目前有：`studio`（工作室）、`home`（家）、`itsukushima`、`naoshima`、`grandcentral`、`whitehouse`、`mbc`、`hongik` |
+| `date` | 是 | `"YYYY-MM-DD"`，要加引號。一天只放一棟建築 |
+| `scene` | 是 | 建築模型的名字，要先在 `assets/js/day.js` 的 `SCENES` 裡有這個模型。目前有：`studio`（工作室）、`home`（家）、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`whitney`、`capitol`、`whitehouse`、`washington`、`mbc`、`hongik` |
 | `name` | 是 | 英文名稱 |
 | `zh` | 是 | 中文名稱。不要中文時改寫 `no_zh: true` |
 | `place` | 是 | 城市或地區，例如 `Sangam, Seoul`，會變成 Google Maps 連結 |
@@ -241,7 +241,7 @@ jekyll serve
 |---|------|------|------|
 | 1 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡 | 第一篇正式文章上線後刪除 |
 | 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample*.svg`（三張） | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
-| 3 | `_data/days.yml` 的四筆（紐約中央車站、白宮、MBC、弘益大學） | 日期和 `did` 是暫定的 | 換成實際日期和那天做的事 |
+| 3 | `_data/days.yml` 的兩筆韓國（MBC、弘益大學） | 日期和 `did` 是暫定的 | 換成實際日期和那天做的事 |
 | 4 | 工作室模型（`day.js` 的 `SCENES.studio`） | 外型是暫定的辦公大樓 | 有照片後照著重畫 |
 | 5 | 「Where is Yen now」的自動打卡 | 目前只用作息表推算（`day.js` 的 `CHECKIN` 是 `null`） | 網站穩定後再設定 iPhone 捷徑：抵達或離開時更新一個只有文字標籤的檔案 |
 | 6 | 農曆國定假日 | `HOLIDAYS` 只有固定日期的假日 | 每年補一次 |

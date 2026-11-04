@@ -1,27 +1,65 @@
 # Places Yen has been. Each one is a building on the homepage (on the same month and day in later
-# years) and a day in the timeline. The sentence under the building is made by one rule:
+# years) and a day in the timeline. One building per day. The sentence under the building is made by one rule:
 #   "{N years ago}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]"
 # Required: date ("YYYY-MM-DD", in quotes), scene (a model in assets/js/day.js SCENES), name,
 #   zh (Chinese name; write no_zh: true to leave it out), place, did.
 # Optional: prep (default "in"), with (a name, or a list), extra (one short sentence),
 #   map (search text for Google Maps), country (default "Japan").
-# The four below: dates and "did" are placeholders until Yen confirms them (README 4).
-- date: "2018-03-21"
+
+# USA, January 2019 (dates from the photos)
+- date: "2019-01-22"
   scene: grandcentral
   name: Grand Central Terminal
-  zh: 紐約中央車站
+  no_zh: true
   place: New York
   country: USA
-  did: looked up at the painted ceiling of the main concourse
+  did: stood on the balcony above the main concourse, under the green ceiling
   map: Grand Central Terminal, New York
-- date: "2018-03-23"
-  scene: whitehouse
-  name: The White House
-  zh: 白宮
+- date: "2019-01-23"
+  scene: unitednations
+  name: United Nations Headquarters
+  no_zh: true
+  place: Turtle Bay, New York
+  country: USA
+  did: looked out over the East River from inside the United Nations
+  map: United Nations Headquarters, New York
+- date: "2019-01-26"
+  scene: whitney
+  name: Whitney Museum of American Art
+  no_zh: true
+  place: Meatpacking District, New York
+  country: USA
+  did: saw the Andy Warhol show at the Whitney
+  extra: In the morning there was the High Line; in the afternoon, The New York Times building.
+  map: Whitney Museum of American Art, New York
+- date: "2019-01-27"
+  scene: capitol
+  name: United States Capitol
+  no_zh: true
   place: Washington, D.C.
   country: USA
-  did: walked past the north lawn on Pennsylvania Avenue
+  did: looked out at the Capitol on a grey afternoon
+  map: United States Capitol, Washington DC
+- date: "2019-01-28"
+  scene: whitehouse
+  name: The White House
+  no_zh: true
+  place: Washington, D.C.
+  country: USA
+  did: stood in front of the north lawn on Pennsylvania Avenue
   map: The White House, Washington DC
+- date: "2019-01-30"
+  scene: washington
+  name: Washington Monument
+  no_zh: true
+  place: Washington, D.C.
+  country: USA
+  did: took a photo at the foot of the Washington Monument
+  with: three friends
+  extra: Then they walked to the Lincoln Memorial and watched the monument in the Reflecting Pool.
+  map: Washington Monument, Washington DC
+
+# South Korea, 2014: dates and "did" are placeholders until Yen confirms them (README 4)
 - date: "2014-07-15"
   scene: mbc
   name: MBC headquarters

@@ -395,6 +395,82 @@ const SCENES = {
     },
     animate(e, t) { const p = pacer(e, t, 2.6, 3.8, .5); e.figure(0, 1.2 + (p.x - 2.6) * 2, Math.PI / 2 * (p.yaw ? -1 : 1), e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
+  // United Nations headquarters: the Secretariat slab and the low General Assembly beside it
+  unitednations: {
+    bare: true, S: 10, origin: 56, cx: 0, cy: 0, R: 5, zmax: 15,
+    build(e, api) {
+      const { box } = e, MB = [232, 230, 222], GL = [92, 130, 126];
+      api.emissive(() => box(-1.0, -3.4, 0, 1.0, 3.4, 14.5, GL, 1), 'floors');
+      for (let z = .6; z < 14.5; z += .55) box(-1.04, -3.44, z, 1.04, 3.44, z + .06, [170, 196, 190]);
+      box(-1.1, -3.6, 0, 1.1, -3.3, 14.8, MB); box(-1.1, 3.3, 0, 1.1, 3.6, 14.8, MB);
+      box(-1.1, -3.6, 14.5, 1.1, 3.6, 14.9, MB);
+      box(1.8, -2.4, 0, 6.2, 2.4, 2.4, MB, 2);
+      for (let k = 0; k < 4; k++) box(1.8 + k * .3, -2.4, 2.4 + k * .22, 6.2 - k * .3, 2.4, 2.4 + (k + 1) * .22, [222, 220, 212]);
+      box(3.6, -.5, 3.3, 4.4, .5, 3.7, MB);
+      boxShadow(e, -1.1, -3.6, 6.2, 3.6, 14.5);
+    },
+    animate(e, t) { const p = pacer(e, t, 1.6, 6, .8); e.figure(p.x, 3.6, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
+  },
+  // Whitney Museum of American Art: a steel-clad block stepping down in terraces toward the High Line
+  whitney: {
+    bare: true, S: 12, origin: 40, cx: 0, cy: 0, R: 5, zmax: 8,
+    build(e, api) {
+      const { box } = e, ST = [150, 162, 172], SD = [126, 138, 150], GL = C.GLASS;
+      box(-4, -2.4, 0, 1.2, 2.4, 7.6, ST, 1);
+      box(1.2, -2.4, 0, 2.8, 2.4, 6.0, SD, 2);
+      box(2.8, -2.4, 0, 4.2, 2.4, 4.4, ST, 3);
+      box(4.2, -2.4, 0, 5.2, 2.4, 2.8, SD, 4);
+      api.emissive(() => box(-3.8, 2.4, 0, 5.0, 2.47, 1.3, GL));
+      for (const [x0, x1, top] of [[-4, 1.2, 7.6], [1.2, 2.8, 6.0], [2.8, 4.2, 4.4]]) for (let z = 2.2; z < top - .4; z += 1.6) api.emissive(() => box(x0 + .2, 2.4, z, x1 - .2, 2.46, z + .28, GL));
+      api.emissive(() => box(-4.06, -2.0, 2.0, -4.0, 1.6, 6.8, GL));
+      for (const [x0, x1, z] of [[1.2, 2.8, 6.0], [2.8, 4.2, 4.4], [4.2, 5.2, 2.8]]) box(x0, -2.4, z, x1, -2.3, z + .35, [200, 204, 206]);
+      boxShadow(e, -4, -2.4, 5.2, 2.4, 7.6);
+    },
+    animate(e, t) { const p = pacer(e, t, -3.6, 4.8, .8); e.figure(p.x, 3.4, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
+  },
+  // United States Capitol: a dome on a drum, between two long wings
+  capitol: {
+    bare: true, S: 10, origin: 40, cx: 0, cy: 0, R: 5, zmax: 9,
+    build(e, api) {
+      const { box } = e, W = [238, 236, 228];
+      box(-7, -1.8, 0, 7, 1.6, 2.6, W, 1);
+      box(-7.1, -1.9, 2.6, 7.1, 1.7, 2.85, W);
+      for (let x = -6.6; x < 6.6; x += .7) { if (Math.abs(x) < 2.4) continue; api.emissive(() => box(x, 1.6, .6, x + .3, 1.66, 2.0, C.GLASS)); }
+      box(-2.2, 1.6, 0, 2.2, 3.0, .4, [226, 224, 216]);
+      for (const x of [-1.9, -1.1, -.3, .5, 1.3]) box(x, 2.6, .4, x + .22, 2.82, 2.5, W);
+      box(-2.2, 1.6, 2.5, 2.2, 3.0, 2.85, W);
+      for (let k = 0; k < 3; k++) box(-2.2 + k * .6, 1.6, 2.85 + k * .2, 2.2 - k * .6, 3.0, 2.85 + (k + 1) * .2, W);
+      e.capsule([0, 0, 2.85], [0, 0, 4.6], 1.75, 1.75, () => W);
+      for (let a = 0; a < 6.283; a += .42) box(Math.cos(a) * 1.78 - .06, Math.sin(a) * 1.78 - .06, 3.0, Math.cos(a) * 1.78 + .06, Math.sin(a) * 1.78 + .06, 4.4, [210, 208, 200]);
+      e.sphere(0, 0, 4.8, 1.6, W);
+      e.capsule([0, 0, 6.2], [0, 0, 6.9], .32, .26, () => W);
+      e.capsule([0, 0, 6.9], [0, 0, 7.5], .1, .08, () => [96, 98, 104]);
+      boxShadow(e, -7, -1.9, 7, 3.0, 4.5);
+    },
+    animate(e, t) { const p = pacer(e, t, -6, 6, .9); e.figure(p.x, 4.0, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
+  },
+  // Washington Monument: a stone obelisk, with Yen and three friends at its foot
+  washington: {
+    bare: true, S: 9, origin: 92, cx: 0, cy: 0, R: 4, zmax: 19,
+    build(e, api) {
+      const { box } = e, ST = [226, 218, 202], SD = [212, 204, 188];
+      for (let k = 0; k < 18; k++) {
+        const h = .82 - k * .012;
+        box(-h, -h, k, h, h, k + 1, k % 2 ? ST : SD, k);
+      }
+      for (let k = 0; k < 4; k++) { const h = .6 - k * .15; box(-h, -h, 18 + k * .35, h, h, 18 + (k + 1) * .35, ST); }
+      boxShadow(e, -.82, -.82, .82, .82, 18);
+    },
+    statics(e) {
+      const FR = [
+        { shirt: [30, 30, 34], stripe: [30, 30, 34], legs: [30, 30, 34], hair: [28, 24, 22], skin: [226, 186, 156] },
+        { shirt: [96, 40, 44], stripe: [96, 40, 44], legs: [44, 44, 52], hair: [40, 30, 26], skin: [228, 188, 158] },
+        { shirt: [40, 42, 52], stripe: [40, 42, 52], legs: [70, 76, 92], hair: [28, 24, 22], skin: [220, 180, 150] },
+        { shirt: [222, 222, 220], stripe: [222, 222, 220], legs: [52, 60, 84], hair: [30, 26, 24], skin: [228, 188, 160] },
+      ];
+      FR.forEach((pal, k) => e.figure(1.6 + k * .55, 2.4 - k * .55, .8, { armR: .1, armL: .1, stance: .06 }, pal, e.dynamicAdd));
+    },
+  },
 };
 
 /* ================= worlds ================= */
