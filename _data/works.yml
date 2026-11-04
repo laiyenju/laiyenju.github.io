@@ -1,2 +1,48 @@
-# Each work: title, one_liner, status (in progress / experiment / done), url.
-[]
+# Portfolio, newest first in the terminal's `ls works`. Each one opens as a page (#work-<slug>).
+# Fields (all text in English): slug (in the link, a-z and -), year, title, sub (one line),
+# role, problem, did (what Yen did), result, url (only public pages; leave empty for private repos),
+# url_label (link text; default "open the portfolio").
+- slug: fubon-design-system
+  year: "2024–25"
+  title: Fubon Digital Experience
+  sub: A design system for one customer experience
+  role: Program owner
+  problem: Six subsidiaries in one financial group each built their own interfaces, so customers met a different experience at every company.
+  did: Yen ran the program that set up one design system for all six subsidiaries, and the way designers and engineers work with it.
+  result: One customer experience across the subsidiaries, and about 20% faster development.
+  url: https://github.com/laiyenju/portfolio
+- slug: vibe-check
+  year: "2025"
+  title: Vibe Check in Action
+  sub: How well AI tools turn a design idea into a working interface
+  role: Researcher
+  problem: Teams were starting to build interfaces with AI tools, but nobody had compared how well the tools follow a design.
+  did: Yen compared Gemini 3 Pro, Claude Sonnet 4.5 and Figma Make on the same design briefs, across seven dimensions, with a focus on Builder Mode workflows.
+  result: A comparison the team can use to choose a tool for each kind of work.
+  url: https://www.figma.com/deck/vrzBeWCaFCrrbcEfoR7bUF
+  url_label: open the presentation
+- slug: genie-ai
+  year: "2023–24"
+  title: Genie AI
+  sub: AI analytics for marketing teams
+  role: Product manager and owner
+  problem: Marketers spent hours pulling first-party and ad data together by hand before they could decide anything.
+  did: "Yen led the product: a GA4 module that brings the data into one place, and AI that automates the manual analysis."
+  result: The platform turns the combined data into insights that marketing teams act on.
+  url: https://github.com/laiyenju/portfolio
+- slug: readwise-to-remarkable
+  year: "2026"
+  title: Readwise → reMarkable
+  sub: reMarkable Hack series
+  role: Design and build
+  problem: Saved articles stayed in Readwise Reader. Reading them on the reMarkable 2 meant exporting files by hand every day.
+  did: Yen built a nightly job on GitHub Actions. At 00:30 Taipei time it collects the tagged articles, turns them into EPUB or PDF with images, adds paragraph-by-paragraph translations, and makes a Daily Digest with its own cover. The files go to Google Drive, and the reMarkable syncs them.
+  result: A new issue is on the reMarkable every morning. No computer needs to stay on.
+- slug: design-lint
+  year: "2026"
+  title: Design Lint
+  sub: A Figma plugin that checks designs against the design system
+  role: Design and build
+  problem: In-house designers and agencies drift from the design system, and checking a file by hand takes a long time.
+  did: Yen designed and built a Figma plugin that checks components, color tokens, text styles, corner radius and text contrast (WCAG AA or AAA) against the approved library. Each finding jumps to its layer, and agencies need only view access to the library.
+  result: In progress. The rules and automated tests are done; testing inside Figma is next.

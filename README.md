@@ -4,7 +4,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 - 純 Jekyll，由 GitHub Pages 建置（`main` 分支、根目錄）。沒有主題，沒有外掛，沒有 `Gemfile`。
 - 只有兩個自動流程：**GitHub Pages 建置網站**、**GitHub Action 畫分享卡片**。
-- 只有一個手動步驟：改了錦鯉原始碼（`assets/vendor/ascii-sharks/src/`）之後，要重新打包 `assets/js/ocean.js`。
+- 只有一個手動步驟：改了 pixel 引擎（`assets/vendor/pixel-plays/engine.js`）或 `scripts/pixel-engine/build.js` 之後，要重新產生 `assets/js/pixel-engine.js`（見 3.3）。
 
 ---
 
@@ -13,16 +13,18 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 資料夾／檔案 | 處理什麼 |
 |---|---|
 | `published/` | 已發布的文章。放進這裡就是發布 |
-| `index.md`、`_layouts/home.html` | 首頁。notes 和 works 也是首頁的一部分（`?view=notes`、`?view=works`） |
+| `index.md`、`_layouts/home.html` | 首頁：每天一棟 pixel 建築、Timeline、下方的 terminal（notes、works 都在 terminal 裡）。`home.html` 把文章清單和 `_data/` 的資料寫成 JSON 放進頁面，畫面全部由 `assets/js/day.js` 畫出來 |
 | `_layouts/default.html` | 文章頁 |
 | `_includes/` | 每頁共用的 `<head>`、SEO 標籤、日夜主題與介面語言的初始設定 |
-| `_data/works.yml` | works 清單 |
+| `_data/works.yml` | 作品集（terminal 的 `ls works`，每件作品一頁 `#work-<slug>`） |
+| `_data/days.yml` | 去過的地方：首頁的往年今日建築、Timeline 的每一天 |
+| `_data/little.yml` | 小事（例如散步遇到柴犬），在今天的建築旁出現一週 |
 | `_config.yml` | 網站資訊、哪些檔案要建置 |
-| `assets/css/`、`assets/js/` | 全站樣式和互動（日夜切換、terminal 介面、文章頁效果）。文章頁不載入錦鯉，Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
-| `assets/vendor/ascii-sharks/` | 錦鯉引擎的 TypeScript 原始碼，打包成 `assets/js/ocean.js` |
+| `assets/css/`、`assets/js/` | 首頁：`day.css`、`day.js`（建築模型 `SCENES`、Timeline、terminal、依太陽變色）、`pixel-engine.js`（產生的檔案）。文章頁：`site.css`、`theme.js`（日夜切換）、`post.js`。Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
+| `assets/vendor/pixel-plays/`、`scripts/pixel-engine/` | Pixel Plays 引擎原檔（MIT，作者 AmirMushich，`LICENSE` 在同一個資料夾）和把它轉成 `assets/js/pixel-engine.js` 的程式 |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
-| `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的對應畫面（首頁選單的連結也指向這裡）。文章頁的 `cd ..` 不經過這裡：從 notes 清單點進來的文章用瀏覽器的「上一頁」回去，其他情況直接連到 `/?view=notes`（`assets/js/post.js` 的 `backToNotes`） |
+| `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。文章頁的 `cd ..` 不經過這裡：從 notes 清單點進來的文章用瀏覽器的「上一頁」回去，其他情況直接連到 `/?view=notes`（`assets/js/post.js` 的 `backToNotes`） |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
 | `CLAUDE.md` | 給 Claude 的工作規則（例如：改檔案時要同時更新 README） |
 
@@ -30,7 +32,8 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 | 項目 | 說明 |
 |---|---|
-| `assets/js/ocean.js` | 打包產生的檔案，不要直接改。改 `assets/vendor/ascii-sharks/src/` 後重新打包（見 3.3） |
+| `assets/js/pixel-engine.js` | 產生的檔案，不要直接改。改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 3.3） |
+| 首頁網址 | `#timeline`、`#day-YYYY-MM-DD`（Timeline 停在那天；同一天第二棟以後加 `-2`、`-3`）、`#past-YYYY-MM-DD`（以那天的建築為主的首頁）、`#work-<slug>`（一件作品）。分享這些網址會直接打開那個畫面 |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
 | 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`CLAUDE.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
@@ -64,50 +67,86 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `description` | 否 | 內文前 120 字 | 搜尋摘要，也是分享卡片上的摘要 |
 | `lang` | 否 | `zh-Hant` | 英文文章填 `en`，會改 `<html lang>` 和 `og:locale`。結構化資料的語言固定是 `zh-Hant`（`_includes/seo.html`） |
 
-### 2.3 works 清單：`_data/works.yml`
+### 2.3 作品集：`_data/works.yml`
 
-每一項是一筆，目前是空的 `[]`：
+一件作品一筆，terminal 的 `ls works` 依檔案順序列出，點了打開那件作品的頁面（`#work-<slug>`）：
 
 ```yaml
-- title: 專案名稱
-  one_liner: 一句話說明
-  status: in progress
-  url: https://…        # 選填；沒填時點了不會跳頁
+- slug: design-lint          # 網址用，英文小寫和 -
+  year: "2026"               # 文字，可以寫 "2024–25"
+  title: Design Lint
+  sub: 一句話說明
+  role: Design and build
+  problem: 當時的問題
+  did: Yen 做了什麼
+  result: 結果
+  url: https://…             # 選填；只放公開的頁面，私人 repo 不要放
+  url_label: open the presentation   # 選填，連結文字，預設 open the portfolio
 ```
 
-| 欄位 | 選項 | 說明 |
+全部用英文寫（網站介面一律英文，只有文章可以是中文）。
+
+### 2.3.1 去過的地方：`_data/days.yml`
+
+一筆是一天、一棟建築。建築底下的句子由同一條規則組出來：`{幾年前}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]`
+
+| 欄位 | 必填 | 說明 |
 |---|---|---|
-| `status` | `in progress` → ●（強調色）、`experiment` → ◐、其他值（例如 `done`）→ ○ | 符號後面照原樣顯示文字。不填就沒有符號也沒有文字 |
+| `date` | 是 | `"YYYY-MM-DD"`，要加引號。同一天可以有好幾筆（好幾棟建築），網址會依順序變成 `#day-2019-01-26`、`#day-2019-01-26-2`… |
+| `scene` | 是 | 建築模型的名字，要先在 `assets/js/day.js` 的 `SCENES` 裡有這個模型。目前有：`studio`（工作室）、`home`（家）、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`whitney`、`capitol`、`whitehouse`、`washington`、`mbc`、`hongik` |
+| `name` | 是 | 英文名稱 |
+| `zh` | 是 | 中文名稱。不要中文時改寫 `no_zh: true` |
+| `place` | 是 | 城市或地區，例如 `Sangam, Seoul`，會變成 Google Maps 連結 |
+| `did` | 是 | Yen 做了什麼，小寫開頭、不加句號 |
+| `prep` | 否 | `in`（預設）或 `on`（島） |
+| `with` | 否 | 同行者，一個人或一串 `[Mei, Ken]` |
+| `extra` | 否 | 補充一句 |
+| `map` | 否 | Google Maps 搜尋文字，預設用 `name, place` |
+| `country` | 否 | 預設 `Japan`。Timeline 的國家數由它算 |
+
+缺必填欄位、沒有中文名、或模型不存在時，那一筆不會出現，瀏覽器的 console 會列出缺了什麼。
+
+### 2.3.2 小事：`_data/little.yml`
+
+```yaml
+- date: "2026-11-02"
+  kind: shiba               # 模型畫得出來的：shiba
+  text: Yen met a Shiba Inu on a walk this week.
+```
+
+從 `date` 起七天內，今天的建築旁會出現這個角色，句子接在自我介紹後面。
 
 ### 2.4 首頁內容
 
 | 設定 | 位置 | 預設 | 注意 |
 |---|---|---|---|
-| 名字、職稱、slogan | `_layouts/home.html` | `hey, I'm Yen`／`Product manager @Taiwan`／`I write about how products get decided.` | 一起改：`whoami` 的回應（`assets/js/shell.js`、`assets/js/post.js`）、首頁分享卡片文字（`scripts/og/build.js`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
-| 社群連結 | `_layouts/home.html` | github、linkedin、x | 一起改：`_includes/seo.html` 的 `sameAs`；X 帳號另有 `_config.yml` 的 `author.twitter` |
-| 瀏覽器分頁標題 | `assets/js/home.js` 的 `TITLES` | `hey, I'm Yen`／`Notes · Yen`／`Works · Yen` | 首頁的要和 `index.md` 的 `title` 一樣 |
-| 清單一次顯示幾篇 | `assets/js/home.js` 的 `LIST_LIMIT` | `6` | 超過的收進 `view all` |
+| 自我介紹 | `assets/js/day.js` 的 `BIO` | `Product manager in Taipei. Writes about how products get decided.` | 今天的建築底下和 terminal 的 `whoami` 都用它。一起改：文章頁 `whoami`（`assets/js/post.js`）、首頁分享卡片文字（`scripts/og/build.js`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
+| 社群連結 | `_layouts/home.html`（`capLinks`）、`assets/js/day.js` 的 `whoami` | github、linkedin、x | 一起改：`_includes/seo.html` 的 `sameAs`；X 帳號另有 `_config.yml` 的 `author.twitter` |
+| 平日／假日 | `assets/js/day.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
+| 所在城市 | `assets/js/day.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、背景顏色和影子方向。出國時改這裡 |
+| 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | `CHECKIN` 之後會接自動打卡（見第 4 節） |
+| terminal 按鈕 | `assets/js/day.js` 的 `CHIPS` | About Yen、Notes、Work、Where is Yen now、Clear | 按鈕寫白話，點了 terminal 會打出真正的指令。可輸入的指令在 `COMMANDS` |
+| 瀏覽器分頁標題 | `index.md` 的 `title` | `hey, I'm Yen` | |
 
 ### 2.5 外觀
 
 | 設定 | 位置 | 預設 | 其他選項／注意 |
 |---|---|---|---|
-| 日夜主題 | 讀者自己選（首頁右上角） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
+| 首頁顏色 | `assets/js/day.js` 的 `BG_STOPS`、`lightFor` | 跟著 `CITY` 的真實太陽高度變：白天接近白、黃昏暖色、夜晚深藍；晚上窗戶亮燈 | 首頁沒有日夜切換按鈕 |
+| 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題 21px、說明 17px；頂部日期首頁 14px、Timeline 19px | |
+| 建築大小 | `assets/js/day.js` 的 `sizeStage`、`fitCanvas`（`* .86`）、`fitTl`（`* .86`） | 手機上建築約佔畫面 46% 高 | |
+| Timeline 的動畫 | `assets/js/day.js` 的 `buildUp`（一磚一磚，磚塊 4×3 像素）、`dissolve`、`MOVE` | 蓋起來 0.9 秒、溶解 0.2 秒、首頁和 Timeline 之間移動 0.48 秒 | 系統設定「減少動態效果」時都直接跳到結果 |
+| 文章頁日夜主題 | 讀者自己選（文章頁） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`，內文標題也用這個顏色），分享卡片在 `scripts/og/card.html`，要一起改 |
-| 底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_layouts/home.html`、`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
-| 錦鯉樣式 | `_layouts/home.html` 的 `OceanEngine(…)`（文章頁沒有錦鯉） | 日間 `GLYPH_DAY`（明體倉頡字根）、夜間 `GLYPH_NIGHT`（點陣字根） | `ASCII`（原版，用英數符號）。改 `src/themes.ts` 的字元要重新打包；改了 `RADICALS` 要更新 `_includes/head.html` 的 Google Fonts `text=` 清單 |
-| 首頁與 notes／works 字級 | `assets/css/site.css` 的 `.home-nav`、`.home-greeting`、`.home-role`、`.home-slogan`、`.home-links`、`.home-last`、`.home-panel .sh-line`、`.sh-panel .panel-list a`、`.work-desc` | 選單 15px（寬螢幕 17px）、問候 24–32px、職稱／slogan 15px（寬螢幕 17px）、清單 15px（手機 14px） | 文章頁底部的指令列另外保持 13px。改大後要看手機寬度的 notes 清單標題還放得下 |
-| 網頁字型 | `_includes/head.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；錦鯉用 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
+| 文章頁底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
+| 網頁字型 | 文章頁 `_includes/head.html`、首頁 `_layouts/home.html`（Google Fonts） | JetBrains Mono、Noto Sans TC | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
 | 文章圖片排版 | `assets/css/site.css` 的 `.post-fig`、`.post-gallery` | 單張和內文同寬；直式圖片（高 > 寬 × 1.1）寬度 `80%`；同一段有兩張以上時並排，總寬 `960px`，間距 `20px`；手機（≤ 640px）上下排列 | 並排的圖片會伸到側欄，`post.js` 會把側欄註腳往下推，避開圖片 |
 | 圖片放大檢視 | `assets/css/site.css` 的 `.lb`（`assets/js/post.js` 的 `buildLightbox`） | 寬螢幕：左欄 `320px` 放關閉、圖說、上一張／張數／下一張，細線隔開右邊的圖片；窄螢幕（≤ 767px）：上面關閉和箭頭，下面張數和圖說 | 鍵盤：Esc 關閉、左右鍵切換；手機左右滑動切換；點圖片關閉。一篇文章的圖片會依序循環 |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
-| 點文章時的捲動速度 | `assets/js/shell.js` 的 `LINE`、`TICK` | `30`（px）、`24`（ms） | `LINE` 越大、`TICK` 越小越快 |
-| 首頁、notes、works 打字機般逐行印出的速度 | `assets/js/home.js` 的 `TYPE_MS`、`TYPE_MAX`；問候語是 `_layouts/home.html` 的 `data-type-ms` | 每字 `8`ms、每行最多 `260`ms；問候語每字 `40`ms | 每次進入這三個畫面都會印（載入、切換、從文章回來）；按任意鍵、點擊、捲動就一次印完。`ls -lt` 這類指令照人打字的速度（`assets/js/shell.js`，每字 70ms）。從文章回來時指令不重打，歷史多一行 `cat 檔名.md`，讀過的那列留著 ▸ |
-| 從文章回來時錦鯉游進來、格線鋪滿 | `assets/vendor/ascii-sharks/src/renderer.ts` 的 `REVEAL_BRUSH`、`REVEAL_CREEP`、`REVEAL_MAX`；進場位置與速度在 `src/world.ts` 的 `enterFromEdges` | 格線只沿著錦鯉游過的路徑鋪（身體下方必鋪，旁邊一、兩格每秒機率 `3`、`0.8`）；已鋪的地方每秒自己往外爬 `0.6` 格，讓錦鯉游不到的角落也慢慢補上；`40` 秒後剩下的部分柔和淡入 | 只在從文章回到首頁、notes、works 時發生。改了要重新打包 `ocean.js`（見 3.3） |
 
 ### 2.6 介面語言
 
-沒有設定可以改：瀏覽器第一語言是中文就顯示中文，其他顯示英文。新增介面文字時，兩種語言都要寫：
+首頁全部是英文，只有文章標題和地點的中文名（`zh`）是中文。文章頁沒有設定可以改：瀏覽器第一語言是中文就顯示中文，其他顯示英文。文章頁新增介面文字時，兩種語言都要寫：
 
 | 位置 | 寫法 |
 |---|---|
@@ -166,26 +205,31 @@ flowchart TD
   npm install --no-save playwright && npx playwright install chromium && node scripts/og/build.js
   ```
 
-### 3.3 錦鯉引擎（手動打包）
+### 3.3 pixel 引擎（手動產生）
 
 ```mermaid
 flowchart LR
-  S["assets/vendor/ascii-sharks/src/*.ts"] --> E["entry.ts"]
-  E -- "esbuild（手動）" --> O["assets/js/ocean.js"]
-  O --> H["home.html"]
+  V["assets/vendor/pixel-plays/engine.js<br/>（原檔，不改）"] --> B["scripts/pixel-engine/build.js"]
+  B -- "node（手動）" --> O["assets/js/pixel-engine.js"]
+  O --> H["home.html（先載入）"]
+  D["assets/js/day.js"] --> H
 ```
 
-改了 `src/` 或 `entry.ts` 之後，執行下面的指令，再把 `ocean.js` 一起 commit：
+`build.js` 把原本只畫一個場景的引擎包成 `createPixelEngine(canvas, SCENE)`，讓首頁可以同時有好幾個場景，並加上每個場景的畫布大小、比例和平面旋轉。改了原檔或 `build.js` 之後執行，再把 `pixel-engine.js` 一起 commit：
 
 ```bash
-npx esbuild@0.24.0 assets/vendor/ascii-sharks/entry.ts --bundle --format=iife --target=es2019 --outfile=assets/js/ocean.js
+node scripts/pixel-engine/build.js
 ```
+
+新增建築模型不用重新產生：模型寫在 `assets/js/day.js` 的 `SCENES`。
 
 ### 3.4 本機預覽
 
 ```bash
 jekyll serve
 ```
+
+首頁的資料是 Jekyll 寫進頁面的，所以要用 `jekyll serve` 看，不能直接打開 HTML 檔。
 
 輸出在 `_site/`（已在 `.gitignore`）。
 
@@ -197,3 +241,7 @@ jekyll serve
 |---|------|------|------|
 | 1 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡 | 第一篇正式文章上線後刪除 |
 | 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample*.svg`（三張） | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
+| 3 | 工作室模型（`day.js` 的 `SCENES.studio`） | 外型是暫定的辦公大樓 | 有照片後照著重畫 |
+| 4 | 「Where is Yen now」的自動打卡 | 目前只用作息表推算（`day.js` 的 `CHECKIN` 是 `null`） | 網站穩定後再設定 iPhone 捷徑：抵達或離開時更新一個只有文字標籤的檔案 |
+| 5 | 農曆國定假日 | `HOLIDAYS` 只有固定日期的假日 | 每年補一次 |
+| 6 | `assets/css/site.css` 的 `.home-*`、`.sh-panel` 等舊首頁樣式 | 新首頁不用 `site.css`，這些樣式已經沒有作用（文章頁的 terminal 還在用 `.sh-*` 的一部分） | 有空時清掉沒用到的規則 |

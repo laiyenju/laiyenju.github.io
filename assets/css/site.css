@@ -1369,10 +1369,7 @@ html.ui-zh .post-pager a {
   margin: 0;
   padding: 0;
 }
-canvas[data-koi].is-leaving {
-  opacity: 0;
-  transition: opacity 300ms ease;
-}
+
 
 /* Arrival, like `cat` in a terminal (see post.js): the title typed character by character behind a block cursor, the date
    line typed out, and the first screen of prose streamed in line by line.

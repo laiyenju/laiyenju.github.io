@@ -14,5 +14,5 @@
 
 ## 其他
 
-- `assets/js/ocean.js` 是打包產生的，不要直接改（見 README 3.3）。
+- `assets/js/pixel-engine.js` 是產生的，不要直接改；改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 README 3.3）。
 - 新增根目錄的檔案時，確認它要不要加進 `_config.yml` 的 `exclude`，否則 Jekyll 會把它發布成網頁。
