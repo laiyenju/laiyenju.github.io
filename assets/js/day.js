@@ -237,27 +237,66 @@ function deer(e, x, y, yaw, t) {
 
 /* Each scene: a tight plinth of ground around one large building. W/H/S/origin frame it. */
 const SCENES = {
-  // office tower (placeholder: glass curtain wall, white vertical fins, lobby)
+  // Fubon Liaoning Building (Liaoning St 177, Taipei): a slim blue glass tower split by dark recessed bands,
+  // the Fubon logo at the top of its face, on a wide podium with a long glass band, a perforated metal panel
+  // and a roof garden (wood deck, round planters, blue umbrellas, a lawn and solar panels)
   studio: {
-    bare: true, S: 12, origin: 64, cx: 0, cy: .6, R: 5.2, zmax: 14.6,
+    bare: true, S: 10, origin: 70, cx: .3, cy: .2, R: 6, zmax: 16,
     build(e, api) {
-      const { box } = e, X0 = -2.4, X1 = 2.4, Y0 = -2.2, Y1 = 2.2, TOP = 13.2;
-      // lobby
-      api.emissive(() => box(X0 + .3, Y0 + .3, 0, X1 - .3, Y1 - .3, 1.3, C.GLASS, 1), 'lobby');
-      for (let x = X0 + .3; x <= X1 - .2; x += .9) box(x, Y1 - .34, 0, x + .14, Y1 - .26, 1.3, C.FIN);
-      // tower body (glass), then floor slabs and vertical fins in front of it
-      api.emissive(() => box(X0, Y0, 1.3, X1, Y1, TOP, C.CURTAIN, 2), 'floors');
-      for (let z = 1.3; z <= TOP; z += .62) { box(X0 - .02, Y0 - .02, z, X1 + .02, Y1 + .02, z + .09, C.FIN); }
-      for (let x = X0 + .25; x <= X1; x += .45) box(x, Y1, 1.3, x + .1, Y1 + .14, TOP, C.FIN);
-      for (let y = Y0 + .25; y <= Y1; y += .45) box(X1, y, 1.3, X1 + .14, y + .1, TOP, C.FIN);
-      // crown and canopy
-      box(X0 - .1, Y0 - .1, TOP, X1 + .1, Y1 + .1, TOP + .35, C.FIN);
-      box(X0 + .8, Y0 + .8, TOP + .35, X1 - .8, Y1 - .8, TOP + 1.1, C.CONC);
-      box(X0 + .2, Y1 - .2, 1.3, X1 - .2, Y1 + 1.0, 1.48, C.FIN);
-      boxShadow(e, X0, Y0, X1 + .1, Y1 + .1, TOP);
+      const { box } = e, GL = [70, 104, 140], DARK = [40, 46, 56], MET = [168, 172, 176], SILV = [206, 210, 212];
+      const TX0 = -2.6, TX1 = 2.6, TY0 = -3.0, TY1 = -.2, TOP = 15.4, PZ = 3.0;
+      // tower: glass body, the dark recesses that split it, floor bands and mullions on the front (+y) and side (+x)
+      api.emissive(() => box(TX0, TY0, 0, TX1, TY1, TOP, GL, 2), 'floors');
+      for (const x of [-1.75, 1.55]) box(x, TY1 - .1, PZ, x + .2, TY1 + .02, TOP, DARK);
+      box(TX1 - .1, -1.7, PZ, TX1 + .02, -1.5, TOP, DARK);
+      for (let z = PZ + .6; z < TOP - 1; z += .62) {
+        box(TX0, TY1, z, -1.75, TY1 + .16, z + .07, MET); box(1.75, TY1, z, TX1, TY1 + .16, z + .07, MET);
+        box(TX1, TY0, z, TX1 + .16, TY1, z + .07, MET);
+      }
+      for (let x = -1.45; x < 1.5; x += .34) box(x, TY1, PZ, x + .05, TY1 + .05, TOP - 1, DARK);
+      // light metal louvres across the top floors, the Fubon logo (blue over green) at their left
+      for (let z = TOP - 1; z < TOP; z += .14) box(TX0, TY1, z, TX1, TY1 + .08, z + .07, SILV);
+      for (let z = TOP - 1; z < TOP; z += .14) box(TX1, TY0, z, TX1 + .08, TY1, z + .07, SILV);
+      box(-1.45, TY1 + .08, TOP - .5, -.95, TY1 + .12, TOP - .1, [46, 110, 196]);
+      box(-1.3, TY1 + .08, TOP - .95, -.8, TY1 + .12, TOP - .55, [62, 168, 96]);
+      box(TX0 - .05, TY0 - .05, TOP, TX1 + .05, TY1 + .05, TOP + .15, [104, 110, 118]);
+      // podium: recessed glass ground floor, a long glass band above it, the perforated panel on the right
+      const PX0 = -5.0, PX1 = 5.4, PY0 = -3.4, PY1 = 3.0;
+      api.emissive(() => box(PX0 + .4, PY0 + .4, 0, PX1 - .4, PY1 - .5, 1.0, C.GLASS, 1), 'lobby');
+      for (let x = PX0 + .6; x < PX1 - .4; x += .8) box(x, PY1 - .55, 0, x + .08, PY1 - .47, 1.0, MET);
+      box(PX0, PY0, 1.0, PX1, PY1, 1.15, MET, 3);
+      api.emissive(() => box(PX0, PY0, 1.15, 2.2, PY1, PZ - .2, [96, 128, 150], 4));
+      for (let x = PX0 + .3; x < 2.2; x += .36) box(x, PY1, 1.15, x + .05, PY1 + .05, PZ - .2, DARK);
+      box(2.2, PY0, 1.15, PX1, PY1, PZ - .2, [150, 154, 158], 5);
+      for (let x = 2.35; x < PX1; x += .22) for (let z = 1.3; z < PZ - .3; z += .22) box(x, PY1, z, x + .08, PY1 + .03, z + .08, [118, 122, 128]);
+      for (let y = PY0 + .15; y < PY1; y += .22) for (let z = 1.3; z < PZ - .3; z += .22) box(PX1, y, z, PX1 + .03, y + .08, z + .08, [118, 122, 128]);
+      box(PX0 - .05, PY0 - .05, PZ - .2, PX1 + .05, PY1 + .05, PZ, SILV);
+      // the teal logo on the lobby glass
+      box(-1.1, PY1 - .5, .35, -.6, PY1 - .46, .85, [40, 170, 170]);
+      // roof garden: wood deck in front of the tower, round white planters with trees, blue umbrellas
+      box(PX0 + .2, TY1 + .1, PZ, 1.2, PY1 - .2, PZ + .06, C.DECK);
+      for (const [x, y] of [[-4.2, 2.2], [-2.8, 1.0], [-1.4, 2.3], [-.2, 1.1]]) {
+        box(x - .45, y - .45, PZ, x + .45, y + .45, PZ + .2, [236, 236, 232]);
+        box(x - .35, y - .35, PZ + .2, x + .35, y + .35, PZ + .22, C.GREEN);
+        e.sphere(x, y, PZ + .95, .5, C.GREEN, 'rough');
+      }
+      for (const [x, y] of [[-3.4, .4], [.4, .3], [.7, 1.9]]) {
+        box(x - .02, y - .02, PZ, x + .02, y + .02, PZ + .55, MET);
+        box(x - .3, y - .3, PZ + .55, x + .3, y + .3, PZ + .62, [52, 112, 196]);
+      }
+      // the raised block on the right: lawn on its roof, solar panels beside it
+      box(1.5, -1.8, PZ, PX1 - .2, PY1 - .2, PZ + .7, [210, 212, 210], 6);
+      box(1.6, -1.7, PZ + .7, 3.6, PY1 - .3, PZ + .78, [120, 160, 82]);
+      for (let x = 3.75; x < PX1 - .3; x += .45) box(x, -1.6, PZ + .7, x + .38, PY1 - .4, PZ + .82, [52, 64, 96]);
+      // the white curved canopy over the MRT entrance, front left
+      box(PX0 - .2, PY1 + .6, 0, PX0 + 1.6, PY1 + 1.6, .6, [180, 196, 204]);
+      box(PX0 - .3, PY1 + .5, .6, PX0 + 1.7, PY1 + 1.7, .75, [244, 244, 240]);
+      box(PX0 + .1, PY1 + .4, .75, PX0 + 1.3, PY1 + 1.8, .85, [244, 244, 240]);
+      boxShadow(e, TX0, TY0, TX1, TY1, TOP);
+      boxShadow(e, PX0, PY0, PX1, PY1, PZ);
     },
     animate(e, t, o) {
-      if (o.shiba) shibaLoop(e, t, 3.2, 2.6, 1.0, 1.6);
+      if (o.shiba) shibaLoop(e, t, 1.2, 4.6, 2.2, .5);
     },
   },
   home: {
