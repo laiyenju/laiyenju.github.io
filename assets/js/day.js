@@ -449,6 +449,66 @@ const SCENES = {
       boxShadow(e, -.82, -.82, .82, .82, 18);
     },
   },
+  // 111 Eighth Avenue (the old Port of New York Authority building, now Google's office): a brick block with setbacks on a stone base
+  google: {
+    bare: true, S: 10, origin: 48, cx: 0, cy: 0, R: 5, zmax: 11,
+    build(e, api) {
+      const { box } = e, BR = [142, 92, 72], BD = [124, 80, 62], ST = [208, 202, 188], G = C.GLASS;
+      box(-5, -2.6, 0, 5, 2.6, 1.7, ST, 1);
+      box(-4.8, -2.4, 1.7, 4.8, 2.4, 8.4, BR, 2);
+      box(-3.8, -1.8, 8.4, 3.8, 1.8, 9.6, BD, 3);
+      box(-2.6, -1.2, 9.6, 2.6, 1.2, 10.5, BR, 4);
+      for (let z = 2.1; z < 8.2; z += .75) for (let x = -4.5; x < 4.6; x += .62) api.emissive(() => box(x, 2.4, z, x + .3, 2.46, z + .42, G), 'floors');
+      for (let z = 2.1; z < 8.2; z += .75) for (let y = -2.1; y < 2.2; y += .62) api.emissive(() => box(4.8, y, z, 4.86, y + .3, z + .42, G), 'floors');
+      for (let x = -4.4; x < 4.5; x += 1.4) api.emissive(() => box(x, 2.6, .3, x + .8, 2.66, 1.4, G));
+      box(-5.05, 2.55, 1.5, 5.05, 2.75, 1.7, [190, 184, 170]);
+      boxShadow(e, -5, -2.6, 5, 2.6, 8.4);
+    },
+  },
+  // The High Line: an old elevated rail line on steel columns, now a planted walkway
+  highline: {
+    bare: true, S: 13, origin: 18, cx: 0, cy: 0, R: 5, zmax: 4,
+    build(e) {
+      const { box } = e, STEEL = [74, 84, 80], PAVE = [192, 190, 182], WOOD = [168, 128, 88];
+      for (const x of [-4.6, -1.6, 1.4, 4.4]) for (const y of [-.8, .8]) box(x - .14, y - .14, 0, x + .14, y + .14, 2.2, STEEL);
+      box(-5.4, -1.2, 2.2, 5.4, 1.2, 2.7, STEEL, 1);
+      box(-5.3, -1.1, 2.7, 5.3, 1.1, 2.8, PAVE, 2);
+      for (let x = -5.2; x < 5.2; x += .5) box(x, -1.15, 2.8, x + .06, -1.1, 3.3, STEEL);
+      box(-5.3, -1.18, 3.24, 5.3, -1.1, 3.3, STEEL);
+      box(-5.2, .3, 2.8, -1.4, 1.05, 3.05, [120, 86, 62]);
+      for (let k = 0; k < 9; k++) e.sphere(-4.9 + k * .45, .68 + (k % 2) * .08, 3.25, .26, k % 3 ? C.GREEN : [140, 150, 96], 'rough');
+      box(.4, .2, 2.8, 3.4, .75, 3.1, WOOD); box(.4, .75, 2.8, 3.4, .95, 3.4, WOOD);
+      boxShadow(e, -5.4, -1.2, 5.4, 1.2, 2.7);
+    },
+  },
+  // The New York Times Building: a glass tower behind a screen of horizontal ceramic rods, with a mast on top
+  nyt: {
+    bare: true, S: 9.5, origin: 70, cx: 0, cy: 0, R: 4, zmax: 18,
+    build(e, api) {
+      const { box } = e, ROD = [218, 220, 216], GL = [96, 118, 136];
+      api.emissive(() => box(-2.4, -2.4, 0, 2.4, 2.4, 1.6, C.GLASS, 1));
+      api.emissive(() => box(-2.4, -2.4, 1.6, 2.4, 2.4, 14.6, GL, 2), 'floors');
+      for (let z = 1.9; z < 14.6; z += .38) { box(-2.1, 2.4, z, 2.1, 2.5, z + .1, ROD); box(2.4, -2.1, z, 2.5, 2.1, z + .1, ROD); }
+      box(-2.5, -2.5, 14.6, 2.5, 2.5, 14.9, ROD);
+      box(-.12, -.12, 14.9, .12, .12, 18, [150, 152, 156]);
+      box(-2.6, 2.4, 1.5, 2.6, 3.2, 1.65, ROD);
+      boxShadow(e, -2.5, -2.5, 2.5, 2.5, 14.6);
+    },
+  },
+  // Lincoln Memorial: a Doric temple of white marble on a stepped base, columns all round
+  lincoln: {
+    bare: true, S: 12, origin: 26, cx: 0, cy: 0, R: 5, zmax: 5,
+    build(e) {
+      const { box } = e, MB = [236, 234, 226], MD = [220, 218, 210];
+      for (let k = 0; k < 4; k++) box(-6 + k * .3, -3.6 + k * .3, k * .25, 6 - k * .3, 3.6 - k * .3, (k + 1) * .25, MD, k);
+      box(-4.4, -2.0, 1.0, 4.4, 2.0, 3.6, [200, 198, 190], 5);
+      for (let x = -4.8; x <= 4.81; x += .8) { box(x - .17, 2.42, 1.0, x + .17, 2.76, 3.7, MB); box(x - .17, -2.76, 1.0, x + .17, -2.42, 3.7, MB); }
+      for (let y = -2.0; y <= 2.01; y += .8) { box(4.82, y - .17, 1.0, 5.16, y + .17, 3.7, MB); box(-5.16, y - .17, 1.0, -4.82, y + .17, 3.7, MB); }
+      box(-5.4, -3.0, 3.7, 5.4, 3.0, 4.3, MB);
+      box(-4.4, -2.0, 4.3, 4.4, 2.0, 5.0, MD);
+      boxShadow(e, -5.4, -3.0, 5.4, 3.0, 4.3);
+    },
+  },
 };
 
 /* ================= worlds ================= */
@@ -710,7 +770,7 @@ function renderPast(date) {
       tag: `${ago(now - d.y)} · ${LONG_MON[d.m - 1]} ${d.d}, ${d.y}`,
       name: o.zh && !o.noZh ? `${o.name} · ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) + (main ? nav : '') };
   });
-  state.index = state.items.length - 1;
+  state.index = Math.max(0, state.items.findIndex(it => it.main));
   sizeStage(); renderText(); renderThumbs(); mount(false);
   $('ctaText').textContent = 'Timeline';
   scrollTo(0, 0);
@@ -1031,7 +1091,7 @@ function openTl(date) {
   renderRuler();
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
-  $('tlStats').textContent = `${TL.list.length} days kept · ${nPlaces} places · ${nCountries} countries`;
+  $('tlStats').textContent = `${new Set(TL.list.map(x => x.date)).size} days kept · ${nPlaces} places · ${nCountries} countries`;
   showTlDay(k, true).then(() => {
     if (!fly) return;
     const cv = $('tlc'), tlRect = cv.getBoundingClientRect(), g = ghostOf(fly.img, rectLike(fly.img, cv, tlRect));
