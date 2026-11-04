@@ -184,13 +184,13 @@ body.is-past .term { display: none; }
 .tl-cap .s a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .ruler { position: fixed; z-index: 7; left: 0; right: 0; bottom: 0; padding: 10px max(16px, env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(transparent, var(--bg) 35%); }
-.ruler-track { position: relative; height: 46px; max-width: 760px; margin: 0 auto; touch-action: none; cursor: pointer; }
-.ruler-track .tick { position: absolute; bottom: 14px; width: 1px; height: 6px; background: var(--rule); }
-.ruler-track .tick.y { height: 14px; background: var(--ink-soft); }
-.ruler-track .yl { position: absolute; bottom: 0; transform: translateX(-50%); font: 11px/1 var(--mono); color: var(--ink-soft); }
-.ruler-track .dot { position: absolute; bottom: 30px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--ink-soft); }
-.ruler-track .dot.on { background: var(--accent); }
-.ruler-track .needle { position: absolute; bottom: 12px; width: 2px; height: 30px; margin-left: -1px; background: var(--accent); transition: left .5s cubic-bezier(.2, .8, .2, 1); }
+.ruler-track { position: relative; height: 40px; max-width: 760px; margin: 0 auto; touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.ruler-track::before { content: ''; position: absolute; left: 0; right: 0; bottom: 12px; height: 1px; background: var(--rule); }
+.ruler-track .dot { position: absolute; bottom: 12px; width: 1px; height: 10px; margin-left: -.5px; background: var(--ink-soft); }
+.ruler-track .dot.on { background: transparent; }
+.ruler-track .needle { position: absolute; bottom: 8px; width: 3px; height: 22px; margin-left: -1.5px; border-radius: 2px; background: var(--accent); transition: left .35s cubic-bezier(.2, .8, .2, 1); }
+.ruler-track.drag .needle { transition: none; }
+.ruler-track:focus-visible { outline: 1px dotted var(--ink-soft); outline-offset: 4px; }
 /* the date at the top turns like a dial */
 .dial { display: inline-flex; font-variant-numeric: tabular-nums; }
 .dial .dg { display: inline-block; height: 1.35em; overflow: hidden; vertical-align: bottom; }

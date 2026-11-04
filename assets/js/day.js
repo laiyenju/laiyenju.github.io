@@ -1140,25 +1140,24 @@ function fitTl(cv) {
   const st = $('tlStage'), f = Math.min(st.clientWidth / cv.width, st.clientHeight / cv.height, 3.2) * .86;
   cv.style.width = Math.round(cv.width * f) + 'px'; cv.style.height = Math.round(cv.height * f) + 'px';
 }
+/* The ruler under the timeline: one stop per building, evenly spaced (buildings on the same day sit closer),
+   oldest on the left. No years on it: the date at the top already says when. Drag along it to scrub. */
 function renderRuler() {
-  const list = TL.list, first = parseDay(list[0].date), last = parseDay(list[list.length - 1].date);
-  const y0 = first.y, y1 = last.y + 1, t0 = dayMs(y0, 1, 1), t1 = dayMs(y1, 1, 1);
-  const pos = iso => { const d = parseDay(iso); return (dayMs(d.y, d.m, d.d) - t0) / (t1 - t0) * 100; };
+  const list = TL.list, at = [0];
+  for (let k = 1; k < list.length; k++) at.push(at[k - 1] + (list[k].date === list[k - 1].date ? .5 : 1));
+  const span = at[at.length - 1] || 1, pos = k => list.length < 2 ? 50 : at[k] / span * 100;
   let h = '';
-  for (let y = y0; y < y1; y++) for (let m = 1; m <= 12; m++) {
-    const at = (dayMs(y, m, 1) - t0) / (t1 - t0) * 100;
-    h += `<span class="tick${m === 1 ? ' y' : ''}" style="left:${at}%"></span>`;
-    const step = Math.ceil((y1 - y0) / 6); // at most about six year labels, so they never crowd
-    if (m === 1 && ((y - y0) % step === 0 || y === y1 - 1)) h += `<span class="yl" style="left:${at + 100 / (y1 - y0) / 2}%">${y}</span>`;
-  }
-  list.forEach((x, k) => { h += `<span class="dot" data-k="${k}" style="left:${pos(x.date)}%"></span>`; });
+  list.forEach((x, k) => { h += `<span class="dot" data-k="${k}" style="left:${pos(k)}%"></span>`; });
   h += `<span class="needle" id="needle"></span>`;
   $('rulerTrack').innerHTML = h;
   TL.pos = pos;
 }
 function markRuler() {
   $('rulerTrack').querySelectorAll('.dot').forEach(d => d.classList.toggle('on', +d.dataset.k === TL.idx));
-  $('needle').style.left = TL.pos(TL.list[TL.idx].date) + '%';
+  $('needle').style.left = TL.pos(TL.idx) + '%';
+  const x = TL.list[TL.idx], t = $('rulerTrack');
+  t.setAttribute('aria-valuenow', TL.idx + 1);
+  t.setAttribute('aria-valuetext', x.today ? 'Today' : `${x.name}, ${x.date}`);
 }
 function placeLine(x) {
   if (x.today) return 'Taiwan';
@@ -1167,13 +1166,13 @@ function placeLine(x) {
 const tlImages = new Map();
 function tlImage(x) { const key = x.id + '|' + LIGHT.n.toFixed(2); if (!tlImages.has(key)) tlImages.set(key, pureImage(x)); return tlImages.get(key); }
 // no lock: a new change interrupts the running one, so quick swipes feel continuous
-async function showTlDay(k, first, fromP = 0) {
+async function showTlDay(k, first, fromP = 0, instant = false) {
   const next = cl(k, 0, TL.list.length - 1);
   if (next === TL.idx && !first) { settleBack(); return; }
   const token = ++TL.token, prev = TL.cur;
   TL.idx = next;
   const x = TL.list[TL.idx], d = parseDay(x.date), years = fromDayMs(state.day).y - d.y;
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches, cv = $('tlc');
+  const still = instant || matchMedia('(prefers-reduced-motion: reduce)').matches, cv = $('tlc');
   try { history.replaceState(null, '', '#day-' + x.id); } catch (e) {}
   markRuler();
   $('tlCap').classList.add('hide');
@@ -1203,7 +1202,7 @@ function openTl(date) {
       <div class="tl-stage" id="tlStage" role="button" tabindex="0" aria-label="This day's building. Tap to read the day. Swipe left or right for other days."><canvas id="tlc"></canvas></div>
       <div class="tl-cap hide" id="tlCap"><div class="n" id="tlName"></div><div class="s" id="tlPlace"></div></div>
     </div>
-    <div class="ruler"><div class="stats" id="tlStats"></div><div class="ruler-track" id="rulerTrack" aria-label="Days kept, oldest on the left"></div></div>`;
+    <div class="ruler"><div class="stats" id="tlStats"></div><div class="ruler-track" id="rulerTrack" role="slider" tabindex="0" aria-label="Days kept, oldest on the left" aria-valuemin="1" aria-valuemax="${TL.list.length}"></div></div>`;
   const fly = TL.from && TL.from.id === TL.list[k].id && !matchMedia('(prefers-reduced-motion: reduce)').matches ? TL.from : null;
   TL.from = null;
   if (fly) tl.classList.add('clear');
@@ -1252,14 +1251,32 @@ function openTl(date) {
   st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
   st.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tapTl(); } });
   const track = $('rulerTrack');
-  const pick = ev => {
+  // tap a stop to go there; drag along the ruler to scrub: the building changes at once under the finger
+  const nearest = ev => {
     const r = track.getBoundingClientRect(), at = (ev.clientX - r.left) / r.width * 100;
     let best = 0, bd = 1e9;
-    TL.list.forEach((x, k) => { const dd = Math.abs(TL.pos(x.date) - at); if (dd < bd) { bd = dd; best = k; } });
-    showTlDay(best);
+    TL.list.forEach((x, k) => { const dd = Math.abs(TL.pos(k) - at); if (dd < bd) { bd = dd; best = k; } });
+    return best;
   };
-  track.addEventListener('pointerdown', ev => { track.setPointerCapture(ev.pointerId); pick(ev); });
-  track.addEventListener('pointermove', ev => { if (ev.buttons) pick(ev); });
+  let drag = null;
+  track.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    track.setPointerCapture(ev.pointerId);
+    drag = { id: ev.pointerId, x: ev.clientX, moved: false };
+    const k = nearest(ev); if (k !== TL.idx) showTlDay(k);
+  });
+  track.addEventListener('pointermove', ev => {
+    if (!drag || ev.pointerId !== drag.id) return;
+    if (!drag.moved && Math.abs(ev.clientX - drag.x) > 6) { drag.moved = true; track.classList.add('drag'); }
+    if (!drag.moved) return;
+    const k = nearest(ev); if (k !== TL.idx) showTlDay(k, false, 0, true);
+  });
+  const stop = ev => { if (!drag || ev.pointerId !== drag.id) return; drag = null; track.classList.remove('drag'); };
+  track.addEventListener('pointerup', stop); track.addEventListener('pointercancel', stop);
+  track.addEventListener('keydown', ev => {
+    const d = { ArrowLeft: -1, ArrowRight: 1, Home: -TL.list.length, End: TL.list.length }[ev.key];
+    if (d) { ev.preventDefault(); showTlDay(TL.idx + d); }
+  });
 }
 // today → today's homepage; same month and day as today → today's homepage on that year's tab; otherwise → a homepage with that building as the main one
 /* the building moves between the two pages instead of being rebuilt */

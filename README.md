@@ -136,6 +136,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題 21px、說明 17px；頂部日期首頁 14px、Timeline 19px | |
 | 建築大小 | `assets/js/day.js` 的 `sizeStage`、`fitCanvas`（`* .86`）、`fitTl`（`* .86`） | 手機上建築約佔畫面 46% 高 | |
 | Timeline 的動畫 | `assets/js/day.js` 的 `buildUp`（一磚一磚，磚塊 4×3 像素）、`dissolve`、`MOVE` | 蓋起來 0.9 秒、溶解 0.2 秒、首頁和 Timeline 之間移動 0.48 秒 | 系統設定「減少動態效果」時都直接跳到結果 |
+| Timeline 的尺標 | `assets/js/day.js` 的 `renderRuler`；樣式在 `assets/css/day.css` 的 `.ruler-track` | 每棟建築一格、等距排列（同一天的建築間距減半），最舊的在左邊；不標年份（頂部日期已經有） | 點一格跳過去；手指按住左右滑可以快速切換（滑動時不播動畫，放開就停在那棟）；鍵盤可用左右方向鍵 |
 | 文章頁日夜主題 | 讀者自己選（文章頁） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`，內文標題也用這個顏色），分享卡片在 `scripts/og/card.html`，要一起改 |
 | 文章頁底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
