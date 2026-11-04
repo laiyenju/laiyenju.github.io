@@ -147,6 +147,48 @@ function boxShadow(e, x0, y0, x1, y1, z) {
   const n = Math.max(2, Math.ceil(z / .8));
   for (let k = 0; k <= n; k++) { const zz = .2 + (z - .2) * k / n; for (let x = x0; x <= x1; x += .4) for (let y = y0; y <= y1; y += .4) e.castShadow(x, y, zz, .32); }
 }
+/* Lettering on a wall, in a 3×5 pixel font, drawn in screen pixels so it stays sharp and readable.
+   It follows the wall's slope the way pixel-art signs do: at scale 2 every font column steps one pixel,
+   at scale 1 every letter steps as a whole. face 'y' = a wall facing +y (letters run toward +x),
+   face 'x' = a wall facing +x (letters run toward −y). x, y, z = the centre of the text's top edge on that wall. */
+const FONT3 = {
+  A: '010101111101101', B: '110101110101110', C: '111100100100111', E: '111100110100111', G: '111100101101111', H: '101101111101101',
+  I: '111010010010111', K: '101110100110101', L: '100100100100111', M: '1000111011101011000110001', N: '10011101101110011001', O: '111101101101111',
+  R: '110101110101101', S: '111100111001111', T: '111010010010010', W: '1000110001101011010101010', Y: '101101010010010', D: '110101101101110',
+  o: '000111101101111', g: '111101111001111', l: '010010010010010', e: '111101111100111', ' ': '000000000000000',
+};
+function signIso(e, text, { face = 'y', x, y, z, scale = 2, colors }) {
+  const glyph = ch => FONT3[ch] || FONT3[ch.toUpperCase()] || FONT3[' '];
+  const adv = ch => ch === ' ' ? 2 : glyph(ch).length / 5 + 1;
+  const chars = [...text], cols = chars.reduce((w, ch) => w + adv(ch), -1);
+  const p = e.project(x, y, z), dir = face === 'y' ? 1 : -1;
+  const ox = Math.round(p.sx - cols * scale / 2), oy = Math.round(p.sy - dir * cols * scale / 4);
+  let col = 0;
+  chars.forEach((ch, k) => {
+    const g = glyph(ch), gw = g.length / 5, color = e.rgb(...colors[k % colors.length]);
+    for (let r = 0; r < 5; r++) for (let c = 0; c < gw; c++) {
+      if (g[r * gw + c] !== '1') continue;
+      const cc = col + c, step = scale >= 2 ? cc * scale / 2 : Math.floor(col / 2);
+      const sx = ox + cc * scale, sy = oy + dir * step + r * scale;
+      for (let a = 0; a < scale; a++) for (let b = 0; b < scale; b++) {
+        const ix = sx + a, iy = sy + b;
+        if (ix < 0 || iy < 0 || ix >= e.W || iy >= e.H) continue;
+        e.pix[iy * e.W + ix] = color;
+      }
+    }
+    col += adv(ch);
+  });
+}
+function flag(e, x, y, h, cloth) {
+  e.box(x - .03, y - .03, 0, x + .03, y + .03, h, [120, 122, 126]);
+  e.box(x + .03, y - .02, h - .45, x + .55, y + .02, h - .05, cloth);
+}
+function usFlag(e, x, y, h) {
+  e.box(x - .03, y - .03, 0, x + .03, y + .03, h, [120, 122, 126]);
+  for (let k = 0; k < 5; k++) e.box(x + .03, y - .02, h - .45 + k * .08, x + .6, y + .02, h - .37 + k * .08, k % 2 ? [240, 240, 236] : [186, 46, 44]);
+  e.box(x + .03, y - .025, h - .25, x + .28, y + .025, h - .05, [44, 56, 110]);
+}
+
 function lantern(e, api, x, y, s = 1) {
   const B = (a, b, c, d, z0, z1, col) => e.box(x + a * s, y + b * s, z0 * s, x + c * s, y + d * s, z1 * s, col);
   B(-.4, -.4, .4, .4, 0, .3, C.STONE);
@@ -325,8 +367,12 @@ const SCENES = {
       for (const x of [-3.75, -1.3, 1.3, 3.75]) { box(x - .28, 1.6, .5, x - .06, 1.86, 4.2, ST); box(x + .06, 1.6, .5, x + .28, 1.86, 4.2, ST); }
       box(-4.6, -.3, 4.5, 4.6, 1.95, 4.78, SD);
       box(-2.1, .1, 4.78, 2.1, 1.5, 5.6, ST);
-      box(-.38, 1.5, 4.95, .38, 1.58, 5.5, [222, 182, 82]);
-      box(-1.0, .5, 5.6, 1.0, 1.2, 6.25, [168, 160, 132]);
+      // the round clock over the centre window, and the sculpture group (Mercury, Hercules, Minerva) around it
+      e.sphere(0, 1.6, 5.15, .42, [226, 190, 92], 'gloss');
+      e.sphere(0, 1.72, 5.15, .26, [250, 246, 232]);
+      for (const [x, z, r] of [[-1.1, 5.4, .38], [1.1, 5.4, .38], [0, 6.0, .42], [-.6, 5.9, .3], [.6, 5.9, .3]]) e.sphere(x, 1.2, z, r, [170, 166, 150], 'rough');
+      box(-1.4, .6, 5.6, 1.4, 1.3, 5.75, [168, 160, 132]);
+      usFlag(e, 4.2, 2.0, 1.4);
       boxShadow(e, -5, -3.6, 5, 2.2, 4.5);
     },
   },
@@ -351,6 +397,10 @@ const SCENES = {
       for (const x of [-3.2, 3.0]) box(x, -1.4, 3.22, x + .4, -1.0, 3.9, W);
       box(-.04, -.7, 3.22, .04, -.62, 4.9, [96, 96, 96]);
       box(.04, -.7, 4.4, .9, -.66, 4.86, [186, 52, 48]); box(.04, -.7, 4.62, .36, -.65, 4.86, [52, 62, 120]);
+      // the fountain on the North Lawn
+      box(-1.0, 4.0, 0, 1.0, 5.6, .25, [200, 198, 190]);
+      box(-.8, 4.2, .2, .8, 5.4, .27, [120, 168, 196]);
+      e.capsule([0, 4.8, .25], [0, 4.8, 1.3], .14, .05, () => [226, 238, 244]);
       boxShadow(e, -4.7, -2.3, 4.7, 2.9, 3.2);
     },
   },
@@ -367,6 +417,7 @@ const SCENES = {
       for (let z = 1.6; z < 8.0; z += .6) box(.56, -1.64, z, 3.44, 1.64, z + .08, FR);
       box(-3.5, -1.7, 10.5, -.3, 1.7, 10.8, FR); box(.5, -1.7, 8.0, 3.5, 1.7, 8.3, FR);
       box(-.4, -.6, 6.0, .6, .6, 6.5, FR);
+      signIso(e, 'MBC', { face: 'y', x: 0, y: 2.27, z: 1.5, scale: 2, colors: [[28, 40, 92]] });
       boxShadow(e, -4, -2.2, 4, 2.2, 10.5);
     },
   },
@@ -397,6 +448,9 @@ const SCENES = {
       box(1.8, -2.4, 0, 6.2, 2.4, 2.4, MB, 2);
       for (let k = 0; k < 4; k++) box(1.8 + k * .3, -2.4, 2.4 + k * .22, 6.2 - k * .3, 2.4, 2.4 + (k + 1) * .22, [222, 220, 212]);
       box(3.6, -.5, 3.3, 4.4, .5, 3.7, MB);
+      // the row of member states' flags along First Avenue
+      const cloths = [[186, 46, 44], [44, 96, 168], [240, 200, 60], [36, 128, 72], [240, 240, 236], [30, 30, 34], [214, 110, 40], [96, 160, 210]];
+      for (let k = 0; k < 14; k++) flag(e, -1.6 + k * .58, 4.6, 2.2, cloths[(k * 5) % cloths.length]);
       boxShadow(e, -1.1, -3.6, 6.2, 3.6, 14.5);
     },
   },
@@ -413,7 +467,12 @@ const SCENES = {
       for (const [x0, x1, top] of [[-4, 1.2, 7.6], [1.2, 2.8, 6.0], [2.8, 4.2, 4.4]]) for (let z = 2.2; z < top - .4; z += 1.6) api.emissive(() => box(x0 + .2, 2.4, z, x1 - .2, 2.46, z + .28, GL));
       api.emissive(() => box(-4.06, -2.0, 2.0, -4.0, 1.6, 6.8, GL));
       for (const [x0, x1, z] of [[1.2, 2.8, 6.0], [2.8, 4.2, 4.4], [4.2, 5.2, 2.8]]) box(x0, -2.4, z, x1, -2.3, z + .35, [200, 204, 206]);
-      boxShadow(e, -4, -2.4, 5.2, 2.4, 7.6);
+      // the outdoor stairs that link the terraces
+      for (const [x0, z0, z1] of [[1.3, 4.4, 6.0], [2.9, 2.8, 4.4]]) for (let k = 0; k < 5; k++) box(x0 + k * .28, -.6, z1 - (k + 1) * (z1 - z0) / 5, x0 + (k + 1) * .28, .2, z1 - k * (z1 - z0) / 5, [200, 204, 206]);
+      // the big overhang above the entrance, facing the river
+      box(-4.9, -2.4, 3.4, -4.0, 2.4, 7.6, ST);
+      api.emissive(() => box(-4.96, -2.0, 4.0, -4.9, 2.0, 7.0, GL));
+      boxShadow(e, -4.9, -2.4, 5.2, 2.4, 7.6);
     },
   },
   // United States Capitol: a dome on a drum, between two long wings
@@ -433,12 +492,14 @@ const SCENES = {
       e.sphere(0, 0, 4.8, 1.6, W);
       e.capsule([0, 0, 6.2], [0, 0, 6.9], .32, .26, () => W);
       e.capsule([0, 0, 6.9], [0, 0, 7.5], .1, .08, () => [96, 98, 104]);
+      e.sphere(0, 0, 7.6, .09, [96, 98, 104]);
+      for (const x of [-5, 5]) usFlag(e, x, 0, 3.8);
       boxShadow(e, -7, -1.9, 7, 3.0, 4.5);
     },
   },
   // Washington Monument: a stone obelisk
   washington: {
-    bare: true, S: 9, origin: 92, cx: 0, cy: 0, R: 4, zmax: 19,
+    bare: true, S: 9, origin: 92, cx: 0, cy: 0, R: 4.5, zmax: 19,
     build(e, api) {
       const { box } = e, ST = [226, 218, 202], SD = [212, 204, 188];
       for (let k = 0; k < 18; k++) {
@@ -446,7 +507,88 @@ const SCENES = {
         box(-h, -h, k, h, h, k + 1, k % 2 ? ST : SD, k);
       }
       for (let k = 0; k < 4; k++) { const h = .6 - k * .15; box(-h, -h, 18 + k * .35, h, h, 18 + (k + 1) * .35, ST); }
+      for (const x of [-.2, .1]) { box(x, .62, 16.8, x + .12, .66, 17.2, [70, 64, 58]); box(.62, -x - .12, 16.8, .66, -x, 17.2, [70, 64, 58]); }
+      // the ring of American flags around the base
+      for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283; usFlag(e, Math.cos(a) * 3.1, Math.sin(a) * 3.1, 2.4); }
       boxShadow(e, -.82, -.82, .82, .82, 18);
+    },
+  },
+  // 111 Eighth Avenue (the old Port of New York Authority building, now Google's office): a brick block with setbacks on a stone base
+  google: {
+    bare: true, S: 10, origin: 48, cx: 0, cy: 0, R: 5, zmax: 11,
+    build(e, api) {
+      const { box } = e, BR = [142, 92, 72], BD = [124, 80, 62], ST = [208, 202, 188], G = C.GLASS;
+      box(-5, -2.6, 0, 5, 2.6, 1.7, ST, 1);
+      box(-4.8, -2.4, 1.7, 4.8, 2.4, 8.4, BR, 2);
+      box(-3.8, -1.8, 8.4, 3.8, 1.8, 9.6, BD, 3);
+      box(-2.6, -1.2, 9.6, 2.6, 1.2, 10.5, BR, 4);
+      for (let z = 2.1; z < 8.2; z += .75) for (let x = -4.5; x < 4.6; x += .62) api.emissive(() => box(x, 2.4, z, x + .3, 2.46, z + .42, G), 'floors');
+      for (let z = 2.1; z < 8.2; z += .75) for (let y = -2.1; y < 2.2; y += .62) api.emissive(() => box(4.8, y, z, 4.86, y + .3, z + .42, G), 'floors');
+      for (let x = -4.4; x < 4.5; x += 1.4) api.emissive(() => box(x, 2.6, .3, x + .8, 2.66, 1.4, G));
+      box(-5.05, 2.55, 1.5, 5.05, 2.75, 1.7, [190, 184, 170]);
+      // the Google sign above the stone base, and the old terminal's name cut into the stone
+      signIso(e, 'Google', { face: 'y', x: 0, y: 2.47, z: 3.5, scale: 2, colors: [[66, 133, 244], [219, 68, 55], [244, 180, 0], [66, 133, 244], [15, 157, 88], [219, 68, 55]] });
+      signIso(e, 'INLAND TERMINAL', { face: 'y', x: 1.2, y: 2.75, z: 1.66, scale: 1, colors: [[140, 120, 84]] });
+      usFlag(e, -4.4, 3.4, 3.2);
+      boxShadow(e, -5, -2.6, 5, 2.6, 8.4);
+    },
+  },
+  // The High Line: an old elevated rail line on steel columns, now a planted walkway
+  highline: {
+    bare: true, S: 13, origin: 18, cx: 0, cy: 0, R: 5, zmax: 4,
+    build(e) {
+      const { box } = e, STEEL = [74, 84, 80], PAVE = [192, 190, 182], WOOD = [168, 128, 88];
+      for (const x of [-4.6, -1.6, 1.4, 4.4]) for (const y of [-.8, .8]) box(x - .14, y - .14, 0, x + .14, y + .14, 2.2, STEEL);
+      box(-5.4, -1.2, 2.2, 5.4, 1.2, 2.7, STEEL, 1);
+      box(-5.3, -1.1, 2.7, 5.3, 1.1, 2.8, PAVE, 2);
+      for (let x = -5.2; x < 5.2; x += .5) box(x, -1.15, 2.8, x + .06, -1.1, 3.3, STEEL);
+      box(-5.3, -1.18, 3.24, 5.3, -1.1, 3.3, STEEL);
+      box(-5.2, .3, 2.8, -1.4, 1.05, 3.05, [120, 86, 62]);
+      for (let k = 0; k < 9; k++) e.sphere(-4.9 + k * .45, .68 + (k % 2) * .08, 3.25, .26, k % 3 ? C.GREEN : [140, 150, 96], 'rough');
+      for (let k = 0; k < 7; k++) e.sphere(-4.7 + k * .5, .5 + (k % 3) * .14, 3.5, .07, [[214, 120, 160], [240, 214, 90], [240, 240, 236]][k % 3]);
+      // the old rail tracks left in the paving
+      for (const y of [-.5, -.2]) box(-5.2, y, 2.8, -1.6, y + .05, 2.86, [120, 96, 80]);
+      box(.4, .2, 2.8, 3.4, .75, 3.1, WOOD); box(.4, .75, 2.8, 3.4, .95, 3.4, WOOD);
+      boxShadow(e, -5.4, -1.2, 5.4, 1.2, 2.7);
+    },
+  },
+  // The New York Times Building: a glass tower behind a screen of horizontal ceramic rods, with a mast on top
+  nyt: {
+    bare: true, S: 11, origin: 70, cx: 0, cy: 0, R: 4, zmax: 18,
+    build(e, api) {
+      const { box } = e, ROD = [218, 220, 216], GL = [96, 118, 136], X = 3.0, Y = 2.2;
+      api.emissive(() => box(-X, -Y, 0, X, Y, 1.6, C.GLASS, 1));
+      api.emissive(() => box(-X, -Y, 1.6, X, Y, 14.6, GL, 2), 'floors');
+      // ceramic rods stop short of the corners, where the glass shows, as on the real building
+      for (let z = 1.9; z < 14.6; z += .38) { box(-X + .5, Y, z, X - .5, Y + .1, z + .1, ROD); box(X, -Y + .5, z, X + .1, Y - .5, z + .1, ROD); }
+      box(-X - .1, -Y - .1, 14.6, X + .1, Y + .1, 14.9, ROD);
+      box(-.12, -.12, 14.9, .12, .12, 18, [150, 152, 156]);
+      box(-X - .2, Y, 1.5, X + .2, Y + .9, 1.65, ROD);
+      // the name across the rods, low on the front, in two lines
+      const ink = [[28, 28, 30]];
+      for (const [line, top] of [['THE NEW', 5.6], ['YORK TIMES', 4.6]]) signIso(e, line, { face: 'y', x: 0, y: Y + .1, z: top, scale: 1, colors: ink });
+      boxShadow(e, -X - .1, -Y - .1, X + .1, Y + .1, 14.6);
+    },
+  },
+  // Lincoln Memorial: a Doric temple of white marble on a stepped base, columns all round
+  lincoln: {
+    bare: true, S: 12, origin: 26, cx: 0, cy: 0, R: 5, zmax: 5,
+    build(e) {
+      const { box } = e, MB = [236, 234, 226], MD = [220, 218, 210];
+      for (let k = 0; k < 4; k++) box(-6 + k * .3, -3.6 + k * .3, k * .25, 6 - k * .3, 3.6 - k * .3, (k + 1) * .25, MD, k);
+      box(-4.4, -2.0, 1.0, 4.4, 2.0, 3.6, [200, 198, 190], 5);
+      for (let x = -4.8; x <= 4.81; x += .8) { box(x - .17, 2.42, 1.0, x + .17, 2.76, 3.7, MB); box(x - .17, -2.76, 1.0, x + .17, -2.42, 3.7, MB); }
+      for (let y = -2.0; y <= 2.01; y += .8) { box(4.82, y - .17, 1.0, 5.16, y + .17, 3.7, MB); box(-5.16, y - .17, 1.0, -4.82, y + .17, 3.7, MB); }
+      box(-5.4, -3.0, 3.7, 5.4, 3.0, 4.3, MB);
+      box(-4.4, -2.0, 4.3, 4.4, 2.0, 5.0, MD);
+      // the open centre of the front, with Lincoln seated inside
+      box(-1.3, 1.98, 1.0, 1.3, 2.04, 3.5, [70, 70, 74]);
+      e.capsule([0, 2.06, 1.3], [0, 2.06, 2.1], .34, .26, () => [244, 242, 236]);
+      e.sphere(0, 2.1, 2.4, .2, [244, 242, 236]);
+      box(-.45, 2.04, 1.0, .45, 2.3, 1.3, [236, 234, 226]);
+      // the wide steps up the front
+      for (let k = 0; k < 4; k++) box(-2.4 + k * .1, 3.6 + (3 - k) * .35, 0, 2.4 - k * .1, 3.6 + (4 - k) * .35, (k + 1) * .25, MD);
+      boxShadow(e, -5.4, -3.0, 5.4, 3.0, 4.3);
     },
   },
 };
@@ -710,7 +852,7 @@ function renderPast(date) {
       tag: `${ago(now - d.y)} · ${LONG_MON[d.m - 1]} ${d.d}, ${d.y}`,
       name: o.zh && !o.noZh ? `${o.name} · ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) + (main ? nav : '') };
   });
-  state.index = state.items.length - 1;
+  state.index = Math.max(0, state.items.findIndex(it => it.main));
   sizeStage(); renderText(); renderThumbs(); mount(false);
   $('ctaText').textContent = 'Timeline';
   scrollTo(0, 0);
@@ -1031,7 +1173,7 @@ function openTl(date) {
   renderRuler();
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
-  $('tlStats').textContent = `${TL.list.length} days kept · ${nPlaces} places · ${nCountries} countries`;
+  $('tlStats').textContent = `${new Set(TL.list.map(x => x.date)).size} days kept · ${nPlaces} places · ${nCountries} countries`;
   showTlDay(k, true).then(() => {
     if (!fly) return;
     const cv = $('tlc'), tlRect = cv.getBoundingClientRect(), g = ghostOf(fly.img, rectLike(fly.img, cv, tlRect));

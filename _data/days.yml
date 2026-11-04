@@ -6,7 +6,7 @@
 # Optional: prep (default "in"), with (a name, or a list), extra (one short sentence),
 #   map (search text for Google Maps), country (default "Japan").
 
-# USA, January 2019 (dates from the photos)
+# USA, January 2019 (dates from the photos; on a day with several, in the order the photos were taken)
 - date: "2019-01-22"
   scene: grandcentral
   name: Grand Central Terminal
@@ -24,14 +24,37 @@
   did: looked out over the East River from inside the United Nations
   map: United Nations Headquarters, New York
 - date: "2019-01-26"
+  scene: google
+  name: 111 Eighth Avenue
+  no_zh: true
+  place: Chelsea, New York
+  country: USA
+  did: walked past the old Port of New York Authority building, Google's office now, early in the morning
+  map: 111 8th Avenue, New York
+- date: "2019-01-26"
+  scene: highline
+  name: The High Line
+  no_zh: true
+  place: Chelsea, New York
+  country: USA
+  did: walked the High Line in the early sun
+  map: The High Line, New York
+- date: "2019-01-26"
   scene: whitney
   name: Whitney Museum of American Art
   no_zh: true
   place: Meatpacking District, New York
   country: USA
   did: saw the Andy Warhol show at the Whitney
-  extra: In the morning there was the High Line; in the afternoon, The New York Times building.
   map: Whitney Museum of American Art, New York
+- date: "2019-01-26"
+  scene: nyt
+  name: The New York Times Building
+  no_zh: true
+  place: Midtown, New York
+  country: USA
+  did: looked up at the ceramic rods of The New York Times Building
+  map: The New York Times Building, New York
 - date: "2019-01-27"
   scene: capitol
   name: United States Capitol
@@ -56,8 +79,17 @@
   country: USA
   did: took a photo at the foot of the Washington Monument
   with: three friends
-  extra: Then they walked to the Lincoln Memorial and watched the monument in the Reflecting Pool.
   map: Washington Monument, Washington DC
+
+- date: "2019-01-30"
+  scene: lincoln
+  name: Lincoln Memorial
+  no_zh: true
+  place: Washington, D.C.
+  country: USA
+  did: watched the Washington Monument in the Reflecting Pool from the steps of the Lincoln Memorial
+  with: three friends
+  map: Lincoln Memorial, Washington DC
 
 # South Korea, October 2014 (around Oct 26; the exact days are not remembered)
 - date: "2014-10-25"

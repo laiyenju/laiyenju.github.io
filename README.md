@@ -93,7 +93,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 欄位 | 必填 | 說明 |
 |---|---|---|
 | `date` | 是 | `"YYYY-MM-DD"`，要加引號。同一天可以有好幾筆（好幾棟建築），網址會依順序變成 `#day-2019-01-26`、`#day-2019-01-26-2`… |
-| `scene` | 是 | 建築模型的名字，要先在 `assets/js/day.js` 的 `SCENES` 裡有這個模型。目前有：`studio`（工作室）、`home`（家）、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`whitney`、`capitol`、`whitehouse`、`washington`、`mbc`、`hongik` |
+| `scene` | 是 | 建築模型的名字，要先在 `assets/js/day.js` 的 `SCENES` 裡有這個模型。目前有：`studio`（工作室）、`home`（家）、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`google`、`highline`、`whitney`、`nyt`、`capitol`、`whitehouse`、`washington`、`lincoln`、`mbc`、`hongik` |
 | `name` | 是 | 英文名稱 |
 | `zh` | 是 | 中文名稱。不要中文時改寫 `no_zh: true` |
 | `place` | 是 | 城市或地區，例如 `Sangam, Seoul`，會變成 Google Maps 連結 |
