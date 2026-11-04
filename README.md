@@ -22,7 +22,6 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `_config.yml` | 網站資訊、哪些檔案要建置 |
 | `assets/css/`、`assets/js/` | 首頁：`day.css`、`day.js`（建築模型 `SCENES`、Timeline、terminal、依太陽變色）、`pixel-engine.js`（產生的檔案）。文章頁：`site.css`、`theme.js`（日夜切換）、`post.js`。Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
 | `assets/vendor/pixel-plays/`、`scripts/pixel-engine/` | Pixel Plays 引擎原檔（MIT，作者 AmirMushich，`LICENSE` 在同一個資料夾）和把它轉成 `assets/js/pixel-engine.js` 的程式 |
-| `assets/vendor/ascii-sharks/`、`assets/js/ocean.js` | 舊首頁的錦鯉引擎和打包結果。目前沒有頁面使用（見第 4 節） |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
 | `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。文章頁的 `cd ..` 不經過這裡：從 notes 清單點進來的文章用瀏覽器的「上一頁」回去，其他情況直接連到 `/?view=notes`（`assets/js/post.js` 的 `backToNotes`） |
@@ -34,7 +33,6 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 項目 | 說明 |
 |---|---|
 | `assets/js/pixel-engine.js` | 產生的檔案，不要直接改。改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 3.3） |
-| `assets/js/ocean.js` | 打包產生的檔案，不要直接改（舊錦鯉，目前沒用到） |
 | 首頁網址 | `#timeline`、`#day-YYYY-MM-DD`（Timeline 停在那天）、`#past-YYYY-MM-DD`（以那天的建築為主的首頁）、`#work-<slug>`（一件作品）。分享這些網址會直接打開那個畫面 |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
@@ -141,7 +139,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 文章頁日夜主題 | 讀者自己選（文章頁） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`，內文標題也用這個顏色），分享卡片在 `scripts/og/card.html`，要一起改 |
 | 文章頁底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
-| 網頁字型 | 文章頁 `_includes/head.html`、首頁 `_layouts/home.html`（Google Fonts） | JetBrains Mono、Noto Sans TC；`head.html` 另載入舊錦鯉用的 Noto Serif TC、DotGothic16 | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
+| 網頁字型 | 文章頁 `_includes/head.html`、首頁 `_layouts/home.html`（Google Fonts） | JetBrains Mono、Noto Sans TC | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
 | 文章圖片排版 | `assets/css/site.css` 的 `.post-fig`、`.post-gallery` | 單張和內文同寬；直式圖片（高 > 寬 × 1.1）寬度 `80%`；同一段有兩張以上時並排，總寬 `960px`，間距 `20px`；手機（≤ 640px）上下排列 | 並排的圖片會伸到側欄，`post.js` 會把側欄註腳往下推，避開圖片 |
 | 圖片放大檢視 | `assets/css/site.css` 的 `.lb`（`assets/js/post.js` 的 `buildLightbox`） | 寬螢幕：左欄 `320px` 放關閉、圖說、上一張／張數／下一張，細線隔開右邊的圖片；窄螢幕（≤ 767px）：上面關閉和箭頭，下面張數和圖說 | 鍵盤：Esc 關閉、左右鍵切換；手機左右滑動切換；點圖片關閉。一篇文章的圖片會依序循環 |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |
@@ -245,6 +243,6 @@ jekyll serve
 | 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample*.svg`（三張） | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
 | 3 | `_data/days.yml` 的四筆（紐約中央車站、白宮、MBC、弘益大學） | 日期和 `did` 是暫定的 | 換成實際日期和那天做的事 |
 | 4 | 工作室模型（`day.js` 的 `SCENES.studio`） | 外型是暫定的辦公大樓 | 有照片後照著重畫 |
-| 5 | 舊錦鯉：`assets/vendor/ascii-sharks/`、`assets/js/ocean.js`、`_includes/head.html` 的 Noto Serif TC／DotGothic16、`site.css` 裡 `.home-*`、`.sh-*` 的樣式 | 首頁改版後沒有頁面使用 | 決定保留（例如當彩蛋）或刪除；刪除時一起改這份 README 和 `CLAUDE.md` |
-| 6 | 「Where is Yen now」的自動打卡 | 目前只用作息表推算（`day.js` 的 `CHECKIN` 是 `null`） | 網站穩定後再設定 iPhone 捷徑：抵達或離開時更新一個只有文字標籤的檔案 |
-| 7 | 農曆國定假日 | `HOLIDAYS` 只有固定日期的假日 | 每年補一次 |
+| 5 | 「Where is Yen now」的自動打卡 | 目前只用作息表推算（`day.js` 的 `CHECKIN` 是 `null`） | 網站穩定後再設定 iPhone 捷徑：抵達或離開時更新一個只有文字標籤的檔案 |
+| 6 | 農曆國定假日 | `HOLIDAYS` 只有固定日期的假日 | 每年補一次 |
+| 7 | `assets/css/site.css` 的 `.home-*`、`.sh-panel` 等舊首頁樣式 | 新首頁不用 `site.css`，這些樣式已經沒有作用（文章頁的 terminal 還在用 `.sh-*` 的一部分） | 有空時清掉沒用到的規則 |
