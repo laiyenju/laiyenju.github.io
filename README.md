@@ -244,4 +244,3 @@ jekyll serve
 | 3 | 工作室模型（`day.js` 的 `SCENES.studio`） | 外型是暫定的辦公大樓 | 有照片後照著重畫 |
 | 4 | 「Where is Yen now」的自動打卡 | 目前只用作息表推算（`day.js` 的 `CHECKIN` 是 `null`） | 網站穩定後再設定 iPhone 捷徑：抵達或離開時更新一個只有文字標籤的檔案 |
 | 5 | 農曆國定假日 | `HOLIDAYS` 只有固定日期的假日 | 每年補一次 |
-| 6 | `assets/css/site.css` 的 `.home-*`、`.sh-panel` 等舊首頁樣式 | 新首頁不用 `site.css`，這些樣式已經沒有作用（文章頁的 terminal 還在用 `.sh-*` 的一部分） | 有空時清掉沒用到的規則 |
