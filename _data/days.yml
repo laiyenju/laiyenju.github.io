@@ -1,5 +1,5 @@
 # Places Yen has been. Each one is a building on the homepage (on the same month and day in later
-# years) and a day in the timeline. One building per day. The sentence under the building is made by one rule:
+# years) and a day in the timeline. A day can have more than one building. The sentence under the building is made by one rule:
 #   "{N years ago}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]"
 # Required: date ("YYYY-MM-DD", in quotes), scene (a model in assets/js/day.js SCENES), name,
 #   zh (Chinese name; write no_zh: true to leave it out), place, did.
@@ -59,8 +59,8 @@
   extra: Then they walked to the Lincoln Memorial and watched the monument in the Reflecting Pool.
   map: Washington Monument, Washington DC
 
-# South Korea, 2014: dates and "did" are placeholders until Yen confirms them (README 4)
-- date: "2014-07-15"
+# South Korea, October 2014 (around Oct 26; the exact days are not remembered)
+- date: "2014-10-25"
   scene: mbc
   name: MBC headquarters
   zh: MBC 電視台總部
@@ -68,7 +68,7 @@
   country: South Korea
   did: visited the broadcasting center at Digital Media City
   map: MBC Sangam, Seoul
-- date: "2014-07-16"
+- date: "2014-10-26"
   scene: hongik
   name: Hongik University
   zh: 弘益大學

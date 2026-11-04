@@ -32,6 +32,9 @@ const REAL_MD = pad(REAL.m) + '-' + pad(REAL.d);
    Optional: prep (default "in"), with, extra, map, country (default "Japan"). */
 const MEMORIES = (SITE.days || []).map(d => ({ date: String(d.date), scene: d.scene, name: d.name, zh: d.zh, noZh: !!d.no_zh,
   place: d.place, prep: d.prep, did: d.did, with: d.with, extra: d.extra, map: d.map, country: d.country }));
+// a day can have more than one building: the first keeps the date as its id, the next ones get date-2, date-3 …
+{ const seen = {}; for (const m of MEMORIES) { seen[m.date] = (seen[m.date] || 0) + 1; m.id = seen[m.date] > 1 ? `${m.date}-${seen[m.date]}` : m.date; } }
+const byDate = (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
 function escHtml(t) { return String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 const listOf = v => { const a = [].concat(v || []); return a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; };
 function checkMemory(m) {
@@ -112,8 +115,6 @@ const C = {
   POT: [176, 98, 64], GREEN: [86, 124, 70], DECK: [150, 112, 80],
   SHIBA: [212, 136, 70], CREAM: [244, 234, 214], DEER: [164, 116, 74], NOSE: [40, 30, 28],
 };
-const YEN = { shirt: [232, 228, 218], stripe: [232, 228, 218], legs: [54, 58, 72], hair: [34, 28, 26], skin: [226, 182, 150] };
-const VISITOR = { shirt: [70, 98, 132], stripe: [70, 98, 132], legs: [196, 188, 170], hair: [60, 44, 36], skin: [214, 168, 134] };
 const toneCache = new Map();
 function closeTones(e, base) {
   let t = toneCache.get(base);
@@ -155,7 +156,6 @@ function lantern(e, api, x, y, s = 1) {
   B(-.15, -.15, .15, .15, 1.75, 1.95, C.STONE);
   boxShadow(e, x - .5 * s, y - .5 * s, x + .5 * s, y + .5 * s, 1.75 * s);
 }
-function walkPose(ph) { return { stance: Math.sin(ph) * .22, armR: Math.sin(ph) * .35, armL: -Math.sin(ph) * .35 }; }
 function pacer(e, t, x0, x1, speed) {
   const L = x1 - x0, s = (e.STILL ? L * .4 : t * speed) % (2 * L), fwd = s < L;
   return { x: x0 + (fwd ? s : 2 * L - s), yaw: fwd ? 0 : Math.PI };
@@ -215,8 +215,6 @@ const SCENES = {
       boxShadow(e, X0, Y0, X1 + .1, Y1 + .1, TOP);
     },
     animate(e, t, o) {
-      const p = pacer(e, t, -4, 3, 1.0);
-      e.figure(p.x, 3.7, p.yaw, e.STILL ? {} : walkPose(t * 6.5), YEN, e.dynamicAdd);
       if (o.shiba) shibaLoop(e, t, 3.2, 2.6, 1.0, 1.6);
     },
   },
@@ -258,8 +256,6 @@ const SCENES = {
       e.growTree(-4.4, -3.0, .55, 240, 20);
     },
     animate(e, t, o) {
-      const sway = e.STILL ? 0 : Math.sin(t * 1.4) * .12;
-      e.figure(-.6, 2.6, -2.0, { armR: -1.0 + sway, armL: .1, stance: .1 }, YEN, e.dynamicAdd);
       if (o.shiba) shibaLoop(e, t, 1.8, 3.0, 1.6, .7);
     },
   },
@@ -290,7 +286,6 @@ const SCENES = {
       box(-1.9, Y - .33, 3.92, 4.3, Y + .33, 4.16, C.INK);
       boxShadow(e, -1.9, Y - .33, 4.3, Y + .33, 4.1);
     },
-    statics(e) { e.figure(-2.4, -.6, 1.0, { armR: .1, armL: .1, stance: .08 }, VISITOR, e.dynamicAdd); },
     animate(e, t) { const p = pacer(e, t, 0, 3.6, .5); deer(e, p.x, -2.0, p.yaw, t); },
   },
   naoshima: {
@@ -313,7 +308,6 @@ const SCENES = {
         box(-3.1, 1.05, 0, -3.0, 1.35, .42, C.INK); box(-1.4, 1.05, 0, -1.3, 1.35, .42, C.INK);
       }
     },
-    animate(e, t) { const p = pacer(e, t, -4.4, .2, .7); e.figure(p.x, .2, p.yaw, e.STILL ? {} : walkPose(t * 5), YEN, e.dynamicAdd); },
   },
   // Grand Central Terminal: Beaux-Arts front with three tall arched windows, paired columns, clock and sculpture on top
   grandcentral: {
@@ -335,7 +329,6 @@ const SCENES = {
       box(-1.0, .5, 5.6, 1.0, 1.2, 6.25, [168, 160, 132]);
       boxShadow(e, -5, -3.6, 5, 2.2, 4.5);
     },
-    animate(e, t) { const p = pacer(e, t, -4, 4, .9); e.figure(p.x, 3.0, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
   // The White House: north front with a columned portico and pediment
   whitehouse: {
@@ -360,7 +353,6 @@ const SCENES = {
       box(.04, -.7, 4.4, .9, -.66, 4.86, [186, 52, 48]); box(.04, -.7, 4.62, .36, -.65, 4.86, [52, 62, 120]);
       boxShadow(e, -4.7, -2.3, 4.7, 2.9, 3.2);
     },
-    animate(e, t) { const p = pacer(e, t, -4.2, 4.2, .8); e.figure(p.x, 4.2, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
   // MBC headquarters, Digital Media City: two glass towers on a shared podium (placeholder shape)
   mbc: {
@@ -377,7 +369,6 @@ const SCENES = {
       box(-.4, -.6, 6.0, .6, .6, 6.5, FR);
       boxShadow(e, -4, -2.2, 4, 2.2, 10.5);
     },
-    animate(e, t) { const p = pacer(e, t, -3.6, 3.6, .9); e.figure(p.x, 3.4, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
   // Hongik University, Hongmun Hall: a tall block with a huge gate cut through it
   hongik: {
@@ -393,7 +384,6 @@ const SCENES = {
       box(-1.1, -1.6, 4.6, 1.1, 1.6, 4.8, CN);
       boxShadow(e, -3.9, -1.7, 3.9, 1.7, 8.6);
     },
-    animate(e, t) { const p = pacer(e, t, 2.6, 3.8, .5); e.figure(0, 1.2 + (p.x - 2.6) * 2, Math.PI / 2 * (p.yaw ? -1 : 1), e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
   // United Nations headquarters: the Secretariat slab and the low General Assembly beside it
   unitednations: {
@@ -409,7 +399,6 @@ const SCENES = {
       box(3.6, -.5, 3.3, 4.4, .5, 3.7, MB);
       boxShadow(e, -1.1, -3.6, 6.2, 3.6, 14.5);
     },
-    animate(e, t) { const p = pacer(e, t, 1.6, 6, .8); e.figure(p.x, 3.6, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
   // Whitney Museum of American Art: a steel-clad block stepping down in terraces toward the High Line
   whitney: {
@@ -426,7 +415,6 @@ const SCENES = {
       for (const [x0, x1, z] of [[1.2, 2.8, 6.0], [2.8, 4.2, 4.4], [4.2, 5.2, 2.8]]) box(x0, -2.4, z, x1, -2.3, z + .35, [200, 204, 206]);
       boxShadow(e, -4, -2.4, 5.2, 2.4, 7.6);
     },
-    animate(e, t) { const p = pacer(e, t, -3.6, 4.8, .8); e.figure(p.x, 3.4, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
   // United States Capitol: a dome on a drum, between two long wings
   capitol: {
@@ -447,9 +435,8 @@ const SCENES = {
       e.capsule([0, 0, 6.9], [0, 0, 7.5], .1, .08, () => [96, 98, 104]);
       boxShadow(e, -7, -1.9, 7, 3.0, 4.5);
     },
-    animate(e, t) { const p = pacer(e, t, -6, 6, .9); e.figure(p.x, 4.0, p.yaw, e.STILL ? {} : walkPose(t * 6), YEN, e.dynamicAdd); },
   },
-  // Washington Monument: a stone obelisk, with Yen and three friends at its foot
+  // Washington Monument: a stone obelisk
   washington: {
     bare: true, S: 9, origin: 92, cx: 0, cy: 0, R: 4, zmax: 19,
     build(e, api) {
@@ -460,15 +447,6 @@ const SCENES = {
       }
       for (let k = 0; k < 4; k++) { const h = .6 - k * .15; box(-h, -h, 18 + k * .35, h, h, 18 + (k + 1) * .35, ST); }
       boxShadow(e, -.82, -.82, .82, .82, 18);
-    },
-    statics(e) {
-      const FR = [
-        { shirt: [30, 30, 34], stripe: [30, 30, 34], legs: [30, 30, 34], hair: [28, 24, 22], skin: [226, 186, 156] },
-        { shirt: [96, 40, 44], stripe: [96, 40, 44], legs: [44, 44, 52], hair: [40, 30, 26], skin: [228, 188, 158] },
-        { shirt: [40, 42, 52], stripe: [40, 42, 52], legs: [70, 76, 92], hair: [28, 24, 22], skin: [220, 180, 150] },
-        { shirt: [222, 222, 220], stripe: [222, 222, 220], legs: [52, 60, 84], hair: [30, 26, 24], skin: [228, 188, 160] },
-      ];
-      FR.forEach((pal, k) => e.figure(1.6 + k * .55, 2.4 - k * .55, .8, { armR: .1, armL: .1, stance: .06 }, pal, e.dynamicAdd));
     },
   },
 };
@@ -583,13 +561,13 @@ function buildItems() {
   const little = LITTLE.filter(l => state.day >= l.day && state.day < l.day + 7 * 864e5);
   const extra = little.map(l => l.text).join(' ');
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
-    .sort((a, b) => a.date < b.date ? -1 : 1).map(m => {
+    .sort(byDate).map(m => {
       const year = +m.date.slice(0, 4);
-      return { date: m.date, scene: m.scene, opts: {}, label: String(year), name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, meta: '', html: sentenceFor(m, dd.y - year) };
+      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, meta: '', html: sentenceFor(m, dd.y - year) };
     });
   const day = r.holiday || (r.rest ? 'Weekend' : 'Weekday');
   items.push({
-    scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true,
+    scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
     name: base === 'home' ? 'Yen is at home today.' : 'Yen is at the office today.',
     place: base === 'home' ? 'home' : 'the office',
     meta: `${day} · ${CITY.name}`,
@@ -717,17 +695,18 @@ function go(k) {
 }
 /* the homepage, but on a past day: only reached from the timeline (#past-YYYY-MM-DD) */
 function renderPast(date) {
-  const x = tlEntries().find(e => e.date === date && !e.today);
+  const x = tlEntries().find(e => e.id === date && !e.today);
   if (!x) { exitPast(); return; }
+  const id = date; date = x.date;
   const m = x.m, d = parseDay(date), now = fromDayMs(state.day).y, md = date.slice(5);
   const nav = `<div class="nav-row"><button type="button" class="back" id="pastBack">← Timeline</button><button type="button" class="back" id="pastToday">Back to today</button></div>`;
-  state.pastDate = date;
+  state.pastDate = id;
   document.body.classList.add('is-past');
   // that day's homepage: earlier years on the same date on the left, that building as the main one
-  const same = MEMORIES.filter(o => o.date.slice(5) === md && o.date <= date && checkMemory(o)).sort((a, b) => a.date < b.date ? -1 : 1);
+  const same = MEMORIES.filter(o => o.date.slice(5) === md && o.date <= date && checkMemory(o)).sort(byDate);
   state.items = same.map(o => {
-    const y = +o.date.slice(0, 4), main = o.date === date;
-    return { date: o.date, scene: o.scene, opts: {}, label: main ? 'That day' : String(y), main, pastView: main,
+    const y = +o.date.slice(0, 4), main = o.id === id;
+    return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: main,
       tag: `${ago(now - d.y)} · ${LONG_MON[d.m - 1]} ${d.d}, ${d.y}`,
       name: o.zh && !o.noZh ? `${o.name} · ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) + (main ? nav : '') };
   });
@@ -737,7 +716,7 @@ function renderPast(date) {
   scrollTo(0, 0);
 }
 document.addEventListener('click', ev => {
-  if (ev.target.closest('#pastBack') && state.pastDate) { TL.from = { rect: disp.getBoundingClientRect(), img: disp, date: state.pastDate }; go2('#day-' + state.pastDate); }
+  if (ev.target.closest('#pastBack') && state.pastDate) { TL.from = { rect: disp.getBoundingClientRect(), img: disp, id: state.pastDate }; go2('#day-' + state.pastDate); }
   else if (ev.target.closest('#pastToday')) closeOverlays();
 });
 function exitPast() {
@@ -875,9 +854,9 @@ function plainSentence(m) {
 }
 function timelineEntries() {
   const today = state.items[state.items.length - 1];
-  const past = MEMORIES.filter(m => m.date < todayISO() && checkMemory(m)).sort((a, b) => a.date < b.date ? 1 : -1);
-  return [{ date: todayISO(), today: true, scene: today.scene, opts: today.opts, name: today.name, html: escHtml(today.meta) }]
-    .concat(past.map(m => ({ date: m.date, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, html: plainSentence(m) })));
+  const past = MEMORIES.filter(m => m.date < todayISO() && checkMemory(m)).sort(byDate).reverse();
+  return [{ date: todayISO(), id: todayISO(), today: true, scene: today.scene, opts: today.opts, name: today.name, html: escHtml(today.meta) }]
+    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, html: plainSentence(m) })));
 }
 /* ---------- timeline mode ----------
    Days go left (oldest) to right (today), like the homepage. Changing day: the building
@@ -1005,7 +984,7 @@ function placeLine(x) {
   return (x.m.country || 'Japan') + (x.m.with ? ` · with ${listOf(x.m.with)}` : '');
 }
 const tlImages = new Map();
-function tlImage(x) { const key = x.date + '|' + LIGHT.n.toFixed(2); if (!tlImages.has(key)) tlImages.set(key, pureImage(x)); return tlImages.get(key); }
+function tlImage(x) { const key = x.id + '|' + LIGHT.n.toFixed(2); if (!tlImages.has(key)) tlImages.set(key, pureImage(x)); return tlImages.get(key); }
 // no lock: a new change interrupts the running one, so quick swipes feel continuous
 async function showTlDay(k, first, fromP = 0) {
   const next = cl(k, 0, TL.list.length - 1);
@@ -1014,7 +993,7 @@ async function showTlDay(k, first, fromP = 0) {
   TL.idx = next;
   const x = TL.list[TL.idx], d = parseDay(x.date), years = fromDayMs(state.day).y - d.y;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches, cv = $('tlc');
-  try { history.replaceState(null, '', '#day-' + x.date); } catch (e) {}
+  try { history.replaceState(null, '', '#day-' + x.id); } catch (e) {}
   markRuler();
   $('tlCap').classList.add('hide');
   dialTo(x.date, `${LONG_DAY[d.wd]} · ${years > 0 ? ago(years).toLowerCase() : 'today'}`);
@@ -1038,13 +1017,13 @@ function settleBack() {
 }
 function openTl(date) {
   TL.list = tlEntries(); TL.idx = -1; TL.cur = null; TL.token = (TL.token || 0) + 1;
-  const k = Math.max(0, TL.list.findIndex(x => x.date === date));
+  const k = Math.max(0, TL.list.findIndex(x => x.id === date));
   $('tlBody').innerHTML = `<div class="tlm wrap">
       <div class="tl-stage" id="tlStage" role="button" tabindex="0" aria-label="This day's building. Tap to read the day. Swipe left or right for other days."><canvas id="tlc"></canvas></div>
       <div class="tl-cap hide" id="tlCap"><div class="n" id="tlName"></div><div class="s" id="tlPlace"></div></div>
     </div>
     <div class="ruler"><div class="stats" id="tlStats"></div><div class="ruler-track" id="rulerTrack" aria-label="Days kept, oldest on the left"></div></div>`;
-  const fly = TL.from && TL.from.date === TL.list[k].date && !matchMedia('(prefers-reduced-motion: reduce)').matches ? TL.from : null;
+  const fly = TL.from && TL.from.id === TL.list[k].id && !matchMedia('(prefers-reduced-motion: reduce)').matches ? TL.from : null;
   TL.from = null;
   if (fly) tl.classList.add('clear');
   showOverlay(tl);
@@ -1156,13 +1135,13 @@ function tapTl() {
   if (x.date.slice(5) === todayISO().slice(5)) {
     leaveTl(() => {
       homeToday();
-      const k = state.items.findIndex(it => it.date === x.date);
+      const k = state.items.findIndex(it => it.id === x.id);
       if (k >= 0 && k !== state.index) { state.index = k; renderThumbs(); mount(false); }
       renderText();
     });
     return;
   }
-  leaveTl(() => renderPast(x.date), '#past-' + x.date);
+  leaveTl(() => renderPast(x.id), '#past-' + x.id);
 }
 function leaveToToday() { leaveTl(() => { homeToday(); renderText(); }); }
 // the day's record: a whole page, reached only from the timeline
@@ -1191,8 +1170,8 @@ function route() {
   let m;
   if ((m = h.match(/^#work-(.+)$/))) openWork(m[1]);
   else if (h === '#timeline') { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(todayISO()); else showTlDay(TL.list.length - 1); }
-  else if ((m = h.match(/^#day-(\d{4}-\d{2}-\d{2})$/))) { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(m[1]); }
-  else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2})$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; renderPast(m[1]); updateMore(); }
+  else if ((m = h.match(/^#day-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(m[1]); }
+  else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; renderPast(m[1]); updateMore(); }
   else {
     if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; $('ctaText').textContent = 'Timeline'; }
     if (state.pastDate) exitPast(); else renderText();
@@ -1252,8 +1231,8 @@ stage.addEventListener('pointerup', endDrag); stage.addEventListener('pointercan
 stage.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openTimeline(); } });
 function openTimeline() {
   const it = state.items[state.index];
-  TL.from = { rect: disp.getBoundingClientRect(), img: disp, date: it.date && !it.about ? it.date : todayISO() };
-  go2('#day-' + TL.from.date);
+  TL.from = { rect: disp.getBoundingClientRect(), img: disp, id: it.id && !it.about ? it.id : todayISO() };
+  go2('#day-' + TL.from.id);
 }
 let wheelT = 0;
 addEventListener('wheel', ev => {
