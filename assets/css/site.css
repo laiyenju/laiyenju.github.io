@@ -56,8 +56,8 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  /* Room for a scrollbar on every page, so the home and an article put their
-     text column at the same x whether or not either one scrolls. */
+  /* Room for a scrollbar on every page, so an article's text column stays
+     at the same x whether or not it scrolls. */
   scrollbar-gutter: stable;
 }
 
@@ -72,20 +72,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Whole-page language stacks */
-body.lang-en {
-  font-family: var(--font-latin);
-}
-body.lang-zh,
-body.lang-zh-Hant {
-  font-family: var(--font-zh);
-}
-body.lang-zh :lang(en),
-body.lang-zh-Hant .latin {
-  font-family: var(--font-latin);
-  font-size: 1.06em; /* Latin leads visually vs Noto */
-}
-
 a {
   color: inherit;
   text-decoration: none;
@@ -97,328 +83,8 @@ html.ui-zh .i-en {
   display: none;
 }
 
-/* Read aloud, never seen: the whole words behind the home page's split glyphs. */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* —— Homepage (full-viewport ASCII 河豚 stage) —— */
-body.home {
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-weight: 400;
-  overflow-x: hidden;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: #fafaf7;
-  color: #2a2420;
-}
-
-.home-stage {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: #fafaf7;
-}
-
-.home-puffer {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  display: block;
-  pointer-events: auto;
-  background: transparent;
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-}
-
-.home-vignette {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: none;
-}
-
-/* Nav sits in the centred column, right above the copy, so every control
-   is within one short reach. It stays put when a list replaces the copy. */
-.home-chrome {
-  position: relative;
-  z-index: 5;
-  /* The same measure as an article's text column (680 less 20 + 20), so a
-     note printed here lines up with its own page. */
-  width: min(640px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: max(72px, calc(50vh - 128px)) 0 72px;
-  padding-top: max(72px, calc(50dvh - 128px));
-  text-align: center;
-  pointer-events: none;
-}
-.home-chrome a,
-.home-chrome button,
-.home-view {
-  pointer-events: auto;
-}
-
-.home-nav {
-  display: flex;
-  justify-content: center;
-  gap: 28px;
-  margin: 0 0 40px;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  color: #2a2420;
-}
-.home-nav a {
-  position: relative;
-  color: inherit;
-  text-decoration: none;
-  transition: color 180ms ease;
-}
-.home-nav a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -6px;
-  height: 2px;
-  background: currentColor;
-  transform: scaleX(0);
-  transition: transform 320ms cubic-bezier(0.2, 0, 0, 1);
-}
-.home-nav a:hover {
-  opacity: 1;
-}
-/* The way into the site, so its words carry the accent; the open section is underlined. */
-body .home-nav a {
-  color: var(--accent);
-}
-.home-nav a[aria-current="page"]::after {
-  transform: scaleX(1);
-}
-@media (min-width: 900px) {
-  .home-nav {
-    font-size: 17px;
-  }
-}
-
-/* View swap: out = fade + 6px up; in = from 8px below. No scale, no blur. */
-.home-view {
-  transition: opacity 220ms ease, transform 220ms ease;
-}
-.home-view.is-out {
-  opacity: 0;
-  transform: translateY(-6px);
-}
-.home-view:not(.is-out) {
-  transition: opacity 420ms cubic-bezier(0.2, 0, 0, 1), transform 420ms cubic-bezier(0.2, 0, 0, 1);
-}
-.home-view.is-before {
-  opacity: 0;
-  transform: translateY(8px);
-  transition: none;
-}
-.home-view:focus {
-  outline: none;
-}
-
-.home-copy {
-  position: relative;
-  max-width: 42ch;
-  margin: 0 auto;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-weight: 400;
-  color: #2a2420;
-  background: none;
-}
-
-/* —— Notes / works list, two columns —— */
-.home-panel {
-  text-align: left;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  color: #2a2420;
-  padding: 18px 20px 22px;
-  margin: -18px -20px 0;
-  background: rgba(250, 250, 247, 0.86);
-  /* Feathered, so the wash reads as paper, not a card. */
-  box-shadow: 0 0 28px 14px rgba(250, 250, 247, 0.86);
-}
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  margin: 0 0 14px;
-  font-size: 13px;
-  color: #736d66;
-}
-.panel-back {
-  color: inherit;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.panel-back:hover {
-  opacity: 1;
-  color: #2a2420;
-}
-
-.panel-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 32px;
-}
-.panel-list li {
-  border-top: 1px solid rgba(42, 36, 32, 0.12);
-  transition: opacity 420ms cubic-bezier(0.2, 0, 0, 1), transform 420ms cubic-bezier(0.2, 0, 0, 1);
-  transition-delay: calc(var(--i, 0) * 40ms + 60ms);
-}
-.home-view.is-before .panel-list li,
-.panel-list li.is-before {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: none;
-}
-.panel-list a {
-  display: block;
-  padding: 14px 0 16px;
-  color: inherit;
-  text-decoration: none;
-}
-.panel-list a:hover {
-  opacity: 1;
-}
-.panel-title {
-  display: block;
-  font-size: 14px;
-  line-height: 1.45;
-  transition: color 200ms ease;
-}
-
-.panel-more {
-  margin: 18px 0 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 14px;
-  color: var(--accent);
-  cursor: pointer;
-}
-@media (max-width: 560px) {
-  .panel-list {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-view,
-  .home-view:not(.is-out),
-  .panel-list li,
-  .home-nav a,
-  .home-nav a::after {
-    transition: none;
-  }
-}
-
-.home-greeting {
-  margin: 0 0 8px;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: clamp(24px, 3vw, 32px);
-  /* Medium weight and no tightening, so the mono cells show. */
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.25;
-  color: #2a2420;
-}
-
-.home-role,
-.home-slogan {
-  margin: 0 auto 8px;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.55;
-  letter-spacing: -0.01em;
-  color: #2a2420;
-}
-.home-slogan {
-  margin-bottom: 18px;
-}
-@media (min-width: 900px) {
-  .home-role,
-  .home-slogan {
-    font-size: 17px;
-    line-height: 1.58;
-  }
-}
-
-.home-links {
-  margin: 0;
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  color: #736d66;
-}
-.home-links a {
-  color: inherit;
-  text-decoration: none;
-}
-.home-links a::after {
-  content: "↗";
-  margin-left: 1px;
-}
-
-@media (max-width: 640px) {
-  .home-nav {
-    gap: 22px;
-    margin-bottom: 32px;
-  }
-  /* One step down on phones, so the slogan stays on one line. */
-  .home-slogan {
-    font-size: 14px;
-  }
-}
-
-/* —— Home: night palette and the notes / works shell ——
-   body.theme-night is set from prefers-color-scheme (see _layouts/home.html). */
-/* Night: the same type and layout on a cool ink ground; the koi stay gold, and gold is the one accent. */
-body.home.theme-night,
-body.theme-night .home-stage { background: #0d0f12; color: #e8e6e3; }
-body.theme-night .home-nav,
-body.theme-night .home-greeting,
-body.theme-night .home-role,
-body.theme-night .home-slogan,
-body.theme-night .home-copy,
-body.theme-night .home-panel,
-body.theme-night .panel-back:hover { color: #e8e6e3; }
-body.theme-night .home-nav a { color: var(--accent); }
-body.theme-night .panel-head { color: #8a8f99; }
 body.theme-night { --accent: #f5b942; }
-body.theme-night .home-links { color: #8a8f99; }
-body.theme-night .panel-more { color: var(--accent); }
-body.theme-night .home-panel { background: rgba(13, 15, 18, 0.86); box-shadow: 0 0 28px 14px rgba(13, 15, 18, 0.86); }
-body.theme-night .panel-list li { border-top-color: rgba(232, 230, 227, 0.16); }
-body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0.45)); }
 
-/* —— Notes: a shell session. A prompt runs `ls -lt`, rows sit in `ls -l` columns,
-      and the row under the pointer or keyboard turns reverse video like a TUI picker. —— */
-.sh-panel .panel-list { grid-template-columns: 1fr; }
-.sh-panel .panel-list li { border-top: 0; }
 .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Prompt in ink; only the live one, where you can type, takes the accent. */
 .sh-prompt { color: #2a2420; font-weight: 600; }
@@ -428,46 +94,7 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
 .sh-dir { color: #736d66; font-weight: 600; }
 .sh-arrow { color: #736d66; }
 .sh-dim { color: #736d66; }
-.sh-cmd::after {
-  content: ""; display: inline-block; width: 0.6em; height: 1.05em; margin-left: 2px;
-  vertical-align: -0.18em; background: currentColor; animation: sh-blink 1.1s steps(1) infinite;
-}
-.sh-cmd:not(.is-typing)::after { display: none; }
 @keyframes sh-blink { 50% { opacity: 0; } }
-.sh-panel .panel-list a { padding: 3px 6px; margin: 0 -6px; border-radius: 1px; font-size: 15px; line-height: 1.75; }
-.sh-notes .panel-list a {
-  display: grid; grid-template-columns: 1.5ch 10ch 10ch minmax(0, 1fr) 10ch; gap: 14px; align-items: baseline;
-}
-.sh-panel .panel-title { font-size: inherit; line-height: 1.75; }
-/* Home lists read a size up from the article's footer prompt, which keeps 13px. */
-.home-panel .sh-line,
-.home-panel .sh-out p { font-size: 15px; }
-.ls-mark { color: transparent; }
-/* Back from a note: its row keeps the ▸, like a picker's last choice. */
-.sh-panel .panel-list a.is-last .ls-mark { color: var(--accent); }
-.ls-perm, .ls-size, .ls-date { color: #736d66; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ls-size { text-align: right; }
-/* While the command types itself out, the listing waits, as if the shell hasn't answered yet. */
-.home-panel.is-listing .sh-total,
-.home-panel.is-listing .panel-list,
-.home-panel.is-listing .panel-more,
-.home-panel.is-listing .sh-out,
-.home-panel.is-listing .sh-live { visibility: hidden; }
-.sh-panel .panel-list a:hover,
-.sh-panel .panel-list a:focus-visible,
-.sh-panel .panel-list a.is-opening { background: #2a2420; color: #fafaf7; outline: none; }
-.sh-panel .panel-list a.is-opening * { color: inherit; }
-.sh-panel .panel-list a:hover *,
-.sh-panel .panel-list a:focus-visible * { color: inherit; }
-.sh-panel .panel-list a:hover .panel-title { color: inherit; }
-.sh-panel .panel-list a:focus-visible .ls-mark,
-.sh-panel .panel-list a:hover .ls-mark { color: inherit; }
-/* Back to home, said the shell way. */
-.home-panel .panel-back.sh-back { padding: 1px 6px; margin-left: -6px; border-radius: 1px; color: #736d66; }
-.sh-back .sh-dollar { color: #736d66; }
-.home-panel .panel-back.sh-back:hover,
-.home-panel .panel-back.sh-back:focus-visible { background: #2a2420; color: #fafaf7; outline: none; }
-.sh-back:hover .sh-dollar, .sh-back:focus-visible .sh-dollar { color: inherit; }
 
 /* The last prompt takes commands (a small easter egg): cd ~, cd -, ls, help… */
 .sh-out { margin: 18px 0 0; display: grid; }
@@ -501,106 +128,25 @@ body.theme-night .home-puffer { filter: drop-shadow(0 0 3px rgba(242, 176, 80, 0
   body.theme-night .sh-taps button { border-color: rgba(232, 230, 227, 0.3); }
   .post-end .sh-keys { display: none; }
 }
-.home-panel.is-listing .sh-taps { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .sh-caret { animation: none; } }
 /* Key hints sit up top beside $ cd ~, so the prompt can be the last line and print below it. */
 .sh-keys { margin: 0; font-size: 12px; color: #736d66; }
-.home-panel .sh-keys { font-size: 13px; }
-.sh-panel .panel-head { justify-content: space-between; }
 .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
 @media (max-width: 560px) {
-  .home-panel .sh-line,
-  .home-panel .sh-out p,
-  .sh-panel .panel-list a { font-size: 14px; }
-  .sh-notes .panel-list a { grid-template-columns: 1.5ch 10ch minmax(0, 1fr) 9ch; gap: 10px; }
-  .ls-perm { display: none; }
   .sh-keys { display: none; }
 }
-/* Touch screens have no arrow keys or esc: keep only the help hint. */
-@media (hover: none) and (pointer: coarse) {
-  .sh-keys-nav { display: none; }
-}
-@media (prefers-reduced-motion: reduce) { .sh-cmd::after { animation: none; } }
 
-/* —— Works: the same shell, listing directories. Each row leads with its seal character. —— */
-.sh-works .panel-list a {
-  display: grid; grid-template-columns: 1.5ch 10ch minmax(0, 1fr) auto; column-gap: 14px; align-items: baseline;
-}
-.work-status { font-size: 13px; color: #736d66; white-space: nowrap; }
-/* Status by shape, not colour: ● in progress (the accent), ◐ experiment, ○ done. */
-.work-status::before { content: "○ "; }
-.work-status[data-status="experiment"]::before { content: "◐ "; }
-.work-status[data-status="in progress"]::before { content: "● "; color: var(--accent); }
-.work-desc { grid-column: 3 / -1; font-size: 14px; line-height: 1.6; color: #736d66; padding-bottom: 4px; }
-@media (max-width: 560px) {
-  .sh-works .panel-list a { grid-template-columns: 1.5ch minmax(0, 1fr) auto; column-gap: 10px; }
-  .work-desc { grid-column: 2 / -1; }
-}
-
-body.theme-night .ls-perm,
-body.theme-night .ls-size,
-body.theme-night .ls-date,
 body.theme-night .sh-dim,
-body.theme-night .sh-keys,
-body.theme-night .work-status,
-body.theme-night .work-desc { color: #8a8f99; }
+body.theme-night .sh-keys { color: #8a8f99; }
 body.theme-night .sh-prompt { color: #e8e6e3; }
 body.theme-night .sh-live .sh-prompt { color: var(--accent); }
 body.theme-night .sh-path { color: #e8e6e3; }
 body.theme-night .sh-dir,
 body.theme-night .sh-arrow { color: #8a8f99; }
 body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
-body.theme-night .home-panel .panel-back.sh-back { color: #8a8f99; }
-body.theme-night .sh-back .sh-dollar { color: #8a8f99; }
-body.theme-night .home-panel .panel-back.sh-back:hover,
-body.theme-night .home-panel .panel-back.sh-back:focus-visible { background: #e8e6e3; color: #0d0f12; }
-body.theme-night .sh-panel .panel-list a:hover,
-body.theme-night .sh-panel .panel-list a:focus-visible,
-body.theme-night .sh-panel .panel-list a.is-opening { background: #e8e6e3; color: #0d0f12; }
-
-/* —— Home copy: a few terminal marks on a human page —— */
-/* The same underline cursor as article titles. */
-/* The same block cursor as the notes / works prompts, in the text's colour. */
-.home-greeting::after {
-  content: "";
-  display: inline-block;
-  width: 0.6em;
-  height: 1.05em;
-  margin-left: 0.12em;
-  vertical-align: -0.18em;
-  background: currentColor;
-  animation: sh-blink 1.1s steps(1) infinite;
-}
-/* Like a login banner's "Last login": the newest note, linked. It sits
-   below the links behind a short rule, far enough apart that a tap on one
-   never lands on the other. */
-.home-last {
-  display: inline-block;
-  margin: 32px auto 0;
-  padding-top: 14px;
-  border-top: 1px solid rgba(42, 36, 32, 0.14);
-  font-size: 13px;
-  line-height: 1.55;
-  color: #6e6a64;
-  font-variant-numeric: tabular-nums;
-}
-.home-last-label {
-  color: #736d66;
-}
-.home-last a {
-  display: inline-block;
-  padding: 4px 0;
-  color: var(--accent);
-}
-body.theme-night .home-last { color: #8a8f99; border-top-color: rgba(232, 230, 227, 0.18); }
-body.theme-night .home-last-label { color: #7f848e; }
-body.theme-night .home-last a { color: var(--accent); }
-@media (prefers-reduced-motion: reduce) {
-  .home-greeting::after { animation: none; }
-}
 
 /* —— Article (Jekyll default layout): a quiet reading column on plain
-      paper, no koi. Footnotes sit in the right margin on wide screens and
+      paper. Footnotes sit in the right margin on wide screens and
       at the end on narrow ones. —— */
 .post-body {
   margin: 0;
@@ -1289,9 +835,6 @@ body.has-rail .post-prose .footnotes {
   padding-left: 2.4em;
 }
 
-
-
-
 /* Footnote references read [1]. */
 .post-prose a.footnote::before,
 .post-note-n::before {
@@ -1357,19 +900,6 @@ html.ui-zh .post-pager a {
   border: 1px solid rgba(42, 36, 32, 0.25);
   border-radius: 2px;
 }
-
-/* A note printed in the notes shell before its page takes over (shell.js):
-   the article's own header and text, laid out exactly as on its page. */
-.sh-cat {
-  text-align: left;
-  pointer-events: none;
-}
-.sh-cat .post {
-  max-width: none;
-  margin: 0;
-  padding: 0;
-}
-
 
 /* Arrival, like `cat` in a terminal (see post.js): the title typed character by character behind a block cursor, the date
    line typed out, and the first screen of prose streamed in line by line.
@@ -1443,20 +973,10 @@ html.post-print.stream-done .post-prose > * {
   }
 }
 
-/* The home, notes and works print themselves a line at a time (home.js),
-   so the page waits blank until then. Should the script not run, it shows
-   anyway after a moment. */
-html.print-pending .home-chrome {
-  visibility: hidden;
-  animation: pr-safety 0s 1.2s forwards;
-}
 @keyframes pr-safety {
   to {
     visibility: visible;
   }
-}
-.pr-wait {
-  visibility: hidden !important;
 }
 
 /* Navigations between pages cross-fade briefly (old page out fast, new one in
@@ -1491,7 +1011,7 @@ html.print-pending .home-chrome {
   }
 }
 
-/* Night: the same cool ink ground as the home, light text, gold only for the accent and selection. */
+/* Night: a cool ink ground, light text, gold only for the accent and selection. */
 body.post-body.theme-night {
   background: #0d0f12;
   color: #e8e6e3;
@@ -1532,54 +1052,6 @@ body.theme-night .post-note.is-lit { color: #e8e6e3; }
 body.theme-night .post-note-n { color: #8a8f99; }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
-/* —— Day / night switch (theme.js), on the home page only: three segments
-      in a thin box at the top right; the one in use is filled, like a
-      selected row. A note is left to its reader (the prompt at the end
-      still takes `theme`). —— */
-.theme-switch {
-  position: absolute;
-  z-index: 20;
-  top: max(12px, env(safe-area-inset-top, 0px));
-  right: max(16px, env(safe-area-inset-right, 0px));
-  display: flex;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid rgba(42, 36, 32, 0.18);
-  border-radius: 3px;
-  font: 11px/1.5 "JetBrains Mono", ui-monospace, monospace;
-}
-.theme-switch button {
-  margin: 0;
-  padding: 2px 8px;
-  border: 0;
-  border-radius: 2px;
-  background: none;
-  font: inherit;
-  color: #736d66;
-  cursor: pointer;
-  transition: color 160ms ease, background-color 160ms ease;
-}
-.theme-switch button[aria-checked="true"] {
-  background: var(--link-sel-bg);
-  color: var(--link-sel-fg);
-  cursor: default;
-}
-.theme-switch button:focus-visible {
-  outline: 1px solid var(--focus-ring);
-  outline-offset: 1px;
-}
-@media (hover: hover) {
-  .theme-switch button[aria-checked="false"]:hover {
-    color: #2a2420;
-  }
-}
-body.theme-night .theme-switch { border-color: rgba(232, 230, 227, 0.2); }
-body.theme-night .theme-switch button { color: #8a8f99; }
-body.theme-night .theme-switch button[aria-checked="true"] { color: var(--link-sel-fg); }
-@media (hover: hover) {
-  body.theme-night .theme-switch button[aria-checked="false"]:hover { color: #e8e6e3; }
-}
-
 /* —— Links: pointed at, a link only deepens its colour — grey goes to ink,
    the accent to a deeper accent (by night: lighter). Keyboard focus adds
    an underline as well, so focus never rests on colour alone. Two
@@ -1602,12 +1074,10 @@ body.theme-night {
   --hover-accent: #ffd98c;
   --focus-ring: rgba(232, 230, 227, 0.5);
 }
-a,
-.panel-more {
+a {
   transition: color 180ms ease;
 }
-a:focus-visible,
-.panel-more:focus-visible {
+a:focus-visible {
   outline: none;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -1615,29 +1085,20 @@ a:focus-visible,
 }
 /* Grey links deepen to ink; the accent ones to a deeper accent. */
 a:active,
-body .home-links a:active,
 body .post-prose a.reversefootnote:active,
 a:focus-visible,
-body .home-links a:focus-visible,
 body .post-prose a.reversefootnote:focus-visible {
   color: var(--hover-ink);
 }
-body .home-nav a:is(:active, :focus-visible),
-body .home-last a:is(:active, :focus-visible),
-body .panel-more:is(:active, :focus-visible),
 body .post-prose a.footnote:is(:active, :focus-visible) {
   color: var(--hover-accent);
 }
 /* Hover only where a pointer can hover, so a tapped link doesn't stay lit on phones. */
 @media (hover: hover) {
   a:hover,
-  body .home-links a:hover,
-  body .post-prose a.reversefootnote:hover {
+body .post-prose a.reversefootnote:hover {
     color: var(--hover-ink);
   }
-  body .home-nav a:hover,
-  body .home-last a:hover,
-  body .panel-more:hover,
   body .post-prose a.footnote:hover {
     color: var(--hover-accent);
   }
