@@ -1,246 +1,68 @@
 <!DOCTYPE html>
-<html lang="{{ page.lang | default: site.lang | default: 'zh-Hant' }}">
+<html lang="en">
 <head>
-  <base href="{{ '/' | relative_url }}">
-  {% include head.html %}
-  <script>
-    // Every visit prints the page out line by line (home.js), so it stays
-    // blank until that starts. Back from an article (post.js leaves a note
-    // in sessionStorage), it comes in one cut, no cross-fade, like a shell
-    // when a pager quits, and the list's history shows the note read.
-    (function () {
-      var root = document.documentElement;
-      function take() {
-        var r = null;
-        try {
-          r = JSON.parse(sessionStorage.getItem("post-return") || "null");
-          sessionStorage.removeItem("post-return");
-        } catch (e) {}
-        return r && Date.now() - r.t < 10000 ? r : null;
-      }
-      window.postReturn = take();
-      var cut = !!window.postReturn; // kept here: the scripts clear postReturn once they have used it
-      if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) root.classList.add("print-pending");
-      // Restored from the back/forward cache: the page is as it was left.
-      window.addEventListener("pageshow", function (e) {
-        if (!e.persisted) return;
-        window.postReturn = take() || window.postReturn;
-        // The back button from a note, too: the row that opened it is still lit.
-        cut = !!window.postReturn || !!document.querySelector(".sh-panel .panel-list a.is-opening");
-      });
-      window.addEventListener("pagereveal", function (e) {
-        var vt = e.viewTransition;
-        if (!vt || !cut) return;
-        cut = false;
-        vt.ready.catch(function () {}); // skipping rejects ready; that is expected here
-        vt.skipTransition();
-      });
-    })();
-  </script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ page.title | default: site.title }}</title>
+{% include seo.html %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ '/assets/css/day.css' | relative_url }}?v={{ site.time | date: '%s' }}">
 </head>
-{% assign page_lang = page.lang | default: site.lang | default: 'zh-Hant' %}
-<body class="lang-{{ page_lang }} home">
-  {% include theme-boot.html %}
-  <div class="theme-switch" role="radiogroup" aria-label="Theme" data-label-zh="日夜主題模式">
-    <button type="button" role="radio" aria-checked="true" data-theme-set="auto" title="Follow the system" data-title-zh="跟隨系統">auto</button>
-    <button type="button" role="radio" aria-checked="false" data-theme-set="day" title="Day" data-title-zh="日間">day</button>
-    <button type="button" role="radio" aria-checked="false" data-theme-set="night" title="Night" data-title-zh="夜間">night</button>
-  </div>
-  <div class="home-stage">
-    <canvas data-koi class="home-puffer" aria-hidden="true"></canvas>
-    <div class="home-vignette" aria-hidden="true"></div>
+<body>
+{% comment %}Being in published/ is the publish signal (see README). Notes, works, places and small things
+  go to the page as JSON; assets/js/day.js draws everything from it.{% endcomment %}
+{% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
+<script type="application/json" id="site-data">
+{
+  "notes": [{% for n in notes %}{ "date": {{ n.date | date: "%Y-%m-%d" | jsonify }}, "title": {{ n.title | jsonify }}, "url": {{ n.url | relative_url | jsonify }} }{% unless forloop.last %},{% endunless %}{% endfor %}],
+  "works": {{ site.data.works | jsonify }},
+  "days": {{ site.data.days | jsonify }},
+  "little": {{ site.data.little | jsonify }}
+}
+</script>
 
-    <div class="home-chrome">
-      <nav class="home-nav" aria-label="Primary">
-        <a href="notes/" data-view-link="notes">notes/</a>
-        <a href="works/" data-view-link="works">works/</a>
-      </nav>
 
-      {% comment %}Being in published/ is the publish signal (see README).{% endcomment %}
-      {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
-      {% assign last_note = notes | first %}
-      <div class="home-view home-copy" data-view="home">
-        <h1 class="home-greeting" data-type-ms="40">hey, I'm Yen</h1>
-        <p class="home-role">Product manager @Taiwan</p>
-        <p class="home-slogan">I write about how products get decided.</p>
-        <p class="home-links"><a href="https://github.com/laiyenju">github</a> · <a href="https://www.linkedin.com/in/laiyenju/">linkedin</a> · <a href="https://x.com/theYenLai">x</a></p>
-        {% comment %}Set apart from the links, like a status line, so neither is tapped by mistake.{% endcomment %}
-        {% if last_note %}
-        <p class="home-last"><span class="home-last-label">last note</span> {% if last_note.date %}<time datetime="{{ last_note.date | date_to_xmlschema }}">{{ last_note.date | date: "%Y-%m-%d" }}</time> · {% endif %}<a href="{{ last_note.url | relative_url }}">{{ last_note.title }}</a></p>
-        {% endif %}
+<header class="top wrap">
+  <button type="button" class="when" id="whenBtn" aria-label="Open the timeline">
+    <span class="txt"><b id="date">—</b><span id="clock">Taipei</span></span>
+    <span class="cta" id="ctaTl" aria-hidden="true"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="9" height="8" rx="1.5"/><path d="M1.5 5h9M4 1v3M8 1v3"/></svg><span id="ctaText">Timeline</span></span>
+  </button>
+</header>
+<section class="hero" id="top">
+  <div class="hero-inner wrap">
+    <main class="group" id="group">
+      <div class="stage" id="stage" role="button" tabindex="0" aria-label="Today's building. Swipe left or right for other years. Tap to open the timeline."></div>
+      <div class="tools">
+        <div class="thumbs" id="thumbs" role="tablist" aria-label="This day across the years, oldest on the left, today on the right"></div>
       </div>
-
-      {% assign this_year = site.time | date: "%Y" %}
-      {% assign year_chars = 0 %}
-      {% assign year_posts = 0 %}
-      {% capture note_rows %}
-        {% for note in notes %}
-          {% comment %}Rough character count: rendered text without tags or whitespace.{% endcomment %}
-          {% assign chars = note.content | markdownify | strip_html | strip_newlines | remove: " " | size %}
-          {% assign note_year = note.date | date: "%Y" %}
-          {% if note_year == this_year %}
-            {% assign year_chars = year_chars | plus: chars %}
-            {% assign year_posts = year_posts | plus: 1 %}
-          {% endif %}
-          <li><a href="{{ note.url | relative_url }}"><span class="ls-mark">▸</span><span class="ls-perm">-rw-r--r--</span>{% if note.date %}<time class="ls-date" datetime="{{ note.date | date_to_xmlschema }}">{{ note.date | date: "%Y-%m-%d" }}</time>{% else %}<span class="ls-date"></span>{% endif %}<span class="panel-title">{{ note.title }}</span><span class="ls-size">{{ chars }} chars</span></a></li>
-        {% endfor %}
-      {% endcapture %}
-      <section class="home-view home-panel sh-panel sh-notes" data-view="notes" data-path="~/notes" aria-label="Notes" tabindex="-1" hidden>
-        <div class="panel-head">
-          <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
-          <p class="sh-keys"><span class="sh-keys-nav"><span class="i-en"><kbd>↑</kbd> <kbd>↓</kbd> select  <kbd>⏎</kbd> open  <kbd>esc</kbd> back  ·  </span><span class="i-zh"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span></span><kbd>help</kbd></p>
-        </div>
-        <p class="sh-line"><span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -lt">ls -lt</span></p>
-        <p class="sh-line sh-dim sh-total">total {{ year_chars }} chars · {{ year_posts }} {% if year_posts == 1 %}post{% else %}posts{% endif %} in {{ this_year }}</p>
-        <ul class="panel-list">
-          {{ note_rows }}
-        </ul>
-        <button class="panel-more" type="button" hidden>view all</button>
-        <div class="sh-out" aria-live="polite"></div>
-        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-notes" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
-      </section>
-
-      {% assign works = site.data.works %}
-      {% assign works_active = works | where: "status", "in progress" | size %}
-      <section class="home-view home-panel sh-panel sh-works" data-view="works" data-path="~/works" aria-label="Works" tabindex="-1" hidden>
-        <div class="panel-head">
-          <a class="panel-back sh-back" href="./" data-view-link="home"><span class="sh-dollar">$</span> cd ~</a>
-          <p class="sh-keys"><span class="sh-keys-nav"><span class="i-en"><kbd>↑</kbd> <kbd>↓</kbd> select  <kbd>⏎</kbd> open  <kbd>esc</kbd> back  ·  </span><span class="i-zh"><kbd>↑</kbd> <kbd>↓</kbd> 選擇　<kbd>⏎</kbd> 開啟　<kbd>esc</kbd> 返回　·　</span></span><kbd>help</kbd></p>
-        </div>
-        <p class="sh-line"><span class="sh-dir">~/works</span> <span class="sh-arrow">❯</span> <span class="sh-cmd" data-cmd="ls -l">ls -l</span></p>
-        <p class="sh-line sh-dim sh-total">total {{ works | size }} {% if works.size == 1 %}work{% else %}works{% endif %} · {{ works_active }} in progress</p>
-        <ul class="panel-list">
-        {% for work in works %}
-          <li><a href="{% if work.url and work.url != '#' %}{{ work.url | relative_url }}{% else %}#{% endif %}"><span class="ls-mark">▸</span><span class="ls-perm">drwxr-xr-x</span><span class="panel-title">{{ work.title }}/</span>{% if work.status %}<span class="work-status" data-status="{{ work.status }}">{{ work.status }}</span>{% else %}<span></span>{% endif %}<span class="work-desc">{{ work.one_liner }}</span></a></li>
-        {% endfor %}
-        </ul>
-        <button class="panel-more" type="button" hidden>view all</button>
-        <div class="sh-out" aria-live="polite"></div>
-        <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/works</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="sh-input-works" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
-      </section>
-    </div>
+      <div class="caption" aria-live="polite">
+        <span class="past-tag" id="capTag" hidden></span>
+        <div class="name" id="capName">—</div>
+        <div class="meta" id="capMeta"></div>
+        <div class="note" id="capNote"></div>
+        <div class="links" id="capLinks" hidden><a href="https://github.com/laiyenju" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/laiyenju/" target="_blank" rel="noopener">linkedin</a> · <a href="https://x.com/theYenLai" target="_blank" rel="noopener">x</a> · <a href="#work" id="workLink">work</a></div>
+      </div>
+    </main>
   </div>
+</section>
 
-  <script src="{{ '/assets/js/theme.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
-  <script src="{{ '/assets/js/ocean.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
-  <script src="{{ '/assets/js/home.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
-  <script src="{{ '/assets/js/shell.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      var canvas = document.querySelector("canvas[data-koi]");
-      var ringBox = null;
+<div class="more" id="more" aria-hidden="true"></div>
+<section class="reader wrap" id="tl" hidden aria-label="Timeline"><div id="tlBody"></div></section>
+<section class="reader wrap" id="reader" hidden aria-label="Work"><article class="reader-inner" id="readerBody"></article></section>
+<section class="term wrap" aria-label="terminal">
+  <div class="term-inner">
+    <div class="log" id="log" aria-live="polite"></div>
+    <form class="input-row" id="cmdForm" autocomplete="off">
+      <label class="prompt" for="cmd">yen@<span class="city">taipei</span> ~ <i>$</i></label>
+      <input id="cmd" name="cmd" type="text" enterkeyhint="go" autocapitalize="off" spellcheck="false" placeholder="Type a command, or tap one below">
+    </form>
+    <div class="cmdbar" id="cmdbar" aria-label="Commands"></div>
+  </div>
+</section>
 
-      function view() { return document.body.getAttribute("data-view") || "home"; }
-      function night() { return document.body.classList.contains("theme-night"); }
-
-      // The koi circle the nav and the copy together. Measured on home only:
-      // in a list view the copy is hidden, so the last home measurement stands.
-      function measureRing() {
-        if (view() !== "home") return;
-        var a = document.querySelector(".home-nav").getBoundingClientRect();
-        var b = document.querySelector(".home-copy").getBoundingClientRect();
-        var l = Math.min(a.left, b.left), t = Math.min(a.top, b.top);
-        ringBox = new DOMRect(l, t, Math.max(a.right, b.right) - l, Math.max(a.bottom, b.bottom) - t);
-        if (window.homeOcean) window.homeOcean.setRing(ringBox);
-      }
-
-      // Lists: the koi hurry across the open panel instead of sitting on the rows.
-      function syncText() {
-        var o = window.homeOcean;
-        if (!o) return;
-        if (view() === "home") { o.setTextRects(null); return; }
-        var p = document.querySelector('.home-view[data-view="' + view() + '"]');
-        if (!p || p.hidden) return;
-        var r = p.getBoundingClientRect();
-        o.setTextRects(new Float32Array([r.left, r.top, r.right, r.bottom]));
-      }
-
-      // Day: Cangjie radicals in ink on paper. Night: dot-matrix radicals on an amber screen.
-      function startOcean() {
-        if (!canvas || !window.OceanEngine) return;
-        if (window.homeOcean) window.homeOcean.destroy();
-        var themes = window.OceanThemes;
-        window.homeOcean = new window.OceanEngine(canvas, undefined, 0, night() ? themes.GLYPH_NIGHT : themes.GLYPH_DAY);
-        if (ringBox) window.homeOcean.setRing(ringBox);
-        if (view() !== "home") window.homeOcean.setCalm(true, true);
-        syncText();
-      }
-
-      // theme.js switched day / night: redraw the koi in the other palette.
-      document.addEventListener("themechange", startOcean);
-
-      var roots = document.querySelectorAll(".home-nav, .home-copy");
-      roots.forEach(function (root) {
-        var texts = [];
-        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-        var node;
-        while ((node = walker.nextNode())) {
-          if (node.nodeValue && node.nodeValue.trim()) texts.push(node);
-        }
-        // Screen readers get the words whole from a hidden copy; the glyphs are for the eye.
-        texts.forEach(function (textNode) {
-          var frag = document.createDocumentFragment();
-          var value = textNode.nodeValue;
-          var said = document.createElement("span");
-          said.className = "sr-only";
-          said.textContent = value;
-          var shown = document.createElement("span");
-          shown.setAttribute("aria-hidden", "true");
-          frag.appendChild(said);
-          frag.appendChild(shown);
-          for (var i = 0; i < value.length; i++) {
-            var ch = value.charAt(i);
-            if (ch === " " || ch === "\n" || ch === "\t") {
-              shown.appendChild(document.createTextNode(ch));
-            } else {
-              var span = document.createElement("span");
-              span.className = "home-glyph";
-              span.textContent = ch;
-              shown.appendChild(span);
-            }
-          }
-          textNode.parentNode.replaceChild(frag, textNode);
-        });
-      });
-
-      startOcean();
-      measureRing();
-      // Back from an article: the koi swim in from the edges and lay the grid
-      // where they pass (home.js clears postReturn in start(), so ask first).
-      if (window.postReturn && window.homeOcean) window.homeOcean.arrive();
-      // The same when this page comes back from the back/forward cache
-      // (registered before home.js's own pageshow, which clears postReturn).
-      window.addEventListener("pageshow", function (e) {
-        if (e.persisted && window.postReturn && window.homeOcean) window.homeOcean.arrive();
-      });
-      if (window.homeViews) window.homeViews.start();
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureRing);
-      window.addEventListener("resize", measureRing);
-      window.setInterval(syncText, 400);
-
-      // Copy over a koi is cut out of it: the glyph gets a small patch of the
-      // page colour behind it, so it stays legible over any part of the body.
-      // The engine says which cells hold koi body, so nothing is read back
-      // from the canvas (a GPU readback stalls the frame it lands on).
-      var glyphs = document.querySelectorAll(".home-glyph");
-      var CHECK_MS = 100;
-      var lastCheck = 0;
-      function tick(now) {
-        requestAnimationFrame(tick);
-        var o = window.homeOcean;
-        if (!o || !o.koiCover || document.hidden || now - lastCheck < CHECK_MS) return;
-        lastCheck = now;
-        var isNight = night();
-        for (var j = 0; j < glyphs.length; j++) {
-          var g = glyphs[j];
-          var r = g.getBoundingClientRect();
-          var hit = !!r.width && o.koiCover(r.left, r.top, r.right, r.bottom) >= 0.5;
-          g.dataset.on = hit ? "1" : "";
-          g.style.background = hit ? (isNight ? "#0d0f12" : "#fafaf7") : "";
-        }
-      }
-      requestAnimationFrame(tick);
-    });
-  </script>
+<script src="{{ '/assets/js/pixel-engine.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
+<script src="{{ '/assets/js/day.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
 </body>
 </html>

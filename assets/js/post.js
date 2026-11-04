@@ -350,7 +350,7 @@
     function say(text, prompt) {
       var p = document.createElement("p");
       if (prompt) {
-        p.innerHTML = '<span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> '; // short, as in shell.js
+        p.innerHTML = '<span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> ';
         p.appendChild(document.createTextNode(text));
       } else {
         p.className = "sh-dim";
@@ -394,7 +394,7 @@
       if (w[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
       if (w[0] === "exit" || w[0] === "home") return go(root);
       if (w[0] === "help" && window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
-        // Touch screens: only what the buttons below can do (see shell.js).
+        // Touch screens: only what the buttons below can do.
         say(t("tap a command below", "點選下方的指令"));
         say("top     " + t("back to the top", "回到頁首"));
         say("cd ..   " + t("back to notes", "回到文章列表"));
@@ -420,7 +420,7 @@
       run(input.value);
       input.value = "";
     });
-    // Touch screens: the commands as buttons, so the keyboard never comes up (see shell.js).
+    // Touch screens: the commands as buttons, so the keyboard never comes up.
     var row = document.createElement("div");
     row.className = "sh-taps";
     ["help", "top", "cd ..", "theme"].forEach(function (cmd) {

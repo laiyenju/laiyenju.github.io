@@ -1,0 +1,40 @@
+# Places Yen has been. Each one is a building on the homepage (on the same month and day in later
+# years) and a day in the timeline. The sentence under the building is made by one rule:
+#   "{N years ago}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]"
+# Required: date ("YYYY-MM-DD", in quotes), scene (a model in assets/js/day.js SCENES), name,
+#   zh (Chinese name; write no_zh: true to leave it out), place, did.
+# Optional: prep (default "in"), with (a name, or a list), extra (one short sentence),
+#   map (search text for Google Maps), country (default "Japan").
+# The four below: dates and "did" are placeholders until Yen confirms them (README 4).
+- date: "2018-03-21"
+  scene: grandcentral
+  name: Grand Central Terminal
+  zh: 紐約中央車站
+  place: New York
+  country: USA
+  did: looked up at the painted ceiling of the main concourse
+  map: Grand Central Terminal, New York
+- date: "2018-03-23"
+  scene: whitehouse
+  name: The White House
+  zh: 白宮
+  place: Washington, D.C.
+  country: USA
+  did: walked past the north lawn on Pennsylvania Avenue
+  map: The White House, Washington DC
+- date: "2014-07-15"
+  scene: mbc
+  name: MBC headquarters
+  zh: MBC 電視台總部
+  place: Sangam, Seoul
+  country: South Korea
+  did: visited the broadcasting center at Digital Media City
+  map: MBC Sangam, Seoul
+- date: "2014-07-16"
+  scene: hongik
+  name: Hongik University
+  zh: 弘益大學
+  place: Hongdae, Seoul
+  country: South Korea
+  did: walked through the giant gate of Hongmun Hall
+  map: Hongik University, Seoul
