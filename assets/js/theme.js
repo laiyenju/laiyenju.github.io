@@ -1,14 +1,14 @@
 (function () {
   "use strict";
 
-  /* —— Day / night. "auto" follows the system; "day" and "night" are the
+  /* —— Day / night. "auto" follows the sky over Taipei, like the home page (sky.js:
+        the page takes the sky's colour, with light text when it is dark); "day" and "night" are the
         reader's own choice, kept in localStorage. The switch in the top
         right sets one of the three, and the shells take `theme day|night|auto`
         (the touch button steps auto → the opposite of the system → the other). Pages that draw the koi
         listen for "themechange" to redraw in the new palette. —— */
 
   var KEY = "theme";
-  var media = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : { matches: false };
   var choices = [];
 
   function pref() {
@@ -17,8 +17,11 @@
     return p === "day" || p === "night" ? p : "auto";
   }
 
+  // auto paints the sky colour and says whether it is dark; day / night drop it for the fixed paper or ink ground
   function isNight(p) {
-    return p === "night" || (p === "auto" && media.matches);
+    var sky = window.siteSky;
+    if (p !== "auto") { if (sky) sky.clearNotes(); return p === "night"; }
+    return sky ? sky.paintNotes() : false;
   }
 
   function label() {
@@ -44,12 +47,13 @@
 
   function next() {
     var p = pref();
-    var system = media.matches ? "night" : "day";
+    var system = window.siteSky && window.siteSky.isDark() ? "night" : "day";
     var other = system === "night" ? "day" : "night";
     return p === "auto" ? other : p === other ? system : "auto";
   }
 
-  if (media.addEventListener) media.addEventListener("change", function () { if (pref() === "auto") apply(); });
+  // the sky moves: repaint every minute while on auto
+  window.setInterval(function () { if (pref() === "auto") apply(); }, 60000);
 
   document.addEventListener("DOMContentLoaded", function () {
     // Labels for screen readers and tooltips, in the interface language.

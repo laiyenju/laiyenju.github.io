@@ -152,7 +152,9 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
       at the end on narrow ones. —— */
 .post-body {
   margin: 0;
-  background: #fafaf7;
+  /* on auto the sky over Taipei (sky.js sets --sky, as on the home page); day / night: fixed paper or ink */
+  background: var(--sky, #fafaf7);
+  transition: background-color 1.2s ease;
   color: #2a2420;
 }
 .post {
@@ -170,12 +172,12 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   position: fixed; z-index: 7; top: 0; left: 0; right: 0;
   display: flex; justify-content: center;
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 10px;
-  background: linear-gradient(#fafaf7 70%, rgba(250, 250, 247, 0));
+  background: linear-gradient(var(--sky, #fafaf7) 70%, transparent);
 }
 .post-when {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   width: min(330px, calc(100vw - 32px)); padding: 7px 7px 7px 16px;
-  border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px; background: #fff;
+  border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px; background: var(--sky-sheet, #fff);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); color: #2a2420;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   transition: border-color 0.15s ease, transform 0.15s ease;
@@ -230,7 +232,7 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   padding: 9px 14px;
   border: 1px solid rgba(42, 36, 32, 0.14);
   border-radius: 8px;
-  background: #fff;
+  background: var(--sky-sheet, #fff);
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 14px;
   line-height: 1.2;
@@ -558,7 +560,7 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
     "close . . stage"
     "cap cap cap stage"
     "prev count next stage";
-  background: #fafaf7;
+  background: var(--sky, #fafaf7);
   color: #2a2420;
   opacity: 0;
   transition: opacity 180ms ease;
@@ -1019,7 +1021,7 @@ html.post-print.stream-done .post-prose > * {
 
 /* Night: a cool ink ground, light text, gold only for the accent and selection. */
 body.post-body.theme-night {
-  background: #0d0f12;
+  background: var(--sky, #0d0f12);
   color: #e8e6e3;
   --link-sel-bg: #f5b942;
   --link-sel-fg: #0d0f12;
@@ -1041,20 +1043,20 @@ body.theme-night .post-end .sh-dim,
 body.theme-night .post-end .sh-keys { color: #8a8f99; }
 body.theme-night .post-title,
 body.theme-night .post-end { color: #e8e6e3; }
-body.theme-night .post-top { background: linear-gradient(#0d0f12 70%, rgba(13, 15, 18, 0)); }
-body.theme-night .post-when { background: #151820; border-color: rgba(232, 230, 227, 0.18); color: #e8e6e3; }
+body.theme-night .post-top { background: linear-gradient(var(--sky, #0d0f12) 70%, transparent); }
+body.theme-night .post-when { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: #e8e6e3; }
 body.theme-night .post-when .txt span { color: #8a8f99; }
 body.theme-night .post-when .cta { background: #e8e6e3; color: #0d0f12; }
 body.theme-night .post-bar { color: #8a8f99; }
 body.theme-night .post-bar b { color: #e8e6e3; }
-body.theme-night .post-back { background: #151820; border-color: rgba(232, 230, 227, 0.18); color: #e8e6e3; }
+body.theme-night .post-back { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: #e8e6e3; }
 body.theme-night .post-end .sh-prompt { color: #8a8f99; }
 body.theme-night .post-head .sh-path,
 body.theme-night .post-end .sh-path { color: #e8e6e3; }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
 body.theme-night .post-subtitle { color: #b6b9bf; }
-body.theme-night .lb { background: #0d0f12; color: #e8e6e3; }
+body.theme-night .lb { background: var(--sky, #0d0f12); color: #e8e6e3; }
 body.theme-night .lb-stage { border-color: rgba(232, 230, 227, 0.8); }
 body.theme-night .post-note { color: #a3a7af; }
 body.theme-night .post-note.is-lit { color: #e8e6e3; }

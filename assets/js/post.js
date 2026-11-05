@@ -407,7 +407,7 @@
         say("next      " + t("newer note", "下一個（較新的文章）"));
         say("prev      " + t("older note", "上一個（較舊的文章）"));
         say("top       " + t("back to the top", "回到頁首"));
-        say("theme     " + t("day / night / auto (auto follows the system)", "切換日夜主題模式（auto 跟隨系統）"));
+        say("theme     " + t("day / night / auto (auto follows the sky, like the home page)", "切換日夜主題模式（auto 跟著天色，和首頁一樣）"));
         say("whoami    " + t("who is Yen", "看網站作者是誰"));
         say("clear     " + t("clear the screen", "清除畫面"));
         return say("help      " + t("show this list", "查看操作指令"));

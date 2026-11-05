@@ -1,6 +1,6 @@
 <script>
   // Day or night before first paint, so a visit never flashes the wrong ground:
-  // a saved choice (theme: day / night, see theme.js), else the system setting.
+  // a saved choice (theme: day / night, see theme.js), else the sky (sky.js).
   // Words of the interface (hints, help, messages) in the reader's own
   // language: Chinese if the browser's first language is Chinese, else
   // English. The notes stay as written. No switch: there is nothing to choose.
@@ -9,9 +9,11 @@
     if (/^zh\b/i.test(langs[0] || "")) document.documentElement.classList.add("ui-zh");
   })();
   (function () {
+    // auto (the default): the page takes the colour of the sky over Taipei, like the home page (sky.js);
+    // night text when the sky is dark. day / night: the reader's own fixed choice.
     var p;
     try { p = localStorage.getItem("theme"); } catch (e) {}
-    var night = p === "night" || (p !== "day" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var night = p === "night" || (p !== "day" && window.siteSky && window.siteSky.paintNotes());
     if (night) document.body.classList.add("theme-night");
   })();
 </script>
