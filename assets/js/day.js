@@ -1569,6 +1569,8 @@ setInterval(() => {
   if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; refreshLight(true); renderDay(); } else refreshLight(true);
 }, 60e3);
 addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
+// the words change height once the web fonts arrive (Quattro sets wider than the fallback), so measure again
+if (document.fonts) document.fonts.addEventListener('loadingdone', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
 
 applyTheme(LIGHT);
 refreshLight(false);

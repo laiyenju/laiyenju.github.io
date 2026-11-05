@@ -2,6 +2,8 @@
 /* Layout: the first screen is one pixel building with its caption, past-year thumbnails and a
    `whereis` line right under it. Scrolling up shrinks the building and the page continues as a
    terminal (ls notes/, ls works/). Colours follow the real sun over the current city (default Taipei). */
+@font-face { font-family: "iA Writer Quattro"; src: url("../fonts/quattro/iAWriterQuattroS-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "iA Writer Quattro"; src: url("../fonts/quattro/iAWriterQuattroS-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 :root {
   --bg: #f8f8f5;
   --ink: #262421;
@@ -10,7 +12,9 @@
   --accent: #b5531e;
   --sheet: #ffffff;
   --mono: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  --sans: "Noto Sans TC", system-ui, sans-serif;
+  /* English in iA Writer Quattro (as in the notes), Chinese falls through to Noto Sans TC.
+     Both come in 400 and 700 only, so a weight looks the same in either language. */
+  --sans: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   --p: 0;
   --shrink: 38svh;
 }
@@ -25,6 +29,8 @@ body {
   font: 14px/1.6 var(--mono);
   transition: background-color 1.2s ease, color 1.2s ease;
   -webkit-tap-highlight-color: transparent;
+  /* a thin space between Chinese and English or numbers, where the browser supports it */
+  text-autospace: ideograph-alpha ideograph-numeric;
 }
 a { color: inherit; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
@@ -97,8 +103,8 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .thumb:not([aria-current="true"]) canvas { opacity: .72; }
 
 .caption { text-align: center; display: grid; gap: 4px; max-width: 34em; padding-bottom: 8px; }
-.caption .name { font: 500 21px/1.45 var(--sans); letter-spacing: .01em; text-wrap: balance; }
-.caption .name.past { font: 600 17px/1.65 var(--sans); letter-spacing: 0; }
+.caption .name { font: 700 21px/1.45 var(--sans); letter-spacing: .01em; text-wrap: balance; }
+.caption .name.past { font: 700 17px/1.65 var(--sans); letter-spacing: 0; }
 .caption .meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); }
 .caption .meta a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .meta a:hover { color: var(--ink); border-bottom-style: solid; }
@@ -184,7 +190,7 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .ghost { position: fixed; z-index: 6; pointer-events: none; image-rendering: pixelated; transform-origin: 0 0; }
 .reader-inner { max-width: 680px; margin: 0 auto; padding-top: calc(84px + env(safe-area-inset-top, 0px)); padding-bottom: 20svh; }
 .reader .prompt { display: block; margin-bottom: 26px; }
-.reader h1 { font: 500 30px/1.4 var(--sans); margin: 0 0 6px; text-wrap: balance; letter-spacing: -.005em; }
+.reader h1 { font: 400 30px/1.4 var(--sans); margin: 0 0 6px; text-wrap: balance; letter-spacing: -.005em; }
 .reader .sub { font: 18px/1.6 var(--sans); color: var(--ink-soft); margin: 0 0 14px; }
 .reader .byline { font: 14px/1.6 var(--mono); color: var(--ink-soft); margin: 0 0 34px; }
 .reader h2 { font: 500 14px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); margin: 34px 0 8px; }
@@ -208,7 +214,7 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .tl-stage canvas.snapback { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
 .tl-cap { margin-top: 18px; display: grid; gap: 4px; transition: opacity .3s ease; }
 .tl-cap.hide { opacity: 0; }
-.tl-cap .n { font: 600 18px/1.55 var(--sans); }
+.tl-cap .n { font: 700 18px/1.55 var(--sans); }
 .tl-cap .p { font: 15px/1.6 var(--mono); color: var(--ink-soft); }
 .tl-cap { max-width: 34em; }
 .tl-cap .s { font: 15px/1.6 var(--mono); color: var(--ink-soft); }
@@ -233,13 +239,13 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 /* timeline (list, kept for reference) */
 .tl-stats { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 6px 0 30px; }
 .tl-stats div { display: grid; }
-.tl-stats b { font: 500 28px/1.2 var(--sans); }
+.tl-stats b { font: 400 28px/1.2 var(--sans); }
 .tl-stats span { font: 13px/1.5 var(--mono); color: var(--ink-soft); }
 .tl-year { font: 500 14px/1.4 var(--mono); letter-spacing: .06em; color: var(--ink-soft); margin: 26px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
 .tl-item { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; width: 100%; text-align: left; padding: 12px 0; border-bottom: 1px solid var(--rule); }
 .tl-item canvas { width: 96px; height: 84px; image-rendering: pixelated; }
 .tl-item .d { font: 13.5px/1.5 var(--mono); color: var(--ink-soft); }
-.tl-item .n { font: 600 17px/1.55 var(--sans); }
+.tl-item .n { font: 700 17px/1.55 var(--sans); }
 .tl-item .s { font: 15.5px/1.7 var(--sans); color: var(--ink-soft); margin-top: 2px; }
 .tl-item:hover .n { text-decoration: underline; text-underline-offset: 3px; }
 .tl-item[aria-current="true"] .d { color: var(--accent); }
