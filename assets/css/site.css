@@ -41,7 +41,7 @@
    links in a note go from dotted to solid (see "Links").
    Filled (reverse video) always means "selected": a terminal row, the theme in use. */
 :root {
-  --accent: #b5531e;
+  --accent: var(--t-accent, #b5531e);
   --paper: #fafaf7;
   --ink: #000;
   --font-latin: system-ui, sans-serif;
@@ -85,17 +85,17 @@ html.ui-zh .i-en {
   display: none;
 }
 
-body.theme-night { --accent: #f5b942; }
+body.theme-night { --accent: var(--t-accent, #f5b942); }
 
 .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Prompt like the home page's terminal: grey words, the $ in the accent. */
-.sh-prompt { color: #736d66; }
-.sh-live .sh-prompt { color: #736d66; }
-.sh-path { color: #2a2420; font-weight: 600; }
+.sh-prompt { color: var(--t-faint, #736d66); }
+.sh-live .sh-prompt { color: var(--t-faint, #736d66); }
+.sh-path { color: var(--t-ink, #2a2420); font-weight: 600; }
 /* Commands already run: the same prompt, so the command reads first. */
-.sh-dir { color: #736d66; }
+.sh-dir { color: var(--t-faint, #736d66); }
 .sh-arrow { color: var(--accent); }
-.sh-dim { color: #736d66; }
+.sh-dim { color: var(--t-faint, #736d66); }
 @keyframes sh-blink { 50% { opacity: 0; } }
 
 /* The last prompt takes commands (a small easter egg): cd ~, cd -, ls, help… */
@@ -132,18 +132,18 @@ body.theme-night { --accent: #f5b942; }
 }
 @media (prefers-reduced-motion: reduce) { .sh-caret { animation: none; } }
 /* Key hints sit up top beside $ cd ~, so the prompt can be the last line and print below it. */
-.sh-keys { margin: 0; font-size: 12px; color: #736d66; }
+.sh-keys { margin: 0; font-size: 12px; color: var(--t-faint, #736d66); }
 .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
 @media (max-width: 560px) {
   .sh-keys { display: none; }
 }
 
 body.theme-night .sh-dim,
-body.theme-night .sh-keys { color: #8a8f99; }
+body.theme-night .sh-keys { color: var(--t-faint, #8a8f99); }
 body.theme-night .sh-prompt,
-body.theme-night .sh-live .sh-prompt { color: #8a8f99; }
-body.theme-night .sh-path { color: #e8e6e3; }
-body.theme-night .sh-dir { color: #8a8f99; }
+body.theme-night .sh-live .sh-prompt { color: var(--t-faint, #8a8f99); }
+body.theme-night .sh-path { color: var(--t-ink, #e8e6e3); }
+body.theme-night .sh-dir { color: var(--t-faint, #8a8f99); }
 body.theme-night .sh-arrow { color: var(--accent); }
 body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
@@ -155,7 +155,7 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   /* on auto the sky over Taipei (sky.js sets --sky, as on the home page); day / night: fixed paper or ink */
   background: var(--sky, #fafaf7);
   transition: background-color 1.2s ease;
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
 }
 .post {
   position: relative;
@@ -178,29 +178,29 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   width: min(330px, calc(100vw - 32px)); padding: 7px 7px 7px 16px;
   border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px; background: var(--sky-sheet, #fff);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); color: #2a2420;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); color: var(--t-ink, #2a2420);
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
-.post-when:hover { border-color: #736d66; }
+.post-when:hover { border-color: var(--t-faint, #736d66); }
 .post-when:active { transform: scale(0.98); }
 .post-when .txt { display: grid; flex: 1; min-width: 0; text-align: center; line-height: 1.3; }
 .post-when b { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; white-space: nowrap; }
-.post-when .txt span { font-size: 12px; color: #736d66; white-space: nowrap; }
+.post-when .txt span { font-size: 12px; color: var(--t-soft, #736d66); white-space: nowrap; }
 .post-when .cta {
   display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px;
-  background: #2a2420; color: #fafaf7; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap;
+  background: var(--t-ink, #2a2420); color: #fafaf7; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap;
 }
 .post-when .cta svg { width: 12px; height: 12px; }
 
 .post-bar,
 .post-meta {
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  color: #736d66;
+  color: var(--t-faint, #736d66);
 }
 .post-bar { margin: 0; font-size: 14px; line-height: 1.7; }
 .post-bar i { font-style: normal; color: var(--accent); }
-.post-bar b { font-weight: 400; color: #2a2420; }
+.post-bar b { font-weight: 400; color: var(--t-ink, #2a2420); }
 .post-head { text-align: left; margin-bottom: 34px; }
 .post-title {
   margin: 18px 0 6px;
@@ -208,7 +208,7 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   font-size: 30px;
   font-weight: 400;
   line-height: 1.4;
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
   text-wrap: balance;
 }
 .post-subtitle {
@@ -216,7 +216,7 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 18px;
   line-height: 1.6;
-  color: #5a544e;
+  color: var(--t-soft, #5a544e);
   text-wrap: balance;
 }
 .post-meta {
@@ -236,7 +236,7 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 14px;
   line-height: 1.2;
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
   text-decoration: none;
   transition: color 200ms ease, border-color 200ms ease;
 }
@@ -244,12 +244,12 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 /* Prose: ink on paper, and as little else as possible. Structure is marked
    with space, weight and a few hairlines; no colour except the link hover. */
 .post-prose {
-  --ink: #2a2420;
-  --ink-soft: #5a544e;
-  --ink-faint: #736d66;
+  --ink: var(--t-ink, #2a2420);
+  --ink-soft: var(--t-soft, #5a544e);
+  --ink-faint: var(--t-faint, #736d66);
   --rule: rgba(42, 36, 32, 0.14);
   --washi: #f2efe9;
-  --shu: #b5531e;
+  --shu: var(--t-accent, #b5531e);
   --mono: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 17px;
@@ -561,7 +561,7 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
     "cap cap cap stage"
     "prev count next stage";
   background: var(--sky, #fafaf7);
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
   opacity: 0;
   transition: opacity 180ms ease;
 }
@@ -757,7 +757,7 @@ html.lb-lock { overflow: hidden; }
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 12.5px;
   line-height: 1.6;
-  color: #6e6a64;
+  color: var(--t-soft, #6e6a64);
   transition: color 200ms ease;
 }
 .post-note p {
@@ -768,10 +768,16 @@ html.lb-lock { overflow: hidden; }
   margin-right: 6px;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 11px;
-  color: #8a847d;
+  color: var(--t-faint, #8a847d);
 }
 .post-note.is-lit {
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
+}
+/* Code blocks, marks and inline code sit on a light tint of the ground: a little ink mixed into the sky,
+   so they keep their box at any hour (a fixed tint vanished into the night sky). */
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  html body.post-body .post-prose { --washi: color-mix(in srgb, var(--t-ink, #2a2420) 7%, var(--sky, #fafaf7)); }
+  html body .post-prose :not(pre) > code { background: var(--washi); }
 }
 body.has-rail .post-prose .footnotes {
   display: none;
@@ -865,11 +871,11 @@ body.has-rail .post-prose .footnotes {
   margin-top: 4em;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 13px;
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
 }
 .post-eof {
   margin: 0 0 1.6em;
-  color: #736d66;
+  color: var(--t-faint, #736d66);
 }
 .post-pager {
   display: grid;
@@ -890,7 +896,7 @@ html.ui-zh .post-pager a {
 }
 .post-pager-label,
 .post-pager time {
-  color: #736d66;
+  color: var(--t-faint, #736d66);
   font-variant-numeric: tabular-nums;
 }
 .post-end .sh-live {
@@ -1022,17 +1028,17 @@ html.post-print.stream-done .post-prose > * {
 /* Night: a cool ink ground, light text, gold only for the accent and selection. */
 body.post-body.theme-night {
   background: var(--sky, #0d0f12);
-  color: #e8e6e3;
+  color: var(--t-ink, #e8e6e3);
   --link-sel-bg: #f5b942;
   --link-sel-fg: #0d0f12;
 }
 body.theme-night .post-prose {
-  --ink: #e8e6e3;
-  --ink-soft: #b6b9bf;
-  --ink-faint: #8a8f99;
+  --ink: var(--t-ink, #e8e6e3);
+  --ink-soft: var(--t-soft, #b6b9bf);
+  --ink-faint: var(--t-faint, #8a8f99);
   --rule: rgba(232, 230, 227, 0.14);
   --washi: #151820;
-  --shu: #f5b942;
+  --shu: var(--t-accent, #f5b942);
 }
 body.theme-night .post-back,
 body.theme-night .post-meta,
@@ -1040,27 +1046,27 @@ body.theme-night .post-eof,
 body.theme-night .post-pager-label,
 body.theme-night .post-pager time,
 body.theme-night .post-end .sh-dim,
-body.theme-night .post-end .sh-keys { color: #8a8f99; }
+body.theme-night .post-end .sh-keys { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-title,
-body.theme-night .post-end { color: #e8e6e3; }
+body.theme-night .post-end { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-top { background: linear-gradient(var(--sky, #0d0f12) 70%, transparent); }
-body.theme-night .post-when { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: #e8e6e3; }
-body.theme-night .post-when .txt span { color: #8a8f99; }
-body.theme-night .post-when .cta { background: #e8e6e3; color: #0d0f12; }
-body.theme-night .post-bar { color: #8a8f99; }
-body.theme-night .post-bar b { color: #e8e6e3; }
-body.theme-night .post-back { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: #e8e6e3; }
-body.theme-night .post-end .sh-prompt { color: #8a8f99; }
+body.theme-night .post-when { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-when .txt span { color: var(--t-soft, #8a8f99); }
+body.theme-night .post-when .cta { background: var(--t-ink, #e8e6e3); color: #0d0f12; }
+body.theme-night .post-bar { color: var(--t-faint, #8a8f99); }
+body.theme-night .post-bar b { color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-back { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-end .sh-prompt { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-head .sh-path,
-body.theme-night .post-end .sh-path { color: #e8e6e3; }
+body.theme-night .post-end .sh-path { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
-body.theme-night .post-subtitle { color: #b6b9bf; }
-body.theme-night .lb { background: var(--sky, #0d0f12); color: #e8e6e3; }
+body.theme-night .post-subtitle { color: var(--t-soft, #b6b9bf); }
+body.theme-night .lb { background: var(--sky, #0d0f12); color: var(--t-ink, #e8e6e3); }
 body.theme-night .lb-stage { border-color: rgba(232, 230, 227, 0.8); }
-body.theme-night .post-note { color: #a3a7af; }
-body.theme-night .post-note.is-lit { color: #e8e6e3; }
-body.theme-night .post-note-n { color: #8a8f99; }
+body.theme-night .post-note { color: var(--t-soft, #a3a7af); }
+body.theme-night .post-note.is-lit { color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-note-n { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
 /* —— Links: pointed at, a link only deepens its colour — grey goes to ink,
@@ -1072,9 +1078,9 @@ body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3)
    - links inside a note keep the ink colour on a dotted line, which turns
      solid when pointed at. —— */
 :root {
-  --link-sel-bg: #2a2420;
+  --link-sel-bg: var(--t-ink, #2a2420);
   --link-sel-fg: #fafaf7;
-  --hover-ink: #2a2420;
+  --hover-ink: var(--t-ink, #2a2420);
   --hover-accent: #8a3d14;
   --focus-ring: rgba(42, 36, 32, 0.45);
 }

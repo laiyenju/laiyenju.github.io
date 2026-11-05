@@ -362,12 +362,6 @@
       while (out.children.length > 14) out.removeChild(out.firstChild);
     }
     if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
-    function theme(arg) {
-      var th = window.siteTheme;
-      if (!th) return say("theme: not available");
-      if (arg === "day" || arg === "night" || arg === "auto") { th.set(arg); return say("theme: " + arg); }
-      say("theme: " + th.pref() + t("  (usage: theme day / night / auto)", "　（用法：theme day / night / auto）"));
-    }
     function go(url) { window.setTimeout(function () { markReturn(); location.href = url; }, 260); }
     function run(raw) {
       var line = raw.trim().replace(/\s+/g, " ");
@@ -390,7 +384,6 @@
       }
       if (w[0] === "top") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
       if (w[0] === "clear") { out.innerHTML = ""; return; }
-      if (w[0] === "theme") return theme(arg);
       if (w[0] === "whoami") return say("yen — product manager @Taiwan. I write about how products get decided.");
       if (w[0] === "pwd") return say("/home/yen/notes");
       if (w[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
@@ -399,8 +392,7 @@
         // Touch screens: only what the buttons below can do.
         say(t("tap a command below", "點選下方的指令"));
         say("top     " + t("back to the top", "回到頁首"));
-        say("cd ..   " + t("back to notes", "回到文章列表"));
-        return say("theme   " + t("day / night / auto", "切換日夜主題模式"));
+        return say("cd ..   " + t("back to notes", "回到文章列表"));
       }
       if (w[0] === "help") {
         say("cd ..     " + t("back to notes (or ls)", "回到文章列表（也可以輸入 ls）"));
@@ -409,7 +401,6 @@
         say("next      " + t("newer note", "下一個（較新的文章）"));
         say("prev      " + t("older note", "上一個（較舊的文章）"));
         say("top       " + t("back to the top", "回到頁首"));
-        say("theme     " + t("day / night / auto (auto follows the sky, like the home page)", "切換日夜主題模式（auto 跟著天色，和首頁一樣）"));
         say("whoami    " + t("who is Yen", "看網站作者是誰"));
         say("clear     " + t("clear the screen", "清除畫面"));
         return say("help      " + t("show this list", "查看操作指令"));
@@ -425,12 +416,12 @@
     // Touch screens: the commands as buttons, so the keyboard never comes up.
     var row = document.createElement("div");
     row.className = "sh-taps";
-    ["help", "top", "theme"].forEach(function (cmd) {
+    ["help", "top"].forEach(function (cmd) {
       var b = document.createElement("button");
       b.type = "button";
       b.textContent = cmd;
       b.addEventListener("click", function () {
-        run(cmd === "theme" && window.siteTheme && window.siteTheme.next ? "theme " + window.siteTheme.next() : cmd);
+        run(cmd);
       });
       row.appendChild(b);
     });

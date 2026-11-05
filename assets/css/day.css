@@ -58,7 +58,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .when b { font: 500 14px/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; transition: font-size .4s cubic-bezier(.2, .8, .2, 1); }
 /* in the timeline the date grows: it is what changes there */
 body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
-.when .txt span { color: var(--ink-soft); white-space: nowrap; font-size: 12px; }
+/* on the card (a lifted colour), so one step darker than other grey words to stay readable */
+.when .txt span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: 12px; }
 #clock { transition: opacity .25s ease; }
 #clock.swap { opacity: 0; }
 .when .txt b span { color: inherit; font-size: inherit; }

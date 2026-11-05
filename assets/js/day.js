@@ -79,12 +79,14 @@ function lightFor(ms) {
   };
 }
 function applyTheme(L) {
+  // page and text colours for this sky, shared with the notes (sky.js)
   const c = siteSky.colours(L.bg), dark = c.dark, root = document.documentElement.style;
   root.setProperty('--bg', c.bg);
-  root.setProperty('--ink', dark ? '#ece7dd' : '#262421');
-  root.setProperty('--ink-soft', dark ? '#aaa3b8' : '#6f6a62');
+  root.setProperty('--ink', c.ink);
+  root.setProperty('--ink-soft', c.faint);
+  root.setProperty('--ink-card', c.soft);
   root.setProperty('--rule', dark ? 'rgba(236,231,221,.18)' : 'rgba(38,36,33,.14)');
-  root.setProperty('--accent', dark ? '#f0a46a' : '#b5531e');
+  root.setProperty('--accent', c.accent);
   root.setProperty('--sheet', c.sheet);
   root.colorScheme = dark ? 'dark' : 'light';
 }
