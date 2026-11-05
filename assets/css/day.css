@@ -354,11 +354,10 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
   .bar-slot { min-height: 50px; }
   .bar-slot .cmdbar { justify-content: center; }
   .term .cmdbar { position: sticky; bottom: 0; margin-top: 6px; padding-inline: 0; }
-  /* the timeline. --tl-h: the building's box; 238px: the card's row below its top, the name and the ruler;
-     --tl-lift: the room left over, split above and below so the block sits in the middle under the card */
-  :root { --tl-h: clamp(300px, calc(100svh - 318px - var(--card-top)), 560px);
-    --tl-lift: max(0px, calc((100svh - var(--card-top) - var(--tl-h) - 238px) / 2)); }
-  .tlm { padding-top: calc(var(--card-top) + 80px + var(--tl-lift)); padding-bottom: 0; }
-  .tl-stage { height: var(--tl-h); }
-  .ruler { bottom: var(--tl-lift); background: none; padding-bottom: 12px; }
+  /* the timeline: the building in the home page's own box (--stage-top, -w, -h: day.js sizeStage), at the same
+     scale (fitTl), so going in and out it stays put and only the words change. Its name right under it, then the
+     ruler right under the name, in the flow, not pinned to the bottom edge. */
+  .tlm { padding-top: var(--stage-top, calc(var(--card-top) + 64px)); padding-bottom: 0; }
+  .tl-stage { width: min(100%, var(--stage-w, 560px)); height: var(--stage-h, 54svh); }
+  .ruler { position: static; background: none; padding: 20px max(16px, env(safe-area-inset-left, 0px)) 32px; }
 }

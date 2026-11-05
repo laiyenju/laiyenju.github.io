@@ -113,6 +113,14 @@ function sizeStage() {
   STAGE = { w: wide ? Math.min(group.clientWidth, 900) : group.clientWidth, h };
   stage.style.width = STAGE.w + 'px'; stage.style.height = STAGE.h + 'px';
   group.style.paddingTop = lift ? lift + 'px' : '';
+  // wide screens: the timeline puts its building in this same box (--stage-top/-w/-h, day.css), so going in and out
+  // the building stays where it is, the same size; only the words around it change
+  const root = document.documentElement.style;
+  if (wide) {
+    let top = 0; // from the layout, not the screen: the stage shrinks a little as the page scrolls (--p)
+    for (let e = stage; e; e = e.offsetParent) top += e.offsetTop;
+    root.setProperty('--stage-top', top + 'px'); root.setProperty('--stage-w', STAGE.w + 'px'); root.setProperty('--stage-h', STAGE.h + 'px');
+  } else ['--stage-top', '--stage-w', '--stage-h'].forEach(v => root.removeProperty(v));
 }
 const disp = document.createElement('canvas');
 stage.append(disp);
@@ -697,8 +705,14 @@ function buildUp(cv, img, ms, token) {
     requestAnimationFrame(tick);
   });
 }
+// the timeline building's scale. Wide screens: the same as the home page (fitCanvas), in the same box, so the building
+// does not change size between the two; phones: a little smaller, under the date card
+function tlScale(w, h) {
+  const st = $('tlStage'), wide = innerWidth >= 900;
+  return wholePixels(Math.max(.4, Math.min(st.clientWidth / w, st.clientHeight / h, wide ? 4.4 : 3.2) * (wide ? .97 : .86)));
+}
 function fitTl(cv) {
-  const st = $('tlStage'), f = wholePixels(Math.min(st.clientWidth / cv.width, st.clientHeight / cv.height, 3.2) * .86);
+  const f = tlScale(cv.width, cv.height);
   cv.style.width = Math.round(cv.width * f) + 'px'; cv.style.height = Math.round(cv.height * f) + 'px';
 }
 /* The ruler under the timeline: one stop per building, evenly spaced (buildings on the same day sit closer),
@@ -725,7 +739,7 @@ function markRuler() {
    timeline is not one building in an empty screen. The row runs past the screen's edges when there are many.
    Click one to go to it. Phones: hidden (.tl-row in day.css), and not drawn. */
 const ROW = { box: 220, gap: 26 };
-function renderRow() {
+function renderRow(at) {
   const row = $('tlRow'); if (!row || innerWidth < 900) return;
   const st = $('tlStage'), H = st.clientHeight * .6;
   row.innerHTML = '';
@@ -737,14 +751,16 @@ function renderRow() {
     c.style.width = Math.round(img.width * f) + 'px'; c.style.height = Math.round(img.height * f) + 'px';
     row.append(c);
   });
-  layoutRow(true);
+  layoutRow(true, at);
 }
-function layoutRow(first) {
-  const row = $('tlRow'); if (!row || !row.children.length) return;
-  // the first ones stand close to the chosen one (a big building may overlap them a little: they sit behind it)
-  const half = Math.min($('tlStage').clientWidth / 2, 210), step = ROW.box + ROW.gap;
+// at: the day being chosen (on opening, before TL.idx is set), so the row starts where it belongs and does not slide in
+function layoutRow(first, at = TL.idx) {
+  const row = $('tlRow'); if (!row || !row.children.length || !TL.list[at]) return;
+  // the first ones stand close to the chosen one, clear of it: a wide building pushes them out a little
+  const img = tlImage(TL.list[at]), shown = img.width * tlScale(img.width, img.height);
+  const half = Math.max(Math.min($('tlStage').clientWidth / 2, 210), shown / 2), step = ROW.box + ROW.gap;
   for (const c of row.children) {
-    const d = +c.dataset.k - TL.idx;
+    const d = +c.dataset.k - at;
     if (first) c.style.transition = 'none';
     c.classList.toggle('on', d === 0);
     // the chosen one hides here (the big canvas shows it); the rest keep their places either side
@@ -803,7 +819,7 @@ function openTl(date) {
   if (fly) tl.classList.add('clear');
   showOverlay(tl);
   ctaFor('Today');
-  renderRuler(); renderRow();
+  renderRuler(); renderRow(k);
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
   $('tlStats').textContent = `${new Set(TL.list.map(x => x.date)).size} days kept · ${nPlaces} places · ${nCountries} countries`;
@@ -1076,7 +1092,7 @@ setInterval(() => {
   if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; refreshLight(true); renderDay(); } else { refreshLight(true); refreshToday(); }
   if (r.min % 10 === 0) loadCheckin(); // a page left open hears of new check-ins
 }, 60e3);
-addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
+addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); if (!tl.hidden && $('tlc') && TL.cur) { fitTl($('tlc')); layoutRow(); } onScroll(); });
 // the words change height once the web fonts arrive (Quattro sets wider than the fallback), so measure again
 if (document.fonts) document.fonts.addEventListener('loadingdone', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
 
