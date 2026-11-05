@@ -87,66 +87,6 @@ html.ui-zh .i-en {
 
 body.theme-night { --accent: var(--t-accent, #f5b942); }
 
-.sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Prompt like the home page's terminal: grey words, the $ in the accent. */
-.sh-prompt { color: var(--t-faint, #736d66); }
-.sh-live .sh-prompt { color: var(--t-faint, #736d66); }
-.sh-path { color: var(--t-ink, #2a2420); font-weight: 600; }
-/* Commands already run: the same prompt, so the command reads first. */
-.sh-dir { color: var(--t-faint, #736d66); }
-.sh-arrow { color: var(--accent); }
-.sh-dim { color: var(--t-faint, #736d66); }
-@keyframes sh-blink { 50% { opacity: 0; } }
-
-/* The last prompt takes commands (a small easter egg): cd ~, cd -, ls, help… */
-.sh-out { margin: 18px 0 0; display: grid; }
-.sh-out:empty { display: none; }
-.sh-out p { margin: 0; font-size: 13px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
-.sh-live { margin-top: 18px; display: flex; align-items: baseline; cursor: text; }
-.sh-live[hidden] { display: none; }
-.sh-out:not(:empty) + .sh-live { margin-top: 0; }
-.sh-input {
-  flex: 1; min-width: 0; margin-left: 0.6ch; padding: 0; border: 0; outline: none; background: none;
-  font: inherit; color: inherit; caret-color: currentColor; caret-shape: block;
-}
-.sh-caret {
-  display: inline-block; width: 0.6em; height: 1.05em; margin-left: 0.6ch;
-  vertical-align: -0.18em; background: currentColor; opacity: 0.55;
-  animation: sh-blink 1.1s steps(1) infinite;
-}
-.sh-live:focus-within .sh-caret { display: none; }
-.sh-taps { display: none; }
-@media (hover: none) and (pointer: coarse) {
-  .sh-live .sh-input { display: none; }
-  .sh-live { cursor: default; }
-  .sh-taps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .sh-live[hidden] + .sh-taps { display: none; }
-  .sh-taps button {
-    min-height: 36px; margin: 0; padding: 0 12px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px;
-    background: none; color: inherit; font: inherit; font-size: 13px; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .sh-taps button:active { background: var(--link-sel-bg); border-color: var(--link-sel-bg); color: var(--link-sel-fg); }
-  body.theme-night .sh-taps button { border-color: rgba(232, 230, 227, 0.3); }
-  .post-end .sh-keys { display: none; }
-}
-@media (prefers-reduced-motion: reduce) { .sh-caret { animation: none; } }
-/* Key hints sit up top beside $ cd ~, so the prompt can be the last line and print below it. */
-.sh-keys { margin: 0; font-size: 12px; color: var(--t-faint, #736d66); }
-.sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
-@media (max-width: 560px) {
-  .sh-keys { display: none; }
-}
-
-body.theme-night .sh-dim,
-body.theme-night .sh-keys { color: var(--t-faint, #8a8f99); }
-body.theme-night .sh-prompt,
-body.theme-night .sh-live .sh-prompt { color: var(--t-faint, #8a8f99); }
-body.theme-night .sh-path { color: var(--t-ink, #e8e6e3); }
-body.theme-night .sh-dir { color: var(--t-faint, #8a8f99); }
-body.theme-night .sh-arrow { color: var(--accent); }
-body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
-
 /* —— Article (Jekyll default layout): a quiet reading column on plain
       paper. Footnotes sit in the right margin on wide screens and
       at the end on narrow ones. —— */
@@ -241,21 +181,6 @@ body.theme-night .post-home { background: var(--sky-sheet, #151820); border-colo
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-}
-/* ← cd .. : a button, like ← cd ~ under a work */
-.post-backrow { margin: 32px 0 0; }
-.post-back {
-  display: inline-flex;
-  padding: 9px 14px;
-  border: 1px solid rgba(42, 36, 32, 0.14);
-  border-radius: 8px;
-  background: var(--sky-sheet, #fff);
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 14px;
-  line-height: 1.2;
-  color: var(--t-ink, #2a2420);
-  text-decoration: none;
-  transition: color 200ms ease, border-color 200ms ease;
 }
 
 /* Prose: ink on paper, and as little else as possible. Structure is marked
@@ -916,21 +841,6 @@ html.ui-zh .post-pager a {
   color: var(--t-faint, #736d66);
   font-variant-numeric: tabular-nums;
 }
-.post-end .sh-live {
-  margin-top: 0;
-}
-.post-end .sh-out:not(:empty) {
-  margin: 0;
-}
-.post-end .sh-keys {
-  margin-top: 14px;
-}
-.post-end .sh-keys kbd {
-  font: inherit;
-  padding: 0 4px;
-  border: 1px solid rgba(42, 36, 32, 0.25);
-  border-radius: 2px;
-}
 
 /* Arrival, like `cat` in a terminal (see post.js): the title typed character by character behind a block cursor, the date
    line typed out, and the first screen of prose streamed in line by line.
@@ -1078,13 +988,10 @@ body.theme-night .post-prose {
   --washi: #151820;
   --shu: var(--t-accent, #f5b942);
 }
-body.theme-night .post-back,
 body.theme-night .post-meta,
 body.theme-night .post-eof,
 body.theme-night .post-pager-label,
-body.theme-night .post-pager time,
-body.theme-night .post-end .sh-dim,
-body.theme-night .post-end .sh-keys { color: var(--t-faint, #8a8f99); }
+body.theme-night .post-pager time { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-title,
 body.theme-night .post-end { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-top { background: linear-gradient(var(--sky, #0d0f12) 70%, transparent); }
@@ -1093,10 +1000,6 @@ body.theme-night .post-when .txt span { color: var(--t-soft, #8a8f99); }
 body.theme-night .post-when .cta { background: var(--t-ink, #e8e6e3); color: #0d0f12; }
 body.theme-night .post-bar { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-bar b { color: var(--t-ink, #e8e6e3); }
-body.theme-night .post-back { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
-body.theme-night .post-end .sh-prompt { color: var(--t-faint, #8a8f99); }
-body.theme-night .post-head .sh-path,
-body.theme-night .post-end .sh-path { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
 body.theme-night .post-subtitle { color: var(--t-soft, #b6b9bf); }
@@ -1105,7 +1008,6 @@ body.theme-night .lb-stage { border-color: rgba(232, 230, 227, 0.8); }
 body.theme-night .post-note { color: var(--t-soft, #a3a7af); }
 body.theme-night .post-note.is-lit { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-note-n { color: var(--t-faint, #8a8f99); }
-body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
 /* —— Links: pointed at, a link only deepens its colour — grey goes to ink,
    the accent to a deeper accent (by night: lighter). Keyboard focus adds
@@ -1159,24 +1061,22 @@ body .post-prose a.reversefootnote:hover {
   }
 }
 
-/* Terminal rows: reverse video, and the ← cd .. button the same when pointed at. */
-body :is(.post-pager a, .post-back):focus-visible,
-body :is(.post-pager a, .post-back):active,
-body .post-back.is-opening {
+/* Terminal rows (prev / next): reverse video when pointed at. */
+body .post-pager a:focus-visible,
+body .post-pager a:active {
   background: var(--link-sel-bg);
   color: var(--link-sel-fg);
 }
-body :is(.post-pager a, .post-back):focus-visible *,
-body :is(.post-pager a, .post-back):active *,
-body .post-back.is-opening * {
+body .post-pager a:focus-visible *,
+body .post-pager a:active * {
   color: inherit !important;
 }
 @media (hover: hover) {
-  body :is(.post-pager a, .post-back):hover {
+  body .post-pager a:hover {
     background: var(--link-sel-bg);
     color: var(--link-sel-fg);
   }
-  body :is(.post-pager a, .post-back):hover * {
+  body .post-pager a:hover * {
     color: inherit !important;
   }
 }

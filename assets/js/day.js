@@ -1163,8 +1163,8 @@ function openWork(slug) {
     <h2>What Yen did</h2><p>${esc(w.did)}</p>
     <h2>The result</h2><p>${esc(w.result)}</p>
     ${w.url ? `<p class="out"><a href="${w.url}" target="_blank" rel="noopener">${esc(w.urlLabel || 'open the portfolio')} ↗</a></p>` : ''}
-    <div class="nav-row"><button type="button" class="back" data-go="works">← cd ..</button></div>`;
-  // opened from the list in the terminal: going back just closes the page, and the list is still there underneath
+`;
+  // opened from the list in the terminal: going back (← Work, or works/ in the path) closes the page, and the list is still there underneath
   WORK.fromList = !!logEl.querySelector(`.ls [data-run="open works/${w.slug}"]`); WORK.slug = w.slug;
   showOverlay(reader);
   if (!still()) reveal($('readerBody'), 260); // the page prints in from the top, like cat, in about a quarter second
@@ -1497,27 +1497,6 @@ function tapTl() {
   leaveTl(() => renderPast(x.id), '#past-' + x.id);
 }
 function leaveToToday() { leaveTl(() => { homeToday(); renderText(); }); }
-// the day's record: a whole page, reached only from the timeline
-function openRecord(date) {
-  const list = tlEntries(), x = list.find(e => e.date === date);
-  if (!x) { go2('#timeline'); return; }
-  const d = parseDay(date), years = fromDayMs(state.day).y - d.y;
-  let body;
-  if (x.today) { const it = state.items[state.items.length - 1]; body = `<p>${esc(it.note)}</p><p>${esc(whereNow())}</p>`; }
-  else {
-    const m = x.m, map = `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.map || m.name + ', ' + m.place)}" target="_blank" rel="noopener">${esc(m.place)}, ${esc(m.country || 'Japan')} ↗</a>`;
-    body = `<p class="day-meta">${map}${m.with ? ' · with ' + esc(listOf(m.with)) : ''}</p>` + (m.story || [plainSentence(m)]).map(t => `<p>${esc(t)}</p>`).join('');
-  }
-  $('readerBody').innerHTML = `<span class="prompt">yen@${CITY.short} ~ <i>$</i> <b>cat days/${date}.md</b></span>
-    <p class="byline">${LONG_DAY[d.wd]}, ${LONG_MON[d.m - 1]} ${d.d}, ${d.y} · ${years > 0 ? ago(years).toLowerCase() : 'today'}</p>
-    <h1>${esc(x.today ? (x.scene === 'home' ? 'Home' : 'The office') : x.name)}</h1>
-    <div class="day-model" id="dayModel"></div>${body}
-    <div class="nav-row"><button type="button" class="back" data-hash="#day-${date}">← Timeline</button><button type="button" class="back" data-close>cd ~</button></div>`;
-  $('dayModel').append(pureImage(x));
-  const c = $('dayModel').firstChild, f = Math.min(560 / c.width, 380 / c.height, 3) * .9;
-  c.style.width = Math.round(c.width * f) + 'px'; c.style.height = Math.round(c.height * f) + 'px';
-  showOverlay(reader);
-}
 function route() {
   const h = location.hash;
   let m;
@@ -1536,11 +1515,10 @@ addEventListener('popstate', route);
 for (const o of [reader, tl]) {
   o.addEventListener('scroll', () => updateMore(), { passive: true });
   o.addEventListener('click', ev => {
-    const c = ev.target.closest('[data-close]'), hsh = ev.target.closest('[data-hash]'), day = ev.target.closest('[data-day]');
+    // the path in a work's prompt: works/ back to the list, ~ home
     const goTo = ev.target.closest('[data-go]');
     if (goTo && goTo.dataset.go === 'works') backToWorks();
     else if (goTo && goTo.dataset.go === 'home') { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); }
-    else if (c) closeOverlays(); else if (hsh) go2(hsh.dataset.hash); else if (day) go2('#day-' + day.dataset.day);
   });
 }
 addEventListener('keydown', ev => {

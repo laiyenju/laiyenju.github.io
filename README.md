@@ -14,7 +14,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `published/` | 已發布的文章。放進這裡就是發布 |
 | `index.md`、`_layouts/home.html` | 首頁：每天一棟 pixel 建築、Timeline、下方的 terminal（notes、works 都在 terminal 裡）。`home.html` 把文章清單和 `_data/` 的資料寫成 JSON 放進頁面，畫面全部由 `assets/js/day.js` 畫出來 |
-| `_layouts/default.html` | 文章頁。和首頁的作品頁同一個框架：頂部分成兩塊，左邊是日期卡片（左側按鈕 `← Notes`，整張卡片點了回 notes 清單；時間由 `assets/js/post.js` 的 `tick` 填），右邊是 Home（正方形圖示按鈕）、`yen@taipei ~ $ cat notes/<檔名>.md`（路徑可以點：`~` 回首頁、`notes/` 回清單）、靠左的標題、文末的 terminal 和 `← cd ..`（回清單） |
+| `_layouts/default.html` | 文章頁。和首頁的作品頁同一個框架：頂部分成兩塊，左邊是日期卡片（左側按鈕 `← Notes`，整張卡片點了回 notes 清單；時間由 `assets/js/post.js` 的 `tick` 填），右邊是 Home（正方形圖示按鈕）、`yen@taipei ~ $ cat notes/<檔名>.md`（路徑可以點：`~` 回首頁、`notes/` 回清單）、靠左的標題，文末是 `(END)` 和上一篇／下一篇 |
 | `_includes/` | 每頁共用的 `<head>`、SEO 標籤、文章頁在第一次畫面前套上天色與介面語言（`theme-boot.html`） |
 | `_data/works.yml` | 作品集（terminal 的 `ls works`，每件作品一頁 `#work-<slug>`） |
 | `_data/days.yml` | 去過的地方：首頁的往年今日建築、Timeline 的每一天 |
@@ -24,7 +24,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `assets/vendor/pixel-plays/`、`scripts/pixel-engine/` | Pixel Plays 引擎原檔（MIT，作者 AmirMushich，`LICENSE` 在同一個資料夾）和把它轉成 `assets/js/pixel-engine.js` 的程式 |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
-| `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。notes 和作品的進出方式一樣：清單裡點一篇，在同一個分頁直接切過去，不播打字動畫（`day.js` 留下 `post-handoff`、`post-from-list`）。回清單（`← Notes`、`notes/`、`cd ..`）用瀏覽器的「上一頁」回到首頁，清單捲回日期卡片下方；瀏覽器沒有保留首頁時，直接把清單印回來，不再打字（`post.js` 的 `backToNotes`，`day.js` 的 `backFromNote`）。不是從清單進來的文章，回清單就連到 `/?view=notes`。作品頁的 `works/` 和 `← cd ..` 一樣回到清單：從清單打開的就關掉作品頁、把清單捲回日期卡片下方，從連結打開的就執行一次 `ls works`（`day.js` 的 `backToWorks`） |
+| `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。notes 和作品的進出方式一樣：清單裡點一篇，在同一個分頁直接切過去，不播打字動畫（`day.js` 留下 `post-handoff`、`post-from-list`）。回清單（`← Notes`、`notes/`）用瀏覽器的「上一頁」回到首頁，清單捲回日期卡片下方；瀏覽器沒有保留首頁時，直接把清單印回來，不再打字（`post.js` 的 `backToNotes`，`day.js` 的 `backFromNote`）。不是從清單進來的文章，回清單就連到 `/?view=notes`。作品頁的 `← Work` 和 `works/` 一樣回到清單：從清單打開的就關掉作品頁、把清單捲回日期卡片下方，從連結打開的就執行一次 `ls works`（`day.js` 的 `backToWorks`） |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
 | `CLAUDE.md` | 給 Claude 的工作規則（例如：改檔案時要同時更新 README） |
 
@@ -137,7 +137,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題 21px（行高 1.45）、說明 17px（行高 1.65，和標題之間多 10px）；頂部日期首頁 14px、Timeline 19px | |
 | 建築大小 | `assets/js/day.js` 的 `sizeStage`、`fitCanvas`（`* .86`）、`fitTl`（`* .86`） | 手機：建築用掉說明文字和底部按鈕列以外剩下的空間（最多畫面一半高）；還有空間時平均分到上下，讓建築和說明靠在一起、整組置中。沒有往年今日時，縮圖那一列會收起來（`day.css` 的 `.tools:has(.thumbs.none)`） | 寬螢幕往下捲到 terminal 時，建築移到中間、右邊的文字和年份縮圖淡出（`onScroll` 的 `--dx`、`--q`）。大小和位置只看建築本身；影子完整畫出來，可以超出建築的範圍、壓到文字下面（`getWorld` 的 `pad`、`fitCanvas` 的負 margin），手機上只會在螢幕邊緣被切掉。縮圖不含超出的影子 |
 | Timeline 的動畫 | `assets/js/day.js` 的 `buildUp`（一磚一磚，磚塊 4×3 像素）、`dissolve`、`MOVE` | 蓋起來 0.9 秒、溶解 0.2 秒、首頁和 Timeline 之間移動 0.48 秒 | 系統設定「減少動態效果」時都直接跳到結果 |
-| 頁面之間的轉場 | `day.js` 的 `lightRow`、`reveal`、`openTl`／`leaveTl`（`tl-in`）；文章在 `_layouts/default.html` 的開頭和 `site.css` 的 `post-rise` | 一套動作：terminal 的輸出一列一列往上浮現，選中的列是反白。清單點一列：那一列反白 0.11 秒再打開。作品頁、從站內打開的文章（清單、上一篇／下一篇）：直接切過去，內容由上往下約 0.25 秒浮現，不打字。回到清單：清單捲回日期卡片下方，剛讀的那一列反白再慢慢退掉。進出 Timeline：今天的文字先退開，Timeline 的文字才出現，離開時反過來，兩者不重疊。首頁在第一個畫面前就套上天色，不會先白再變色 | 從外部連結打開文章時，標題照舊一個字一個字打出來。系統設定「減少動態效果」時都直接切換 |
+| 頁面之間的轉場 | `day.js` 的 `lightRow`、`reveal`、`openTl`／`leaveTl`（`tl-in`）；文章在 `_layouts/default.html` 的開頭和 `site.css` 的 `post-rise` | 一套動作：terminal 的輸出一列一列往上浮現，選中的列像 terminal 清單一樣，左邊出現 `>`、標題變成強調色（`day.css` 的 `.ls .lit`，沒有色塊、沒有圓角）。清單點一列：那一列先標上 0.11 秒再打開。作品頁、從站內打開的文章（清單、上一篇／下一篇）：直接切過去，內容由上往下約 0.25 秒浮現，不打字。回到清單：清單捲回日期卡片下方，剛讀的那一列標上 `>` 再慢慢退掉。進出 Timeline：今天的文字先退開，Timeline 的文字才出現，離開時反過來，兩者不重疊。首頁在第一個畫面前就套上天色，不會先白再變色 | 從外部連結打開文章時，標題照舊一個字一個字打出來。系統設定「減少動態效果」時都直接切換 |
 | Timeline 的尺標 | `assets/js/day.js` 的 `renderRuler`；樣式在 `assets/css/day.css` 的 `.ruler-track` | 每棟建築一格、等距排列（同一天的建築間距減半），最舊的在左邊；不標年份（頂部日期已經有） | 點一格跳過去；手指按住左右滑可以快速切換（滑動時不播動畫，放開就停在那棟）；鍵盤可用左右方向鍵 |
 | 強調色 | `assets/js/sky.js` 的 `TEXT.day.accent`、`TEXT.night.accent` | 白天 `#b5531e`（朱）、天暗時 `#f0a46a`（橘） | 首頁和文章頁共用（文章的 `--accent`、`--shu` 都從這裡來，內文標題也用這個顏色）。分享卡片在 `scripts/og/card.html`，要一起改 |
 | 文章頁底色 | `assets/js/sky.js`（和首頁同一個天色） | 跟著天色 | `site.css` 裡的 `#fafaf7`、`#0d0f12` 只在 `sky.js` 沒載入時用。`_includes/seo.html` 的 `theme-color`（瀏覽器網址列的顏色，跟著系統設定用 `#fafaf7`／`#0d0f12`）和 `scripts/og/card.html`（分享卡片，`#fafaf7`）是固定的 |
