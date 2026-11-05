@@ -14,7 +14,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `published/` | 已發布的文章。放進這裡就是發布 |
 | `index.md`、`_layouts/home.html` | 首頁：每天一棟 pixel 建築、Timeline、下方的 terminal（notes、works 都在 terminal 裡）。`home.html` 把文章清單和 `_data/` 的資料寫成 JSON 放進頁面，畫面全部由 `assets/js/day.js` 畫出來 |
-| `_layouts/default.html` | 文章頁。和首頁的作品頁同一個框架：頂部是日期卡片（左側按鈕 `← Notes`，整張卡片點了回 notes 清單；右端是 Home 圖示按鈕；時間由 `assets/js/post.js` 的 `tick` 填），下面直接是靠左的標題（和卡片之間留一段空白，作品頁一樣），文末是 `(END)` |
+| `_layouts/default.html` | 文章頁。和首頁的作品頁同一個框架：頂部是日期卡片（左側按鈕 `← Notes`，整張卡片點了回 notes 清單；卡片右邊外面是 Home 圖示按鈕；時間由 `assets/js/post.js` 的 `tick` 填），下面直接是靠左的標題（和卡片之間留一段空白，作品頁一樣），文末是 `(END)` |
 | `_includes/` | 每頁共用的 `<head>`、SEO 標籤。文章頁的天色在 `head.html` 裡就先套上（`body` 出現之前），第一個畫面就是天色，從首頁點進來不會先閃一下白色；`theme-boot.html` 再加上夜晚的淺色字和介面語言 |
 | `_data/works.yml` | 作品集（terminal 的 `ls works`，每件作品一頁 `#work-<slug>`） |
 | `_data/days.yml` | 去過的地方：首頁的往年今日建築、Timeline 的每一天 |
@@ -35,7 +35,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `assets/js/pixel-engine.js` | 產生的檔案，不要直接改。改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 3.3） |
 | 首頁網址 | `#timeline`、`#day-YYYY-MM-DD`（Timeline 停在那天；同一天第二棟以後加 `-2`、`-3`）、`#past-YYYY-MM-DD`（和首頁同一個畫面，只是主建築換成那天的，標題上方有一行主題色的「幾年前・日期」（`day.css` 的 `.past-tag`）；頂部按鈕變成 Today，點了回到今天；點建築打開 Timeline 的那一天）、`#work-<slug>`（一件作品）。分享這些網址會直接打開那個畫面 |
-| 日期卡片 | 大小和位置在每一頁都一樣（首頁、Timeline、作品頁、文章頁），切換頁面時不會移動，也不會因為裡面的字不同而變大變小：寬 `--card-w`（`min(360px, 100vw - 32px)`，`day.css` 和 `site.css` 各有一份，要一起改）、高 50px、離頂端 12px、置中（文章頁以整個視窗寬置中，有捲軸也不偏）。日期下面是現在的時間，到秒（`HH:MM:SS`），每個數字像翻牌一樣往上捲到下一個（`assets/js/sky.js` 的 `rollClock`，首頁由 `day.js` 的 `secondTick`、文章頁由 `post.js` 的 `tick` 每秒呼叫；樣式在 `day.css`、`site.css` 的 `.roll`；系統設定「減少動態效果」時直接換數字）。Timeline 裡這一行改寫那天是幾年前，不顯示時間（字級不變）；停在過去某一天時，日期和這一行用強調色（`day.css` 的 `.when.is-past-day`）。首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：同一張卡片，按鈕移到左側、寫 `← Work`／`← Notes`，點了回清單；Home 在卡片裡的右端：34×34px、只有外框的圖示按鈕。卡片是扁平的毛玻璃（半透明加模糊，頁面捲動時看得到後面；只有一條細框線，沒有反光、沒有陰影；首頁在 `day.css` 開頭的 `--glass`、`--glass-blur`，文章頁在 `site.css` 的 `.post-when`、`.post-home`）。作品頁和文章頁寬度小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
+| 日期卡片 | 大小和位置在每一頁都一樣（首頁、Timeline、作品頁、文章頁），切換頁面時不會移動，也不會因為裡面的字不同而變大變小：寬 `--card-w`（`min(360px, 100vw - 32px)`）、高 50px、置中（文章頁以整個視窗寬置中，有捲軸也不偏），離頂端 `--card-top`：手機 12px；寬螢幕（≥ 900px）是畫面高度的 9%（28–96px），讓整頁集中在畫面中間，不會貼著頂端。`--card-w`、`--card-top` 在 `day.css` 和 `site.css` 各有一份，要一起改；首頁的建築、Timeline、作品頁和文章頁的標題都從卡片下方開始排。日期下面是現在的時間，到秒（`HH:MM:SS`），每個數字像翻牌一樣往上捲到下一個（`assets/js/sky.js` 的 `rollClock`，首頁由 `day.js` 的 `secondTick`、文章頁由 `post.js` 的 `tick` 每秒呼叫；樣式在 `day.css`、`site.css` 的 `.roll`；系統設定「減少動態效果」時直接換數字）。Timeline 裡這一行改寫那天是幾年前，不顯示時間（字級不變）；停在過去某一天時，日期和這一行用強調色（`day.css` 的 `.when.is-past-day`）。首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：同一張卡片，按鈕移到左側、寫 `← Work`／`← Notes`，點了回清單；Home 在卡片右邊、卡片外面：和卡片一樣高的正方形（50×50px）圖示按鈕。Home 不會推動卡片：螢幕 508px 以上放在卡片右邊；更窄時卡片右邊讓出 58px 給 Home，卡片的左邊、頂端和高度不變，兩個加起來剛好是卡片平常的範圍（`day.css` 的 `.home-btn`、`site.css` 的 `.post-home`）。卡片和 Home 都是扁平的毛玻璃（半透明加模糊，頁面捲動時看得到後面；只有一條細框線，沒有反光、沒有陰影；首頁在 `day.css` 開頭的 `--glass`、`--glass-blur`，文章頁在 `site.css` 的 `.post-when`、`.post-home`）。作品頁和文章頁寬度小於 508px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | `checkin` 分支 | Action 每次打卡都整個覆寫，只有一個 commit、一個 `location.json`。不要手動改，也不要合併進 `main` |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |

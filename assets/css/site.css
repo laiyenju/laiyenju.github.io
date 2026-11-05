@@ -98,25 +98,26 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
   box-sizing: border-box;
   max-width: 680px;
   margin: 0 auto;
-  padding: calc(84px + env(safe-area-inset-top, 0px)) 20px 96px;
+  padding: calc(var(--card-top) + 72px) 20px 96px;
 }
 
 /* —— The frame, the same as a work on the home page: the date card fixed at
       the top, then the title on the left, the subtitle, the date and size in mono; (END) at the end.
       The card is the same size and in the same place on every page (here, the home page, the timeline, a work):
-      --card-w wide (day.css has the same), 50px tall, centred on the whole window (100vw, so a scrollbar does
-      not move it), 12px from the top. Home sits inside it, at its right end. —— */
+      --card-w wide and --card-top from the top (day.css has the same), 50px tall, centred on the whole window
+      (100vw, so a scrollbar does not move it). Home stands beside it, outside it on the right. —— */
+:root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px)); }
+@media (min-width: 900px) { :root { --card-top: clamp(28px, 9svh, 96px); } }
 .post-top {
-  --card-w: min(360px, calc(100vw - 32px));
   position: fixed; z-index: 7; top: 0; left: 0; width: 100vw;
   display: flex; justify-content: center; align-items: center;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 0 10px;
+  padding: var(--card-top) 0 10px;
   /* only a light veil: the card and Home are frosted glass, so the note shows through behind them */
   background: linear-gradient(color-mix(in srgb, var(--sky, #fafaf7) 55%, transparent), transparent);
 }
 .post-when {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  width: var(--card-w); height: 50px; padding: 7px 49px 7px 7px;
+  width: var(--card-w); height: 50px; padding: 7px 16px 7px 7px;
   border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px;
   background: color-mix(in srgb, var(--sky-sheet, #fff) 62%, transparent);
   -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
@@ -134,18 +135,26 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
   background: var(--t-ink, #2a2420); color: #fafaf7; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap;
 }
 .post-when .cta svg { width: 12px; height: 12px; }
-/* Home, inside the card at its right end: a 34px square, an icon only, outlined (the filled button is the way back) */
+/* Home, beside the card on its right, outside it: a 50px glass square, as tall as the card, an icon only. It never
+   moves the card: from 508px wide it sits right of the card; narrower, the card gives up 58px on its right for it,
+   so its left edge, top and height stay where they are on every page (day.css: the same). */
 .post-home {
-  position: absolute; top: calc(12px + env(safe-area-inset-top, 0px) + 8px); left: calc(50vw + var(--card-w) / 2 - 42px);
-  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0;
-  border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 8px;
+  position: absolute; top: var(--card-top); left: calc(50vw + var(--card-w) / 2 + 8px);
+  display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; padding: 0;
+  border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px;
+  background: color-mix(in srgb, var(--sky-sheet, #fff) 62%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
   color: var(--t-ink, #2a2420);
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 .post-home:hover { border-color: var(--t-faint, #736d66); }
 .post-home:active { transform: scale(0.96); }
 .post-home svg { width: 16px; height: 16px; }
-@media (max-width: 399px) { .post-when .wd { display: none; } }
+@media (max-width: 507px) {
+  .post-when { width: calc(var(--card-w) - 58px); margin-right: 58px; }
+  .post-home { left: calc(50vw + var(--card-w) / 2 - 50px); }
+  .post-when .wd { display: none; }
+}
 /* the live time in the date card: HH:MM:SS, each digit rolls (sky.js rollClock) */
 .roll { display: inline-flex; font-variant-numeric: tabular-nums; vertical-align: bottom; }
 .roll .rg { display: inline-block; height: 1.35em; line-height: 1.35em; overflow: hidden; }
@@ -154,7 +163,7 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
 .roll .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .roll .rs { transition: none !important; } }
 
-body.theme-night .post-home { border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-home { background: color-mix(in srgb, var(--sky-sheet, #151820) 62%, transparent); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
 
 .post-meta {
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
@@ -729,7 +738,7 @@ body.has-rail .post-prose .footnotes {
 
 @media (max-width: 640px) {
   .post {
-    padding: calc(84px + env(safe-area-inset-top, 0px)) 20px 72px;
+    padding: calc(var(--card-top) + 72px) 20px 72px;
   }
   .post-prose {
     font-size: 16px;

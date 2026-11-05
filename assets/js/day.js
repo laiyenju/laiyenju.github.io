@@ -97,9 +97,9 @@ function sizeStage() {
   const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight;
   if (wide) {
     // wide screens: the phone's stack (building, words) under the date card. The building takes what the card's
-    // row (76px), the words and a 32px bottom margin leave, between 260 and 640px; any room left is split above and
-    // below, so the building and its words sit in the middle of the screen under the card.
-    const room = innerHeight - 76 - 32 - words;
+    // row (--card-top + the card, day.css), the words and a 32px bottom margin leave, between 260 and 640px; any room
+    // left is split above and below, so the building and its words sit in the middle of the screen under the card.
+    const room = innerHeight - (document.querySelector('.top').offsetHeight + 4) - 32 - words;
     h = Math.round(cl(room, 260, 640));
     lift = Math.max(0, Math.round((room - h) / 2));
   } else {
