@@ -34,7 +34,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `assets/js/pixel-engine.js` | 產生的檔案，不要直接改。改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 3.3） |
 | 首頁網址 | `#timeline`、`#day-YYYY-MM-DD`（Timeline 停在那天；同一天第二棟以後加 `-2`、`-3`）、`#past-YYYY-MM-DD`（和首頁同一個畫面，只是主建築換成那天的，標題上方有一行主題色的「幾年前・日期」（`day.css` 的 `.past-tag`）；頂部按鈕變成 Today，點了回到今天；點建築打開 Timeline 的那一天）、`#work-<slug>`（一件作品）。分享這些網址會直接打開那個畫面 |
-| 頂部卡片 | 首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：分成兩塊，左邊日期卡片的按鈕在左側、寫 `← Work`／`← Notes`，點了回清單；右邊是 Home：和卡片一樣高的正方形（50×50px）圖示按鈕。兩塊加起來不會超過螢幕寬：寬度小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
+| 頂部卡片 | 首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：分成兩塊，左邊日期卡片的按鈕在左側、寫 `← Work`／`← Notes`，點了回清單；右邊是 Home：和卡片一樣高的正方形（50×50px）圖示按鈕。卡片和 Home 都是毛玻璃（半透明加模糊，頁面捲動時看得到後面；首頁在 `day.css` 開頭的 `--glass`、`--glass-blur`、`--glass-edge`，文章頁在 `site.css` 的 `.post-when`、`.post-home`）。兩塊加起來不會超過螢幕寬：寬度小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
 | 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`CLAUDE.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
@@ -126,16 +126,18 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 平日／假日 | `assets/js/day.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
 | 所在城市 | `assets/js/sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、首頁和文章頁的背景顏色、影子方向。出國時只要改這裡，首頁和文章頁的時間、提示字 `yen@taipei` 都會跟著變 |
 | 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | `CHECKIN` 之後會接自動打卡（見第 4 節） |
-| terminal 按鈕 | `assets/js/day.js` 的 `CHIPS`、`placeBar`；樣式在 `assets/css/day.css` 的 `.cmdbar` | `$`、About Yen、Notes、Work、Where's Yen、Clear | 整個首頁只有這一排。寬螢幕（≥ 900px）：一開始在今天的說明下面（`_layouts/home.html` 的 `#barSlot`），往下捲到 terminal 時滑進 terminal、貼在輸入框下面，捲回去再滑回來。手機：一直固定在畫面底部。沒有分隔線，用漸層讓內容淡入按鈕下面。只在 Timeline、作品頁打開時隱藏。點了分三拍：先把這一行捲到日期卡片正下方、停穩，再帶著游標一個字一個字打出指令、停一下像按了 Enter，最後輸出一列一列淡入（`day.js` 的 `run`、`focusLine`、`reveal`；頁面不夠長時 terminal 下方會自動留白；系統設定「減少動態效果」時直接顯示）。清單裡點一列（`open works/…`）會立刻打開，不打字；點 `$` 也會把輸入框捲到那裡。放不下時可以左右滑，右邊會淡出提示。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
+| terminal 按鈕 | `assets/js/day.js` 的 `CHIPS`、`placeBar`；樣式在 `assets/css/day.css` 的 `.cmdbar` | `$`、About Yen、Notes、Work、Where's Yen、Clear | 整個首頁只有這一排。寬螢幕（≥ 900px）：一開始在今天的說明下面（`_layouts/home.html` 的 `#barSlot`），往下捲到 terminal 時滑進 terminal、貼在輸入框下面，捲回去再滑回來。手機：一直固定在畫面底部。沒有分隔線；按鈕是毛玻璃（和頂部卡片同一組 `--glass` 設定），底下只留一層淡淡的漸層，捲過去的內容看得到、但會模糊。只在 Timeline、作品頁打開時隱藏。點了分三拍：先把這一行捲到日期卡片正下方、停穩，再帶著游標一個字一個字打出指令、停一下像按了 Enter，最後輸出一列一列淡入（`day.js` 的 `run`、`focusLine`、`reveal`；頁面不夠長時 terminal 下方會自動留白；系統設定「減少動態效果」時直接顯示）。清單裡點一列（`open works/…`）會立刻打開，不打字；點 `$` 也會把輸入框捲到那裡。放不下時可以左右滑，右邊會淡出提示。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
 | 瀏覽器分頁標題 | `index.md` 的 `title` | `hey, I'm Yen` | |
 
 ### 2.5 外觀
 
 | 設定 | 位置 | 預設 | 其他選項／注意 |
 |---|---|---|---|
-| 首頁和文章頁顏色 | `assets/js/sky.js` 的 `BG_STOPS`（背景）、`TEXT`（文字原本的顏色）、`colours`；首頁的光線和窗燈在 `day.js` 的 `lightFor` | 跟著 `CITY` 的真實太陽高度變：白天接近白、黃昏暖色、夜晚深藍；晚上窗戶亮燈。整個網站沒有日夜切換，只有這一條規則 | 每一種文字顏色（內文、副標、日期與提示、強調色）都先用 `TEXT` 的顏色，讀不清楚時才往深或淺移一點，對比至少 4.5。黃昏的中間色也會稍微調深或調淺。程式碼區塊和行內程式碼的底色是「天色加一點文字色」（`site.css` 的 `--washi`），任何時間都看得出邊界 |
+| 首頁和文章頁顏色 | `assets/js/sky.js` 的 `BG_STOPS`（背景）、`TEXT`（文字原本的顏色）、`colours`；首頁的光線和窗燈在 `day.js` 的 `lightFor` | 跟著 `CITY` 的真實太陽高度變：白天接近白、黃昏暖色、夜晚深藍。晚上每棟建築都有光：窗戶亮燈（`api.emissive`，辦公大樓約兩成樓層不亮），紀念建築和鳥居打燈（`api.emissive(…, 'flood')`，保留白天的顏色、偏暖）。整個網站沒有日夜切換，只有這一條規則 | 每一種文字顏色（內文、副標、日期與提示、強調色）都先用 `TEXT` 的顏色，讀不清楚時才往深或淺移一點，對比至少 4.5。黃昏的中間色也會稍微調深或調淺。程式碼區塊和行內程式碼的底色是「天色加一點文字色」（`site.css` 的 `--washi`），任何時間都看得出邊界 |
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題 21px（行高 1.45）、說明 17px（行高 1.65，和標題之間多 10px）；頂部日期首頁 14px、Timeline 19px | |
 | 建築大小 | `assets/js/day.js` 的 `sizeStage`、`fitCanvas`（`* .86`）、`fitTl`（`* .86`） | 手機：建築用掉說明文字和底部按鈕列以外剩下的空間（最多畫面一半高）；還有空間時平均分到上下，讓建築和說明靠在一起、整組置中。沒有往年今日時，縮圖那一列會收起來（`day.css` 的 `.tools:has(.thumbs.none)`） | 寬螢幕往下捲到 terminal 時，建築移到中間、右邊的文字和年份縮圖淡出（`onScroll` 的 `--dx`、`--q`）。大小和位置只看建築本身；影子完整畫出來，可以超出建築的範圍、壓到文字下面（`getWorld` 的 `pad`、`fitCanvas` 的負 margin），手機上只會在螢幕邊緣被切掉。縮圖不含超出的影子 |
+| 首頁才會動的細節 | `assets/js/day.js` 的 `e.moving`（`flag`、`usFlag`、`krFlag`、`birds`、`ripples`、`beacon`） | 旗子飄、樹和植物搖、鳥繞著飛、水面波紋、噴泉、屋頂紅色警示燈閃。只在首頁動，Timeline 裡同一棟建築是靜止的，用來分辨現在在哪一頁 | 新模型要加會動的東西，在 `build` 裡用 `e.moving((e, t) => …)`；`t` 是 `null` 時畫靜止的樣子（Timeline）。系統設定「減少動態效果」時不動 |
+| 建築的邊緣 | `assets/js/day.js` 的 `getWorld`、`cleanShadow`、`wholePixels` | 沒有地面的模型（`bare`）不畫地面的陰暗邊（`bakeOcclusion`），影子邊緣整理成一條乾淨的線；畫面縮放取整數倍螢幕像素 | 避免建築四周出現像去背沒去乾淨的灰點 |
 | Timeline 的動畫 | `assets/js/day.js` 的 `buildUp`（一磚一磚，磚塊 4×3 像素）、`dissolve`、`MOVE` | 蓋起來 0.9 秒、溶解 0.2 秒、首頁和 Timeline 之間移動 0.48 秒 | 系統設定「減少動態效果」時都直接跳到結果 |
 | 頁面之間的轉場 | `day.js` 的 `lightRow`、`reveal`、`openTl`／`leaveTl`（`tl-in`）；文章在 `_layouts/default.html` 的開頭和 `site.css` 的 `post-rise` | 一套動作：terminal 的輸出一列一列往上浮現，選中的列像 terminal 清單一樣，左邊出現 `>`、標題變成強調色（`day.css` 的 `.ls .lit`，沒有色塊、沒有圓角）。清單點一列：那一列先標上 0.11 秒再打開。作品頁、從站內打開的文章（清單、上一篇／下一篇）：直接切過去，內容由上往下約 0.25 秒浮現，不打字。回到清單：清單捲回日期卡片下方，剛讀的那一列標上 `>` 再慢慢退掉。進出 Timeline：今天的文字先退開，Timeline 的文字才出現，離開時反過來，兩者不重疊。首頁在第一個畫面前就套上天色，不會先白再變色 | 從外部連結打開文章時，標題照舊一個字一個字打出來。系統設定「減少動態效果」時都直接切換 |
 | Timeline 的尺標 | `assets/js/day.js` 的 `renderRuler`；樣式在 `assets/css/day.css` 的 `.ruler-track` | 每棟建築一格、等距排列（同一天的建築間距減半），最舊的在左邊；不標年份（頂部日期已經有） | 點一格跳過去；手指按住左右滑可以快速切換（滑動時不播動畫，放開就停在那棟）；鍵盤可用左右方向鍵 |

@@ -152,14 +152,62 @@ function signIso(e, text, { face = 'y', x, y, z, scale = 2, colors }) {
     col += adv(ch);
   });
 }
-function flag(e, x, y, h, cloth) {
-  e.box(x - .03, y - .03, 0, x + .03, y + .03, h, [120, 122, 126]);
-  e.box(x + .03, y - .02, h - .45, x + .55, y + .02, h - .05, cloth);
+/* Small things that move, on the home page only: flags in the wind, birds, ripples, plants, a blinking light.
+   A scene hands them to e.moving(fn); the home page calls fn(e, t) on every frame (t in seconds, stepped at 8 fps).
+   The timeline draws the building still, so there fn(e, null) runs once: the same thing, at rest. */
+const POLE = [120, 122, 126];
+// a cloth hanging from a pole at (x, y), top edge at z: ripples run from the pole to the free end
+function cloth(e, x, y, z, len, ht, colorAt, t, phase = 0) {
+  for (let u = 0; u <= len; u += .03) {
+    const k = u / len, w = t == null ? 0 : t * 3.4 - k * 4.4 + phase;
+    const dy = t == null ? 0 : Math.sin(w) * .1 * k, dz = t == null ? 0 : (Math.sin(w * .6 + 1) * .05 - .05 * k) * k;
+    const s = t == null ? 0 : Math.cos(w); // the slope of the fold: the side turned to the light is brighter
+    const level = s > .5 ? 4 : s > -.5 ? 3 : 2;
+    for (let v = 0; v <= ht; v += .03) e.plot(x + u, y + dy, z - v + dz, e.rampOf(colorAt(k, v / ht))[level]);
+  }
 }
-function usFlag(e, x, y, h) {
-  e.box(x - .03, y - .03, 0, x + .03, y + .03, h, [120, 122, 126]);
-  for (let k = 0; k < 5; k++) e.box(x + .03, y - .02, h - .45 + k * .08, x + .6, y + .02, h - .37 + k * .08, k % 2 ? [240, 240, 236] : [186, 46, 44]);
-  e.box(x + .03, y - .025, h - .25, x + .28, y + .025, h - .05, [44, 56, 110]);
+function flag(e, x, y, h, color, z0 = 0) {
+  e.box(x - .03, y - .03, z0, x + .03, y + .03, z0 + h, POLE);
+  e.moving((e, t) => cloth(e, x + .03, y, z0 + h - .05, .52, .38, () => color, t, x * 1.7 + y));
+}
+const US_RED = [186, 46, 44], US_WHITE = [240, 240, 236], US_BLUE = [44, 56, 110];
+function usFlag(e, x, y, h, z0 = 0) {
+  e.box(x - .03, y - .03, z0, x + .03, y + .03, z0 + h, POLE);
+  e.moving((e, t) => cloth(e, x + .03, y, z0 + h - .05, .58, .4, (u, v) => u < .45 && v < .55 ? US_BLUE : Math.floor(v * 7) % 2 ? US_WHITE : US_RED, t, x * 1.3 + y * .7));
+}
+const KR_RED = [200, 48, 52], KR_BLUE = [32, 72, 150], KR_WHITE = [244, 244, 240];
+function krFlag(e, x, y, h, z0 = 0) {
+  e.box(x - .03, y - .03, z0, x + .03, y + .03, z0 + h, POLE);
+  e.moving((e, t) => cloth(e, x + .03, y, z0 + h - .05, .56, .38, (u, v) => Math.hypot((u - .5) * .56, (v - .5) * .38) < .1 ? (v < .5 ? KR_RED : KR_BLUE) : KR_WHITE, t, x + y));
+}
+// a few birds circling the building, wings up and down; hidden while they pass behind it
+const BIRD = [[[-2, -1], [-1, 0], [0, 0], [1, 0], [2, -1]], [[-2, 1], [-1, 0], [0, 0], [1, 0], [2, 1]]];
+function birds(e, t, cx, cy, r, z, n = 3) {
+  if (t == null) return;
+  const ink = e.rgb(58, 56, 64);
+  for (let k = 0; k < n; k++) {
+    const a = t * .16 + k * .45, p = e.project(cx + Math.cos(a) * (r + k * .5), cy + Math.sin(a) * (r + k * .5), z + k * .5 + Math.sin(t * .6 + k) * .3);
+    for (const [dx, dy] of BIRD[Math.floor(t * 4 + k * 3) % 2]) {
+      const ix = Math.round(p.sx) + dx, iy = Math.round(p.sy) + dy;
+      if (ix < 0 || iy < 0 || ix >= e.W || iy >= e.H) continue;
+      const i = iy * e.W + ix;
+      if (p.d <= e.zb[i]) continue;
+      e.zb[i] = p.d; e.pix[i] = ink;
+    }
+  }
+}
+// rings spreading on water around a point at ground level
+function ripples(e, t, x, y) {
+  if (t == null) return;
+  const c = e.rgb(176, 214, 230);
+  for (let k = 0; k < 2; k++) {
+    const f = (t * .35 + k * .5) % 1, r = .3 + f * 1.1;
+    for (let a = 0; a < 6.283; a += .07) if (e.hash(Math.round(a * 30), k) > f * .8) e.plot(x + Math.cos(a) * r, y + Math.sin(a) * r * .9, .01, c);
+  }
+}
+// an aircraft warning light on top of something tall: on, off, on
+function beacon(e, t, x, y, z) {
+  if (t == null || Math.floor(t * 1.25) % 2 === 0) e.sphere(x, y, z, .14, [236, 52, 40], 'gloss');
 }
 
 function lantern(e, api, x, y, s = 1) {
@@ -251,7 +299,7 @@ const SCENES = {
       for (const [x, y] of [[-4.2, 2.2], [-2.8, 1.0], [-1.4, 2.3], [-.2, 1.1]]) {
         box(x - .45, y - .45, PZ, x + .45, y + .45, PZ + .2, [236, 236, 232]);
         box(x - .35, y - .35, PZ + .2, x + .35, y + .35, PZ + .22, C.GREEN);
-        e.sphere(x, y, PZ + .95, .5, C.GREEN, 'rough');
+        e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 1.7 + x) * .1), y, PZ + .95, .5, C.GREEN, 'rough'));
       }
       for (const [x, y] of [[-3.4, .4], [.4, .3], [.7, 1.9]]) {
         box(x - .02, y - .02, PZ, x + .02, y + .02, PZ + .55, MET);
@@ -265,6 +313,7 @@ const SCENES = {
       box(PX0 - .2, PY1 + .6, 0, PX0 + 1.6, PY1 + 1.6, .6, [180, 196, 204]);
       box(PX0 - .3, PY1 + .5, .6, PX0 + 1.7, PY1 + 1.7, .75, [244, 244, 240]);
       box(PX0 + .1, PY1 + .4, .75, PX0 + 1.3, PY1 + 1.8, .85, [244, 244, 240]);
+      e.moving((e, t) => beacon(e, t, 0, -1.6, TOP + .35));
       boxShadow(e, TX0, TY0, TX1, TY1, TOP);
       boxShadow(e, PX0, PY0, PX1, PY1, PZ);
     },
@@ -321,6 +370,8 @@ const SCENES = {
       box(-5.0, -4.9, .45, 2.8, -3.0, 2.0, C.WHITE, 2);
       for (let x = -5.0; x <= 2.7; x += 1.1) box(x, -3.0, .45, x + .22, -2.85, 2.0, V);
       box(-5.0, -3.0, 1.82, 2.8, -2.82, 2.02, V);
+      // a paper lantern hanging between each pair of posts
+      for (let x = -4.4; x < 2.6; x += 1.1) api.emissive(() => box(x + .14, -2.8, 1.2, x + .38, -2.62, 1.55, [244, 230, 196]));
       for (let k = 0; k < 6; k++) {
         const hw = 1.75 - k * .32;
         if (hw < .15) break;
@@ -328,6 +379,7 @@ const SCENES = {
       }
       boxShadow(e, -5.4, -5.7, 3.2, -2.2, 2.2);
       const Y = 1.8;
+      api.emissive(() => {
       for (const px of [-.6, 3.0]) {
         box(px - .22, Y - .22, 0, px + .22, Y + .22, 3.8, V);
         box(px - .12, Y - 1.0, 0, px + .12, Y - .76, 2.0, V); box(px - .12, Y + .76, 0, px + .12, Y + 1.0, 2.0, V);
@@ -338,6 +390,8 @@ const SCENES = {
       box(1.1, Y - .12, 3.04, 1.3, Y + .12, 3.6, V);
       box(-1.7, Y - .28, 3.6, 4.1, Y + .28, 3.92, V);
       box(-1.9, Y - .33, 3.92, 4.3, Y + .33, 4.16, C.INK);
+      }, 'flood');
+      for (const px of [-.6, 3.0]) e.moving((e, t) => ripples(e, t, px, Y));
       boxShadow(e, -1.9, Y - .33, 4.3, Y + .33, 4.1);
     },
     animate(e, t) { const p = pacer(e, t, 0, 3.6, .5); deer(e, p.x, -2.0, p.yaw, t); },
@@ -350,10 +404,13 @@ const SCENES = {
       api.emissive(() => box(3.0, -1.4, .2, 3.26, -1.33, 3.0, C.GLASS));
       box(-5.0, -1.4, 0, .8, -.8, 2.6, C.CONC, 1);
       box(.8, -4.6, 0, 1.4, -.8, 2.6, C.CONC, 2);
-      for (let x = -4.7; x < .7; x += .6) for (const z of [.45, 1.05, 1.65, 2.25]) e.plot(x, -.78, z, holes);
-      for (let y = -4.3; y < -.9; y += .6) for (const z of [.45, 1.05, 1.65, 2.25]) e.plot(1.42, y, z, holes);
-      for (let x = 1.9; x < 4.7; x += .6) for (const z of [.5, 1.2, 1.9, 2.6]) if (Math.abs(x - 3.13) > .3) e.plot(x, -1.38, z, holes);
-      for (let y = -4.1; y < -1.5; y += .6) for (const z of [.5, 1.2, 1.9, 2.6]) e.plot(4.82, y, z, holes);
+      api.emissive(() => {
+        for (let x = -4.7; x < .7; x += .6) for (const z of [.45, 1.05, 1.65, 2.25]) e.plot(x, -.78, z, holes);
+        for (let y = -4.3; y < -.9; y += .6) for (const z of [.45, 1.05, 1.65, 2.25]) e.plot(1.42, y, z, holes);
+        for (let x = 1.9; x < 4.7; x += .6) for (const z of [.5, 1.2, 1.9, 2.6]) if (Math.abs(x - 3.13) > .3) e.plot(x, -1.38, z, holes);
+        for (let y = -4.1; y < -1.5; y += .6) for (const z of [.5, 1.2, 1.9, 2.6]) e.plot(4.82, y, z, holes);
+      });
+      e.moving((e, t) => birds(e, t, 0, -2.4, 4.6, 4.6));
       boxShadow(e, -5.0, -1.4, .8, -.8, 2.6);
       boxShadow(e, .8, -4.6, 1.4, -.8, 2.6);
       boxShadow(e, 1.6, -4.4, 4.8, -1.4, 3.2);
@@ -370,7 +427,7 @@ const SCENES = {
       const { box } = e, ST = [214, 200, 168], SD = [188, 174, 144], G = C.GLASS;
       box(-5, -3.6, 0, 5, -.2, 4.0, SD, 1);
       box(-4.6, 1.6, 0, 4.6, 2.2, .5, SD, 2);
-      box(-4.4, -.2, 0, 4.4, 1.6, 4.5, ST, 3);
+      api.emissive(() => box(-4.4, -.2, 0, 4.4, 1.6, 4.5, ST, 3), 'flood');
       for (const x of [-2.6, 0, 2.6]) {
         api.emissive(() => box(x - .62, 1.6, 1.0, x + .62, 1.67, 3.9, G));
         for (const mx of [x - .21, x + .21]) box(mx - .04, 1.67, 1.0, mx + .04, 1.71, 3.9, ST);
@@ -393,7 +450,7 @@ const SCENES = {
     bare: true, S: 13, origin: 18, cx: 0, cy: 0, R: 5, zmax: 4.6,
     build(e, api) {
       const { box } = e, W = [240, 240, 236], G = C.GLASS;
-      box(-4.6, -2.2, 0, 4.6, 1, 3.0, W, 1);
+      api.emissive(() => box(-4.6, -2.2, 0, 4.6, 1, 3.0, W, 1), 'flood');
       box(-4.7, -2.3, 3.0, 4.7, 1.1, 3.22, W);
       for (let x = -4.5; x < 4.6; x += .45) box(x, .96, 3.22, x + .16, 1.1, 3.5, W);
       box(-4.7, .94, 3.5, 4.7, 1.1, 3.58, W);
@@ -402,17 +459,21 @@ const SCENES = {
         for (const z of [.55, 1.85]) api.emissive(() => box(x, 1, z, x + .44, 1.06, z + .8, G));
       }
       box(-1.9, 1, 0, 1.9, 2.9, .3, [222, 222, 216]);
-      for (const x of [-1.55, -.55, .55, 1.55]) box(x - .13, 2.45, .3, x + .13, 2.71, 2.85, W);
+      api.emissive(() => { for (const x of [-1.55, -.55, .55, 1.55]) box(x - .13, 2.45, .3, x + .13, 2.71, 2.85, W); }, 'flood');
       box(-1.85, 1, 2.85, 1.85, 2.8, 3.1, W);
       for (let k = 0; k < 4; k++) box(-1.85 + k * .44, 1, 3.1 + k * .16, 1.85 - k * .44, 2.8, 3.1 + (k + 1) * .16, W);
       api.emissive(() => box(-.32, 1, .3, .32, 1.06, 1.7, G));
       for (const x of [-3.2, 3.0]) box(x, -1.4, 3.22, x + .4, -1.0, 3.9, W);
-      box(-.04, -.7, 3.22, .04, -.62, 4.9, [96, 96, 96]);
-      box(.04, -.7, 4.4, .9, -.66, 4.86, [186, 52, 48]); box(.04, -.7, 4.62, .36, -.65, 4.86, [52, 62, 120]);
+      usFlag(e, 0, -.66, 1.68, 3.22);
       // the fountain on the North Lawn
       box(-1.0, 4.0, 0, 1.0, 5.6, .25, [200, 198, 190]);
       box(-.8, 4.2, .2, .8, 5.4, .27, [120, 168, 196]);
       e.capsule([0, 4.8, .25], [0, 4.8, 1.3], .14, .05, () => [226, 238, 244]);
+      e.moving((e, t) => {
+        if (t == null) return;
+        const c = e.rgb(232, 242, 248);
+        for (let k = 0; k < 10; k++) { const f = (t * .9 + k / 10) % 1, a = k * 2.4; e.plot(Math.cos(a) * f * .7, 4.8 + Math.sin(a) * f * .6, 1.3 + f * .5 - f * f * 1.6, c); }
+      });
       boxShadow(e, -4.7, -2.3, 4.7, 2.9, 3.2);
     },
   },
@@ -430,6 +491,8 @@ const SCENES = {
       box(-3.5, -1.7, 10.5, -.3, 1.7, 10.8, FR); box(.5, -1.7, 8.0, 3.5, 1.7, 8.3, FR);
       box(-.4, -.6, 6.0, .6, .6, 6.5, FR);
       signIso(e, 'MBC', { face: 'y', x: 0, y: 2.27, z: 1.5, scale: 2, colors: [[28, 40, 92]] });
+      for (const x of [-3.6, -2.8]) krFlag(e, x, 3.2, 2.4);
+      flag(e, -2.0, 3.2, 2.4, [28, 40, 92]);
       boxShadow(e, -4, -2.2, 4, 2.2, 10.5);
     },
   },
@@ -445,6 +508,7 @@ const SCENES = {
       for (const [x0, x1] of [[-3.5, -1.4], [1.4, 3.5]]) for (let z = .6; z < 8.2; z += .9) for (let x = x0; x < x1; x += .7) api.emissive(() => box(x, 1.6, z, x + .36, 1.66, z + .5, C.GLASS));
       for (let z = 5.2; z < 8.2; z += .9) for (let x = -.9; x < .9; x += .7) api.emissive(() => box(x, 1.6, z, x + .36, 1.66, z + .5, C.GLASS));
       box(-1.1, -1.6, 4.6, 1.1, 1.6, 4.8, CN);
+      krFlag(e, 3.2, 1.2, 1.3, 8.9);
       boxShadow(e, -3.9, -1.7, 3.9, 1.7, 8.6);
     },
   },
@@ -484,6 +548,7 @@ const SCENES = {
       // the big overhang above the entrance, facing the river
       box(-4.9, -2.4, 3.4, -4.0, 2.4, 7.6, ST);
       api.emissive(() => box(-4.96, -2.0, 4.0, -4.9, 2.0, 7.0, GL));
+      e.moving((e, t) => birds(e, t, 0, 0, 5.2, 8.6));
       boxShadow(e, -4.9, -2.4, 5.2, 2.4, 7.6);
     },
   },
@@ -499,10 +564,12 @@ const SCENES = {
       for (const x of [-1.9, -1.1, -.3, .5, 1.3]) box(x, 2.6, .4, x + .22, 2.82, 2.5, W);
       box(-2.2, 1.6, 2.5, 2.2, 3.0, 2.85, W);
       for (let k = 0; k < 3; k++) box(-2.2 + k * .6, 1.6, 2.85 + k * .2, 2.2 - k * .6, 3.0, 2.85 + (k + 1) * .2, W);
-      e.capsule([0, 0, 2.85], [0, 0, 4.6], 1.75, 1.75, () => W);
-      for (let a = 0; a < 6.283; a += .42) box(Math.cos(a) * 1.78 - .06, Math.sin(a) * 1.78 - .06, 3.0, Math.cos(a) * 1.78 + .06, Math.sin(a) * 1.78 + .06, 4.4, [210, 208, 200]);
-      e.sphere(0, 0, 4.8, 1.6, W);
-      e.capsule([0, 0, 6.2], [0, 0, 6.9], .32, .26, () => W);
+      api.emissive(() => {
+        e.capsule([0, 0, 2.85], [0, 0, 4.6], 1.75, 1.75, () => W);
+        for (let a = 0; a < 6.283; a += .42) box(Math.cos(a) * 1.78 - .06, Math.sin(a) * 1.78 - .06, 3.0, Math.cos(a) * 1.78 + .06, Math.sin(a) * 1.78 + .06, 4.4, [210, 208, 200]);
+        e.sphere(0, 0, 4.8, 1.6, W);
+        e.capsule([0, 0, 6.2], [0, 0, 6.9], .32, .26, () => W);
+      }, 'flood');
       e.capsule([0, 0, 6.9], [0, 0, 7.5], .1, .08, () => [96, 98, 104]);
       e.sphere(0, 0, 7.6, .09, [96, 98, 104]);
       for (const x of [-5, 5]) usFlag(e, x, 0, 3.8);
@@ -514,12 +581,15 @@ const SCENES = {
     bare: true, S: 9, origin: 92, cx: 0, cy: 0, R: 4.5, zmax: 19,
     build(e, api) {
       const { box } = e, ST = [226, 218, 202], SD = [212, 204, 188];
-      for (let k = 0; k < 18; k++) {
-        const h = .82 - k * .012;
-        box(-h, -h, k, h, h, k + 1, k % 2 ? ST : SD, k);
-      }
-      for (let k = 0; k < 4; k++) { const h = .6 - k * .15; box(-h, -h, 18 + k * .35, h, h, 18 + (k + 1) * .35, ST); }
-      for (const x of [-.2, .1]) { box(x, .62, 16.8, x + .12, .66, 17.2, [70, 64, 58]); box(.62, -x - .12, 16.8, .66, -x, 17.2, [70, 64, 58]); }
+      api.emissive(() => {
+        for (let k = 0; k < 18; k++) {
+          const h = .82 - k * .012;
+          box(-h, -h, k, h, h, k + 1, k % 2 ? ST : SD, k);
+        }
+        for (let k = 0; k < 4; k++) { const h = .6 - k * .15; box(-h, -h, 18 + k * .35, h, h, 18 + (k + 1) * .35, ST); }
+      }, 'flood');
+      api.emissive(() => { for (const x of [-.2, .1]) { box(x, .62, 16.8, x + .12, .66, 17.2, [70, 64, 58]); box(.62, -x - .12, 16.8, .66, -x, 17.2, [70, 64, 58]); } });
+      e.moving((e, t) => beacon(e, t, 0, 0, 19.55));
       // the ring of American flags around the base
       for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283; usFlag(e, Math.cos(a) * 3.1, Math.sin(a) * 3.1, 2.4); }
       boxShadow(e, -.82, -.82, .82, .82, 18);
@@ -548,16 +618,23 @@ const SCENES = {
   // The High Line: an old elevated rail line on steel columns, now a planted walkway
   highline: {
     bare: true, S: 13, origin: 18, cx: 0, cy: 0, R: 5, zmax: 4,
-    build(e) {
+    build(e, api) {
       const { box } = e, STEEL = [74, 84, 80], PAVE = [192, 190, 182], WOOD = [168, 128, 88];
       for (const x of [-4.6, -1.6, 1.4, 4.4]) for (const y of [-.8, .8]) box(x - .14, y - .14, 0, x + .14, y + .14, 2.2, STEEL);
       box(-5.4, -1.2, 2.2, 5.4, 1.2, 2.7, STEEL, 1);
       box(-5.3, -1.1, 2.7, 5.3, 1.1, 2.8, PAVE, 2);
       for (let x = -5.2; x < 5.2; x += .5) box(x, -1.15, 2.8, x + .06, -1.1, 3.3, STEEL);
       box(-5.3, -1.18, 3.24, 5.3, -1.1, 3.3, STEEL);
+      for (const x of [-3.6, -.6, 2.4, 5.0]) {
+        box(x - .03, .98, 2.8, x + .03, 1.04, 3.9, STEEL);
+        api.emissive(() => box(x - .1, .9, 3.9, x + .1, 1.1, 4.0, [244, 230, 196]));
+      }
       box(-5.2, .3, 2.8, -1.4, 1.05, 3.05, [120, 86, 62]);
-      for (let k = 0; k < 9; k++) e.sphere(-4.9 + k * .45, .68 + (k % 2) * .08, 3.25, .26, k % 3 ? C.GREEN : [140, 150, 96], 'rough');
-      for (let k = 0; k < 7; k++) e.sphere(-4.7 + k * .5, .5 + (k % 3) * .14, 3.5, .07, [[214, 120, 160], [240, 214, 90], [240, 240, 236]][k % 3]);
+      e.moving((e, t) => {
+        const sway = k => t == null ? 0 : Math.sin(t * 1.9 + k * .8) * .07;
+        for (let k = 0; k < 9; k++) e.sphere(-4.9 + k * .45 + sway(k) * .6, .68 + (k % 2) * .08, 3.25, .26, k % 3 ? C.GREEN : [140, 150, 96], 'rough');
+        for (let k = 0; k < 7; k++) e.sphere(-4.7 + k * .5 + sway(k + 3), .5 + (k % 3) * .14, 3.5, .07, [[214, 120, 160], [240, 214, 90], [240, 240, 236]][k % 3]);
+      });
       // the old rail tracks left in the paving
       for (const y of [-.5, -.2]) box(-5.2, y, 2.8, -1.6, y + .05, 2.86, [120, 96, 80]);
       box(.4, .2, 2.8, 3.4, .75, 3.1, WOOD); box(.4, .75, 2.8, 3.4, .95, 3.4, WOOD);
@@ -575,6 +652,7 @@ const SCENES = {
       for (let z = 1.9; z < 14.6; z += .38) { box(-X + .5, Y, z, X - .5, Y + .1, z + .1, ROD); box(X, -Y + .5, z, X + .1, Y - .5, z + .1, ROD); }
       box(-X - .1, -Y - .1, 14.6, X + .1, Y + .1, 14.9, ROD);
       box(-.12, -.12, 14.9, .12, .12, 18, [150, 152, 156]);
+      e.moving((e, t) => beacon(e, t, 0, 0, 18.15));
       box(-X - .2, Y, 1.5, X + .2, Y + .9, 1.65, ROD);
       // the name across the rods, low on the front, in two lines
       const ink = [[28, 28, 30]];
@@ -585,21 +663,24 @@ const SCENES = {
   // Lincoln Memorial: a Doric temple of white marble on a stepped base, columns all round
   lincoln: {
     bare: true, S: 12, origin: 26, cx: 0, cy: 0, R: 5, zmax: 5,
-    build(e) {
+    build(e, api) {
       const { box } = e, MB = [236, 234, 226], MD = [220, 218, 210];
       for (let k = 0; k < 4; k++) box(-6 + k * .3, -3.6 + k * .3, k * .25, 6 - k * .3, 3.6 - k * .3, (k + 1) * .25, MD, k);
       box(-4.4, -2.0, 1.0, 4.4, 2.0, 3.6, [200, 198, 190], 5);
-      for (let x = -4.8; x <= 4.81; x += .8) { box(x - .17, 2.42, 1.0, x + .17, 2.76, 3.7, MB); box(x - .17, -2.76, 1.0, x + .17, -2.42, 3.7, MB); }
-      for (let y = -2.0; y <= 2.01; y += .8) { box(4.82, y - .17, 1.0, 5.16, y + .17, 3.7, MB); box(-5.16, y - .17, 1.0, -4.82, y + .17, 3.7, MB); }
-      box(-5.4, -3.0, 3.7, 5.4, 3.0, 4.3, MB);
+      api.emissive(() => {
+        for (let x = -4.8; x <= 4.81; x += .8) { box(x - .17, 2.42, 1.0, x + .17, 2.76, 3.7, MB); box(x - .17, -2.76, 1.0, x + .17, -2.42, 3.7, MB); }
+        for (let y = -2.0; y <= 2.01; y += .8) { box(4.82, y - .17, 1.0, 5.16, y + .17, 3.7, MB); box(-5.16, y - .17, 1.0, -4.82, y + .17, 3.7, MB); }
+        box(-5.4, -3.0, 3.7, 5.4, 3.0, 4.3, MB);
+      }, 'flood');
       box(-4.4, -2.0, 4.3, 4.4, 2.0, 5.0, MD);
       // the open centre of the front, with Lincoln seated inside
-      box(-1.3, 1.98, 1.0, 1.3, 2.04, 3.5, [70, 70, 74]);
+      api.emissive(() => box(-1.3, 1.98, 1.0, 1.3, 2.04, 3.5, [70, 70, 74]));
       e.capsule([0, 2.06, 1.3], [0, 2.06, 2.1], .34, .26, () => [244, 242, 236]);
       e.sphere(0, 2.1, 2.4, .2, [244, 242, 236]);
       box(-.45, 2.04, 1.0, .45, 2.3, 1.3, [236, 234, 226]);
       // the wide steps up the front
       for (let k = 0; k < 4; k++) box(-2.4 + k * .1, 3.6 + (3 - k) * .35, 0, 2.4 - k * .1, 3.6 + (4 - k) * .35, (k + 1) * .25, MD);
+      e.moving((e, t) => birds(e, t, 0, 0, 5.4, 5.6));
       boxShadow(e, -5.4, -3.0, 5.4, 3.0, 4.3);
     },
   },
@@ -627,6 +708,8 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   }
   e.growGrass();
   e.groundZ.set(e.zb);
+  const movers = [];
+  e.moving = fn => { if (pure) fn(e, null); else movers.push(fn); };
   const em = [], emc = [], emk = [];
   const api = {
     emissive(fn, kind = 'all') {
@@ -639,15 +722,19 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   e.pendingShadows.length = 0;
   if (sc.statics && !pure) sc.statics(e, opts);
   e.flushShadows();
-  if (!pure) e.bakeOcclusion();
+  // the ground's soft darkening next to things is worked out on screen, so with no ground drawn (bare) it only
+  // leaves a speckled grey fringe around the building, most visible on a light sky: bare scenes skip it
+  if (!bare) e.bakeOcclusion();
   e.staticShadow.set(e.shadowMask);
   e.applyShadows(e.groundZ);
+  if (bare) cleanShadow(e, MARK);
   e.bakedPix.set(e.pix); e.bakedZ.set(e.zb);
-  const lit = [];
+  const lit = [], flood = [];
   for (let k = 0; k < em.length; k++) {
     if (e.bakedPix[em[k]] !== emc[k]) continue;
-    // office floors: light only some floors, so the tower reads as a building at night
-    if (emk[k] === 'floors' && e.hash(3, Math.floor((em[k] / e.W) / 6.5)) < .45) continue;
+    if (emk[k] === 'flood') { flood.push(em[k]); continue; }
+    // office floors: a few floors stay dark, so the tower reads as a building at night
+    if (emk[k] === 'floors' && e.hash(3, Math.floor((em[k] / e.W) / 6.5)) < .22) continue;
     lit.push(em[k]);
   }
   // crop around the building itself (not its shadow), centred on it, so it stays in the middle at any hour
@@ -674,18 +761,39 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   }
   const pad = [y0 - sy0, sx1 - x1, sy1 - y1, x0 - sx0];
   const view = document.createElement('canvas'); view.width = sx1 - sx0 + 1; view.height = sy1 - sy0 + 1;
-  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), MARK, bare, pure };
+  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), flood: Int32Array.from(flood), movers, MARK, bare, pure };
   if (!keep) return w;
   worlds.set(key, w);
   while (worlds.size > 6) worlds.delete(worlds.keys().next().value);
   return w;
 }
+// bare scenes: shadows on the ground are drawn as round blobs with a dithered rim, which reads as a ragged cut-out
+// once the ground is invisible. Two passes of a 3×3 majority vote give the shadow one clean edge.
+function cleanShadow(e, MARK) {
+  const { W, H, pix, zb, groundZ, ground } = e, open = i => ground[i] && zb[i] === groundZ[i];
+  for (let pass = 0; pass < 2; pass++) {
+    const snap = pix.slice();
+    for (let iy = 1; iy < H - 1; iy++) for (let ix = 1; ix < W - 1; ix++) {
+      const i = iy * W + ix;
+      if (!open(i)) continue;
+      let dark = 0, sum = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const j = i + dy * W + dx;
+        if (!open(j)) { dark++; continue; } // the building's foot counts as shade, so the shadow meets it
+        if (snap[j] !== MARK) { dark++; sum = snap[j]; }
+      }
+      if (snap[i] === MARK && dark >= 6 && sum) pix[i] = sum;
+      else if (snap[i] !== MARK && dark <= 3) pix[i] = MARK;
+    }
+  }
+}
 function drawWorld(w, t) {
   const e = w.e, pix = e.pix;
   pix.set(e.bakedPix); e.zb.set(e.bakedZ);
   e.pendingShadows.length = 0;
-  if (w.sc.animate && !w.pure) w.sc.animate(e, t, w.opts);
   const wt = e.STILL ? 0 : Math.floor(t * 8) / 8;
+  if (w.sc.animate && !w.pure) w.sc.animate(e, t, w.opts);
+  for (const fn of w.movers) fn(e, wt);
   e.drawLeaves(wt); e.drawTufts(wt);
   e.flushShadows(); e.applyShadows(e.bakedZ); e.shadeEdges();
   // bare scenes: the ground is invisible; only its shadows stay, as soft translucent violet
@@ -707,7 +815,15 @@ function drawWorld(w, t) {
     }
   }
   if (L.lit > 0) {
+    // floodlit walls (monuments, a shrine gate): at night they keep most of their daytime colour, a little warmer
+    const f = L.lit * .6, fr = mix(1, 1.06 / L.kr, f), fg = mix(1, .98 / L.kg, f), fb = mix(1, .84 / L.kb, f);
+    for (const i of w.flood) {
+      if (e.zb[i] !== e.bakedZ[i]) continue; // something moving is in front
+      const p = pix[i];
+      pix[i] = e.rgb((p & 255) * fr, (p >> 8 & 255) * fg, (p >> 16 & 255) * fb);
+    }
     for (const i of w.em) {
+      if (e.zb[i] !== e.bakedZ[i]) continue;
       const p = e.bakedPix[i], a = e.hash(i % e.W, i / e.W | 0) > .5;
       pix[i] = e.rgb(mix((p & 255) * L.kr, a ? 255 : 246, L.lit), mix((p >> 8 & 255) * L.kg, a ? 210 : 186, L.lit), mix((p >> 16 & 255) * L.kb, a ? 140 : 104, L.lit));
     }
@@ -773,9 +889,15 @@ function fitCanvas(w) {
   if (disp.width !== w.view.width || disp.height !== w.view.height) { disp.width = w.view.width; disp.height = w.view.height; }
   // sized and placed by the building alone; negative margins let the shadow spill past the stage, uncut
   const [, , iw, ih] = innerOf(w), [t, r, b, l] = w.pad;
-  const f = Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 3.4) * .86);
+  const f = wholePixels(Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 3.4) * .86));
   disp.style.width = Math.round(disp.width * f) + 'px'; disp.style.height = Math.round(disp.height * f) + 'px';
   disp.style.margin = `${-t * f}px ${-r * f}px ${-b * f}px ${-l * f}px`;
+}
+// whole screen pixels per model pixel: an in-between scale makes some pixels one wider than the next, and the
+// building's outline turns ragged. Rounds to the nearest whole step, never more than 12% larger than asked.
+function wholePixels(f) {
+  const dpr = window.devicePixelRatio || 1, k = f * dpr;
+  return k < 1.5 ? f : (Math.round(k) <= k * 1.12 ? Math.round(k) : Math.floor(k)) / dpr;
 }
 // the building part of what is on screen now, as its own picture and place (for the timeline's fly-in and fly-out)
 function dispInner() {
@@ -1291,7 +1413,7 @@ function buildUp(cv, img, ms, token) {
   });
 }
 function fitTl(cv) {
-  const st = $('tlStage'), f = Math.min(st.clientWidth / cv.width, st.clientHeight / cv.height, 3.2) * .86;
+  const st = $('tlStage'), f = wholePixels(Math.min(st.clientWidth / cv.width, st.clientHeight / cv.height, 3.2) * .86);
   cv.style.width = Math.round(cv.width * f) + 'px'; cv.style.height = Math.round(cv.height * f) + 'px';
 }
 /* The ruler under the timeline: one stop per building, evenly spaced (buildings on the same day sit closer),

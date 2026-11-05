@@ -17,6 +17,11 @@
   --sans: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   --p: 0;
   --shrink: 38svh;
+  /* frosted glass for the buttons that float over the page (the date card, Home, the command bar):
+     the page shows through, blurred, so you can still tell what scrolls behind them */
+  --glass: color-mix(in srgb, var(--sheet) 62%, transparent);
+  --glass-blur: blur(14px) saturate(1.5);
+  --glass-edge: inset 0 1px 0 color-mix(in srgb, #fff 32%, transparent), 0 2px 10px rgba(0, 0, 0, .07);
 }
 [hidden] { display: none !important; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -42,13 +47,14 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   position: fixed; z-index: 7; top: 0; left: 0; right: 0;
   display: flex; justify-content: center; align-items: center; gap: 12px;
   padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 10px;
-  background: linear-gradient(var(--bg) 70%, transparent);
+  /* only a light veil: the glass card itself does the work, so the page can be seen behind it */
+  background: linear-gradient(color-mix(in srgb, var(--bg) 55%, transparent), transparent);
 }
 .soft { color: var(--ink-soft); }
 .when {
   display: flex; align-items: center; gap: 12px; text-align: left;
   padding: 6px 6px 6px 12px; border: 1px solid var(--rule); border-radius: 12px;
-  background: var(--sheet); box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--glass-edge);
   transition: border-color .15s ease, transform .15s ease, background-color 1.2s ease;
 }
 .when:hover { border-color: var(--ink-soft); }
@@ -79,7 +85,7 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .home-btn {
   display: inline-flex; align-items: center; justify-content: center; flex: none; width: 50px; height: 50px; padding: 0;
   border: 1px solid var(--rule); border-radius: 12px;
-  background: var(--sheet); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); color: var(--ink);
+  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--glass-edge); color: var(--ink);
   transition: border-color .15s ease, transform .15s ease, background-color 1.2s ease;
 }
 .home-btn[hidden] { display: none; }
@@ -181,13 +187,15 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 }
 .cmdbar::-webkit-scrollbar { display: none; }
 .cmdbar.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
-.cmdbar button { flex: none; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono); background: var(--sheet); }
+.cmdbar button { flex: none; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono);
+  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--glass-edge); }
 .cmdbar button:hover { border-color: var(--ink-soft); }
-.cmdbar .dollar { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 4px; }
-/* no divider: the page fades out under the bar, so the buttons float on the page instead of sitting in a toolbar */
+.cmdbar .dollar { border-color: transparent; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; color: var(--accent); padding-inline: 4px; }
+/* no divider and no solid band: the buttons are glass and float on the page, so what scrolls under them shows through,
+   blurred. A light veil at the very bottom keeps the words from running straight into the buttons. */
 .term .cmdbar {
   z-index: 6; padding: 22px max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
-  background: linear-gradient(color-mix(in srgb, var(--bg) 0%, transparent), var(--bg) 20px);
+  background: linear-gradient(color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 45%, transparent) 60%);
 }
 .term .cmdbar.off { opacity: 0; transform: translateY(100%); pointer-events: none; }
 .input-row { scroll-margin-bottom: 90px; }
