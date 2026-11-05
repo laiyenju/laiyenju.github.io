@@ -997,13 +997,14 @@ async function run(raw, typed) {
   const key = ALIASES[cmd] || cmd;
   // clear = close the terminal: empty it and go back to the top, where the page started
   if (key === 'clear') {
-    logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur();
+    logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur(); document.querySelector('.term').style.paddingBottom = '';
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     return;
   }
   const block = document.createElement('div'); block.className = 'block';
   block.innerHTML = prompt(typed ? '' : raw.trim());
   logEl.append(block);
+  if (key !== 'cd ~') focusLine(block);
   if (typed && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     typing = true;
     const b = block.querySelector('b');
@@ -1012,24 +1013,34 @@ async function run(raw, typed) {
   } else if (typed) block.querySelector('b').textContent = raw;
   const fn = COMMANDS[key];
   block.insertAdjacentHTML('beforeend', fn ? fn() : line(`Command not found: ${raw.trim()}. Try one of the buttons below.`, 'err'));
-  if (key !== 'cd ~') $('cmdForm').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (key !== 'cd ~' && !openOverlay()) roomBelow(FOCUS.at);
+}
+// the line being typed goes near the top of the screen, just under the date card, so the eye knows where to look;
+// the output then reads downwards from there. The terminal grows empty room below when there is not enough page to scroll.
+const FOCUS = { at: 0 };
+function roomBelow(target) {
+  const term = document.querySelector('.term'), base = Math.round(innerHeight * .3);
+  term.style.paddingBottom = '';
+  const short = target + innerHeight - document.documentElement.scrollHeight;
+  if (short > 0) term.style.paddingBottom = base + short + 'px';
+}
+function focusLine(block) {
+  const below = document.querySelector('.top').getBoundingClientRect().bottom + 20;
+  FOCUS.at = Math.max(0, Math.round(scrollY + block.getBoundingClientRect().top - below));
+  roomBelow(FOCUS.at);
+  scrollTo({ top: FOCUS.at, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 logEl.addEventListener('click', ev => { const b = ev.target.closest('[data-run]'); if (b) run(b.dataset.run, true); });
-// the buttons live in one bar fixed to the bottom of the screen, on every screen size.
-// From the top of the page, a button first scrolls down to the terminal, then runs.
-function toTerm(then) {
-  const t = document.querySelector('.term');
-  if (t.getBoundingClientRect().top < innerHeight * .5) then(); else { scrollTo({ top: t.offsetTop + 10, behavior: 'smooth' }); setTimeout(then, 450); }
-}
+// the buttons: one bar for the whole page (see placeBar). A button runs its command; run() brings the line into view.
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
 {
   const d = document.createElement('button'); d.type = 'button'; d.className = 'dollar'; d.textContent = '$'; d.title = 'Type a command';
-  d.addEventListener('click', () => toTerm(() => $('cmd').focus()));
+  d.addEventListener('click', () => { focusLine($('cmdForm')); $('cmd').focus({ preventScroll: true }); });
   $('cmdbar').append(d);
 }
 CHIPS.forEach(([label, c]) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = c;
-  b.addEventListener('click', () => c === 'clear' ? run(c, true) : toTerm(() => run(c, true)));
+  b.addEventListener('click', () => run(c, true));
   $('cmdbar').append(b);
 });
 // when the bar is wider than the screen, fade its right edge so it reads as "swipe for more"
