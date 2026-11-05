@@ -56,7 +56,7 @@ function cards() {
     path: "~",
     cmd: "whoami",
     title: home.title || "hey, I'm Yen",
-    summary: "Product manager @Taiwan. I write about how products get decided. 關於產品決策的中文筆記。",
+    summary: "I decide what gets built, then build some of it. I write down how those decisions get made. 產品決策的中文筆記。",
     meta: "notes/ · works/",
   });
   const dir = path.join(ROOT, "published");

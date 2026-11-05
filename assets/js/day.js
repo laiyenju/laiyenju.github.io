@@ -10,7 +10,7 @@ const NOTES = SITE.notes || [];
 const WORKS = (SITE.works || []).map(w => ({ slug: w.slug, year: String(w.year || ''), title: w.title, sub: w.sub || '', role: w.role || '',
   problem: w.problem || '', did: w.did || '', result: w.result || '', url: w.url || '', urlLabel: w.url_label || '' }));
 const HOLIDAYS = { '01-01': "New Year's Day", '02-28': 'Peace Memorial Day', '04-04': "Children's Day", '05-01': 'Labor Day', '10-10': 'National Day' };
-const BIO = 'Product manager in Taipei. Writes about how products get decided.';
+const BIO = 'Yen decides what gets built, then builds some of it. Writes about how those decisions get made.';
 
 const pad = n => String(n).padStart(2, '0');
 const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -1079,7 +1079,7 @@ document.querySelectorAll('.city').forEach(el => { el.textContent = CITY.short; 
 const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
 const line = (t, cls = '') => `<div class="out-line ${cls}">${esc(t)}</div>`;
 const COMMANDS = {
-  'whoami': () => line(`Yen Lai. ${BIO}`) + `<div class="out-line mono"><a href="https://github.com/laiyenju" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/laiyenju/" target="_blank" rel="noopener">linkedin</a> · <a href="https://x.com/theYenLai" target="_blank" rel="noopener">x</a></div>`,
+  'whoami': () => line(BIO.replace(/^Yen /, 'Yen Lai, product manager, ')) + `<div class="out-line mono"><a href="https://github.com/laiyenju" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/laiyenju/" target="_blank" rel="noopener">linkedin</a> · <a href="https://x.com/theYenLai" target="_blank" rel="noopener">x</a></div>`,
   'ls notes': () => lsRows(NOTES),
   'ls works': () => WORKS.length ? `<div class="ls">${WORKS.map(w => `<button type="button" data-run="open works/${w.slug}" lang="en"><span class="d">${w.year}</span><span class="t">${esc(w.title)}</span><span class="r">${esc(w.sub)}</span></button>`).join('')}</div>` : line('Nothing here yet.'),
   'ls': () => line('notes/   works/', 'mono'),

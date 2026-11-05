@@ -51,7 +51,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 設定 | 預設 | 說明 |
 |---|---|---|
 | `title` | `Yen Lai` | 文章頁標題的後半段（「標題 · Yen Lai」） |
-| `description` | 一句英文 + 一句中文 | 首頁的搜尋摘要 |
+| `description` | 一句英文 + 一句中文 | 首頁的搜尋摘要。英文那句和自我介紹（2.4 的 `BIO`）說同一件事 |
 | `url` | `https://laiyenju.github.io` | 換網域時要改 |
 | `author.name` | `Yen Lai` | 結構化資料的作者 |
 | `author.twitter` | `theYenLai` | X 分享卡片的帳號 |
@@ -120,7 +120,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 | 設定 | 位置 | 預設 | 注意 |
 |---|---|---|---|
-| 自我介紹 | `assets/js/day.js` 的 `BIO` | `Product manager in Taipei. Writes about how products get decided.` | 今天的建築底下和 terminal 的 `whoami` 都用它。一起改：文章頁 `whoami`（`assets/js/post.js`）、首頁分享卡片文字（`scripts/og/build.js`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
+| 自我介紹 | `assets/js/day.js` 的 `BIO` | `Yen decides what gets built, then builds some of it. Writes about how those decisions get made.` | 今天的建築底下用它；terminal 的 `whoami` 把開頭的 Yen 換成「Yen Lai, product manager,」。一起改：首頁分享卡片文字（`scripts/og/build.js`，卡片上用第一人稱「I decide…」；push 後 Action 會重畫卡片）、首頁搜尋摘要（`_config.yml` 的 `description`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
 | 社群連結 | `assets/js/day.js` 的 `whoami` | github、linkedin、x | 首頁不直接放連結，要執行 `whoami` 才看得到。一起改：`_includes/seo.html` 的 `sameAs`；X 帳號另有 `_config.yml` 的 `author.twitter` |
 | 平日／假日 | `assets/js/day.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
 | 所在城市 | `assets/js/sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、首頁和文章頁的背景顏色、影子方向。出國時只要改這裡，首頁和文章頁的時間、提示字 `yen@taipei` 都會跟著變 |
