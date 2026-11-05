@@ -951,7 +951,7 @@ for (const w of WORKS) {
 }
 const ALIASES = { 'ls notes/': 'ls notes', 'ls works/': 'ls works', 'whereis': 'whereis yen', 'cd': 'cd ~', 'cd ..': 'cd ~', 'notes': 'ls notes', 'works': 'ls works', 'about': 'whoami' };
 // plain-language labels on the buttons; the terminal still shows the real command being typed
-const CHIPS = [['About Yen', 'whoami'], ['Notes', 'ls notes'], ['Work', 'ls works'], ['Where is Yen now', 'whereis yen'], ['Clear', 'clear']];
+const CHIPS = [['About Yen', 'whoami'], ['Notes', 'ls notes'], ['Work', 'ls works'], ["Where's Yen", 'whereis yen'], ['Clear', 'clear']];
 let typing = false;
 function prompt(cmd) { return `<span class="prompt">yen@${CITY.short} ~ <i>$</i> <b>${esc(cmd)}</b></span>`; }
 async function run(raw, typed) {
@@ -996,6 +996,27 @@ CHIPS.forEach(([label, c]) => {
   $('cmdbar').append(b);
 });
 // when the bar is wider than the screen, fade its right edge so it reads as "swipe for more"
+// one bar, two homes. Phones: always fixed to the bottom (inside the terminal, CSS does the rest).
+// Wide screens: under today's words at the top; once the reader heads for the terminal it glides down
+// into the terminal and sticks to its bottom, and glides back up on the way out.
+let barReady = false;
+function placeBar(q) {
+  const bar = $('cmdbar'), up = bar.parentNode === $('barSlot');
+  // a little slack either side of the switch point, so a slow scroll does not bounce it back and forth
+  const home = innerWidth >= 900 && q < (up ? .45 : .35) ? $('barSlot') : $('cmdForm').parentNode;
+  if (bar.parentNode === home) { barReady = true; return; }
+  const a = bar.getBoundingClientRect();
+  home.append(bar); barEdge();
+  if (!barReady || matchMedia('(prefers-reduced-motion: reduce)').matches || innerWidth < 900) { barReady = true; return; }
+  const b = bar.getBoundingClientRect();
+  bar.style.transition = 'none';
+  bar.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`;
+  bar.style.opacity = '.4';
+  bar.getBoundingClientRect();
+  bar.style.transition = 'transform .5s cubic-bezier(.2, .8, .2, 1), opacity .5s ease';
+  bar.style.transform = ''; bar.style.opacity = '';
+  setTimeout(() => { bar.style.transition = ''; }, 520);
+}
 function barEdge() { const c = $('cmdbar'); c.classList.toggle('more-right', c.scrollLeft + c.clientWidth < c.scrollWidth - 4); }
 $('cmdbar').addEventListener('scroll', barEdge, { passive: true }); addEventListener('resize', barEdge); barEdge();
 function renderLists() { logEl.innerHTML = ''; }
@@ -1424,6 +1445,7 @@ function onScroll() {
   document.documentElement.style.setProperty('--dx', dx.toFixed(1) + 'px');
   document.documentElement.style.setProperty('--q', q.toFixed(3));
   document.body.classList.toggle('words-off', q > .6);
+  placeBar(q);
   updateMore();
 }
 addEventListener('scroll', onScroll, { passive: true });

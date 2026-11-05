@@ -125,7 +125,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 平日／假日 | `assets/js/day.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
 | 所在城市 | `assets/js/day.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、背景顏色和影子方向。出國時改這裡 |
 | 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | `CHECKIN` 之後會接自動打卡（見第 4 節） |
-| terminal 按鈕 | `assets/js/day.js` 的 `CHIPS`；樣式在 `assets/css/day.css` 的 `.cmdbar` | `$`、About Yen、Notes、Work、Where is Yen now、Clear | 整個首頁只有這一排，所有螢幕都固定在畫面底部，只在 Timeline、作品頁、往年今日時隱藏。按鈕寫白話，點了會先捲到 terminal，再打出真正的指令；點 `$` 跳到輸入框。手機上放不下時可以左右滑，右邊會淡出提示。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
+| terminal 按鈕 | `assets/js/day.js` 的 `CHIPS`、`placeBar`；樣式在 `assets/css/day.css` 的 `.cmdbar` | `$`、About Yen、Notes、Work、Where's Yen、Clear | 整個首頁只有這一排。寬螢幕（≥ 900px）：一開始在今天的說明下面（`_layouts/home.html` 的 `#barSlot`），往下捲到 terminal 時滑進 terminal、貼在輸入框下面，捲回去再滑回來。手機：一直固定在畫面底部。沒有分隔線，用漸層讓內容淡入按鈕下面。Timeline、作品頁、往年今日時隱藏。點了會先捲到 terminal，再打出真正的指令；點 `$` 跳到輸入框。放不下時可以左右滑，右邊會淡出提示。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
 | 瀏覽器分頁標題 | `index.md` 的 `title` | `hey, I'm Yen` | |
 
 ### 2.5 外觀
