@@ -58,7 +58,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .when b { font: 500 14px/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; transition: font-size .4s cubic-bezier(.2, .8, .2, 1); }
 /* in the timeline the date grows: it is what changes there */
 body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
-.when .txt span { color: var(--ink-soft); white-space: nowrap; font-size: 12px; }
+/* on the card (a lifted colour), so one step darker than other grey words to stay readable */
+.when .txt span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: 12px; }
 #clock { transition: opacity .25s ease; }
 #clock.swap { opacity: 0; }
 .when .txt b span { color: inherit; font-size: inherit; }
@@ -108,7 +109,7 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .caption .meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); }
 .caption .meta a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .meta a:hover { color: var(--ink); border-bottom-style: solid; }
-.caption .note { font: 17px/1.85 var(--sans); color: var(--ink); text-wrap: pretty; margin-top: 10px; }
+.caption .note { font: 17px/1.65 var(--sans); color: var(--ink); text-wrap: pretty; margin-top: 10px; }
 .caption .note a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .note a:hover { border-bottom-style: solid; }
 
@@ -194,7 +195,7 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .reader .sub { font: 18px/1.6 var(--sans); color: var(--ink-soft); margin: 0 0 14px; }
 .reader .byline { font: 14px/1.6 var(--mono); color: var(--ink-soft); margin: 0 0 34px; }
 .reader h2 { font: 500 14px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); margin: 34px 0 8px; }
-.reader p { font: 17.5px/1.85 var(--sans); margin: 0 0 14px; }
+.reader p { font: 17px/1.7 var(--sans); margin: 0 0 14px; }
 .reader .out { font: 14.5px/1.7 var(--mono); }
 .reader .out a { border-bottom: 1px dotted var(--ink-soft); text-decoration: none; }
 .reader .back { display: inline-flex; margin-top: 40px; border: 1px solid var(--rule); border-radius: 8px; padding: 9px 14px; background: var(--sheet); font: 14px/1.2 var(--mono); }

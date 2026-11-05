@@ -5,7 +5,7 @@
    Written into the page by _layouts/home.html from published/ (notes), _data/works.yml,
    _data/days.yml (places) and _data/little.yml (small things, shown for a week). */
 const SITE = JSON.parse(document.getElementById('site-data').textContent);
-const CITY = { name: 'Taipei', short: 'taipei', lat: 25.033, lon: 121.565, tz: 8 };
+const CITY = siteSky.CITY; // where Yen is: assets/js/sky.js
 const NOTES = SITE.notes || [];
 const WORKS = (SITE.works || []).map(w => ({ slug: w.slug, year: String(w.year || ''), title: w.title, sub: w.sub || '', role: w.role || '',
   problem: w.problem || '', did: w.did || '', result: w.result || '', url: w.url || '', urlLabel: w.url_label || '' }));
@@ -54,29 +54,13 @@ function sentenceFor(m, years) {
 // small things (a Shiba on a walk…): each shows for seven days from its date
 const LITTLE = (SITE.little || []).map(l => { const [y, m, d] = String(l.date).split('-').map(Number); return { day: dayMs(y, m, d), kind: l.kind, text: l.text }; });
 
-/* ================= sun & light ================= */
-function sunAt(ms) {
-  const d = new Date(ms), n = (ms - Date.UTC(d.getUTCFullYear(), 0, 0)) / 864e5;
-  const rad = Math.PI / 180, decl = 23.44 * Math.sin(2 * Math.PI * (284 + n) / 365) * rad;
-  const B = 2 * Math.PI * (n - 81) / 364, eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
-  const solar = d.getUTCHours() + d.getUTCMinutes() / 60 + CITY.lon / 15 + eot / 60;
-  const H = (solar - 12) * 15 * rad, lat = CITY.lat * rad;
-  const alt = Math.asin(Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(H));
-  const az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(lat) - Math.tan(decl) * Math.cos(lat)) + Math.PI;
-  return { alt: alt / rad, az };
-}
+/* ================= sun & light =================
+   The sun and the page colour come from assets/js/sky.js (the notes use them too). */
+const sunAt = ms => siteSky.sunAt(ms);
 const cl = (v, a, b) => Math.max(a, Math.min(b, v));
 const mix = (a, b, t) => a + (b - a) * t;
-const BG_STOPS = [[-18, [21, 25, 38]], [-9, [40, 46, 74]], [-4, [128, 120, 154]], [0, [222, 200, 190]], [5, [244, 230, 212]], [14, [247, 243, 234]], [28, [248, 248, 245]]];
-function bgFor(alt) {
-  if (alt <= BG_STOPS[0][0]) return BG_STOPS[0][1];
-  for (let k = 1; k < BG_STOPS.length; k++) {
-    const [a1, c1] = BG_STOPS[k], [a0, c0] = BG_STOPS[k - 1];
-    if (alt <= a1) { const t = (alt - a0) / (a1 - a0); return c0.map((v, j) => mix(v, c1[j], t)); }
-  }
-  return BG_STOPS[BG_STOPS.length - 1][1];
-}
-const hex = c => '#' + c.map(v => pad(Math.round(v).toString(16))).join('');
+const bgFor = alt => siteSky.bgFor(alt);
+const hex = c => siteSky.hex(c);
 function lightFor(ms) {
   const s = sunAt(ms), alt = s.alt;
   const n = cl((4 - alt) / 14, 0, 1);
@@ -95,15 +79,15 @@ function lightFor(ms) {
   };
 }
 function applyTheme(L) {
-  const bg = L.bg, lum = (.2126 * bg[0] + .7152 * bg[1] + .0722 * bg[2]) / 255;
-  const dark = lum < .45, root = document.documentElement.style;
-  root.setProperty('--bg', hex(bg));
-  root.setProperty('--ink', dark ? '#ece7dd' : '#262421');
-  root.setProperty('--ink-soft', dark ? '#aaa3b8' : '#6f6a62');
+  // page and text colours for this sky, shared with the notes (sky.js)
+  const c = siteSky.colours(L.bg), dark = c.dark, root = document.documentElement.style;
+  root.setProperty('--bg', c.bg);
+  root.setProperty('--ink', c.ink);
+  root.setProperty('--ink-soft', c.faint);
+  root.setProperty('--ink-card', c.soft);
   root.setProperty('--rule', dark ? 'rgba(236,231,221,.18)' : 'rgba(38,36,33,.14)');
-  root.setProperty('--accent', dark ? '#f0a46a' : '#b5531e');
-  const sheet = dark ? bg.map(v => v + 14) : bg.map(v => mix(v, 255, .7));
-  root.setProperty('--sheet', hex(sheet.map(v => cl(v, 0, 255))));
+  root.setProperty('--accent', c.accent);
+  root.setProperty('--sheet', c.sheet);
   root.colorScheme = dark ? 'dark' : 'light';
 }
 
@@ -963,6 +947,7 @@ function whereNow() {
 /* ================= terminal ================= */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const logEl = $('log');
+document.querySelectorAll('.city').forEach(el => { el.textContent = CITY.short; }); // the input line's yen@<city>
 // notes and works share one list: date or year | title, then a short line under it (subtitle or description).
 // Each row carries its language, so Chinese titles get Chinese line breaking and spacing.
 const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" target="_blank" rel="noopener" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
@@ -997,13 +982,14 @@ async function run(raw, typed) {
   const key = ALIASES[cmd] || cmd;
   // clear = close the terminal: empty it and go back to the top, where the page started
   if (key === 'clear') {
-    logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur();
+    logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur(); document.querySelector('.term').style.paddingBottom = '';
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     return;
   }
   const block = document.createElement('div'); block.className = 'block';
   block.innerHTML = prompt(typed ? '' : raw.trim());
   logEl.append(block);
+  if (key !== 'cd ~') focusLine(block);
   if (typed && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     typing = true;
     const b = block.querySelector('b');
@@ -1012,24 +998,34 @@ async function run(raw, typed) {
   } else if (typed) block.querySelector('b').textContent = raw;
   const fn = COMMANDS[key];
   block.insertAdjacentHTML('beforeend', fn ? fn() : line(`Command not found: ${raw.trim()}. Try one of the buttons below.`, 'err'));
-  if (key !== 'cd ~') $('cmdForm').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (key !== 'cd ~' && !openOverlay()) roomBelow(FOCUS.at);
+}
+// the line being typed goes near the top of the screen, just under the date card, so the eye knows where to look;
+// the output then reads downwards from there. The terminal grows empty room below when there is not enough page to scroll.
+const FOCUS = { at: 0 };
+function roomBelow(target) {
+  const term = document.querySelector('.term'), base = Math.round(innerHeight * .3);
+  term.style.paddingBottom = '';
+  const short = target + innerHeight - document.documentElement.scrollHeight;
+  if (short > 0) term.style.paddingBottom = base + short + 'px';
+}
+function focusLine(block) {
+  const below = document.querySelector('.top').getBoundingClientRect().bottom + 20;
+  FOCUS.at = Math.max(0, Math.round(scrollY + block.getBoundingClientRect().top - below));
+  roomBelow(FOCUS.at);
+  scrollTo({ top: FOCUS.at, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 logEl.addEventListener('click', ev => { const b = ev.target.closest('[data-run]'); if (b) run(b.dataset.run, true); });
-// the buttons live in one bar fixed to the bottom of the screen, on every screen size.
-// From the top of the page, a button first scrolls down to the terminal, then runs.
-function toTerm(then) {
-  const t = document.querySelector('.term');
-  if (t.getBoundingClientRect().top < innerHeight * .5) then(); else { scrollTo({ top: t.offsetTop + 10, behavior: 'smooth' }); setTimeout(then, 450); }
-}
+// the buttons: one bar for the whole page (see placeBar). A button runs its command; run() brings the line into view.
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
 {
   const d = document.createElement('button'); d.type = 'button'; d.className = 'dollar'; d.textContent = '$'; d.title = 'Type a command';
-  d.addEventListener('click', () => toTerm(() => $('cmd').focus()));
+  d.addEventListener('click', () => { focusLine($('cmdForm')); $('cmd').focus({ preventScroll: true }); });
   $('cmdbar').append(d);
 }
 CHIPS.forEach(([label, c]) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = c;
-  b.addEventListener('click', () => c === 'clear' ? run(c, true) : toTerm(() => run(c, true)));
+  b.addEventListener('click', () => run(c, true));
   $('cmdbar').append(b);
 });
 // when the bar is wider than the screen, fade its right edge so it reads as "swipe for more"

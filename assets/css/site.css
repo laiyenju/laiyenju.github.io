@@ -41,7 +41,7 @@
    links in a note go from dotted to solid (see "Links").
    Filled (reverse video) always means "selected": a terminal row, the theme in use. */
 :root {
-  --accent: #b5531e;
+  --accent: var(--t-accent, #b5531e);
   --paper: #fafaf7;
   --ink: #000;
   --font-latin: system-ui, sans-serif;
@@ -85,17 +85,17 @@ html.ui-zh .i-en {
   display: none;
 }
 
-body.theme-night { --accent: #f5b942; }
+body.theme-night { --accent: var(--t-accent, #f5b942); }
 
 .sh-line { margin: 0; font-size: 13px; line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Prompt in ink; only the live one, where you can type, takes the accent. */
-.sh-prompt { color: #2a2420; font-weight: 600; }
-.sh-live .sh-prompt { color: var(--accent); }
-.sh-path { color: #2a2420; font-weight: 600; }
-/* Commands already run: a short prompt in grey, so the command reads first. */
-.sh-dir { color: #736d66; font-weight: 600; }
-.sh-arrow { color: #736d66; }
-.sh-dim { color: #736d66; }
+/* Prompt like the home page's terminal: grey words, the $ in the accent. */
+.sh-prompt { color: var(--t-faint, #736d66); }
+.sh-live .sh-prompt { color: var(--t-faint, #736d66); }
+.sh-path { color: var(--t-ink, #2a2420); font-weight: 600; }
+/* Commands already run: the same prompt, so the command reads first. */
+.sh-dir { color: var(--t-faint, #736d66); }
+.sh-arrow { color: var(--accent); }
+.sh-dim { color: var(--t-faint, #736d66); }
 @keyframes sh-blink { 50% { opacity: 0; } }
 
 /* The last prompt takes commands (a small easter egg): cd ~, cd -, ls, help… */
@@ -132,19 +132,19 @@ body.theme-night { --accent: #f5b942; }
 }
 @media (prefers-reduced-motion: reduce) { .sh-caret { animation: none; } }
 /* Key hints sit up top beside $ cd ~, so the prompt can be the last line and print below it. */
-.sh-keys { margin: 0; font-size: 12px; color: #736d66; }
+.sh-keys { margin: 0; font-size: 12px; color: var(--t-faint, #736d66); }
 .sh-keys kbd { font: inherit; padding: 0 4px; border: 1px solid rgba(42, 36, 32, 0.25); border-radius: 2px; }
 @media (max-width: 560px) {
   .sh-keys { display: none; }
 }
 
 body.theme-night .sh-dim,
-body.theme-night .sh-keys { color: #8a8f99; }
-body.theme-night .sh-prompt { color: #e8e6e3; }
-body.theme-night .sh-live .sh-prompt { color: var(--accent); }
-body.theme-night .sh-path { color: #e8e6e3; }
-body.theme-night .sh-dir,
-body.theme-night .sh-arrow { color: #8a8f99; }
+body.theme-night .sh-keys { color: var(--t-faint, #8a8f99); }
+body.theme-night .sh-prompt,
+body.theme-night .sh-live .sh-prompt { color: var(--t-faint, #8a8f99); }
+body.theme-night .sh-path { color: var(--t-ink, #e8e6e3); }
+body.theme-night .sh-dir { color: var(--t-faint, #8a8f99); }
+body.theme-night .sh-arrow { color: var(--accent); }
 body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
 /* —— Article (Jekyll default layout): a quiet reading column on plain
@@ -152,79 +152,108 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
       at the end on narrow ones. —— */
 .post-body {
   margin: 0;
-  background: #fafaf7;
-  color: #2a2420;
+  /* on auto the sky over Taipei (sky.js sets --sky, as on the home page); day / night: fixed paper or ink */
+  background: var(--sky, #fafaf7);
+  transition: background-color 1.2s ease;
+  color: var(--t-ink, #2a2420);
 }
 .post {
   position: relative;
   box-sizing: border-box;
   max-width: 680px;
   margin: 0 auto;
-  padding: 72px 20px 96px;
+  padding: calc(84px + env(safe-area-inset-top, 0px)) 20px 96px;
 }
 
-.post-back,
+/* —— The frame, the same as a work on the home page: the date card fixed at
+      the top, then `yen@taipei ~ $ cat notes/<file>.md`, the title on the
+      left, the subtitle, the date and size in mono; ← cd .. at the end. —— */
+.post-top {
+  position: fixed; z-index: 7; top: 0; left: 0; right: 0;
+  display: flex; justify-content: center;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 10px;
+  background: linear-gradient(var(--sky, #fafaf7) 70%, transparent);
+}
+.post-when {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: min(330px, calc(100vw - 32px)); padding: 7px 7px 7px 16px;
+  border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px; background: var(--sky-sheet, #fff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); color: var(--t-ink, #2a2420);
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.post-when:hover { border-color: var(--t-faint, #736d66); }
+.post-when:active { transform: scale(0.98); }
+.post-when .txt { display: grid; flex: 1; min-width: 0; text-align: center; line-height: 1.3; }
+.post-when b { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; white-space: nowrap; }
+.post-when .txt span { font-size: 12px; color: var(--t-soft, #736d66); white-space: nowrap; }
+.post-when .cta {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px;
+  background: var(--t-ink, #2a2420); color: #fafaf7; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap;
+}
+.post-when .cta svg { width: 12px; height: 12px; }
+
+.post-bar,
 .post-meta {
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  font-size: 12px;
-  letter-spacing: 0.01em;
-  color: #736d66;
+  color: var(--t-faint, #736d66);
 }
-.post-back {
-  color: inherit;
-  text-decoration: none;
-  transition: color 200ms ease;
-}
-/* Head: title, subtitle and date centred in the reading column, above a
-   left-aligned body, like a typewritten page: everything at the body size,
-   the title only bold. They stay inside the column's edges and wrap into
-   even lines, and a short hairline (the same as a break in the prose) hands
-   over from the centred head to the text. */
-.post-head {
-  text-align: center;
-}
-.post-head::after {
-  content: "";
-  display: block;
-  width: 2.5em;
-  margin: 40px auto 48px;
-  border-top: 1px solid rgba(42, 36, 32, 0.3);
-}
+.post-bar { margin: 0; font-size: 14px; line-height: 1.7; }
+.post-bar i { font-style: normal; color: var(--accent); }
+.post-bar b { font-weight: 400; color: var(--t-ink, #2a2420); }
+.post-head { text-align: left; margin-bottom: 34px; }
 .post-title {
-  margin: 28px auto 0;
+  margin: 18px 0 6px;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.8;
-  color: #2a2420;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--t-ink, #2a2420);
   text-wrap: balance;
 }
 .post-subtitle {
-  margin: 0 auto;
+  margin: 0 0 14px;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
-  font-size: 17px;
-  line-height: 1.8;
-  color: #5a544e;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--t-soft, #5a544e);
   text-wrap: balance;
 }
 .post-meta {
   width: fit-content;
-  margin: 16px auto 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+/* ← cd .. : a button, like ← cd ~ under a work */
+.post-backrow { margin: 32px 0 0; }
+.post-back {
+  display: inline-flex;
+  padding: 9px 14px;
+  border: 1px solid rgba(42, 36, 32, 0.14);
+  border-radius: 8px;
+  background: var(--sky-sheet, #fff);
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--t-ink, #2a2420);
+  text-decoration: none;
+  transition: color 200ms ease, border-color 200ms ease;
 }
 
 /* Prose: ink on paper, and as little else as possible. Structure is marked
    with space, weight and a few hairlines; no colour except the link hover. */
 .post-prose {
-  --ink: #2a2420;
-  --ink-soft: #5a544e;
-  --ink-faint: #736d66;
+  --ink: var(--t-ink, #2a2420);
+  --ink-soft: var(--t-soft, #5a544e);
+  --ink-faint: var(--t-faint, #736d66);
   --rule: rgba(42, 36, 32, 0.14);
   --washi: #f2efe9;
-  --shu: #b5531e;
+  --shu: var(--t-accent, #b5531e);
   --mono: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 17px;
-  line-height: 1.8;
+  line-height: 1.7;
   color: var(--ink);
   overflow-wrap: break-word;
 }
@@ -531,8 +560,8 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
     "close . . stage"
     "cap cap cap stage"
     "prev count next stage";
-  background: #fafaf7;
-  color: #2a2420;
+  background: var(--sky, #fafaf7);
+  color: var(--t-ink, #2a2420);
   opacity: 0;
   transition: opacity 180ms ease;
 }
@@ -728,7 +757,7 @@ html.lb-lock { overflow: hidden; }
   font-family: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   font-size: 12.5px;
   line-height: 1.6;
-  color: #6e6a64;
+  color: var(--t-soft, #6e6a64);
   transition: color 200ms ease;
 }
 .post-note p {
@@ -739,10 +768,16 @@ html.lb-lock { overflow: hidden; }
   margin-right: 6px;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 11px;
-  color: #8a847d;
+  color: var(--t-faint, #8a847d);
 }
 .post-note.is-lit {
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
+}
+/* Code blocks, marks and inline code sit on a light tint of the ground: a little ink mixed into the sky,
+   so they keep their box at any hour (a fixed tint vanished into the night sky). */
+@supports (background: color-mix(in srgb, red 10%, blue)) {
+  html body.post-body .post-prose { --washi: color-mix(in srgb, var(--t-ink, #2a2420) 7%, var(--sky, #fafaf7)); }
+  html body .post-prose :not(pre) > code { background: var(--washi); }
 }
 body.has-rail .post-prose .footnotes {
   display: none;
@@ -750,17 +785,16 @@ body.has-rail .post-prose .footnotes {
 
 @media (max-width: 640px) {
   .post {
-    padding: 48px 20px 72px;
+    padding: calc(84px + env(safe-area-inset-top, 0px)) 20px 72px;
   }
   .post-prose {
     font-size: 16px;
   }
-  .post-title,
-  .post-subtitle {
-    font-size: 16px;
+  .post-title {
+    font-size: 26px;
   }
-  .post-head::after {
-    margin: 32px auto 40px;
+  .post-subtitle {
+    font-size: 17px;
   }
 }
 
@@ -768,28 +802,6 @@ body.has-rail .post-prose .footnotes {
       that renders Markdown (after Charm's Glow). Body text stays in the
       reading face; the terminal lives in the structure around it. —— */
 
-/* Header: $ cd .. as a row of its own, the title, date · chars. The cat
-   command that opened the note is not kept; it scrolled away like a
-   terminal's. The row is built like prev / next at the end (same size,
-   padding and reach), so it turns reverse video across the whole line;
-   its words sit at the right. */
-.post-bar {
-  display: block;
-}
-.post-back {
-  display: block;
-  padding: 3px 6px;
-  margin: 0 -6px;
-  font-size: 13px;
-  line-height: 1.75;
-  text-align: right;
-}
-.post-back .sh-dollar {
-  color: #736d66;
-}
-.post-bar + .post-title {
-  margin-top: 40px;
-}
 .post-meta {
   font-variant-numeric: tabular-nums;
 }
@@ -859,11 +871,11 @@ body.has-rail .post-prose .footnotes {
   margin-top: 4em;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   font-size: 13px;
-  color: #2a2420;
+  color: var(--t-ink, #2a2420);
 }
 .post-eof {
   margin: 0 0 1.6em;
-  color: #736d66;
+  color: var(--t-faint, #736d66);
 }
 .post-pager {
   display: grid;
@@ -884,7 +896,7 @@ html.ui-zh .post-pager a {
 }
 .post-pager-label,
 .post-pager time {
-  color: #736d66;
+  color: var(--t-faint, #736d66);
   font-variant-numeric: tabular-nums;
 }
 .post-end .sh-live {
@@ -1015,18 +1027,18 @@ html.post-print.stream-done .post-prose > * {
 
 /* Night: a cool ink ground, light text, gold only for the accent and selection. */
 body.post-body.theme-night {
-  background: #0d0f12;
-  color: #e8e6e3;
+  background: var(--sky, #0d0f12);
+  color: var(--t-ink, #e8e6e3);
   --link-sel-bg: #f5b942;
   --link-sel-fg: #0d0f12;
 }
 body.theme-night .post-prose {
-  --ink: #e8e6e3;
-  --ink-soft: #b6b9bf;
-  --ink-faint: #8a8f99;
+  --ink: var(--t-ink, #e8e6e3);
+  --ink-soft: var(--t-soft, #b6b9bf);
+  --ink-faint: var(--t-faint, #8a8f99);
   --rule: rgba(232, 230, 227, 0.14);
   --washi: #151820;
-  --shu: #f5b942;
+  --shu: var(--t-accent, #f5b942);
 }
 body.theme-night .post-back,
 body.theme-night .post-meta,
@@ -1034,24 +1046,27 @@ body.theme-night .post-eof,
 body.theme-night .post-pager-label,
 body.theme-night .post-pager time,
 body.theme-night .post-end .sh-dim,
-body.theme-night .post-end .sh-keys { color: #8a8f99; }
+body.theme-night .post-end .sh-keys { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-title,
-body.theme-night .post-end { color: #e8e6e3; }
-body.theme-night .post-back .sh-dollar { color: #8a8f99; }
-body.theme-night .post-head .sh-prompt,
-body.theme-night .post-end .sh-prompt { color: #e8e6e3; }
-body.theme-night .post-end .sh-live .sh-prompt { color: var(--accent); }
+body.theme-night .post-end { color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-top { background: linear-gradient(var(--sky, #0d0f12) 70%, transparent); }
+body.theme-night .post-when { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-when .txt span { color: var(--t-soft, #8a8f99); }
+body.theme-night .post-when .cta { background: var(--t-ink, #e8e6e3); color: #0d0f12; }
+body.theme-night .post-bar { color: var(--t-faint, #8a8f99); }
+body.theme-night .post-bar b { color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-back { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-end .sh-prompt { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-head .sh-path,
-body.theme-night .post-end .sh-path { color: #e8e6e3; }
+body.theme-night .post-end .sh-path { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
-body.theme-night .post-subtitle { color: #b6b9bf; }
-body.theme-night .post-head::after { border-color: rgba(232, 230, 227, 0.3); }
-body.theme-night .lb { background: #0d0f12; color: #e8e6e3; }
+body.theme-night .post-subtitle { color: var(--t-soft, #b6b9bf); }
+body.theme-night .lb { background: var(--sky, #0d0f12); color: var(--t-ink, #e8e6e3); }
 body.theme-night .lb-stage { border-color: rgba(232, 230, 227, 0.8); }
-body.theme-night .post-note { color: #a3a7af; }
-body.theme-night .post-note.is-lit { color: #e8e6e3; }
-body.theme-night .post-note-n { color: #8a8f99; }
+body.theme-night .post-note { color: var(--t-soft, #a3a7af); }
+body.theme-night .post-note.is-lit { color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-note-n { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 
 /* —— Links: pointed at, a link only deepens its colour — grey goes to ink,
@@ -1063,9 +1078,9 @@ body.theme-night .post-end .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3)
    - links inside a note keep the ink colour on a dotted line, which turns
      solid when pointed at. —— */
 :root {
-  --link-sel-bg: #2a2420;
+  --link-sel-bg: var(--t-ink, #2a2420);
   --link-sel-fg: #fafaf7;
-  --hover-ink: #2a2420;
+  --hover-ink: var(--t-ink, #2a2420);
   --hover-accent: #8a3d14;
   --focus-ring: rgba(42, 36, 32, 0.45);
 }
@@ -1106,8 +1121,7 @@ body .post-prose a.reversefootnote:hover {
   }
 }
 
-/* Terminal rows: reverse video. The article's $ cd .. at the top is one
-   too, the same as prev / next at the end. */
+/* Terminal rows: reverse video, and the ← cd .. button the same when pointed at. */
 body :is(.post-pager a, .post-back):focus-visible,
 body :is(.post-pager a, .post-back):active,
 body .post-back.is-opening {
