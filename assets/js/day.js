@@ -819,7 +819,6 @@ function renderText() {
   $('capName').textContent = it.name; $('capName').classList.toggle('past', !it.about && !it.main);
   $('capMeta').textContent = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
-  $('quick').classList.toggle('away', !it.about); updateQuick();
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
 }
 function renderThumbs() {
@@ -952,7 +951,7 @@ for (const w of WORKS) {
 }
 const ALIASES = { 'ls notes/': 'ls notes', 'ls works/': 'ls works', 'whereis': 'whereis yen', 'cd': 'cd ~', 'cd ..': 'cd ~', 'notes': 'ls notes', 'works': 'ls works', 'about': 'whoami' };
 // plain-language labels on the buttons; the terminal still shows the real command being typed
-const CHIPS = [['About Yen', 'whoami'], ['Notes', 'ls notes'], ['Work', 'ls works'], ['Where is Yen now', 'whereis yen'], ['Clear', 'clear']];
+const CHIPS = [['About Yen', 'whoami'], ['Notes', 'ls notes'], ['Work', 'ls works'], ["Where's Yen", 'whereis yen'], ['Clear', 'clear']];
 let typing = false;
 function prompt(cmd) { return `<span class="prompt">yen@${CITY.short} ~ <i>$</i> <b>${esc(cmd)}</b></span>`; }
 async function run(raw, typed) {
@@ -979,35 +978,47 @@ async function run(raw, typed) {
   if (key !== 'cd ~') $('cmdForm').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 logEl.addEventListener('click', ev => { const b = ev.target.closest('[data-run]'); if (b) run(b.dataset.run, true); });
-// the same commands as a row under today's caption (wide screens) or a bar fixed to the bottom (phones)
-const QUICK = ['whoami', 'ls notes', 'ls works', 'whereis yen'];
+// the buttons live in one bar fixed to the bottom of the screen, on every screen size.
+// From the top of the page, a button first scrolls down to the terminal, then runs.
 function toTerm(then) {
-  const t = document.querySelector('.term'), go = () => setTimeout(then, 450);
-  if (t.getBoundingClientRect().top < innerHeight * .5) then(); else { scrollTo({ top: t.offsetTop + 10, behavior: 'smooth' }); go(); }
-}
-{
-  const q = $('quick');
-  const d = document.createElement('button'); d.type = 'button'; d.className = 'dollar'; d.textContent = '$'; d.title = 'Type a command';
-  d.addEventListener('click', () => toTerm(() => $('cmd').focus()));
-  q.append(d);
-  for (const c of QUICK) {
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = c;
-    b.addEventListener('click', () => toTerm(() => run(c, true)));
-    q.append(b);
-  }
-  $('cmd').addEventListener('focus', updateQuick); $('cmd').addEventListener('blur', updateQuick);
-}
-// phones: hide the bar where it would get in the way — the terminal's own buttons are on screen, the keyboard is up, an overlay is open, or the terminal is not on the page (past view)
-function updateQuick() {
-  $('quick').classList.toggle('off', $('cmdbar').classList.contains('on') || document.activeElement === $('cmd')
-    || !$('reader').hidden || !$('tl').hidden || document.body.classList.contains('is-past'));
+  const t = document.querySelector('.term');
+  if (t.getBoundingClientRect().top < innerHeight * .5) then(); else { scrollTo({ top: t.offsetTop + 10, behavior: 'smooth' }); setTimeout(then, 450); }
 }
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
+{
+  const d = document.createElement('button'); d.type = 'button'; d.className = 'dollar'; d.textContent = '$'; d.title = 'Type a command';
+  d.addEventListener('click', () => toTerm(() => $('cmd').focus()));
+  $('cmdbar').append(d);
+}
 CHIPS.forEach(([label, c]) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = c;
-  b.addEventListener('click', () => run(c, true));
+  b.addEventListener('click', () => c === 'clear' ? run(c, true) : toTerm(() => run(c, true)));
   $('cmdbar').append(b);
 });
+// when the bar is wider than the screen, fade its right edge so it reads as "swipe for more"
+// one bar, two homes. Phones: always fixed to the bottom (inside the terminal, CSS does the rest).
+// Wide screens: under today's words at the top; once the reader heads for the terminal it glides down
+// into the terminal and sticks to its bottom, and glides back up on the way out.
+let barReady = false;
+function placeBar(q) {
+  const bar = $('cmdbar'), up = bar.parentNode === $('barSlot');
+  // a little slack either side of the switch point, so a slow scroll does not bounce it back and forth
+  const home = innerWidth >= 900 && q < (up ? .45 : .35) ? $('barSlot') : $('cmdForm').parentNode;
+  if (bar.parentNode === home) { barReady = true; return; }
+  const a = bar.getBoundingClientRect();
+  home.append(bar); barEdge();
+  if (!barReady || matchMedia('(prefers-reduced-motion: reduce)').matches || innerWidth < 900) { barReady = true; return; }
+  const b = bar.getBoundingClientRect();
+  bar.style.transition = 'none';
+  bar.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px)`;
+  bar.style.opacity = '.4';
+  bar.getBoundingClientRect();
+  bar.style.transition = 'transform .5s cubic-bezier(.2, .8, .2, 1), opacity .5s ease';
+  bar.style.transform = ''; bar.style.opacity = '';
+  setTimeout(() => { bar.style.transition = ''; }, 520);
+}
+function barEdge() { const c = $('cmdbar'); c.classList.toggle('more-right', c.scrollLeft + c.clientWidth < c.scrollWidth - 4); }
+$('cmdbar').addEventListener('scroll', barEdge, { passive: true }); addEventListener('resize', barEdge); barEdge();
 function renderLists() { logEl.innerHTML = ''; }
 
 /* overlays: one work (#work-<slug>), the timeline (#timeline), one day (#day-YYYY-MM-DD) */
@@ -1418,13 +1429,23 @@ function updateMore() {
   const o = openOverlay(), el = o || document.documentElement;
   const top = o ? o.scrollTop : scrollY, view = o ? o.clientHeight : innerHeight;
   const more = top + view < el.scrollHeight - 24;
-  $('more').classList.toggle('off', !more || (!o && $('cmdbar').classList.contains('on')));
-  updateQuick();
+  // on the home page the bar sits at the bottom instead of the hint; overlays have their own bottom (ruler) and hide the bar
+  $('more').classList.toggle('off', !more || !o);
+  $('cmdbar').classList.toggle('off', !!o);
 }
 function onScroll() {
   const p = cl(scrollY / (STAGE.h * .9), 0, 1);
   document.documentElement.style.setProperty('--p', p.toFixed(3));
-  $('cmdbar').classList.toggle('on', document.querySelector('.term').getBoundingClientRect().top < innerHeight * .7);
+  // wide screens: the building slides to the middle, above the terminal; --dx is how far
+  const st = $('stage'); let x = 0;
+  for (let e = st; e; e = e.offsetParent) x += e.offsetLeft;
+  // q: 0 at the top, 1 once the terminal's top is 70% down the screen
+  const q = cl(scrollY / Math.max(1, document.querySelector('.term').offsetTop - innerHeight * .7), 0, 1);
+  const dx = innerWidth >= 900 ? (innerWidth / 2 - (x + st.offsetWidth / 2)) * q : 0;
+  document.documentElement.style.setProperty('--dx', dx.toFixed(1) + 'px');
+  document.documentElement.style.setProperty('--q', q.toFixed(3));
+  document.body.classList.toggle('words-off', q > .6);
+  placeBar(q);
   updateMore();
 }
 addEventListener('scroll', onScroll, { passive: true });
@@ -1509,7 +1530,7 @@ setInterval(() => {
   state.minute = r.h * 60 + r.min;
   if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; refreshLight(true); renderDay(); } else refreshLight(true);
 }, 60e3);
-addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); updateMore(); });
+addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
 
 applyTheme(LIGHT);
 refreshLight(false);
