@@ -986,19 +986,54 @@ async function run(raw, typed) {
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     return;
   }
-  const block = document.createElement('div'); block.className = 'block';
-  block.innerHTML = prompt(typed ? '' : raw.trim());
-  logEl.append(block);
-  if (key !== 'cd ~') focusLine(block);
-  if (typed && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    typing = true;
+  typing = true;
+  try {
+    // In three beats you can follow: the screen settles on the line, the command types out behind a cursor
+    // and waits a moment as if Enter were pressed, then the output comes in a row at a time.
+    // opening a row from a list (open works/…) happens at once: the click is the command, no typing, no scroll
+    const quick = key.startsWith('open ');
+    const block = document.createElement('div'); block.className = 'block';
+    block.innerHTML = prompt(typed && !quick ? '' : raw.trim());
+    logEl.append(block);
+    if (key !== 'cd ~' && !quick) focusLine(block);
     const b = block.querySelector('b');
-    for (const ch of raw) { b.textContent += ch; await new Promise(r => setTimeout(r, 32)); }
-    typing = false;
-  } else if (typed) block.querySelector('b').textContent = raw;
-  const fn = COMMANDS[key];
-  block.insertAdjacentHTML('beforeend', fn ? fn() : line(`Command not found: ${raw.trim()}. Try one of the buttons below.`, 'err'));
-  if (key !== 'cd ~' && !openOverlay()) roomBelow(FOCUS.at);
+    if (quick) { /* nothing to type */ } else if (typed && !still()) {
+      b.insertAdjacentHTML('afterend', '<span class="cur" aria-hidden="true"></span>');
+      await settled(); await wait(120);
+      for (const ch of raw) { b.textContent += ch; await wait(ch === ' ' ? 90 : 55); }
+      await wait(260);
+      block.querySelector('.cur').remove();
+    } else if (typed) b.textContent = raw;
+    const fn = COMMANDS[key];
+    const out = document.createElement('div'); out.className = 'result';
+    out.innerHTML = fn ? fn() : line(`Command not found: ${raw.trim()}. Try one of the buttons below.`, 'err');
+    block.append(out);
+    if (key !== 'cd ~' && !openOverlay()) roomBelow(FOCUS.at);
+    if (!still() && !quick) await reveal(out);
+  } finally { typing = false; }
+}
+const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+// resolves once the scroll that focusLine started has come to rest (or after 700ms at most)
+function settled() {
+  return new Promise(res => {
+    if (Math.abs(scrollY - FOCUS.at) < 2) return res();
+    let done = false;
+    const fin = () => { if (done) return; done = true; removeEventListener('scrollend', fin); res(); };
+    addEventListener('scrollend', fin); setTimeout(fin, 700);
+  });
+}
+// output a row at a time: list rows and label/value pairs one by one, other output line by line; at most ~0.6s in all
+async function reveal(out) {
+  const units = [];
+  for (const el of out.children) { if (el.matches('.ls, dl.case')) units.push(...el.children); else units.push(el); }
+  if (!units.length) return;
+  const step = Math.min(70, 600 / units.length);
+  units.forEach(u => u.classList.add('rise'));
+  out.getBoundingClientRect();
+  units.forEach((u, i) => setTimeout(() => u.classList.add('in'), i * step));
+  await wait(units.length * step + 260);
+  units.forEach(u => u.classList.remove('rise', 'in'));
 }
 // the line being typed goes near the top of the screen, just under the date card, so the eye knows where to look;
 // the output then reads downwards from there. The terminal grows empty room below when there is not enough page to scroll.
@@ -1069,11 +1104,18 @@ function closeOverlays() {
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
   updateMore();
 }
+const WORK = { fromList: false };
+// back to all the work: the list it was opened from, or a fresh `ls works` when it came from a link
+function backToWorks() {
+  const list = WORK.fromList && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls [data-run^="open works/"]'));
+  closeOverlays();
+  if (list) focusLine(list); else setTimeout(() => run('ls works', true), 60);
+}
 function openWork(slug) {
   const w = WORKS.find(x => x.slug === slug);
   if (!w) return;
   $('readerBody').innerHTML = `
-    <span class="prompt">yen@${CITY.short} ~ <i>$</i> <b>cat works/${esc(w.slug)}.md</b></span>
+    <span class="prompt">yen@${CITY.short} <button type="button" class="path" data-go="home" title="Home">~</button> <i>$</i> <b>cat <button type="button" class="path" data-go="works" title="All work">works/</button>${esc(w.slug)}.md</b></span>
     <h1>${esc(w.title)}</h1>
     <p class="sub">${esc(w.sub)}</p>
     <p class="byline">${esc(w.year)} · ${esc(w.role)}</p>
@@ -1081,7 +1123,9 @@ function openWork(slug) {
     <h2>What Yen did</h2><p>${esc(w.did)}</p>
     <h2>The result</h2><p>${esc(w.result)}</p>
     ${w.url ? `<p class="out"><a href="${w.url}" target="_blank" rel="noopener">${esc(w.urlLabel || 'open the portfolio')} ↗</a></p>` : ''}
-    <div class="nav-row"><button type="button" class="back" data-close>← cd ~</button></div>`;
+    <div class="nav-row"><button type="button" class="back" data-go="works">← cd ..</button></div>`;
+  // opened from the list in the terminal: going back just closes the page, and the list is still there underneath
+  WORK.fromList = !!logEl.querySelector(`.ls [data-run="open works/${w.slug}"]`);
   showOverlay(reader);
 }
 function snapshot(scene, opts, maxW, maxH) {
@@ -1449,7 +1493,10 @@ for (const o of [reader, tl]) {
   o.addEventListener('scroll', () => updateMore(), { passive: true });
   o.addEventListener('click', ev => {
     const c = ev.target.closest('[data-close]'), hsh = ev.target.closest('[data-hash]'), day = ev.target.closest('[data-day]');
-    if (c) closeOverlays(); else if (hsh) go2(hsh.dataset.hash); else if (day) go2('#day-' + day.dataset.day);
+    const goTo = ev.target.closest('[data-go]');
+    if (goTo && goTo.dataset.go === 'works') backToWorks();
+    else if (goTo && goTo.dataset.go === 'home') { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); }
+    else if (c) closeOverlays(); else if (hsh) go2(hsh.dataset.hash); else if (day) go2('#day-' + day.dataset.day);
   });
 }
 addEventListener('keydown', ev => {

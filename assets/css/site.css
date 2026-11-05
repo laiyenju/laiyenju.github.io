@@ -201,6 +201,10 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
 .post-bar { margin: 0; font-size: 14px; line-height: 1.7; }
 .post-bar i { font-style: normal; color: var(--accent); }
 .post-bar b { font-weight: 400; color: var(--t-ink, #2a2420); }
+/* the path in the prompt is a way back: ~ home, notes/ the list (dotted like other links, the accent when pointed at) */
+.post-bar .post-path { color: inherit; border-bottom: 1px dotted currentColor; }
+.post-bar .post-path:hover,
+.post-bar .post-path:focus-visible { color: var(--accent); border-bottom-style: solid; }
 .post-head { text-align: left; margin-bottom: 34px; }
 .post-title {
   margin: 18px 0 6px;

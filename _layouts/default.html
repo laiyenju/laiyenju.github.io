@@ -57,7 +57,8 @@
 
   <article class="post">
     <header class="post-head">
-      <p class="post-bar">yen@<span data-city>taipei</span> ~ <i>$</i> <b>cat notes/{{ slug }}.md</b></p>
+      {% comment %}The path is a way back, like a breadcrumb: ~ the home page, notes/ the list.{% endcomment %}
+      <p class="post-bar">yen@<span data-city>taipei</span> <a class="post-path" href="{{ '/' | relative_url }}" title="Home">~</a> <i>$</i> <b>cat <a class="post-path post-to-notes" href="{{ '/' | relative_url }}?view=notes" title="All notes">notes/</a>{{ slug }}.md</b></p>
       <h1 class="post-title">{{ page.title }}</h1>
       {% if page.subtitle %}<p class="post-subtitle">{{ page.subtitle }}</p>{% endif %}
       <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>
