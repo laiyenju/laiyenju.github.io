@@ -869,12 +869,12 @@ function sizeStage() {
   let h, lift = 0;
   if (wide) h = Math.round(cl(innerHeight - 76 - 56, 260, 760));
   else {
-    // phones: the first screen holds the building, today's words and the bar, with nothing hidden under the bar.
-    // The building gets what is left after the words (up to half the screen); any space still left is split
-    // above and below, so the building and its words stay together in the middle instead of drifting apart.
+    // phones: the building always gets half the screen, the same size whether or not the day has other years
+    // (the thumbnail row) or a long sentence: those may run below the first screen, the page scrolls.
+    // When the words do fit, the space left is split above and below, so the building and its words stay together.
     const room = innerHeight - 76 - $('cmdbar').offsetHeight;
     const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight + 8 + 12;
-    h = Math.round(cl(Math.min(innerHeight * .5, room - words), 180, 520));
+    h = Math.round(cl(innerHeight * .5, 180, 520));
     lift = Math.max(0, Math.round((room - words - h) / 2));
   }
   STAGE = { w: wide ? Math.round(group.clientWidth * .53) : group.clientWidth, h };
