@@ -274,21 +274,23 @@ function exitPast() {
 function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
 /* ================= check-ins (README 3.5) =================
    location.json on the checkin branch, written by .github/workflows/checkin.yml when an iPhone Shortcut
-   checks Yen in: { place: home|office|out, label, at, office_at }. Words only, never coordinates.
-   Today's building:
+   checks Yen in: { place: home|office|out, label, at, office_at, homes }. Words only, never coordinates.
+   Today's building (where Yen spends the day, not where Yen is right now: that is "Where's Yen"):
    1. the office if Yen checked in at the office today (also on a weekend: a make-up workday);
    2. home on weekends and HOLIDAYS;
-   3. on other weekdays the office, until 12:00: from then on, while check-ins are on (one in the last 14 days),
-      no office check-in means a day off, and home. No calendar to keep up: the check-ins say it. */
+   3. home on a weekday with a home check-in in office hours (OFFICE_HOURS): a day off or a day working from home;
+   4. the office on every other weekday, all day: coming home in the evening does not turn it into a day off. */
 const CHECKIN_URL = 'https://raw.githubusercontent.com/laiyenju/laiyenju.github.io/checkin/location.json';
-const CHECKIN_FRESH = 6 * 3600e3, CHECKINS_ON = 14 * 864e5, DAY_OFF_FROM = 12 * 60;
+const CHECKIN_FRESH = 6 * 3600e3, OFFICE_HOURS = [9 * 60, 18 * 60 + 30];
 let CHECKIN = null;
 const sameDay = (ms, day) => { const t = taipeiParts(ms); return dayMs(t.y, t.m, t.d) === day; };
+const inOfficeHours = ms => { const t = taipeiParts(ms), m = t.h * 60 + t.min; return m >= OFFICE_HOURS[0] && m < OFFICE_HOURS[1]; };
 function todayScene() {
   const c = CHECKIN;
   if (c && c.office_at && sameDay(Date.parse(c.office_at), state.day)) return 'studio';
   if (isRestDay(fromDayMs(state.day)).rest) return 'home';
-  if (c && Date.now() - Date.parse(c.at) < CHECKINS_ON && state.minute >= DAY_OFF_FROM) return 'home';
+  const homes = c ? (c.homes || (c.place === 'home' ? [c.at] : [])) : [];
+  if (homes.some(at => sameDay(Date.parse(at), state.day) && inOfficeHours(Date.parse(at)))) return 'home';
   return 'studio';
 }
 // redraw today only when its building changes, and only on today's page

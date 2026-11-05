@@ -125,7 +125,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|---|---|
 | 自我介紹 | `assets/js/day.js` 的 `BIO` | `Yen decides what gets built, then builds some of it. Writes about how those decisions get made.` | 今天的建築底下用它；terminal 的 `whoami` 把開頭的 Yen 換成「Yen Lai, product manager,」。一起改：首頁分享卡片文字（`scripts/og/build.js`，卡片上用第一人稱「I decide…」；push 後 Action 會重畫卡片）、首頁搜尋摘要（`_config.yml` 的 `description`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
 | 社群連結 | `assets/js/day.js` 的 `whoami` | github、linkedin、x | 首頁不直接放連結，要執行 `whoami` 才看得到。一起改：`_includes/seo.html` 的 `sameAs`；X 帳號另有 `_config.yml` 的 `author.twitter` |
-| 今天的建築（家／辦公室） | `assets/js/day.js` 的 `todayScene`；固定日期的假日在 `assets/js/scenes.js` 的 `HOLIDAYS` | 1. 今天在辦公室打過卡 → 辦公室（週末補班也是）。2. 週末和 `HOLIDAYS`（元旦、228、兒童節、勞動節、教師節、國慶、光復節、行憲紀念日）→ 家。3. 其他平日：12:00 前是辦公室；12:00 起，打卡有在用（14 天內打過卡）但今天沒在辦公室打卡 → 家（`DAY_OFF_FROM`、`CHECKINS_ON`） | 農曆假日、請假、補班都不用改程式，靠打卡。分享卡片不看打卡，只照週末和 `HOLIDAYS` |
+| 今天的建築（家／辦公室） | `assets/js/day.js` 的 `todayScene`；固定日期的假日在 `assets/js/scenes.js` 的 `HOLIDAYS` | 1. 今天在辦公室打過卡 → 辦公室（週末補班也是）。2. 週末和 `HOLIDAYS`（元旦、228、兒童節、勞動節、教師節、國慶、光復節、行憲紀念日）→ 家。3. 平日在上班時間（09:00–18:30，`OFFICE_HOURS`）打過「家」→ 家（請假或在家工作）。4. 其他平日：整天都是辦公室，晚上回家打卡不會變成家 | 建築是「今天在哪裡過」，「現在在哪」看 Where's Yen。農曆假日、請假、補班都不用改程式，靠打卡：休假那天在上班時間打一次「家」（沒有自動打卡的話，到 Actions 手動 Run workflow）。分享卡片不看打卡，只照週末和 `HOLIDAYS` |
 | 所在城市 | `assets/js/sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、首頁和文章頁的背景顏色、影子方向。出國時只要改這裡，首頁和文章頁的時間、提示字 `yen@taipei` 都會跟著變 |
 | 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | 6 小時內的打卡優先（`CHECKIN_FRESH`），說「Yen is {label}, Taipei. Checked in at HH:MM.」；沒有才用作息表。今天是家的日子就用假日那張表 |
 | terminal 按鈕 | `assets/js/day.js` 的 `CHIPS`、`placeBar`；樣式在 `assets/css/day.css` 的 `.cmdbar` | `$`、About Yen、Notes、Work、Where's Yen、Clear | 整個首頁只有這一排。寬螢幕（≥ 900px）：一開始在今天的說明下面（`_layouts/home.html` 的 `#barSlot`），往下捲到 terminal 時滑進 terminal、貼在輸入框下面，捲回去再滑回來。手機：一直固定在畫面底部。沒有分隔線；按鈕是毛玻璃（和頂部卡片同一組 `--glass` 設定），底下只留一層淡淡的漸層，捲過去的內容看得到、但會模糊。只在 Timeline、作品頁打開時隱藏。點了分三拍：先把這一行捲到日期卡片正下方、停穩，再帶著游標一個字一個字打出指令、停一下像按了 Enter，最後輸出一列一列淡入（`day.js` 的 `run`、`focusLine`、`reveal`；頁面不夠長時 terminal 下方會自動留白；系統設定「減少動態效果」時直接顯示）。清單裡點一列（`open works/…`）會立刻打開，不打字；點 `$` 也會把輸入框捲到那裡。放不下時可以左右滑，右邊會淡出提示。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
@@ -256,6 +256,7 @@ flowchart LR
 | `label` | 首頁說的話，接在「Yen is」後面，例如 `at a café in Daan`。沒填就用 `at home`、`at the office`、`out somewhere in the city`（`update.js` 的 `LABELS`，最多 60 字） |
 | `at` | 打卡時間（UTC） |
 | `office_at` | 最近一次在辦公室打卡的時間，每次打卡都會保留。首頁用它判斷今天是不是辦公室（見 2.4） |
+| `homes` | 24 小時內所有「家」的打卡時間。平日有一次落在上班時間，首頁就把今天當成休假（見 2.4） |
 
 **第一次設定（只做一次，約 15 分鐘）**
 
