@@ -56,6 +56,8 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* the sky from the very first frame (head.html paints it before the body exists): never the browser's white */
+  background: var(--sky, #fafaf7);
   /* Room for a scrollbar on every page, so an article's text column stays
      at the same x whether or not it scrolls. */
   scrollbar-gutter: stable;
@@ -79,12 +81,6 @@ a {
   text-decoration: none;
 }
 
-/* Interface words in one language (theme-boot.html picks it). */
-html:not(.ui-zh) .i-zh,
-html.ui-zh .i-en {
-  display: none;
-}
-
 body.theme-night { --accent: var(--t-accent, #f5b942); }
 
 /* —— Article (Jekyll default layout): a quiet reading column on plain
@@ -102,22 +98,28 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
   box-sizing: border-box;
   max-width: 680px;
   margin: 0 auto;
-  padding: calc(84px + env(safe-area-inset-top, 0px)) 20px 96px;
+  padding: calc(var(--card-top) + 72px) 20px 96px;
 }
 
 /* —— The frame, the same as a work on the home page: the date card fixed at
-      the top, then `yen@taipei ~ $ cat notes/<file>.md`, the title on the
-      left, the subtitle, the date and size in mono; ← cd .. at the end. —— */
+      the top, then the title on the left, the subtitle, the date and size in mono; (END) at the end.
+      The card is the same size and in the same place on every page (here, the home page, the timeline, a work):
+      --card-w wide and --card-top from the top (day.css has the same), 50px tall, centred on the whole window
+      (100vw, so a scrollbar does not move it). Home stands beside it, outside it on the right. Its two lines:
+      the time on top (--card-title, rolling each second), the date, weekday and city under it (--card-sub). —— */
+:root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px));
+  --card-title: 15px; --card-sub: 12px; }
+@media (min-width: 900px) { :root { --card-top: clamp(28px, 9svh, 96px); } }
 .post-top {
-  position: fixed; z-index: 7; top: 0; left: 0; right: 0;
-  display: flex; justify-content: center; align-items: center; gap: 8px;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 10px;
+  position: fixed; z-index: 7; top: 0; left: 0; width: 100vw;
+  display: flex; justify-content: center; align-items: center;
+  padding: var(--card-top) 0 10px;
   /* only a light veil: the card and Home are frosted glass, so the note shows through behind them */
   background: linear-gradient(color-mix(in srgb, var(--sky, #fafaf7) 55%, transparent), transparent);
 }
 .post-when {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  width: min(300px, calc(100vw - 32px - 58px)); padding: 7px 16px 7px 7px;
+  width: var(--card-w); height: 50px; padding: 6px 16px 6px 7px;
   border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px;
   background: color-mix(in srgb, var(--sky-sheet, #fff) 62%, transparent);
   -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
@@ -128,16 +130,19 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
 .post-when:hover { border-color: var(--t-faint, #736d66); }
 .post-when:active { transform: scale(0.98); }
 .post-when .txt { display: grid; flex: 1; min-width: 0; text-align: center; line-height: 1.3; }
-.post-when b { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; white-space: nowrap; }
-.post-when .txt span { font-size: 12px; color: var(--t-soft, #736d66); white-space: nowrap; }
+.post-when b { font-size: var(--card-title); font-weight: 500; line-height: 1.35; letter-spacing: 0.02em; white-space: nowrap; }
+.post-when .txt > span { font-size: var(--card-sub); color: var(--t-soft, #736d66); white-space: nowrap; }
 .post-when .cta {
   display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px;
   background: var(--t-ink, #2a2420); color: #fafaf7; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap;
 }
 .post-when .cta svg { width: 12px; height: 12px; }
-/* Home, beside the date card: a 50px square, as tall as the card, an icon only */
+/* Home, beside the card on its right, outside it: a 50px glass square, as tall as the card, an icon only. It never
+   moves the card: from 508px wide it sits right of the card; narrower, the card gives up 58px on its right for it,
+   so its left edge, top and height stay where they are on every page (day.css: the same). */
 .post-home {
-  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 50px; height: 50px; padding: 0;
+  position: absolute; top: var(--card-top); left: calc(50vw + var(--card-w) / 2 + 8px);
+  display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; padding: 0;
   border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px;
   background: color-mix(in srgb, var(--sky-sheet, #fff) 62%, transparent);
   -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
@@ -147,8 +152,11 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
 .post-home:hover { border-color: var(--t-faint, #736d66); }
 .post-home:active { transform: scale(0.96); }
 .post-home svg { width: 16px; height: 16px; }
-@media (min-width: 480px) { .post-when { width: 300px; } }
-@media (max-width: 399px) { .post-when .wd { display: none; } }
+@media (max-width: 507px) {
+  .post-when { width: calc(var(--card-w) - 58px); margin-right: 58px; }
+  .post-home { left: calc(50vw + var(--card-w) / 2 - 50px); }
+  .post-when .wd { display: none; }
+}
 /* the live time in the date card: HH:MM:SS, each digit rolls (sky.js rollClock) */
 .roll { display: inline-flex; font-variant-numeric: tabular-nums; vertical-align: bottom; }
 .roll .rg { display: inline-block; height: 1.35em; line-height: 1.35em; overflow: hidden; }
@@ -159,18 +167,10 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
 
 body.theme-night .post-home { background: color-mix(in srgb, var(--sky-sheet, #151820) 62%, transparent); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
 
-.post-bar,
 .post-meta {
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
   color: var(--t-faint, #736d66);
 }
-.post-bar { margin: 0; font-size: 14px; line-height: 1.7; }
-.post-bar i { font-style: normal; color: var(--accent); }
-.post-bar b { font-weight: 400; color: var(--t-ink, #2a2420); }
-/* the path in the prompt is a way back: ~ home, notes/ the list (dotted like other links, the accent when pointed at) */
-.post-bar .post-path { color: inherit; border-bottom: 1px dotted currentColor; }
-.post-bar .post-path:hover,
-.post-bar .post-path:focus-visible { color: var(--accent); border-bottom-style: solid; }
 .post-head { text-align: left; margin-bottom: 34px; }
 .post-title {
   margin: 18px 0 6px;
@@ -740,7 +740,7 @@ body.has-rail .post-prose .footnotes {
 
 @media (max-width: 640px) {
   .post {
-    padding: calc(84px + env(safe-area-inset-top, 0px)) 20px 72px;
+    padding: calc(var(--card-top) + 72px) 20px 72px;
   }
   .post-prose {
     font-size: 16px;
@@ -821,7 +821,7 @@ body.has-rail .post-prose .footnotes {
   color: var(--link-sel-fg);
 }
 
-/* End: (END) like less at the end of a file, the next / prev notes, then a prompt. */
+/* End: (END) like less at the end of a file. */
 .post-end {
   margin-top: 4em;
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
@@ -831,28 +831,6 @@ body.has-rail .post-prose .footnotes {
 .post-eof {
   margin: 0 0 1.6em;
   color: var(--t-faint, #736d66);
-}
-.post-pager {
-  display: grid;
-  margin: 0 0 1.6em;
-}
-.post-pager a {
-  display: grid;
-  grid-template-columns: 5ch 10ch minmax(0, 1fr);
-  column-gap: 14px;
-  align-items: baseline;
-  padding: 3px 6px;
-  margin: 0 -6px;
-  line-height: 1.75;
-}
-/* 上一個 / 下一個 take six cells. */
-html.ui-zh .post-pager a {
-  grid-template-columns: 6ch 10ch minmax(0, 1fr);
-}
-.post-pager-label,
-.post-pager time {
-  color: var(--t-faint, #736d66);
-  font-variant-numeric: tabular-nums;
 }
 
 /* Arrival, like `cat` in a terminal (see post.js): the title typed character by character behind a block cursor, the date
@@ -869,7 +847,7 @@ html.post-print .post-prose > * {
   clip-path: inset(0 0 100% 0);
   animation: post-unclip 1ms 4s forwards;
 }
-/* Opened from the notes list: the command line is already there (it slides up from the list). */
+/* Each part shows as its turn comes (post.js stream). */
 html.post-print .post-head > .is-shown,
 html.post-print .post-end.is-shown {
   opacity: 1;
@@ -892,7 +870,7 @@ html.post-print.stream-done .post-prose > * {
   clip-path: none !important;
   animation: none !important;
 }
-/* From inside the site (a list, prev / next): the page prints in from the top in about a quarter second,
+/* From inside the site (the list): the page prints in from the top in about a quarter second,
    the head line by line and then the first blocks of text, the same motion as a work on the home page. */
 html.post-rise .post-head > *,
 html.post-rise .post-prose > :nth-child(-n+8) {
@@ -954,38 +932,6 @@ html.post-rise .post-prose > :nth-child(8) { animation-delay: 295ms; }
   }
 }
 
-/* Navigations between pages cross-fade briefly (old page out fast, new one in
-   behind it). A note opened from the list hands over with no transition at
-   all: it is already on screen (see the head script in default.html). */
-@view-transition {
-  navigation: auto;
-}
-::view-transition-group(*) {
-  animation-duration: 240ms;
-  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
-}
-::view-transition-old(root) {
-  animation: vt-out 160ms cubic-bezier(0.4, 0, 1, 1) both;
-}
-::view-transition-new(root) {
-  animation: vt-in 220ms 100ms cubic-bezier(0, 0, 0.2, 1) both;
-}
-@keyframes vt-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes vt-in {
-  from {
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  @view-transition {
-    navigation: none;
-  }
-}
-
 /* Night: a cool ink ground, light text, gold only for the accent and selection. */
 body.post-body.theme-night {
   background: var(--sky, #0d0f12);
@@ -1002,17 +948,13 @@ body.theme-night .post-prose {
   --shu: var(--t-accent, #f5b942);
 }
 body.theme-night .post-meta,
-body.theme-night .post-eof,
-body.theme-night .post-pager-label,
-body.theme-night .post-pager time { color: var(--t-faint, #8a8f99); }
+body.theme-night .post-eof { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-title,
 body.theme-night .post-end { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-top { background: linear-gradient(color-mix(in srgb, var(--sky, #0d0f12) 55%, transparent), transparent); }
 body.theme-night .post-when { background: color-mix(in srgb, var(--sky-sheet, #151820) 62%, transparent); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
-body.theme-night .post-when .txt span { color: var(--t-soft, #8a8f99); }
+body.theme-night .post-when .txt > span { color: var(--t-soft, #8a8f99); }
 body.theme-night .post-when .cta { background: var(--t-ink, #e8e6e3); color: #0d0f12; }
-body.theme-night .post-bar { color: var(--t-faint, #8a8f99); }
-body.theme-night .post-bar b { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
 body.theme-night .post-subtitle { color: var(--t-soft, #b6b9bf); }
@@ -1026,7 +968,7 @@ body.theme-night .post-note-n { color: var(--t-faint, #8a8f99); }
    the accent to a deeper accent (by night: lighter). Keyboard focus adds
    an underline as well, so focus never rests on colour alone. Two
    exceptions:
-   - terminal rows (the notes / works lists, $ cd ~, prev / next) turn
+   - terminal rows (the notes / works lists on the home page) turn
      reverse video, like the selected row of a terminal picker;
    - links inside a note keep the ink colour on a dotted line, which turns
      solid when pointed at. —— */
@@ -1071,26 +1013,6 @@ body .post-prose a.reversefootnote:hover {
   }
   body .post-prose a.footnote:hover {
     color: var(--hover-accent);
-  }
-}
-
-/* Terminal rows (prev / next): reverse video when pointed at. */
-body .post-pager a:focus-visible,
-body .post-pager a:active {
-  background: var(--link-sel-bg);
-  color: var(--link-sel-fg);
-}
-body .post-pager a:focus-visible *,
-body .post-pager a:active * {
-  color: inherit !important;
-}
-@media (hover: hover) {
-  body .post-pager a:hover {
-    background: var(--link-sel-bg);
-    color: var(--link-sel-fg);
-  }
-  body .post-pager a:hover * {
-    color: inherit !important;
   }
 }
 

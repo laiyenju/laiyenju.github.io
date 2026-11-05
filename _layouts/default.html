@@ -3,9 +3,9 @@
 <head>
   {% include head.html %}
   <script>
-    // Arrival. Opened from inside the site (the notes list on the home page, or prev / next here),
+    // Arrival. Opened from inside the site (the notes list on the home page),
     // the page cuts straight in and prints from the top in a quarter second, like a work does:
-    // no typing, and no cross-fade. Opened from outside (a shared link), it types itself out
+    // no typing, and no cross-fade (the sky is already painted in head.html, so there is no flash). Opened from outside (a shared link), it types itself out
     // (post.js), unless motion is reduced.
     (function () {
       var root = document.documentElement;
@@ -15,14 +15,8 @@
         sessionStorage.removeItem("post-handoff");
       } catch (e) {}
       if (handoff) {
-        // from inside the site (a list, prev / next): no typing, the page prints in from the top in a quarter second
+        // from inside the site (the list): no typing, the page prints in from the top in a quarter second
         if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) root.classList.add("post-rise");
-        window.addEventListener("pagereveal", function (e) {
-          var vt = e.viewTransition;
-          if (!vt) return;
-          vt.ready.catch(function () {}); // skipping rejects ready; that is expected here
-          vt.skipTransition();
-        });
         return;
       }
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -35,34 +29,18 @@
 
   {% assign chars = content | strip_html | strip_newlines | remove: " " | size %}
 
-  {% comment %}Older and newer notes, for the pager at the end.{% endcomment %}
-  {% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" %}
-  {% assign older = nil %}
-  {% assign newer = nil %}
-  {% for note in notes %}
-    {% if note.url == page.url %}
-      {% assign i_older = forloop.index0 | minus: 1 %}
-      {% if i_older >= 0 %}{% assign older = notes[i_older] %}{% endif %}
-      {% assign newer = notes[forloop.index] %}
-    {% endif %}
-  {% endfor %}
-
-  {% assign slug = page.name | remove: '.md' | slice: 11, 200 %}
-  {% comment %}The same frame as a work on the home page: the date card at the top (back to the list) with Home beside it,
-     the command that printed the note, and the title on the left.{% endcomment %}
+  {% comment %}The same frame as a work on the home page: the date card at the top, the same size and in the same place
+     as on every page (← Notes on its left goes back to the list, Home at its right end), then the title on the left.{% endcomment %}
   <div class="post-top">
-    {% comment %}Two pieces: the date card, whose button (on its left) goes back to the notes list, and Home.{% endcomment %}
     <a class="post-when post-to-notes" href="{{ '/' | relative_url }}?view=notes" aria-label="Back to all notes">
       <span class="cta"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 6h-9M4.5 3 1.5 6l3 3"/></svg>Notes</span>
-      <span class="txt"><b data-clock="date">&nbsp;</b><span data-clock="time">Taipei</span></span>
+      <span class="txt"><b data-clock="time">&nbsp;</b><span data-clock="day">Taipei</span></span>
     </a>
     <a class="post-home" href="{{ '/' | relative_url }}" aria-label="Home"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 6 6 1.8 10.5 6M3 4.8v5.7h6V4.8"/></svg></a>
   </div>
 
   <article class="post">
     <header class="post-head">
-      {% comment %}The path is a way back, like a breadcrumb: ~ the home page, notes/ the list.{% endcomment %}
-      <p class="post-bar">yen@<span data-city>taipei</span> <a class="post-path" href="{{ '/' | relative_url }}" title="Home">~</a> <i>$</i> <b>cat <a class="post-path post-to-notes" href="{{ '/' | relative_url }}?view=notes" title="All notes">notes/</a>{{ slug }}.md</b></p>
       <h1 class="post-title">{{ page.title }}</h1>
       {% if page.subtitle %}<p class="post-subtitle">{{ page.subtitle }}</p>{% endif %}
       <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>
@@ -74,12 +52,6 @@
 
     <footer class="post-end">
       <p class="post-eof">(END)</p>
-      {% if older or newer %}
-      <nav class="post-pager" aria-label="More notes">
-        {% if newer %}<a href="{{ newer.url | relative_url }}" data-pager="next"><span class="post-pager-label"><span class="i-en">next</span><span class="i-zh">下一個</span></span><time datetime="{{ newer.date | date_to_xmlschema }}">{{ newer.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ newer.title }}</span></a>{% endif %}
-        {% if older %}<a href="{{ older.url | relative_url }}" data-pager="prev"><span class="post-pager-label"><span class="i-en">prev</span><span class="i-zh">上一個</span></span><time datetime="{{ older.date | date_to_xmlschema }}">{{ older.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ older.title }}</span></a>{% endif %}
-      </nav>
-      {% endif %}
     </footer>
   </article>
 
