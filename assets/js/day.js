@@ -274,21 +274,23 @@ function exitPast() {
 function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
 /* ================= check-ins (README 3.5) =================
    location.json on the checkin branch, written by .github/workflows/checkin.yml when an iPhone Shortcut
-   checks Yen in: { place: home|office|out, label, at, office_at }. Words only, never coordinates.
-   Today's building:
+   checks Yen in: { place: home|office|out|left_home|left_office, label, at, office_at, homes }. Words only, never coordinates.
+   Today's building (where Yen spends the day, not where Yen is right now: that is "Where's Yen"):
    1. the office if Yen checked in at the office today (also on a weekend: a make-up workday);
    2. home on weekends and HOLIDAYS;
-   3. on other weekdays the office, until 12:00: from then on, while check-ins are on (one in the last 14 days),
-      no office check-in means a day off, and home. No calendar to keep up: the check-ins say it. */
+   3. home on a weekday with a home check-in in office hours (OFFICE_HOURS): a day off or a day working from home;
+   4. the office on every other weekday, all day: coming home in the evening does not turn it into a day off. */
 const CHECKIN_URL = 'https://raw.githubusercontent.com/laiyenju/laiyenju.github.io/checkin/location.json';
-const CHECKIN_FRESH = 6 * 3600e3, CHECKINS_ON = 14 * 864e5, DAY_OFF_FROM = 12 * 60;
+const CHECKIN_FRESH = 6 * 3600e3, TRANSIT_FRESH = 90 * 60e3, TRANSIT = ['left_home', 'left_office'], OFFICE_HOURS = [9 * 60, 18 * 60 + 30];
 let CHECKIN = null;
 const sameDay = (ms, day) => { const t = taipeiParts(ms); return dayMs(t.y, t.m, t.d) === day; };
+const inOfficeHours = ms => { const t = taipeiParts(ms), m = t.h * 60 + t.min; return m >= OFFICE_HOURS[0] && m < OFFICE_HOURS[1]; };
 function todayScene() {
   const c = CHECKIN;
   if (c && c.office_at && sameDay(Date.parse(c.office_at), state.day)) return 'studio';
   if (isRestDay(fromDayMs(state.day)).rest) return 'home';
-  if (c && Date.now() - Date.parse(c.at) < CHECKINS_ON && state.minute >= DAY_OFF_FROM) return 'home';
+  const homes = c ? (c.homes || (c.place === 'home' ? [c.at] : [])) : [];
+  if (homes.some(at => sameDay(Date.parse(at), state.day) && inOfficeHours(Date.parse(at)))) return 'home';
   return 'studio';
 }
 // redraw today only when its building changes, and only on today's page
@@ -301,16 +303,19 @@ function loadCheckin() {
     .then(c => { if (c && c.label && Date.parse(c.at)) { CHECKIN = c; refreshToday(); } }).catch(() => {});
 }
 /* ================= where is Yen now =================
-   1. A check-in wins if it is less than 6 hours old.
+   1. A check-in wins if it is less than 6 hours old; one on the way (left home, left the office) only for 90 minutes,
+      so a missed arrival does not leave Yen "on the way home" all evening. Leaving home on an office day says where to.
    2. Otherwise the page reads Yen's usual day from the clock, and says "usually" so nobody takes it as fact. */
 const WEEKDAY = [[0, 'asleep'], [7 * 60, 'on the way to the office'], [9 * 60, 'at the office'], [12 * 60, 'out for lunch near the office'],
   [13 * 60 + 30, 'at the office'], [18 * 60 + 30, 'on the way home'], [19 * 60 + 30, 'at home']];
 const RESTDAY = [[0, 'asleep'], [9 * 60, 'having a slow morning at home'], [12 * 60, 'out somewhere in the city'], [19 * 60, 'at home']];
 function whereNow() {
   const hm = `${pad(Math.floor(state.minute / 60))}:${pad(state.minute % 60)}`;
-  if (CHECKIN && Date.now() - Date.parse(CHECKIN.at) < CHECKIN_FRESH) {
-    const t = taipeiParts(Date.parse(CHECKIN.at));
-    return `Yen is ${CHECKIN.label}, ${CITY.name}. Checked in at ${pad(t.h)}:${pad(t.min)}.`;
+  const c = CHECKIN, fresh = c && (TRANSIT.includes(c.place) ? TRANSIT_FRESH : CHECKIN_FRESH);
+  if (c && Date.now() - Date.parse(c.at) < fresh) {
+    const t = taipeiParts(Date.parse(c.at));
+    const label = c.place === 'left_home' && c.label === 'heading out' && todayScene() === 'studio' ? 'on the way to the office' : c.label;
+    return `Yen is ${label}, ${CITY.name}. Checked in at ${pad(t.h)}:${pad(t.min)}.`;
   }
   const rest = todayScene() === 'home', plan = rest ? RESTDAY : WEEKDAY;
   let now = plan[0][1];
