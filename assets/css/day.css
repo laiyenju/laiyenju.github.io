@@ -98,9 +98,29 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .caption .note { font: 17px/1.75 var(--sans); color: var(--ink); text-wrap: pretty; margin-top: 4px; }
 .caption .note a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .note a:hover { border-bottom-style: solid; }
-.caption .links { font: 14px/1.6 var(--mono); color: var(--ink-soft); margin-top: 2px; }
-.caption .links a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
-.caption .links a:hover { color: var(--ink); border-bottom-style: solid; }
+/* terminal commands: a row under today's caption; on phones a bar fixed to the bottom */
+.quick { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 10px; }
+.quick button { border: 1px solid var(--rule); border-radius: 8px; padding: 6px 11px; font: 14px/1.2 var(--mono); background: var(--sheet); color: var(--ink); }
+.quick button:hover { border-color: var(--ink-soft); }
+.quick button:active { border-color: var(--accent); color: var(--accent); }
+.quick .dollar { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 4px; }
+@media (max-width: 899px) {
+  .quick {
+    position: fixed; z-index: 7; left: 0; right: 0; bottom: 0; margin: 0;
+    flex-wrap: nowrap; justify-content: flex-start; gap: 5px; overflow-x: auto; scrollbar-width: none;
+    padding: 10px max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+    background: var(--bg); border-top: 1px solid var(--rule);
+    transition: background-color 1.2s ease, opacity .25s ease, transform .25s ease;
+  }
+  .quick::-webkit-scrollbar { display: none; }
+  .quick button { flex: none; padding: 9px 8px; font-size: 13px; }
+  .quick .dollar { padding-inline: 2px; margin-left: auto; }
+  .quick button:last-child { margin-right: auto; }
+  .quick.off { opacity: 0; transform: translateY(100%); pointer-events: none; }
+  .hero { padding-bottom: 64px; }
+}
+@media (min-width: 900px) { .quick { justify-content: flex-start; } .quick.away { display: none; } }
+@media (prefers-reduced-motion: reduce) { .quick { transition: none; } }
 
 /* terminal: same page, same background — not a card */
 .term { position: relative; margin-top: 8svh; padding-block: 12px 30svh; }

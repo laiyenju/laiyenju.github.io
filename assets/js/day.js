@@ -819,7 +819,7 @@ function renderText() {
   $('capName').textContent = it.name; $('capName').classList.toggle('past', !it.about && !it.main);
   $('capMeta').textContent = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
-  $('capLinks').hidden = !it.about;
+  $('quick').classList.toggle('away', !it.about); updateQuick();
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
 }
 function renderThumbs() {
@@ -974,11 +974,29 @@ async function run(raw, typed) {
   if (key !== 'cd ~') $('cmdForm').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 logEl.addEventListener('click', ev => { const b = ev.target.closest('[data-run]'); if (b) run(b.dataset.run, true); });
-$('workLink').addEventListener('click', ev => {
-  ev.preventDefault();
-  scrollTo({ top: document.querySelector('.term').offsetTop + 10, behavior: 'smooth' });
-  setTimeout(() => run('ls works', true), 450);
-});
+// the same commands as a row under today's caption (wide screens) or a bar fixed to the bottom (phones)
+const QUICK = ['whoami', 'ls notes', 'ls works', 'whereis yen'];
+function toTerm(then) {
+  const t = document.querySelector('.term'), go = () => setTimeout(then, 450);
+  if (t.getBoundingClientRect().top < innerHeight * .5) then(); else { scrollTo({ top: t.offsetTop + 10, behavior: 'smooth' }); go(); }
+}
+{
+  const q = $('quick');
+  const d = document.createElement('button'); d.type = 'button'; d.className = 'dollar'; d.textContent = '$'; d.title = 'Type a command';
+  d.addEventListener('click', () => toTerm(() => $('cmd').focus()));
+  q.append(d);
+  for (const c of QUICK) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = c;
+    b.addEventListener('click', () => toTerm(() => run(c, true)));
+    q.append(b);
+  }
+  $('cmd').addEventListener('focus', updateQuick); $('cmd').addEventListener('blur', updateQuick);
+}
+// phones: hide the bar where it would get in the way — the terminal's own buttons are on screen, the keyboard is up, an overlay is open, or the terminal is not on the page (past view)
+function updateQuick() {
+  $('quick').classList.toggle('off', $('cmdbar').classList.contains('on') || document.activeElement === $('cmd')
+    || !$('reader').hidden || !$('tl').hidden || document.body.classList.contains('is-past'));
+}
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
 CHIPS.forEach(([label, c]) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = c;
@@ -1396,6 +1414,7 @@ function updateMore() {
   const top = o ? o.scrollTop : scrollY, view = o ? o.clientHeight : innerHeight;
   const more = top + view < el.scrollHeight - 24;
   $('more').classList.toggle('off', !more || (!o && $('cmdbar').classList.contains('on')));
+  updateQuick();
 }
 function onScroll() {
   const p = cl(scrollY / (STAGE.h * .9), 0, 1);
