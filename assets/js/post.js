@@ -453,12 +453,15 @@
   }
   // $ cd .. stays lit in reverse video for a beat, as a list row does when it
   // opens, then the page is gone in one cut (no fade: see home.html).
+  // ← cd .. at the end, and notes/ in the path at the top: both go back to the list the same way
   var back = document.querySelector(".post-back");
-  if (back) back.addEventListener("click", function (e) {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    e.preventDefault();
-    back.classList.add("is-opening");
-    window.setTimeout(backToNotes, 90);
+  document.querySelectorAll(".post-back, .post-to-notes").forEach(function (el) {
+    el.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      if (el === back) back.classList.add("is-opening");
+      window.setTimeout(backToNotes, el === back ? 90 : 0);
+    });
   });
 
   /* —— Leaving: the home page reads this, so it can come back the way a
@@ -484,7 +487,8 @@
     var date = document.querySelector('[data-clock="date"]'), time = document.querySelector('[data-clock="time"]');
     if (!date || !time) return;
     date.textContent = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate());
-    time.textContent = DAYS[d.getUTCDay()] + " · " + CITY.name + " " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
+    // the weekday in its own span: a narrow screen leaves it out (site.css .wd)
+    time.innerHTML = '<span class="wd">' + DAYS[d.getUTCDay()] + " · </span>" + CITY.name + " " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
     window.setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
   }
 

@@ -46,18 +46,21 @@
   {% endfor %}
 
   {% assign slug = page.name | remove: '.md' | slice: 11, 200 %}
-  {% comment %}The same frame as a work on the home page: the date card at the top (it opens the timeline),
+  {% comment %}The same frame as a work on the home page: the date card at the top (back to the list) with Home beside it,
      the command that printed the note, the title on the left, and the way back at the end.{% endcomment %}
   <div class="post-top">
-    <a class="post-when" href="{{ '/' | relative_url }}#timeline" aria-label="Open the timeline">
+    {% comment %}Two pieces: the date card, whose button (on its left) goes back to the notes list, and Home.{% endcomment %}
+    <a class="post-when post-to-notes" href="{{ '/' | relative_url }}?view=notes" aria-label="Back to all notes">
+      <span class="cta"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 6h-9M4.5 3 1.5 6l3 3"/></svg>Notes</span>
       <span class="txt"><b data-clock="date">&nbsp;</b><span data-clock="time">Taipei</span></span>
-      <span class="cta"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="1.5" y="2.5" width="9" height="8" rx="1.5"/><path d="M1.5 5h9M4 1v3M8 1v3"/></svg>Timeline</span>
     </a>
+    <a class="post-home" href="{{ '/' | relative_url }}" aria-label="Home"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 6 6 1.8 10.5 6M3 4.8v5.7h6V4.8"/></svg></a>
   </div>
 
   <article class="post">
     <header class="post-head">
-      <p class="post-bar">yen@<span data-city>taipei</span> ~ <i>$</i> <b>cat notes/{{ slug }}.md</b></p>
+      {% comment %}The path is a way back, like a breadcrumb: ~ the home page, notes/ the list.{% endcomment %}
+      <p class="post-bar">yen@<span data-city>taipei</span> <a class="post-path" href="{{ '/' | relative_url }}" title="Home">~</a> <i>$</i> <b>cat <a class="post-path post-to-notes" href="{{ '/' | relative_url }}?view=notes" title="All notes">notes/</a>{{ slug }}.md</b></p>
       <h1 class="post-title">{{ page.title }}</h1>
       {% if page.subtitle %}<p class="post-subtitle">{{ page.subtitle }}</p>{% endif %}
       <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>

@@ -68,6 +68,25 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
   background: var(--ink); color: var(--bg); font: 500 12px/1 var(--mono); white-space: nowrap;
 }
 .when .cta svg { width: 12px; height: 12px; }
+.when .cta .i-back, .when .cta.is-back .i-cal { display: none; }
+.when .cta.is-back .i-back { display: block; }
+/* a work page: two pieces in one row. Left, the date card, whose button (on its left) goes back to the list;
+   right, Home: a 50px square, as tall as the card, an icon only. Together they never get wider than the screen;
+   on narrow phones the weekday drops. */
+.top.has-home { gap: 8px; }
+.top.has-home .when { width: min(300px, calc(100vw - 32px - 58px)); padding: 7px 16px 7px 7px; }
+.top.has-home .when .cta { order: -1; }
+.home-btn {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 50px; height: 50px; padding: 0;
+  border: 1px solid var(--rule); border-radius: 12px;
+  background: var(--sheet); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); color: var(--ink);
+  transition: border-color .15s ease, transform .15s ease, background-color 1.2s ease;
+}
+.home-btn[hidden] { display: none; }
+.home-btn:hover { border-color: var(--ink-soft); }
+.home-btn:active { transform: scale(.96); }
+.home-btn svg { width: 16px; height: 16px; }
+@media (max-width: 399px) { .top.has-home .wd { display: none; } }
 
 .group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 
@@ -119,6 +138,15 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .prompt { color: var(--ink-soft); font: 14px/1.7 var(--mono); }
 .prompt i { font-style: normal; color: var(--accent); }
 .prompt b { font-weight: 400; color: var(--ink); }
+/* the typing cursor, and output that comes in a row at a time (day.js run / reveal) */
+.cur { display: inline-block; width: .55em; height: 1.1em; margin-left: 1px; vertical-align: -.2em; background: var(--ink); opacity: .7; animation: cur-blink 1s steps(1) infinite; }
+@keyframes cur-blink { 50% { opacity: 0; } }
+.result { display: contents; }
+.rise { opacity: 0; transform: translateY(6px); transition: opacity .26s ease, transform .26s cubic-bezier(.2, .8, .2, 1); }
+.rise.in { opacity: 1; transform: none; }
+/* a path in a prompt you can follow back: ~ home, works/ the list (like a breadcrumb) */
+.prompt .path { font: inherit; color: inherit; border-bottom: 1px dotted currentColor; }
+.prompt .path:hover, .prompt .path:focus-visible { color: var(--accent); border-bottom-style: solid; }
 .block { display: grid; gap: 2px; padding-bottom: 18px; }
 .log { display: grid; }
 .out-line { color: var(--ink); white-space: pre-wrap; font: 14.5px/1.85 var(--mono); }
