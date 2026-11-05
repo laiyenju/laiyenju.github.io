@@ -7,5 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}?v={{ site.time | date: '%s' }}">
-{% comment %}The sun's colour for the page, before first paint (theme-boot.html).{% endcomment %}
+{% comment %}The sun's colour for the page, painted here in <head>, before the body exists: the first frame is already
+  the sky, so arriving from the home page never flashes the default paper (theme-boot.html adds the night class).{% endcomment %}
 <script src="{{ '/assets/js/sky.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
+<script>if (window.siteSky) siteSky.paintNotes();</script>

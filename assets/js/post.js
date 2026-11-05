@@ -272,7 +272,6 @@
   function stream() {
     var root = document.documentElement;
     if (!root.classList.contains("post-print")) return;
-    var bar = document.querySelector(".post-bar");
     var title = document.querySelector(".post-title");
     var sub = document.querySelector(".post-subtitle");
     var meta = document.querySelector(".post-meta");
@@ -281,10 +280,6 @@
 
     function show(el) { if (el) el.classList.add("is-shown"); }
 
-    function typeBar(next) {
-      show(bar);
-      next();
-    }
     function typeTitle(next) {
       if (!title) return next();
       show(title);
@@ -334,13 +329,13 @@
     function stopListening() { SKIP.forEach(function (ev) { window.removeEventListener(ev, done, true); }); }
     SKIP.forEach(function (ev) { window.addEventListener(ev, done, { capture: true, passive: true }); });
 
-    typeBar(function () { typeTitle(function () { typeMeta(streamProse); }); });
+    typeTitle(function () { typeMeta(streamProse); });
   }
 
   /* —— Back to the list. Opened from the notes list, the list is still one
         step back in history, and the browser keeps that page as it was
         (back/forward cache): going back shows it at once, as it was, with
-        no reload. Opened any other way (a shared link, a new tab, next/prev),
+        no reload. Opened any other way (a shared link, a new tab),
         follow the link to the home page's notes view. —— */
   // opened from the list on the home page (it says so as it leaves, day.js): the list is one step back
   var FROM_LIST = false;
@@ -360,7 +355,7 @@
     var a = document.querySelector(".post-to-notes");
     location.href = a ? a.href : new URL("./?view=notes", document.baseURI).href;
   }
-  // ← Notes on the date card and notes/ in the path at the top: both go back to the list the same way
+  // ← Notes on the date card: back to the list
   document.querySelectorAll(".post-to-notes").forEach(function (el) {
     el.addEventListener("click", function (e) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -369,29 +364,26 @@
     });
   });
 
-  /* —— Moving between notes (prev / next, the pager or the shell): arrive as from the list, cut in and print. —— */
-  function inSite(url) {
-    try { var u = new URL(url, location.href); if (u.origin === location.origin && /\/published\//.test(u.pathname)) sessionStorage.setItem("post-handoff", u.pathname); } catch (e) {}
-  }
-  document.querySelectorAll(".post-pager a").forEach(function (a) {
-    a.addEventListener("click", function (e) { if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) inSite(a.href); });
-  });
-
   /* —— Leaving: the home page reads this, so it can come back the way a
         shell does when a pager quits: no fade, the notes list as it was with
         `cat <file>` in its history, and other views printed line by line.
         Set on every way out (the link, a typed command, the back button). —— */
   var FILE = decodeURIComponent(location.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
-  // toList: leaving for the notes list (← Notes, notes/), so the home page shows the list again
-  var leavingToList = false;
-  function markReturn(toList) {
-    if (toList === true) leavingToList = true;
-    try { sessionStorage.setItem("post-return", JSON.stringify({ path: location.pathname, file: FILE, t: Date.now(), toList: leavingToList })); } catch (e) {}
+  // toList: leaving for the notes list (← Notes), so the home page shows the list again.
+  // home: leaving by Home, so the home page starts clean. Neither (the browser's back button): back to the list too.
+  var leavingToList = false, leavingHome = false;
+  function markReturn(to) {
+    if (to === true) leavingToList = true;
+    if (to === "home") leavingHome = true;
+    try { sessionStorage.setItem("post-return", JSON.stringify({ path: location.pathname, file: FILE, t: Date.now(), toList: leavingToList, home: leavingHome })); } catch (e) {}
   }
+  document.querySelectorAll(".post-home").forEach(function (el) {
+    el.addEventListener("click", function () { markReturn("home"); });
+  });
   window.addEventListener("pagehide", function () { markReturn(); });
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
-    leavingToList = false;
+    leavingToList = false; leavingHome = false;
     try { sessionStorage.removeItem("post-return"); } catch (err) {}
   });
 
@@ -415,17 +407,13 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("[data-city]").forEach(function (el) { el.textContent = CITY.short; });
     tick();
-    // Start typing once any page transition has finished (pagereveal has fired
-    // by the first frame) and the fonts are in (at most 400ms), so the first
+    // Start typing once the fonts are in (at most 400ms), so the first
     // characters don't stall while the Chinese face is still coming in.
     requestAnimationFrame(function () {
-      var landed = (document.activeViewTransition && document.activeViewTransition.finished) || Promise.resolve();
       var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
       var cap = new Promise(function (res) { window.setTimeout(res, 400); });
-      var go = function () { Promise.race([fonts, cap]).then(stream, stream); };
-      landed.then(go, go);
+      Promise.race([fonts, cap]).then(stream, stream);
     });
     buildRail();
     buildLightbox();

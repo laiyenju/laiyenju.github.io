@@ -59,11 +59,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 .when:hover { border-color: var(--ink-soft); }
 .when:active { transform: scale(.98); }
-.when { padding: 7px 7px 7px 16px; gap: 12px; width: min(330px, calc(100vw - 32px)); justify-content: space-between; box-sizing: border-box; }
+/* The date card is the same size and in the same place on every page (home, timeline, a work, a note: site.css has
+   the same): --card-w wide, 50px tall, 12px from the top, centred. What it says changes; its box never does. */
+:root { --card-w: min(360px, calc(100vw - 32px)); }
+.when { padding: 7px 7px 7px 16px; gap: 12px; width: var(--card-w); height: 50px; justify-content: space-between; box-sizing: border-box; }
 .when .txt { display: grid; line-height: 1.3; text-align: center; flex: 1; min-width: 0; }
-.when b { font: 500 14px/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; transition: font-size .4s cubic-bezier(.2, .8, .2, 1); }
-/* in the timeline the date grows: it is what changes there */
-body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
+.when b { font: 500 14px/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; }
 /* on the card (a lifted colour), so one step darker than other grey words to stay readable */
 .when .txt span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: 12px; }
 #clock { transition: opacity .25s ease; }
@@ -90,16 +91,14 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .when .cta svg { width: 12px; height: 12px; }
 .when .cta .i-back, .when .cta.is-back .i-cal { display: none; }
 .when .cta.is-back .i-back { display: block; }
-/* a work page: two pieces in one row. Left, the date card, whose button (on its left) goes back to the list;
-   right, Home: a 50px square, as tall as the card, an icon only. Together they never get wider than the screen;
-   on narrow phones the weekday drops. */
-.top.has-home { gap: 8px; }
-.top.has-home .when { width: min(300px, calc(100vw - 32px - 58px)); padding: 7px 16px 7px 7px; }
+/* a work page: the same card. Its button (on its left) goes back to the list, and Home stands inside it at its right
+   end: a 34px square, an icon only, outlined (the filled button is the way back). On narrow phones the weekday drops. */
+.top.has-home .when { padding: 7px 49px 7px 7px; }
 .top.has-home .when .cta { order: -1; }
 .home-btn {
-  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 50px; height: 50px; padding: 0;
-  border: 1px solid var(--rule); border-radius: 12px;
-  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); color: var(--ink);
+  position: absolute; top: calc(12px + env(safe-area-inset-top, 0px) + 8px); left: calc(50% + var(--card-w) / 2 - 42px);
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--rule); border-radius: 8px; color: var(--ink);
   transition: border-color .15s ease, transform .15s ease, background-color 1.2s ease;
 }
 .home-btn[hidden] { display: none; }
@@ -179,8 +178,6 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .hero .caption, .hero .tools { transition: opacity .25s ease; }
 body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-duration: .15s; }
 /* a path in a prompt you can follow back: ~ home, works/ the list (like a breadcrumb) */
-.prompt .path { font: inherit; color: inherit; border-bottom: 1px dotted currentColor; }
-.prompt .path:hover, .prompt .path:focus-visible { color: var(--accent); border-bottom-style: solid; }
 .block { display: grid; gap: 2px; padding-bottom: 18px; }
 .log { display: grid; }
 .out-line { color: var(--ink); white-space: pre-wrap; font: 14.5px/1.85 var(--mono); }
@@ -253,8 +250,8 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 #tl.clear .tl-cap, #tl.clear .ruler, #tl.clear .tl-row { opacity: 0; }
 .ghost { position: fixed; z-index: 6; pointer-events: none; image-rendering: pixelated; transform-origin: 0 0; }
 .reader-inner { max-width: 680px; margin: 0 auto; padding-top: calc(84px + env(safe-area-inset-top, 0px)); padding-bottom: 20svh; }
-.reader .prompt { display: block; margin-bottom: 26px; }
-.reader h1 { font: 400 30px/1.4 var(--sans); margin: 0 0 6px; text-wrap: balance; letter-spacing: -.005em; }
+/* the title right under the card, with the same room as on a note (site.css .post-title) */
+.reader h1 { font: 400 30px/1.4 var(--sans); margin: 18px 0 6px; text-wrap: balance; letter-spacing: -.005em; }
 .reader .sub { font: 18px/1.6 var(--sans); color: var(--ink-soft); margin: 0 0 14px; }
 .reader .byline { font: 14px/1.6 var(--mono); color: var(--ink-soft); margin: 0 0 34px; }
 .reader h2 { font: 500 14px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); margin: 34px 0 8px; }
@@ -333,20 +330,16 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .toast { position: fixed; z-index: 9; left: 50%; top: 56px; transform: translateX(-50%); background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 12px; color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) { .stage canvas { transition: none; } .cursor { animation: none; } }
 /* wide screens (≥ 900px). Phones keep the layout above unchanged.
-   The same stack as on a phone (date card, building, today's words and buttons), as one block in the middle of the
-   screen: the card rests just above the building (--lift, day.js sizeStage) and glides up to the top edge as the page
-   scrolls to the terminal (--q). The timeline is one block too: card, building, name, then the ruler right under it. */
+   The same stack as on a phone (date card, building, today's words and buttons). The card stays at the top, as on
+   every page; the building and its words are centred in the room under it (day.js sizeStage). The timeline is one
+   block too: building, name, then the ruler right under it, centred under the card. */
 @media (min-width: 900px) {
-  .top { transform: translateY(calc(var(--lift, 0px) * (1 - var(--q, 0)))); }
-  body:has(#tl:not([hidden])) .top { transform: translateY(var(--tl-lift)); }
-  body.tl-in .top, body:has(#reader:not([hidden])) .top { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
-  body:has(#reader:not([hidden])) .top { transform: none; }
   .caption { max-width: 40em; }
   /* the buttons' room under the words is kept while they are down in the terminal, so the page never shifts */
   .bar-slot { min-height: 50px; }
   .bar-slot .cmdbar { justify-content: center; }
   .term .cmdbar { position: sticky; bottom: 0; margin-top: 6px; padding-inline: 0; }
-  /* the timeline. --tl-h: the building's box; 250px: the card's row, the name and the ruler */
+  /* the timeline. --tl-h: the building's box; 250px: the card's row, the name and the ruler; --tl-lift: the room left over above */
   :root { --tl-h: clamp(300px, calc(100svh - 330px), 560px); --tl-lift: max(0px, calc((100svh - var(--tl-h) - 250px) / 2)); }
   .tlm { padding-top: calc(92px + var(--tl-lift)); padding-bottom: 0; }
   .tl-stage { height: var(--tl-h); }

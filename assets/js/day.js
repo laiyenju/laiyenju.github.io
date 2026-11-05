@@ -96,15 +96,13 @@ function sizeStage() {
   let h, lift = 0;
   const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight;
   if (wide) {
-    // wide screens: the phone's stack (card, building, words), as one block in the middle of the screen. The building
-    // takes what the card's row (76px), the words and a 32px bottom margin leave, between 260 and 640px; --lift is the
-    // room above the block, by which the card rests lower (day.css) and the building and words move down.
+    // wide screens: the phone's stack (building, words) under the date card. The building takes what the card's
+    // row (76px), the words and a 32px bottom margin leave, between 260 and 640px; any room left is split above and
+    // below, so the building and its words sit in the middle of the screen under the card.
     const room = innerHeight - 76 - 32 - words;
     h = Math.round(cl(room, 260, 640));
     lift = Math.max(0, Math.round((room - h) / 2));
-    document.documentElement.style.setProperty('--lift', lift + 'px');
   } else {
-    document.documentElement.style.removeProperty('--lift');
     // phones: the building always gets 60% of the screen height, the same size whether or not the day has other years
     // (the thumbnail row) or a long sentence: those may run below the first screen, the page scrolls.
     // When the words do fit, the space left is split above and below, so the building and its words stay together.
@@ -261,9 +259,8 @@ function renderPast(date) {
   ctaFor('Today');
   scrollTo(0, 0);
 }
-// the top button: Timeline on today's page, Today anywhere else (it then goes back to today)
 // the top card's button. Timeline on today's page; Today anywhere else in time; on a work page the card turns
-// into the way back to the list (← Work, on its left) and a Home button stands beside it.
+// into the way back to the list (← Work, on its left) and a Home button stands inside it, at its right end.
 function ctaFor(word) {
   const back = word === 'Work';
   $('ctaText').textContent = word;
@@ -435,7 +432,7 @@ function roomBelow(target, hold) {
   if (hold && Math.abs(scrollY - target) > 1 && Math.abs(scrollY - target) < innerHeight) scrollTo({ top: target, behavior: 'instant' });
 }
 function focusLine(block, now) {
-  // just under the date card, as it sits at the very top (on wide screens it rests lower only before the page scrolls)
+  // just under the date card (always at the top, the same on every screen)
   const below = document.querySelector('.top').offsetHeight + 20;
   FOCUS.at = Math.max(0, Math.round(scrollY + block.getBoundingClientRect().top - below));
   roomBelow(FOCUS.at);
@@ -468,7 +465,8 @@ function backFromNote(kept) {
   let r = null;
   try { r = JSON.parse(sessionStorage.getItem('post-return') || 'null'); sessionStorage.removeItem('post-return'); } catch (e) {}
   if (!r || Date.now() - r.t > 30 * 60e3 || new URLSearchParams(location.search).get('view')) return;
-  if (!r.toList) { if (kept) { clearTerm(); scrollTo(0, 0); } return; } // back from a note some other way (Home, ~): a clean home page
+  if (r.home) { if (kept) { clearTerm(); scrollTo(0, 0); } return; } // back from a note by Home: a clean home page
+  // otherwise (← Notes, or the browser's back button) the list comes back
   const list = kept && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls a[href]'));
   const readRow = blk => blk && [...blk.querySelectorAll('.ls a[href]')].find(a => new URL(a.href, location.href).pathname === r.path);
   if (list) { focusLine(list); lightRow(readRow(list), true); return; } // as after a work: the list glides up under the date card
@@ -549,7 +547,6 @@ function openWork(slug) {
   const w = WORKS.find(x => x.slug === slug);
   if (!w) return;
   $('readerBody').innerHTML = `
-    <span class="prompt">yen@${CITY.short} <button type="button" class="path" data-go="home" title="Home">~</button> <i>$</i> <b>cat <button type="button" class="path" data-go="works" title="All work">works/</button>${esc(w.slug)}.md</b></span>
     <h1>${esc(w.title)}</h1>
     <p class="sub">${esc(w.sub)}</p>
     <p class="byline">${esc(w.year)} · ${esc(w.role)}</p>
@@ -949,12 +946,6 @@ addEventListener('hashchange', route);
 addEventListener('popstate', route);
 for (const o of [reader, tl]) {
   o.addEventListener('scroll', () => updateMore(), { passive: true });
-  o.addEventListener('click', ev => {
-    // the path in a work's prompt: works/ back to the list, ~ home
-    const goTo = ev.target.closest('[data-go]');
-    if (goTo && goTo.dataset.go === 'works') backToWorks();
-    else if (goTo && goTo.dataset.go === 'home') { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); }
-  });
 }
 addEventListener('keydown', ev => {
   if (ev.key === 'Escape' && !tl.hidden) leaveToToday(); else if (ev.key === 'Escape' && openOverlay()) closeOverlays();
