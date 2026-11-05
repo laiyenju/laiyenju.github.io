@@ -62,21 +62,25 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* The date card is the same size and in the same place on every page (home, timeline, a work, a note: site.css has
    the same): --card-w wide, 50px tall, --card-top from the top, centred. What it says changes; its box never does.
    Phones: 12px from the top. Wide screens: lower, by the screen's height (9%, 28–96px), so the page sits towards the
-   middle instead of hugging the top edge. */
-:root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px)); }
+   middle instead of hugging the top edge.
+   Its two lines take the same two sizes on every page (site.css has the same): --card-title on top (the time, or in
+   the timeline the date), --card-sub under it (the date, the weekday and the city, or in the timeline how long ago). */
+:root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px));
+  --card-title: 15px; --card-sub: 12px; }
 @media (min-width: 900px) { :root { --card-top: clamp(28px, 9svh, 96px); } }
-.when { padding: 7px 7px 7px 16px; gap: 12px; width: var(--card-w); height: 50px; justify-content: space-between; box-sizing: border-box; }
+.when { padding: 6px 7px 6px 16px; gap: 12px; width: var(--card-w); height: 50px; justify-content: space-between; box-sizing: border-box; }
 .when .txt { display: grid; line-height: 1.3; text-align: center; flex: 1; min-width: 0; }
-.when b { font: 500 14px/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; }
+.when b { font: 500 var(--card-title)/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; }
 /* on the card (a lifted colour), so one step darker than other grey words to stay readable */
-.when .txt span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: 12px; }
-#clock { transition: opacity .25s ease; }
+.when .txt > span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: var(--card-sub); }
+#date, #clock { transition: opacity .25s ease, color .3s ease; }
+#date.swap { opacity: 0; }
 /* the timeline on a past day: the date and its line in the accent, the same colour as the line above a past building */
-.when.is-past-day b, .when.is-past-day .txt span { color: var(--accent); }
+.when.is-past-day b, .when.is-past-day .txt > span { color: var(--accent); }
 /* the colour change fades on the date and the line only; the digit strips inside keep their own roll
    (.dial .strip, .roll .rs) and take the colour from them */
-.when b, .when #clock, .when #clock .wd { transition: color .3s ease; }
-.when .dial span, .when #clock .roll span { color: inherit; }
+.when #clock .wd { transition: color .3s ease; }
+.when .txt b span { color: inherit; font-size: inherit; }
 /* the live time in the date card: HH:MM:SS, each digit rolls (sky.js rollClock) */
 .roll { display: inline-flex; font-variant-numeric: tabular-nums; vertical-align: bottom; }
 .roll .rg { display: inline-block; height: 1.35em; line-height: 1.35em; overflow: hidden; }
@@ -86,7 +90,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 @media (prefers-reduced-motion: reduce) { .roll .rs { transition: none !important; } }
 
 #clock.swap { opacity: 0; }
-.when .txt b span { color: inherit; font-size: inherit; }
 .when .cta {
   display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px;
   background: var(--ink); color: var(--bg); font: 500 12px/1 var(--mono); white-space: nowrap;
@@ -98,7 +101,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
    the right: a 50px glass square, as tall as the card, an icon only. It never moves the card: where there is room
    (508px and wider) it sits right of the card; on narrower screens the card gives up 58px on its right for it, so the
    card's left edge, top and height stay put and the two together fill the card's usual box (site.css: the same). */
-.top.has-home .when { padding: 7px 16px 7px 7px; }
+.top.has-home .when { padding: 6px 16px 6px 7px; }
 .top.has-home .when .cta { order: -1; }
 .home-btn {
   position: absolute; top: var(--card-top); left: calc(50% + var(--card-w) / 2 + 8px);
@@ -116,6 +119,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .home-btn { left: calc(50% + var(--card-w) / 2 - 50px); }
   .top.has-home .wd { display: none; }
 }
+/* the home page on a narrow phone: the day line (date · weekday · city) leaves the weekday out to fit */
+@media (max-width: 389px) { #clock.live .wd { display: none; } }
 
 .group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 

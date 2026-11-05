@@ -592,28 +592,41 @@ function pureImage(x) {
 // header date as a dial: each digit is a strip 0–9 that slides to its number
 // sub: the line under the date; live: end it with the time now, to the second (siteSky.rollClock, ticked by secondTick)
 // past: a day gone by (the timeline), written in the accent like the line above a past building (.past-tag)
+// The card's two lines. live (today: the home page, a work): the time on top, rolling each second (sky.js rollClock),
+// and "2026.11.06 · Friday · Taipei" under it. Otherwise (the timeline): the date on top, its digits turning like a
+// dial, and "Friday · seven years ago" under it. Switching between the two, the top line fades out and back in.
 function dialTo(iso, sub, live = false, past = false) {
   const el = $('date'), text = iso.replace(/-/g, '.');
   $('whenBtn').classList.toggle('is-past-day', past);
-  if (!el.querySelector('.dial') || el.querySelector('.dial').children.length !== text.length) {
-    el.innerHTML = `<span class="dial">${[...text].map(ch => /\d/.test(ch)
-      ? `<span class="dg"><span class="strip">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span>${ch}</span>`).join('')}</span>`;
-  }
-  [...el.querySelector('.dial').children].forEach((c, k) => {
-    const strip = c.querySelector('.strip');
-    if (!strip) return;
-    strip.style.transitionDelay = (k * 35) + 'ms';
-    strip.style.transform = `translateY(${-(+text[k]) * 1.35}em)`;
-  });
-  const c = $('clock');
-  // "Thursday · Taipei 16:15": the weekday goes in its own span, so a narrow screen can leave it out
+  const build = () => {
+    if (live) {
+      if (!$('clockRoll')) { el.innerHTML = '<span class="roll" id="clockRoll"></span>'; siteSky.rollClock($('clockRoll')); }
+      return;
+    }
+    if (!el.querySelector('.dial') || el.querySelector('.dial').children.length !== text.length) {
+      el.innerHTML = `<span class="dial">${[...text].map(ch => /\d/.test(ch)
+        ? `<span class="dg"><span class="strip">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span>${ch}</span>`).join('')}</span>`;
+      el.getBoundingClientRect(); // a new dial starts at 0 and turns to the date
+    }
+    [...el.querySelector('.dial').children].forEach((c, k) => {
+      const strip = c.querySelector('.strip');
+      if (!strip) return;
+      strip.style.transitionDelay = (k * 35) + 'ms';
+      strip.style.transform = `translateY(${-(+text[k]) * 1.35}em)`;
+    });
+  };
+  if (el._live === undefined || el._live === live) build();
+  else { el.classList.add('swap'); clearTimeout(el._t); el._t = setTimeout(() => { build(); el.classList.remove('swap'); }, 220); }
+  el._live = live;
+  const c = $('clock'), line = (live ? text + ' · ' : '') + sub;
+  // the weekday goes in its own span, so a narrow screen can leave it out
   const put = () => {
     const k = sub.indexOf(' · ');
-    c.innerHTML = (k > 0 ? `<span class="wd">${esc(sub.slice(0, k + 3))}</span>${esc(sub.slice(k + 3))}` : esc(sub)) + (live ? ' <span class="roll" id="clockRoll"></span>' : '');
-    c._key = sub + '|' + live;
-    if (live) siteSky.rollClock($('clockRoll'));
+    c.innerHTML = (live ? esc(text) + ' · ' : '') + (k > 0 ? `<span class="wd">${esc(sub.slice(0, k + 3))}</span>${esc(sub.slice(k + 3))}` : esc(sub));
+    c.classList.toggle('live', live);
+    c._key = line;
   };
-  if (c._key !== sub + '|' + live) {
+  if (c._key !== line) {
     if (!c._key) put();
     else { c.classList.add('swap'); clearTimeout(c._t); c._t = setTimeout(() => { put(); c.classList.remove('swap'); }, 220); }
   }

@@ -392,17 +392,17 @@
   function two(n) { return (n < 10 ? "0" : "") + n; }
   function tick() {
     var d = new Date(Date.now() + CITY.tz * 3600e3);
-    var date = document.querySelector('[data-clock="date"]'), time = document.querySelector('[data-clock="time"]');
-    if (!date || !time) return;
-    date.textContent = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate());
-    // the weekday in its own span: a narrow screen leaves it out (site.css .wd)
-    var wd = DAYS[d.getUTCDay()];
-    // the weekday and city stay put; the time, to the second, rolls digit by digit (sky.js rollClock)
-    if (time.getAttribute("data-wd") !== wd) {
-      time.setAttribute("data-wd", wd);
-      time.innerHTML = '<span class="wd">' + wd + " · </span>" + CITY.name + ' <span class="roll"></span>';
-    }
+    var time = document.querySelector('[data-clock="time"]'), day = document.querySelector('[data-clock="day"]');
+    if (!time || !day) return;
+    // on top, the time to the second, rolling digit by digit (sky.js rollClock), as on the home page
+    if (!time.querySelector(".roll")) time.innerHTML = '<span class="roll"></span>';
     if (window.siteSky && siteSky.rollClock) siteSky.rollClock(time.querySelector(".roll"));
+    // under it: date · weekday · city. The weekday in its own span: a narrow screen leaves it out (site.css .wd)
+    var date = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate()), wd = DAYS[d.getUTCDay()];
+    if (day.getAttribute("data-day") !== date) {
+      day.setAttribute("data-day", date);
+      day.innerHTML = date + ' · <span class="wd">' + wd + " · </span>" + CITY.name;
+    }
     window.setTimeout(tick, 1000 - (Date.now() % 1000) + 15);
   }
 
