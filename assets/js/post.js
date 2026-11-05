@@ -337,101 +337,6 @@
     typeBar(function () { typeTitle(function () { typeMeta(streamProse); }); });
   }
 
-  /* —— The prompt after (END): a few commands, like the notes shell. —— */
-  function setupShell() {
-    var input = document.getElementById("post-input");
-    var out = document.querySelector(".post-end .sh-out");
-    if (!input || !out) return;
-    function link(sel) { var a = document.querySelector(sel); return a ? a.href : null; }
-    var to = {
-      notes: link(".post-back"),
-      next: link('.post-pager a[data-pager="next"]'),
-      prev: link('.post-pager a[data-pager="prev"]'),
-    };
-    var root = new URL("./", to.notes || location.href).href;
-    function say(text, prompt) {
-      var p = document.createElement("p");
-      if (prompt) {
-        p.innerHTML = '<span class="sh-dir">yen@' + CITY.short + ' ~/notes</span> <span class="sh-arrow">$</span> ';
-        p.appendChild(document.createTextNode(text));
-      } else {
-        p.className = "sh-dim";
-        p.textContent = text;
-      }
-      out.appendChild(p);
-      while (out.children.length > 14) out.removeChild(out.firstChild);
-    }
-    if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
-    function go(url) { window.setTimeout(function () { markReturn(); inSite(url); location.href = url; }, 260); }
-    function run(raw) {
-      var line = raw.trim().replace(/\s+/g, " ");
-      if (!line) return;
-      say(line, true);
-      var w = line.split(" ");
-      var arg = w[1] || "";
-      if (w[0] === "cd") {
-        if (arg === "" || arg === "~" || arg === "~/" || arg === "/") return go(root);
-        if (arg === ".." || arg === "../" || arg === "~/notes" || arg === "notes") return window.setTimeout(backToNotes, 260);
-        if (arg === "-") return window.setTimeout(function () { history.back(); }, 260);
-        if (arg === "works" || arg === "../works" || arg === "~/works") return go(root + "?view=works");
-        return say("cd: no such file or directory: " + arg);
-      }
-      if (w[0] === "ls") return window.setTimeout(backToNotes, 260);
-      if (w[0] === "next" || w[0] === "prev" || (w[0] === "cat" && (arg === "next" || arg === "prev"))) {
-        var which = w[0] === "cat" ? arg : w[0];
-        if (to[which]) return go(to[which]);
-        return say(which === "next" ? t("this is the newest note.", "這已經是最新的一篇。") : t("this is the first note.", "這是第一篇。"));
-      }
-      if (w[0] === "top") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-      if (w[0] === "clear") { out.innerHTML = ""; return; }
-      if (w[0] === "whoami") return say("yen — product manager @Taiwan. I write about how products get decided.");
-      if (w[0] === "pwd") return say("/home/yen/notes");
-      if (w[0] === "sudo") return say("yen is not in the sudoers file. This incident will be reported.");
-      if (w[0] === "exit" || w[0] === "home") return go(root);
-      if (w[0] === "help" && window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
-        // Touch screens: only what the buttons below can do.
-        say(t("tap a command below", "點選下方的指令"));
-        say("top     " + t("back to the top", "回到頁首"));
-        return say("cd ..   " + t("back to notes", "回到文章列表"));
-      }
-      if (w[0] === "help") {
-        say("cd ..     " + t("back to notes (or ls)", "回到文章列表（也可以輸入 ls）"));
-        say("cd ~      " + t("go home", "回首頁"));
-        say("cd -      " + t("go back", "回上一頁"));
-        say("next      " + t("newer note", "下一個（較新的文章）"));
-        say("prev      " + t("older note", "上一個（較舊的文章）"));
-        say("top       " + t("back to the top", "回到頁首"));
-        say("whoami    " + t("who is Yen", "看網站作者是誰"));
-        say("clear     " + t("clear the screen", "清除畫面"));
-        return say("help      " + t("show this list", "查看操作指令"));
-      }
-      say("sh: command not found: " + w[0] + t(" — try help", "（輸入 help 查看操作指令）"));
-    }
-    input.addEventListener("keydown", function (e) {
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-      run(input.value);
-      input.value = "";
-    });
-    // Touch screens: the commands as buttons, so the keyboard never comes up.
-    var row = document.createElement("div");
-    row.className = "sh-taps";
-    ["help", "top"].forEach(function (cmd) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.textContent = cmd;
-      b.addEventListener("click", function () {
-        run(cmd);
-      });
-      row.appendChild(b);
-    });
-    input.closest(".sh-live").after(row);
-    // Back from the next page: an empty prompt again.
-    window.addEventListener("pageshow", function (e) {
-      if (e.persisted) { input.value = ""; out.innerHTML = ""; }
-    });
-  }
-
   /* —— Back to the list. Opened from the notes list, the list is still one
         step back in history, and the browser keeps that page as it was
         (back/forward cache): going back shows it at once, as it was, with
@@ -452,19 +357,15 @@
   function backToNotes() {
     markReturn(true);
     if (cameFromNotes()) { history.back(); return; }
-    var a = document.querySelector(".post-back");
+    var a = document.querySelector(".post-to-notes");
     location.href = a ? a.href : new URL("./?view=notes", document.baseURI).href;
   }
-  // $ cd .. stays lit in reverse video for a beat, as a list row does when it
-  // opens, then the page is gone in one cut (no fade: see home.html).
-  // ← cd .. at the end, and notes/ in the path at the top: both go back to the list the same way
-  var back = document.querySelector(".post-back");
-  document.querySelectorAll(".post-back, .post-to-notes").forEach(function (el) {
+  // ← Notes on the date card and notes/ in the path at the top: both go back to the list the same way
+  document.querySelectorAll(".post-to-notes").forEach(function (el) {
     el.addEventListener("click", function (e) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
-      if (el === back) back.classList.add("is-opening");
-      window.setTimeout(backToNotes, el === back ? 90 : 0);
+      backToNotes();
     });
   });
 
@@ -481,7 +382,7 @@
         `cat <file>` in its history, and other views printed line by line.
         Set on every way out (the link, a typed command, the back button). —— */
   var FILE = decodeURIComponent(location.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
-  // toList: leaving for the notes list (← Notes, notes/, cd ..), so the home page shows the list again
+  // toList: leaving for the notes list (← Notes, notes/), so the home page shows the list again
   var leavingToList = false;
   function markReturn(toList) {
     if (toList === true) leavingToList = true;
@@ -490,7 +391,6 @@
   window.addEventListener("pagehide", function () { markReturn(); });
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
-    if (back) back.classList.remove("is-opening");
     leavingToList = false;
     try { sessionStorage.removeItem("post-return"); } catch (err) {}
   });
@@ -521,7 +421,6 @@
       var go = function () { Promise.race([fonts, cap]).then(stream, stream); };
       landed.then(go, go);
     });
-    setupShell();
     buildRail();
     buildLightbox();
     layout();

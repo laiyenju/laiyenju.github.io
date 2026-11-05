@@ -49,7 +49,7 @@
 
   {% assign slug = page.name | remove: '.md' | slice: 11, 200 %}
   {% comment %}The same frame as a work on the home page: the date card at the top (back to the list) with Home beside it,
-     the command that printed the note, the title on the left, and the way back at the end.{% endcomment %}
+     the command that printed the note, and the title on the left.{% endcomment %}
   <div class="post-top">
     {% comment %}Two pieces: the date card, whose button (on its left) goes back to the notes list, and Home.{% endcomment %}
     <a class="post-when post-to-notes" href="{{ '/' | relative_url }}?view=notes" aria-label="Back to all notes">
@@ -80,11 +80,6 @@
         {% if older %}<a href="{{ older.url | relative_url }}" data-pager="prev"><span class="post-pager-label"><span class="i-en">prev</span><span class="i-zh">上一個</span></span><time datetime="{{ older.date | date_to_xmlschema }}">{{ older.date | date: "%Y-%m-%d" }}</time><span class="post-pager-title">{{ older.title }}</span></a>{% endif %}
       </nav>
       {% endif %}
-      <div class="sh-out" aria-live="polite"></div>
-      <label class="sh-line sh-live"><span><span class="sh-prompt">yen@<span data-city>taipei</span> ~/notes</span> <span class="sh-arrow">$</span></span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="post-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
-      <p class="sh-keys"><span class="i-en">type <kbd>help</kbd></span><span class="i-zh">輸入 <kbd>help</kbd> 查看操作指令</span></p>
-      {% comment %}Straight to the home page's notes view: /notes/ is only a redirect, a second page load.{% endcomment %}
-      <p class="post-backrow"><a class="post-back" href="{{ '/' | relative_url }}?view=notes">← cd ..</a></p>
     </footer>
   </article>
 

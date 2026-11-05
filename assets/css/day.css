@@ -144,12 +144,18 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .result { display: contents; }
 .rise { opacity: 0; transform: translateY(6px); transition: opacity .26s ease, transform .26s cubic-bezier(.2, .8, .2, 1); }
 .rise.in { opacity: 1; transform: none; }
-/* a picked row in a list: reverse video (the terminal's "selected"); .was lets it fade back */
-.ls .lit, .ls .was { border-radius: 4px; }
-.ls .lit { background: var(--ink); box-shadow: 0 0 0 6px var(--ink); }
-.ls .lit .d, .ls .lit .t, .ls .lit .r { color: var(--bg); }
-.ls .was { transition: background-color .9s ease, box-shadow .9s ease; }
-.ls .was .d, .ls .was .t, .ls .was .r { transition: color .9s ease; }
+/* a picked row in a list, the way a terminal list marks it: a > cursor in the margin and the title in the accent.
+   No box, no fill. .was lets it fade back (coming back to the list, it marks the one you just read). */
+.ls a, .ls button { position: relative; }
+.ls a::before, .ls button::before {
+  content: '>'; position: absolute; left: -15px; top: 12px; font: 500 13px/24px var(--mono); color: var(--accent);
+  opacity: 0; pointer-events: none;
+}
+.ls .lit::before { opacity: 1; }
+.ls .lit .t { color: var(--accent); }
+.ls .was::before { transition: opacity .9s ease; }
+.ls .was .t { transition: color .9s ease; }
+@media (max-width: 520px) { .ls a::before, .ls button::before { left: -13px; line-height: 22px; } }
 /* the timeline open: today's words step aside, and come back only after it has gone */
 .hero .caption, .hero .tools { transition: opacity .25s ease; }
 body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-duration: .15s; }
@@ -235,8 +241,6 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .reader p { font: 17px/1.7 var(--sans); margin: 0 0 14px; }
 .reader .out { font: 14.5px/1.7 var(--mono); }
 .reader .out a { border-bottom: 1px dotted var(--ink-soft); text-decoration: none; }
-.reader .back { display: inline-flex; margin-top: 40px; border: 1px solid var(--rule); border-radius: 8px; padding: 9px 14px; background: var(--sheet); font: 14px/1.2 var(--mono); }
-.reader .draft { color: var(--ink-soft); font: 14px/1.7 var(--sans); border-left: 2px solid var(--rule); padding-left: 12px; margin-top: 30px; }
 
 /* the homepage as it was on a past day: same look, that day's building is the main one */
 /* which day it is: a line of text in the accent colour above the title, not a box */
@@ -287,12 +291,7 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .tl-item .s { font: 15.5px/1.7 var(--sans); color: var(--ink-soft); margin-top: 2px; }
 .tl-item:hover .n { text-decoration: underline; text-underline-offset: 3px; }
 .tl-item[aria-current="true"] .d { color: var(--accent); }
-.day-model { display: grid; place-items: center; margin: 8px 0 18px; }
-.day-model canvas { image-rendering: pixelated; max-width: 100%; }
-.day-meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); margin: 0 0 24px; }
-.day-meta a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .reader p a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
-.nav-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 36px; }
 
 /* tells the reader there is more below */
 .more {
