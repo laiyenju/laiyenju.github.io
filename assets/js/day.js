@@ -688,8 +688,20 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   const mx = 14, half = Math.max((x1 - x0) / 2 + mx, 40), cxm = (x0 + x1) / 2;
   x0 = Math.max(0, Math.round(cxm - half)); x1 = Math.min(e.W - 1, Math.round(cxm + half));
   y0 = Math.max(0, y0 - 12); y1 = Math.min(e.H - 1, y1 + 18);
-  const view = document.createElement('canvas'); view.width = x1 - x0 + 1; view.height = y1 - y0 + 1;
-  const w = { key, scene, sc, e, canvas, view, crop: [x0, y0, view.width, view.height], opts, em: Int32Array.from(lit), MARK, bare, pure };
+  // the picture then grows to take in the whole shadow. The building's box above still decides the size and the
+  // centre on screen; the extra edges (pad: top, right, bottom, left) are allowed to spill over the page.
+  let sx0 = x0, sy0 = y0, sx1 = x1, sy1 = y1;
+  if (bare && !pure) {
+    for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
+      const i = iy * e.W + ix, p = e.bakedPix[i];
+      if (!e.ground[i] || e.bakedZ[i] !== e.groundZ[i] || p === MARK || !(p >>> 24)) continue; // only shaded ground
+      if (ix < sx0) sx0 = ix; if (ix > sx1) sx1 = ix; if (iy < sy0) sy0 = iy; if (iy > sy1) sy1 = iy;
+    }
+    sx0 = Math.max(0, sx0 - 2); sy0 = Math.max(0, sy0 - 2); sx1 = Math.min(e.W - 1, sx1 + 2); sy1 = Math.min(e.H - 1, sy1 + 2);
+  }
+  const pad = [y0 - sy0, sx1 - x1, sy1 - y1, x0 - sx0];
+  const view = document.createElement('canvas'); view.width = sx1 - sx0 + 1; view.height = sy1 - sy0 + 1;
+  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), MARK, bare, pure };
   if (!keep) return w;
   worlds.set(key, w);
   while (worlds.size > 6) worlds.delete(worlds.keys().next().value);
@@ -782,10 +794,23 @@ function sizeStage() {
 }
 const disp = document.createElement('canvas');
 stage.append(disp);
+// the building's own box inside a world's picture: [x, y, width, height] (the rest is shadow)
+function innerOf(w) { const [t, r, b, l] = w.pad; return [l, t, w.view.width - l - r, w.view.height - t - b]; }
 function fitCanvas(w) {
   if (disp.width !== w.view.width || disp.height !== w.view.height) { disp.width = w.view.width; disp.height = w.view.height; }
-  const f = Math.max(.4, Math.min(STAGE.w / disp.width, STAGE.h / disp.height, 3.4) * .86);
+  // sized and placed by the building alone; negative margins let the shadow spill past the stage, uncut
+  const [, , iw, ih] = innerOf(w), [t, r, b, l] = w.pad;
+  const f = Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 3.4) * .86);
   disp.style.width = Math.round(disp.width * f) + 'px'; disp.style.height = Math.round(disp.height * f) + 'px';
+  disp.style.margin = `${-t * f}px ${-r * f}px ${-b * f}px ${-l * f}px`;
+}
+// the building part of what is on screen now, as its own picture and place (for the timeline's fly-in and fly-out)
+function dispInner() {
+  const r = disp.getBoundingClientRect(), k = r.width / disp.width;
+  const [x, y, iw, ih] = mainWorld ? innerOf(mainWorld) : [0, 0, disp.width, disp.height];
+  const c = document.createElement('canvas'); c.width = iw; c.height = ih;
+  c.getContext('2d').drawImage(disp, x, y, iw, ih, 0, 0, iw, ih);
+  return { img: c, rect: { left: r.left + x * k, top: r.top + y * k, width: iw * k, height: ih * k } };
 }
 function blit(src) { const g = disp.getContext('2d'); g.clearRect(0, 0, disp.width, disp.height); g.drawImage(src, 0, 0); }
 /* turntable: 16 pre-drawn views per building, filled in the background, so dragging is smooth */
@@ -853,10 +878,10 @@ function paintThumbs() {
     if (!it.thumb) return;
     const w = getWorld(it.scene, it.opts, 0);
     drawWorld(w, 1.3);
-    const g = it.thumb.getContext('2d'), sw = w.view.width, sh = w.view.height;
+    const g = it.thumb.getContext('2d'), [sx, sy, sw, sh] = innerOf(w);
     const k = Math.min(120 / sw, 108 / sh), dw = sw * k, dh = sh * k;
     g.clearRect(0, 0, 120, 108); g.imageSmoothingEnabled = true;
-    g.drawImage(w.view, 0, 0, sw, sh, (120 - dw) / 2, (108 - dh) / 2, dw, dh);
+    g.drawImage(w.view, sx, sy, sw, sh, (120 - dw) / 2, (108 - dh) / 2, dw, dh);
   });
   if (mainWorld) { drawWorld(mainWorld, clockT()); blit(mainWorld.view); }
 }
@@ -1063,9 +1088,9 @@ function openWork(slug) {
 }
 function snapshot(scene, opts, maxW, maxH) {
   const w = getWorld(scene, opts, 0); drawWorld(w, 1.3);
-  const k = Math.min(maxW / w.view.width, maxH / w.view.height);
-  const c = document.createElement('canvas'); c.width = Math.round(w.view.width * k); c.height = Math.round(w.view.height * k);
-  const g = c.getContext('2d'); g.imageSmoothingEnabled = k < 1; g.drawImage(w.view, 0, 0, c.width, c.height);
+  const [sx, sy, sw, sh] = innerOf(w), k = Math.min(maxW / sw, maxH / sh);
+  const c = document.createElement('canvas'); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = k < 1; g.drawImage(w.view, sx, sy, sw, sh, 0, 0, c.width, c.height);
   return c;
 }
 const LONG_MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1355,7 +1380,7 @@ function leaveTl(setup, hash) {
   scrollTo(0, 0);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; renderText(); updateMore(); return; }
-  const to = rectLike(img, disp, disp.getBoundingClientRect()), g = ghostOf(img, to);
+  const at = dispInner(), to = rectLike(img, at.img, at.rect), g = ghostOf(img, to);
   const fromRect = rectLike(img, cv, from);
   disp.style.opacity = '0';
   cv.style.visibility = 'hidden';
@@ -1484,7 +1509,8 @@ stage.addEventListener('pointerup', endDrag); stage.addEventListener('pointercan
 stage.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openTimeline(); } });
 function openTimeline() {
   const it = state.items[state.index];
-  TL.from = { rect: disp.getBoundingClientRect(), img: disp, id: it.id && !it.about ? it.id : todayISO() };
+  const b = dispInner();
+  TL.from = { rect: b.rect, img: b.img, id: it.id && !it.about ? it.id : todayISO() };
   go2('#day-' + TL.from.id);
 }
 let wheelT = 0;

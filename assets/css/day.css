@@ -70,6 +70,11 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
   transform-origin: 50% 100%; transform: translateX(var(--dx, 0px)) scale(calc(1 - var(--p) * .35));
 }
 .stage canvas { image-rendering: pixelated; display: block; transition: transform .2s ease, opacity .2s ease; }
+/* the picture is larger than the stage when the shadow is long: it spills over the page, never cut at its own edge.
+   It takes no taps (the stage does), and the words sit above it. */
+.stage canvas { pointer-events: none; }
+.tools, .caption { position: relative; z-index: 1; }
+.hero { overflow-x: clip; }
 .stage canvas.out { transform: scale(.62); opacity: 0; }
 .stage canvas.in { transform: scale(.62); opacity: 0; transition: none; }
 .stage canvas.turn-out { transform: scaleX(.08); opacity: .4; }
