@@ -144,6 +144,15 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .result { display: contents; }
 .rise { opacity: 0; transform: translateY(6px); transition: opacity .26s ease, transform .26s cubic-bezier(.2, .8, .2, 1); }
 .rise.in { opacity: 1; transform: none; }
+/* a picked row in a list: reverse video (the terminal's "selected"); .was lets it fade back */
+.ls .lit, .ls .was { border-radius: 4px; }
+.ls .lit { background: var(--ink); box-shadow: 0 0 0 6px var(--ink); }
+.ls .lit .d, .ls .lit .t, .ls .lit .r { color: var(--bg); }
+.ls .was { transition: background-color .9s ease, box-shadow .9s ease; }
+.ls .was .d, .ls .was .t, .ls .was .r { transition: color .9s ease; }
+/* the timeline open: today's words step aside, and come back only after it has gone */
+.hero .caption, .hero .tools { transition: opacity .25s ease; }
+body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-duration: .15s; }
 /* a path in a prompt you can follow back: ~ home, works/ the list (like a breadcrumb) */
 .prompt .path { font: inherit; color: inherit; border-bottom: 1px dotted currentColor; }
 .prompt .path:hover, .prompt .path:focus-visible { color: var(--accent); border-bottom-style: solid; }

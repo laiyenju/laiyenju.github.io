@@ -74,5 +74,17 @@
     return c.dark;
   }
 
-  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, contrast: contrast };
+  // the home page: its colour variables for this sky (day.js keeps them in step; home.html paints them before first paint)
+  function paintHome(bg) {
+    var c = colours(bg), dark = c.dark, root = document.documentElement.style;
+    root.setProperty('--bg', c.bg);
+    root.setProperty('--ink', c.ink);
+    root.setProperty('--ink-soft', c.faint);
+    root.setProperty('--ink-card', c.soft);
+    root.setProperty('--rule', dark ? 'rgba(236,231,221,.18)' : 'rgba(38,36,33,.14)');
+    root.setProperty('--accent', c.accent);
+    root.setProperty('--sheet', c.sheet);
+    root.colorScheme = dark ? 'dark' : 'light';
+  }
+  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, contrast: contrast };
 })();

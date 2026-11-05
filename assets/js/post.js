@@ -362,7 +362,7 @@
       while (out.children.length > 14) out.removeChild(out.firstChild);
     }
     if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
-    function go(url) { window.setTimeout(function () { markReturn(); location.href = url; }, 260); }
+    function go(url) { window.setTimeout(function () { markReturn(); inSite(url); location.href = url; }, 260); }
     function run(raw) {
       var line = raw.trim().replace(/\s+/g, " ");
       if (!line) return;
@@ -437,16 +437,20 @@
         (back/forward cache): going back shows it at once, as it was, with
         no reload. Opened any other way (a shared link, a new tab, next/prev),
         follow the link to the home page's notes view. —— */
+  // opened from the list on the home page (it says so as it leaves, day.js): the list is one step back
+  var FROM_LIST = false;
+  try { FROM_LIST = sessionStorage.getItem("post-from-list") === location.pathname; sessionStorage.removeItem("post-from-list"); } catch (e) {}
   function cameFromNotes() {
+    var nav = window.navigation, canBack = nav && typeof nav.canGoBack === "boolean" ? nav.canGoBack : history.length > 1;
+    if (FROM_LIST) return canBack;
     var from;
     try { from = new URL(document.referrer); } catch (e) { return false; }
     if (from.origin !== location.origin) return false;
     if (!/\/notes\/?$/.test(from.pathname) && from.searchParams.get("view") !== "notes") return false;
-    var nav = window.navigation;
-    return nav && typeof nav.canGoBack === "boolean" ? nav.canGoBack : history.length > 1;
+    return canBack;
   }
   function backToNotes() {
-    markReturn();
+    markReturn(true);
     if (cameFromNotes()) { history.back(); return; }
     var a = document.querySelector(".post-back");
     location.href = a ? a.href : new URL("./?view=notes", document.baseURI).href;
@@ -464,18 +468,30 @@
     });
   });
 
+  /* —— Moving between notes (prev / next, the pager or the shell): arrive as from the list, cut in and print. —— */
+  function inSite(url) {
+    try { var u = new URL(url, location.href); if (u.origin === location.origin && /\/published\//.test(u.pathname)) sessionStorage.setItem("post-handoff", u.pathname); } catch (e) {}
+  }
+  document.querySelectorAll(".post-pager a").forEach(function (a) {
+    a.addEventListener("click", function (e) { if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) inSite(a.href); });
+  });
+
   /* —— Leaving: the home page reads this, so it can come back the way a
         shell does when a pager quits: no fade, the notes list as it was with
         `cat <file>` in its history, and other views printed line by line.
         Set on every way out (the link, a typed command, the back button). —— */
   var FILE = decodeURIComponent(location.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
-  function markReturn() {
-    try { sessionStorage.setItem("post-return", JSON.stringify({ path: location.pathname, file: FILE, t: Date.now() })); } catch (e) {}
+  // toList: leaving for the notes list (← Notes, notes/, cd ..), so the home page shows the list again
+  var leavingToList = false;
+  function markReturn(toList) {
+    if (toList === true) leavingToList = true;
+    try { sessionStorage.setItem("post-return", JSON.stringify({ path: location.pathname, file: FILE, t: Date.now(), toList: leavingToList })); } catch (e) {}
   }
-  window.addEventListener("pagehide", markReturn);
+  window.addEventListener("pagehide", function () { markReturn(); });
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
     if (back) back.classList.remove("is-opening");
+    leavingToList = false;
     try { sessionStorage.removeItem("post-return"); } catch (err) {}
   });
 
