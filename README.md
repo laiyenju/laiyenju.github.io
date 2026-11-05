@@ -62,7 +62,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 欄位 | 必填 | 預設 | 說明 |
 |---|---|---|---|
 | `title` | 是 | — | 標題 |
-| `subtitle` | 否 | 無 | 副標題，置中顯示在標題下方。不填就沒有這一行 |
+| `subtitle` | 否 | 無 | 副標題，置中顯示在標題下方，也是首頁 terminal `ls notes` 清單裡標題下面那一行。不填就沒有這一行（清單改用 `description`，也沒有就只顯示標題） |
 | `date` | 是 | — | 格式 `YYYY-MM-DD`。決定排序和顯示的日期（不是看檔名的日期）；`total` 字數只算今年的文章 |
 | `description` | 否 | 內文前 120 字 | 搜尋摘要，也是分享卡片上的摘要 |
 | `lang` | 否 | `zh-Hant` | 英文文章填 `en`，會改 `<html lang>` 和 `og:locale`。結構化資料的語言固定是 `zh-Hant`（`_includes/seo.html`） |
@@ -140,7 +140,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 文章頁日夜主題 | 讀者自己選（文章頁） | `auto`（跟隨系統） | `day`、`night`。存在讀者的瀏覽器裡 |
 | 強調色 | `assets/css/site.css`：日間 `:root` 的 `--accent`，夜間 `body.theme-night` 的 `--accent` | 日間 `#b5531e`（朱）、夜間 `#f5b942`（琥珀） | 文章頁另有 `--shu`（`.post-prose`，內文標題也用這個顏色），分享卡片在 `scripts/og/card.html`，要一起改 |
 | 文章頁底色 | `assets/css/site.css` | 日間 `#fafaf7`、夜間 `#0d0f12` | 兩個顏色都直接寫在很多條規則裡，要全文搜尋取代。`_includes/seo.html` 的 `theme-color`、`notes/index.html`、`works/index.html`、`scripts/og/card.html`（只有日間）也有 |
-| 網頁字型 | 文章頁 `_includes/head.html`、首頁 `_layouts/home.html`（Google Fonts） | JetBrains Mono、Noto Sans TC | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入） |
+| 網頁字型 | 文章頁 `_includes/head.html`、首頁 `_layouts/home.html`（Google Fonts） | JetBrains Mono、Noto Sans TC | 文章內文是 iA Writer Quattro（`assets/fonts/quattro/`，在 `site.css` 開頭載入）。首頁：建築下方的說明用 Noto Sans TC；terminal 裡的所有文字（指令、輸出、notes／works 清單）用 JetBrains Mono，中文自動退回 Noto Sans TC。notes 和 works 用同一種清單（`day.css` 的 `.ls`） |
 | 文章圖片排版 | `assets/css/site.css` 的 `.post-fig`、`.post-gallery` | 單張和內文同寬；直式圖片（高 > 寬 × 1.1）寬度 `80%`；同一段有兩張以上時並排，總寬 `960px`，間距 `20px`；手機（≤ 640px）上下排列 | 並排的圖片會伸到側欄，`post.js` 會把側欄註腳往下推，避開圖片 |
 | 圖片放大檢視 | `assets/css/site.css` 的 `.lb`（`assets/js/post.js` 的 `buildLightbox`） | 寬螢幕：左欄 `320px` 放關閉、圖說、上一張／張數／下一張，細線隔開右邊的圖片；窄螢幕（≤ 767px）：上面關閉和箭頭，下面張數和圖說 | 鍵盤：Esc 關閉、左右鍵切換；手機左右滑動切換；點圖片關閉。一篇文章的圖片會依序循環 |
 | 註腳放側欄的最小寬度 | `assets/js/post.js` 的 `RAIL_MIN` | `1088`（px） | 較窄時放文末。要和 `site.css` 的文章欄寬（680px）一起算 |

@@ -963,12 +963,14 @@ function whereNow() {
 /* ================= terminal ================= */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const logEl = $('log');
-const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" target="_blank" rel="noopener"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span></a>`).join('')}</div>`;
+// notes and works share one list: date or year | title, then a short line under it (subtitle or description).
+// Each row carries its language, so Chinese titles get Chinese line breaking and spacing.
+const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" target="_blank" rel="noopener" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
 const line = (t, cls = '') => `<div class="out-line ${cls}">${esc(t)}</div>`;
 const COMMANDS = {
   'whoami': () => line(`Yen Lai. ${BIO}`) + `<div class="out-line mono"><a href="https://github.com/laiyenju" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/laiyenju/" target="_blank" rel="noopener">linkedin</a> · <a href="https://x.com/theYenLai" target="_blank" rel="noopener">x</a></div>`,
   'ls notes': () => lsRows(NOTES),
-  'ls works': () => WORKS.length ? `<div class="works">${WORKS.map(w => `<button type="button" data-run="open works/${w.slug}"><span class="y">${w.year}</span><span class="t">${esc(w.title)}</span><span class="r">${esc(w.sub)}</span></button>`).join('')}</div>` : line('Nothing here yet.'),
+  'ls works': () => WORKS.length ? `<div class="ls">${WORKS.map(w => `<button type="button" data-run="open works/${w.slug}" lang="en"><span class="d">${w.year}</span><span class="t">${esc(w.title)}</span><span class="r">${esc(w.sub)}</span></button>`).join('')}</div>` : line('Nothing here yet.'),
   'ls': () => line('notes/   works/', 'mono'),
   'whereis yen': () => line(whereNow()),
   'timeline': () => { go2('#timeline'); return line('Opened the timeline.'); },

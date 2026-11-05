@@ -114,9 +114,13 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .prompt b { font-weight: 400; color: var(--ink); }
 .block { display: grid; gap: 2px; padding-bottom: 18px; }
 .log { display: grid; }
-.out-line { color: var(--ink); white-space: pre-wrap; font: 16px/1.85 var(--sans); }
-.out-line.mono { font: 14px/1.8 var(--mono); }
+.out-line { color: var(--ink); white-space: pre-wrap; font: 14.5px/1.85 var(--mono); }
+.out-line.mono { font-size: 14px; }
 .out-line.err { color: var(--accent); }
+/* cat works/<slug>: label | value, like the lists */
+.case { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); column-gap: 14px; row-gap: 6px; margin: 8px 0 4px; font: 14px/1.75 var(--mono); }
+.case dt { color: var(--ink-soft); font-size: 13px; }
+.case dd { margin: 0; }
 .input-row { display: flex; align-items: center; gap: .6ch; }
 .input-row input { flex: 1; min-width: 0; font: 14px/1.7 var(--mono); color: var(--ink); background: transparent; border: 0; padding: 4px 0; caret-color: var(--accent); }
 .input-row input:focus { outline: none; }
@@ -152,17 +156,25 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
   .term .cmdbar { position: sticky; bottom: 0; margin-top: 6px; padding-inline: 0; }
 }
 .cmdbar button:active { border-color: var(--accent); color: var(--accent); }
-.ls a { display: grid; grid-template-columns: 7.4em 1fr; gap: 12px; padding: 8px 0; text-decoration: none; align-items: baseline; }
-.ls a:hover .t { text-decoration: underline; text-underline-offset: 3px; }
-.ls .d { color: var(--ink-soft); font: 13.5px/1.6 var(--mono); font-variant-numeric: tabular-nums; }
-.ls .t { font: 16.5px/1.65 var(--sans); min-width: 0; }
-.works { display: grid; }
-.works button { display: grid; grid-template-columns: 5em 1fr; gap: 2px 12px; padding: 12px 0; text-align: left; border-bottom: 1px solid var(--rule); align-items: baseline; }
-.works button:last-child { border-bottom: 0; }
-.works .y { color: var(--ink-soft); font: 13.5px/1.6 var(--mono); font-variant-numeric: tabular-nums; }
-.works .t { font: 500 16.5px/1.6 var(--sans); }
-.works .r { grid-column: 2; color: var(--ink-soft); font: 14.5px/1.7 var(--sans); margin-top: 2px; }
-.works button:hover .t { text-decoration: underline; text-underline-offset: 3px; }
+/* notes and works: one list. Date | title, a quieter line under the title, a rule between rows. All in the terminal's font. */
+.ls { display: grid; }
+.ls a, .ls button { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: baseline;
+  width: 100%; padding: 12px 0; border-bottom: 1px solid var(--rule); text-align: left; text-decoration: none; }
+.ls > :last-child { border-bottom: 0; }
+.ls .d { color: var(--ink-soft); font: 13px/1.7 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ls .t { font: 15px/1.6 var(--mono); color: var(--ink); }
+.ls .r { grid-column: 2; font: 13.5px/1.7 var(--mono); color: var(--ink-soft); }
+.ls a:hover .t, .ls button:hover .t { text-decoration: underline; text-underline-offset: 3px; }
+/* Chinese falls back from the coding font to Noto Sans TC: a touch more air, and no letter-squeezing */
+.ls :lang(zh) .t, .ls [lang|="zh"] .t { line-height: 1.7; letter-spacing: .02em; }
+.ls [lang|="zh"] .r { letter-spacing: .02em; }
+/* phones: the date goes above the title, so the title gets the full width */
+@media (max-width: 520px) {
+  .ls a, .ls button { grid-template-columns: minmax(0, 1fr); }
+  .ls .r { grid-column: 1; }
+  .case { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+  .case dd { margin-bottom: 10px; }
+}
 
 /* reading view for a work: a whole article, same look as the notes */
 .reader { position: fixed; inset: 0; z-index: 5; background: var(--bg); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; transition: background-color .45s ease; }
