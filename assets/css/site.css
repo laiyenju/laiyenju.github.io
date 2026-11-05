@@ -70,6 +70,8 @@ body {
   font-size: 18px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  /* a thin space between Chinese and English or numbers, where the browser supports it */
+  text-autospace: ideograph-alpha ideograph-numeric;
 }
 
 a {

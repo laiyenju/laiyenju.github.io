@@ -688,8 +688,20 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   const mx = 14, half = Math.max((x1 - x0) / 2 + mx, 40), cxm = (x0 + x1) / 2;
   x0 = Math.max(0, Math.round(cxm - half)); x1 = Math.min(e.W - 1, Math.round(cxm + half));
   y0 = Math.max(0, y0 - 12); y1 = Math.min(e.H - 1, y1 + 18);
-  const view = document.createElement('canvas'); view.width = x1 - x0 + 1; view.height = y1 - y0 + 1;
-  const w = { key, scene, sc, e, canvas, view, crop: [x0, y0, view.width, view.height], opts, em: Int32Array.from(lit), MARK, bare, pure };
+  // the picture then grows to take in the whole shadow. The building's box above still decides the size and the
+  // centre on screen; the extra edges (pad: top, right, bottom, left) are allowed to spill over the page.
+  let sx0 = x0, sy0 = y0, sx1 = x1, sy1 = y1;
+  if (bare && !pure) {
+    for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
+      const i = iy * e.W + ix, p = e.bakedPix[i];
+      if (!e.ground[i] || e.bakedZ[i] !== e.groundZ[i] || p === MARK || !(p >>> 24)) continue; // only shaded ground
+      if (ix < sx0) sx0 = ix; if (ix > sx1) sx1 = ix; if (iy < sy0) sy0 = iy; if (iy > sy1) sy1 = iy;
+    }
+    sx0 = Math.max(0, sx0 - 2); sy0 = Math.max(0, sy0 - 2); sx1 = Math.min(e.W - 1, sx1 + 2); sy1 = Math.min(e.H - 1, sy1 + 2);
+  }
+  const pad = [y0 - sy0, sx1 - x1, sy1 - y1, x0 - sx0];
+  const view = document.createElement('canvas'); view.width = sx1 - sx0 + 1; view.height = sy1 - sy0 + 1;
+  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), MARK, bare, pure };
   if (!keep) return w;
   worlds.set(key, w);
   while (worlds.size > 6) worlds.delete(worlds.keys().next().value);
@@ -744,7 +756,7 @@ function buildItems() {
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
     .sort(byDate).map(m => {
       const year = +m.date.slice(0, 4);
-      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, meta: '', html: sentenceFor(m, dd.y - year) };
+      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: '', html: sentenceFor(m, dd.y - year) };
     });
   const day = r.holiday || (r.rest ? 'Weekend' : 'Weekday');
   items.push({
@@ -765,17 +777,40 @@ let mainWorld = null;
 let STAGE = { w: 300, h: 300 };
 function sizeStage() {
   const wide = innerWidth >= 900;
-  // phones: the building takes a bit under half the screen, so the title and the first lines show without scrolling
-  const h = wide ? Math.round(cl(innerHeight - 76 - 56, 260, 760)) : Math.round(cl(innerHeight * .46, 200, 520));
+  let h, lift = 0;
+  if (wide) h = Math.round(cl(innerHeight - 76 - 56, 260, 760));
+  else {
+    // phones: the first screen holds the building, today's words and the bar, with nothing hidden under the bar.
+    // The building gets what is left after the words (up to half the screen); any space still left is split
+    // above and below, so the building and its words stay together in the middle instead of drifting apart.
+    const room = innerHeight - 76 - $('cmdbar').offsetHeight;
+    const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight + 8 + 12;
+    h = Math.round(cl(Math.min(innerHeight * .5, room - words), 180, 520));
+    lift = Math.max(0, Math.round((room - words - h) / 2));
+  }
   STAGE = { w: wide ? Math.round(group.clientWidth * .53) : group.clientWidth, h };
   stage.style.width = STAGE.w + 'px'; stage.style.height = STAGE.h + 'px';
+  group.style.paddingTop = lift ? lift + 'px' : '';
 }
 const disp = document.createElement('canvas');
 stage.append(disp);
+// the building's own box inside a world's picture: [x, y, width, height] (the rest is shadow)
+function innerOf(w) { const [t, r, b, l] = w.pad; return [l, t, w.view.width - l - r, w.view.height - t - b]; }
 function fitCanvas(w) {
   if (disp.width !== w.view.width || disp.height !== w.view.height) { disp.width = w.view.width; disp.height = w.view.height; }
-  const f = Math.max(.4, Math.min(STAGE.w / disp.width, STAGE.h / disp.height, 3.4) * .86);
+  // sized and placed by the building alone; negative margins let the shadow spill past the stage, uncut
+  const [, , iw, ih] = innerOf(w), [t, r, b, l] = w.pad;
+  const f = Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 3.4) * .86);
   disp.style.width = Math.round(disp.width * f) + 'px'; disp.style.height = Math.round(disp.height * f) + 'px';
+  disp.style.margin = `${-t * f}px ${-r * f}px ${-b * f}px ${-l * f}px`;
+}
+// the building part of what is on screen now, as its own picture and place (for the timeline's fly-in and fly-out)
+function dispInner() {
+  const r = disp.getBoundingClientRect(), k = r.width / disp.width;
+  const [x, y, iw, ih] = mainWorld ? innerOf(mainWorld) : [0, 0, disp.width, disp.height];
+  const c = document.createElement('canvas'); c.width = iw; c.height = ih;
+  c.getContext('2d').drawImage(disp, x, y, iw, ih, 0, 0, iw, ih);
+  return { img: c, rect: { left: r.left + x * k, top: r.top + y * k, width: iw * k, height: ih * k } };
 }
 function blit(src) { const g = disp.getContext('2d'); g.clearRect(0, 0, disp.width, disp.height); g.drawImage(src, 0, 0); }
 /* turntable: 16 pre-drawn views per building, filled in the background, so dragging is smooth */
@@ -843,10 +878,10 @@ function paintThumbs() {
     if (!it.thumb) return;
     const w = getWorld(it.scene, it.opts, 0);
     drawWorld(w, 1.3);
-    const g = it.thumb.getContext('2d'), sw = w.view.width, sh = w.view.height;
+    const g = it.thumb.getContext('2d'), [sx, sy, sw, sh] = innerOf(w);
     const k = Math.min(120 / sw, 108 / sh), dw = sw * k, dh = sh * k;
     g.clearRect(0, 0, 120, 108); g.imageSmoothingEnabled = true;
-    g.drawImage(w.view, 0, 0, sw, sh, (120 - dw) / 2, (108 - dh) / 2, dw, dh);
+    g.drawImage(w.view, sx, sy, sw, sh, (120 - dw) / 2, (108 - dh) / 2, dw, dh);
   });
   if (mainWorld) { drawWorld(mainWorld, clockT()); blit(mainWorld.view); }
 }
@@ -873,13 +908,14 @@ function go(k) {
   renderText();
   mount(true);
 }
-/* the homepage, but on a past day: only reached from the timeline (#past-YYYY-MM-DD) */
+/* the homepage, but on a past day: only reached from the timeline (#past-YYYY-MM-DD).
+   Same page as today, only the main building is swapped; the badge says which day it is,
+   the top button says Today and goes back, tapping the building opens the timeline there. */
 function renderPast(date) {
   const x = tlEntries().find(e => e.id === date && !e.today);
   if (!x) { exitPast(); return; }
   const id = date; date = x.date;
   const m = x.m, d = parseDay(date), now = fromDayMs(state.day).y, md = date.slice(5);
-  const nav = `<div class="nav-row"><button type="button" class="back" id="pastBack">← Timeline</button><button type="button" class="back" id="pastToday">Back to today</button></div>`;
   state.pastDate = id;
   document.body.classList.add('is-past');
   // that day's homepage: earlier years on the same date on the left, that building as the main one
@@ -888,24 +924,23 @@ function renderPast(date) {
     const y = +o.date.slice(0, 4), main = o.id === id;
     return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: main,
       tag: `${ago(now - d.y)} · ${LONG_MON[d.m - 1]} ${d.d}, ${d.y}`,
-      name: o.zh && !o.noZh ? `${o.name} · ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) + (main ? nav : '') };
+      name: o.zh && !o.noZh ? `${o.name}\u00a0· ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) };
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
-  sizeStage(); renderText(); renderThumbs(); mount(false);
-  $('ctaText').textContent = 'Timeline';
+  renderText(); renderThumbs(); sizeStage(); mount(false);
+  ctaFor('Today');
   scrollTo(0, 0);
 }
-document.addEventListener('click', ev => {
-  if (ev.target.closest('#pastBack') && state.pastDate) { TL.from = { rect: disp.getBoundingClientRect(), img: disp, id: state.pastDate }; go2('#day-' + state.pastDate); }
-  else if (ev.target.closest('#pastToday')) closeOverlays();
-});
+// the top button: Timeline on today's page, Today anywhere else (it then goes back to today)
+function ctaFor(word) { $('ctaText').textContent = word; $('whenBtn').setAttribute('aria-label', word === 'Today' ? 'Back to today' : 'Open the timeline'); }
 function exitPast() {
   if (!state.pastDate) return;
   state.pastDate = null;
   document.body.classList.remove('is-past');
+  ctaFor('Timeline');
   renderDay();
 }
-function renderDay() { state.ang = 0; sizeStage(); buildItems(); renderText(); renderThumbs(); mount(false); }
+function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
 /* ================= where is Yen now =================
    1. A check-in wins if it is less than 6 hours old. In the real site it comes from location.json,
       which an iPhone Shortcut updates when Yen arrives at or leaves a place (only a label, never coordinates).
@@ -928,12 +963,14 @@ function whereNow() {
 /* ================= terminal ================= */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const logEl = $('log');
-const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" target="_blank" rel="noopener"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span></a>`).join('')}</div>`;
+// notes and works share one list: date or year | title, then a short line under it (subtitle or description).
+// Each row carries its language, so Chinese titles get Chinese line breaking and spacing.
+const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" target="_blank" rel="noopener" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
 const line = (t, cls = '') => `<div class="out-line ${cls}">${esc(t)}</div>`;
 const COMMANDS = {
   'whoami': () => line(`Yen Lai. ${BIO}`) + `<div class="out-line mono"><a href="https://github.com/laiyenju" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/laiyenju/" target="_blank" rel="noopener">linkedin</a> · <a href="https://x.com/theYenLai" target="_blank" rel="noopener">x</a></div>`,
   'ls notes': () => lsRows(NOTES),
-  'ls works': () => WORKS.length ? `<div class="works">${WORKS.map(w => `<button type="button" data-run="open works/${w.slug}"><span class="y">${w.year}</span><span class="t">${esc(w.title)}</span><span class="r">${esc(w.sub)}</span></button>`).join('')}</div>` : line('Nothing here yet.'),
+  'ls works': () => WORKS.length ? `<div class="ls">${WORKS.map(w => `<button type="button" data-run="open works/${w.slug}" lang="en"><span class="d">${w.year}</span><span class="t">${esc(w.title)}</span><span class="r">${esc(w.sub)}</span></button>`).join('')}</div>` : line('Nothing here yet.'),
   'ls': () => line('notes/   works/', 'mono'),
   'whereis yen': () => line(whereNow()),
   'timeline': () => { go2('#timeline'); return line('Opened the timeline.'); },
@@ -1027,11 +1064,11 @@ const openOverlay = () => (!reader.hidden && reader) || (!tl.hidden && tl) || nu
 function go2(hash) { if (location.hash !== hash) { try { history.pushState(null, '', hash); } catch (e) { location.hash = hash; return; } } route(); }
 function showOverlay(el) {
   for (const o of [reader, tl]) o.hidden = o !== el;
-  $('ctaText').textContent = location.hash.startsWith('#work-') ? 'Timeline' : 'Today';
+  ctaFor(location.hash.startsWith('#work-') ? 'Timeline' : 'Today');
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
 function closeOverlays() {
-  reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; $('ctaText').textContent = 'Timeline';
+  reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline');
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
   updateMore();
@@ -1053,9 +1090,9 @@ function openWork(slug) {
 }
 function snapshot(scene, opts, maxW, maxH) {
   const w = getWorld(scene, opts, 0); drawWorld(w, 1.3);
-  const k = Math.min(maxW / w.view.width, maxH / w.view.height);
-  const c = document.createElement('canvas'); c.width = Math.round(w.view.width * k); c.height = Math.round(w.view.height * k);
-  const g = c.getContext('2d'); g.imageSmoothingEnabled = k < 1; g.drawImage(w.view, 0, 0, c.width, c.height);
+  const [sx, sy, sw, sh] = innerOf(w), k = Math.min(maxW / sw, maxH / sh);
+  const c = document.createElement('canvas'); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = k < 1; g.drawImage(w.view, sx, sy, sw, sh, 0, 0, c.width, c.height);
   return c;
 }
 const LONG_MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1071,7 +1108,7 @@ function timelineEntries() {
   const today = state.items[state.items.length - 1];
   const past = MEMORIES.filter(m => m.date < todayISO() && checkMemory(m)).sort(byDate).reverse();
   return [{ date: todayISO(), id: todayISO(), today: true, scene: today.scene, opts: today.opts, name: today.name, html: escHtml(today.meta) }]
-    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, html: plainSentence(m) })));
+    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, html: plainSentence(m) })));
 }
 /* ---------- timeline mode ----------
    Days go left (oldest) to right (today), like the homepage. Changing day: the building
@@ -1241,7 +1278,7 @@ function openTl(date) {
   TL.from = null;
   if (fly) tl.classList.add('clear');
   showOverlay(tl);
-  $('ctaText').textContent = 'Today';
+  ctaFor('Today');
   renderRuler();
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
@@ -1345,7 +1382,7 @@ function leaveTl(setup, hash) {
   scrollTo(0, 0);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; renderText(); updateMore(); return; }
-  const to = rectLike(img, disp, disp.getBoundingClientRect()), g = ghostOf(img, to);
+  const at = dispInner(), to = rectLike(img, at.img, at.rect), g = ghostOf(img, to);
   const fromRect = rectLike(img, cv, from);
   disp.style.opacity = '0';
   cv.style.visibility = 'hidden';
@@ -1360,7 +1397,7 @@ function leaveTl(setup, hash) {
   }, MOVE);
 }
 function headerNow() { const dd = fromDayMs(state.day); dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name} ${pad(Math.floor(state.minute / 60))}:${pad(state.minute % 60)}`); }
-function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } $('ctaText').textContent = 'Timeline'; }
+function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Timeline'); }
 function tapTl() {
   const x = TL.list[TL.idx];
   if (x.today) { leaveTl(() => { homeToday(); const k = state.items.length - 1; if (state.index !== k) { state.index = k; renderThumbs(); mount(false); } renderText(); }); return; }
@@ -1405,7 +1442,7 @@ function route() {
   else if ((m = h.match(/^#day-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(m[1]); }
   else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; renderPast(m[1]); updateMore(); }
   else {
-    if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; $('ctaText').textContent = 'Timeline'; }
+    if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); }
     if (state.pastDate) exitPast(); else renderText();
     updateMore();
   }
@@ -1474,7 +1511,8 @@ stage.addEventListener('pointerup', endDrag); stage.addEventListener('pointercan
 stage.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openTimeline(); } });
 function openTimeline() {
   const it = state.items[state.index];
-  TL.from = { rect: disp.getBoundingClientRect(), img: disp, id: it.id && !it.about ? it.id : todayISO() };
+  const b = dispInner();
+  TL.from = { rect: b.rect, img: b.img, id: it.id && !it.about ? it.id : todayISO() };
   go2('#day-' + TL.from.id);
 }
 let wheelT = 0;
@@ -1491,7 +1529,7 @@ addEventListener('keydown', ev => {
 });
 $('whenBtn').addEventListener('click', () => {
   if (!tl.hidden) leaveToToday();
-  else if (!reader.hidden) closeOverlays();
+  else if (!reader.hidden || state.pastDate) closeOverlays();
   else openTimeline();
 });
 function toast(text) {
@@ -1531,6 +1569,8 @@ setInterval(() => {
   if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; refreshLight(true); renderDay(); } else refreshLight(true);
 }, 60e3);
 addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
+// the words change height once the web fonts arrive (Quattro sets wider than the fallback), so measure again
+if (document.fonts) document.fonts.addEventListener('loadingdone', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
 
 applyTheme(LIGHT);
 refreshLight(false);
