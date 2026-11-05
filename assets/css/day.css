@@ -133,6 +133,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* the picture is larger than the stage when the shadow is long: it spills over the page, never cut at its own edge.
    It takes no taps (the stage does), and the words sit above it. */
 .stage canvas { pointer-events: none; }
+/* the platform under the building (day.js placePlate): behind it, placed by script on the same pixel grid */
+.stage .plate { position: absolute; z-index: 0; }
+.stage .plate[hidden] { display: none; }
+.stage canvas.bld { position: relative; z-index: 1; }
 .tools, .caption { position: relative; z-index: 1; }
 /* the first screen is the building and its words only; the terminal starts below it (the buttons are enough to start) */
 .hero { overflow-x: clip; min-height: 100svh; box-sizing: border-box; }
@@ -157,7 +161,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .thumb[aria-current="true"] span { border-bottom: 1.5px solid var(--accent); }
 .thumb:not([aria-current="true"]) canvas { opacity: .72; }
 
-.caption { text-align: center; display: grid; gap: 4px; max-width: 34em; padding-bottom: 8px; }
+/* padding-top: room for the platform's front corner under the building (day.js placePlate) */
+.caption { text-align: center; display: grid; gap: 4px; max-width: 34em; padding-top: 24px; padding-bottom: 8px; }
 .caption .name { font: 700 21px/1.45 var(--sans); letter-spacing: .01em; text-wrap: balance; }
 .caption .name.past { font: 700 17px/1.65 var(--sans); letter-spacing: 0; }
 .caption .meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); }

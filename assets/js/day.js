@@ -123,7 +123,11 @@ function sizeStage() {
   } else ['--stage-top', '--stage-w', '--stage-h'].forEach(v => root.removeProperty(v));
 }
 const disp = document.createElement('canvas');
-stage.append(disp);
+disp.className = 'bld';
+// the platform the building stands on (placePlate), under it in the same stage
+const plate = document.createElement('canvas');
+plate.className = 'plate'; plate.hidden = true;
+stage.append(plate, disp);
 // the building's own box inside a world's picture: [x, y, width, height] (the rest is shadow)
 function innerOf(w) { const [t, r, b, l] = w.pad; return [l, t, w.view.width - l - r, w.view.height - t - b]; }
 function fitCanvas(w) {
@@ -133,6 +137,105 @@ function fitCanvas(w) {
   const f = wholePixels(Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 4.4) * .97));
   disp.style.width = Math.round(disp.width * f) + 'px'; disp.style.height = Math.round(disp.height * f) + 'px';
   disp.style.margin = `${-t * f}px ${-r * f}px ${-b * f}px ${-l * f}px`;
+  placePlate(w, f);
+}
+
+/* The platform: a building with no ground of its own (bare scenes; home has its garden) stands on a faint slab of
+   square tiles, so it does not float. It is drawn at the engine's own pixels, in its projection, from the
+   building's footprint (where it touches the ground, plateFor). Then .6 unit of margin
+   around it, whole tiles of about 1 unit, and a thin edge facing us. Its colour is the page's ink, very faint, so it
+   follows the sky. The shadow is in the building's picture, above it, so it falls on the slab. */
+const PLATE = { margin: .6, tile: 1, depth: .3, top: .06, line: .12, right: .17, left: .11 };
+function inkRGB() {
+  const g = document.createElement('canvas').getContext('2d');
+  g.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
+  const h = g.fillStyle; // the browser gives it back as #rrggbb
+  return h[0] === '#' ? [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)) : [34, 34, 34];
+}
+function plateFor(w) {
+  const e = w.e, ink = inkRGB(), key = ink.join(',');
+  if (w._plate && w._plate.key === key) return w._plate;
+  // the footprint, in ground units: the building's pixels that touch the ground, taken back to it. A pixel shows a
+  // point at some height; only near the ground is its depth the ground's own depth there (an arch's underside, a roof
+  // edge or a flag would land far behind the building)
+  const lift = e.project(0, 0, .25), under = e.unproject(lift.sx, lift.sy);
+  const near = Math.abs(lift.d - e.project(under.x, under.y, 0).d) || 1e-6;
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
+    const i = iy * e.W + ix, p = e.bakedPix[i];
+    if (!(p >>> 24) || p === w.MARK || !e.ground[i] || e.bakedZ[i] === e.groundZ[i]) continue;
+    if (Math.abs(e.bakedZ[i] - e.groundZ[i]) > near) continue;
+    const g = e.unproject(ix + .5, iy + .5);
+    x0 = Math.min(x0, g.x); x1 = Math.max(x1, g.x); y0 = Math.min(y0, g.y); y1 = Math.max(y1, g.y);
+  }
+  if (x0 > x1) return (w._plate = { key, none: true });
+  const m = PLATE.margin, D = PLATE.depth;
+  const X0 = x0 - m, X1 = x1 + m, Y0 = y0 - m, Y1 = y1 + m;
+  // whole tiles each way, about 1 unit each (a little more or less, so the slab ends on a joint)
+  const TX = (X1 - X0) / Math.max(1, Math.round((X1 - X0) / PLATE.tile)), TY = (Y1 - Y0) / Math.max(1, Math.round((Y1 - Y0) / PLATE.tile));
+  // its box on the engine's canvas: the four top corners and the two front ones lowered by the edge
+  const pts = [[X0, Y0, 0], [X1, Y0, 0], [X0, Y1, 0], [X1, Y1, 0], [X1, Y0, -D], [X0, Y1, -D], [X1, Y1, -D]].map(([x, y, z]) => e.project(x, y, z));
+  const bx0 = Math.floor(Math.min(...pts.map(p => p.sx))) - 1, bx1 = Math.ceil(Math.max(...pts.map(p => p.sx))) + 1;
+  const by0 = Math.floor(Math.min(...pts.map(p => p.sy))) - 1, by1 = Math.ceil(Math.max(...pts.map(p => p.sy))) + 1;
+  const cv = document.createElement('canvas'); cv.width = bx1 - bx0 + 1; cv.height = by1 - by0 + 1;
+  const g = cv.getContext('2d'), img = g.createImageData(cv.width, cv.height), d = img.data;
+  // the screen moves linearly along each front edge and with height: measured once from the projection
+  const o = e.project(0, 0, 0), kz = e.project(0, 0, 1).sy - o.sy;
+  const fx = e.project(X1, 0, 0), dyx = e.project(X1, 1, 0).sx - fx.sx; // the right face (x = X1), along y
+  const fy = e.project(0, Y1, 0), dxy = e.project(1, Y1, 0).sx - fy.sx; // the left face (y = Y1), along x
+  const lw = 1 / Math.abs(e.project(1, 0, 0).sx - o.sx); // a joint about one pixel wide
+  const put = (k, a) => { d[k] = ink[0]; d[k + 1] = ink[1]; d[k + 2] = ink[2]; d[k + 3] = Math.round(a * 255); };
+  for (let py = 0; py < cv.height; py++) for (let px = 0; px < cv.width; px++) {
+    const sx = bx0 + px + .5, sy = by0 + py + .5, k = (py * cv.width + px) * 4;
+    const q = e.unproject(sx, sy);
+    if (q.x >= X0 && q.x <= X1 && q.y >= Y0 && q.y <= Y1) {
+      const u = (q.x - X0) / TX, v = (q.y - Y0) / TY, onLine = u % 1 < lw || v % 1 < lw || u > (X1 - X0) / TX - lw || v > (Y1 - Y0) / TY - lw;
+      put(k, onLine ? PLATE.line : PLATE.top);
+      continue;
+    }
+    const y = (sx - fx.sx) / dyx; // on the right face?
+    if (y >= Y0 && y <= Y1) { const z = (sy - e.project(X1, y, 0).sy) / kz; if (z <= 0 && z >= -D) { put(k, PLATE.right); continue; } }
+    const x = (sx - fy.sx) / dxy; // on the left face?
+    if (x >= X0 && x <= X1) { const z = (sy - e.project(x, Y1, 0).sy) / kz; if (z <= 0 && z >= -D) put(k, PLATE.left); }
+  }
+  g.putImageData(img, 0, 0);
+  // where it is drawn from, and its middle (the footprint's centre, on the ground) for the timeline's way in and out
+  const c = e.project((X0 + X1) / 2, (Y0 + Y1) / 2, 0);
+  return (w._plate = { key, cv, bx0, by0, cx: c.sx - bx0, cy: c.sy - by0 });
+}
+function placePlate(w = mainWorld, f) {
+  const P = w && w.bare && !w.pure ? plateFor(w) : null;
+  if (!P || P.none) { plate.hidden = true; return; }
+  if (f == null) f = parseFloat(disp.style.width) / disp.width;
+  if (plate.width !== P.cv.width || plate.height !== P.cv.height) { plate.width = P.cv.width; plate.height = P.cv.height; }
+  const g = plate.getContext('2d'); g.clearRect(0, 0, plate.width, plate.height); g.drawImage(P.cv, 0, 0);
+  plate.style.width = plate.width * f + 'px'; plate.style.height = plate.height * f + 'px';
+  // the picture's pixel (sx, sy) sits at disp's own top-left + (sx - crop x) * f; the plate is placed the same way
+  const [cx0, cy0] = w.crop;
+  plate.style.left = disp.offsetLeft + (P.bx0 - cx0) * f + 'px';
+  plate.style.top = disp.offsetTop + (P.by0 - cy0) * f + 'px';
+  plate.style.transformOrigin = `${P.cx * f}px ${P.cy * f}px`;
+  plate.hidden = false;
+}
+// into the timeline: the platform is drawn into the building's middle, faster and faster, like dust into a vacuum.
+// It goes as a ghost above the timeline as it comes in (the home page goes under it), and stays away until we are back.
+function suckPlate(ms) {
+  if (plate.hidden || plate.style.visibility === 'hidden') return;
+  const r = plate.getBoundingClientRect(), gh = plate.cloneNode(false);
+  gh.getContext('2d').drawImage(plate, 0, 0);
+  gh.className = 'ghost';
+  Object.assign(gh.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', transformOrigin: plate.style.transformOrigin, margin: 0 });
+  document.body.insertBefore(gh, document.querySelector('.ghost'));
+  plate.style.visibility = 'hidden';
+  if (still()) { gh.remove(); return; }
+  gh.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0)', opacity: .3 }], { duration: ms, easing: 'cubic-bezier(.6, 0, .9, .3)', fill: 'forwards' })
+    .finished.then(() => gh.remove(), () => gh.remove());
+}
+// back on the home page: it comes out of the building again, slowing as it reaches its edges
+function unrollPlate(ms) {
+  if (plate.style.visibility !== 'hidden') return;
+  plate.style.visibility = '';
+  if (!still() && !plate.hidden) plate.animate([{ transform: 'scale(0)', opacity: .3 }, { transform: 'scale(1)', opacity: 1 }], { duration: ms, easing: 'cubic-bezier(.2, .8, .2, 1)' });
 }
 // whole screen pixels per model pixel: an in-between scale makes some pixels one wider than the next, and the
 // building's outline turns ragged. Rounds to the nearest whole step, never more than 12% larger than asked.
@@ -539,6 +642,7 @@ function showOverlay(el) {
 function closeOverlays(keep) {
   if (!keep) clearTerm();
   reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); document.body.classList.remove('tl-in');
+  unrollPlate(420);
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
   updateMore();
@@ -823,8 +927,10 @@ function openTl(date) {
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
   $('tlStats').textContent = `${new Set(TL.list.map(x => x.date)).size} days kept · ${nPlaces} places · ${nCountries} countries`;
+  if (!fly) plate.style.visibility = 'hidden'; // under the timeline anyway; it comes back out when we leave
   showTlDay(k, true).then(() => {
     if (!fly) return;
+    suckPlate(Math.round(MOVE * .8));
     const cv = $('tlc'), tlRect = cv.getBoundingClientRect(), g = ghostOf(fly.img, rectLike(fly.img, cv, tlRect));
     const homeRectForTl = rectLike(cv, fly.img, fly.rect);
     disp.style.opacity = '0'; // the homepage copy would show through while the page fades in
@@ -925,7 +1031,7 @@ function leaveTl(setup, hash) {
   setup();
   scrollTo(0, 0);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; document.body.classList.remove('tl-in'); renderText(); updateMore(); return; }
+  if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; document.body.classList.remove('tl-in'); renderText(); updateMore(); unrollPlate(420); return; }
   const at = dispInner(), to = rectLike(img, at.img, at.rect), g = ghostOf(img, to);
   const fromRect = rectLike(img, cv, from);
   disp.style.opacity = '0';
@@ -936,6 +1042,7 @@ function leaveTl(setup, hash) {
   setTimeout(() => {
     tl.hidden = true; tl.classList.remove('clear'); document.body.style.overflow = ''; document.body.classList.remove('tl-in');
     disp.style.transition = 'opacity .25s ease'; disp.style.opacity = '1';
+    unrollPlate(420);
     setTimeout(() => { g.remove(); disp.style.transition = ''; }, 260);
     updateMore();
   }, MOVE);
@@ -966,7 +1073,7 @@ function route() {
   else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; renderPast(m[1]); updateMore(); }
   else {
     if (openOverlay() || state.pastDate) { if (reader.hidden || !WORK.fromList) clearTerm(); }
-    if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); }
+    if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); unrollPlate(420); }
     if (state.pastDate) exitPast(); else renderText();
     updateMore();
   }
@@ -1059,7 +1166,7 @@ function refreshLight(rebake) {
   LIGHT = L; applyTheme(L);
   if (!state.items.length) return;
   frames.clear();
-  if (rebake && shadowChanged) { renderThumbs(); mount(false); } else { paintThumbs(); renderText(); }
+  if (rebake && shadowChanged) { renderThumbs(); mount(false); } else { paintThumbs(); renderText(); placePlate(); } // the platform takes the new ink
 }
 
 /* /notes/ and /works/ send readers here with ?view=notes or ?view=works: open the terminal on that list */
