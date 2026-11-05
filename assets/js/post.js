@@ -362,7 +362,7 @@
       while (out.children.length > 14) out.removeChild(out.firstChild);
     }
     if (ZH && input.getAttribute("data-label-zh")) input.setAttribute("aria-label", input.getAttribute("data-label-zh"));
-    function go(url) { window.setTimeout(function () { markReturn(); location.href = url; }, 260); }
+    function go(url) { window.setTimeout(function () { markReturn(); inSite(url); location.href = url; }, 260); }
     function run(raw) {
       var line = raw.trim().replace(/\s+/g, " ");
       if (!line) return;
@@ -466,6 +466,14 @@
       if (el === back) back.classList.add("is-opening");
       window.setTimeout(backToNotes, el === back ? 90 : 0);
     });
+  });
+
+  /* —— Moving between notes (prev / next, the pager or the shell): arrive as from the list, cut in and print. —— */
+  function inSite(url) {
+    try { var u = new URL(url, location.href); if (u.origin === location.origin && /\/published\//.test(u.pathname)) sessionStorage.setItem("post-handoff", u.pathname); } catch (e) {}
+  }
+  document.querySelectorAll(".post-pager a").forEach(function (a) {
+    a.addEventListener("click", function (e) { if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) inSite(a.href); });
   });
 
   /* —— Leaving: the home page reads this, so it can come back the way a

@@ -3,10 +3,10 @@
 <head>
   {% include head.html %}
   <script>
-    // Arrival. Opened from the notes list, the note has already been printed
-    // there and scrolled into this very position, so the page takes
-    // over as it stands: no typing, and no transition to cover the handoff.
-    // Opened any other way, it types itself out (post.js), unless motion is reduced.
+    // Arrival. Opened from inside the site (the notes list on the home page, or prev / next here),
+    // the page cuts straight in and prints from the top in a quarter second, like a work does:
+    // no typing, and no cross-fade. Opened from outside (a shared link), it types itself out
+    // (post.js), unless motion is reduced.
     (function () {
       var root = document.documentElement;
       var handoff = false;
@@ -15,6 +15,8 @@
         sessionStorage.removeItem("post-handoff");
       } catch (e) {}
       if (handoff) {
+        // from inside the site (a list, prev / next): no typing, the page prints in from the top in a quarter second
+        if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) root.classList.add("post-rise");
         window.addEventListener("pagereveal", function (e) {
           var vt = e.viewTransition;
           if (!vt) return;

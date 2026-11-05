@@ -78,18 +78,7 @@ function lightFor(ms) {
     bg: bgFor(alt),
   };
 }
-function applyTheme(L) {
-  // page and text colours for this sky, shared with the notes (sky.js)
-  const c = siteSky.colours(L.bg), dark = c.dark, root = document.documentElement.style;
-  root.setProperty('--bg', c.bg);
-  root.setProperty('--ink', c.ink);
-  root.setProperty('--ink-soft', c.faint);
-  root.setProperty('--ink-card', c.soft);
-  root.setProperty('--rule', dark ? 'rgba(236,231,221,.18)' : 'rgba(38,36,33,.14)');
-  root.setProperty('--accent', c.accent);
-  root.setProperty('--sheet', c.sheet);
-  root.colorScheme = dark ? 'dark' : 'light';
-}
+function applyTheme(L) { siteSky.paintHome(L.bg); } // page and text colours for this sky (sky.js)
 
 /* ================= scenes ================= */
 const C = {
@@ -1033,11 +1022,11 @@ function settled() {
   });
 }
 // output a row at a time: list rows and label/value pairs one by one, other output line by line; at most ~0.6s in all
-async function reveal(out) {
+async function reveal(out, total = 600) {
   const units = [];
   for (const el of out.children) { if (el.matches('.ls, dl.case')) units.push(...el.children); else units.push(el); }
   if (!units.length) return;
-  const step = Math.min(70, 600 / units.length);
+  const step = Math.min(70, total / units.length);
   units.forEach(u => u.classList.add('rise'));
   out.getBoundingClientRect();
   units.forEach((u, i) => setTimeout(() => u.classList.add('in'), i * step));
@@ -1063,15 +1052,27 @@ function focusLine(block, now) {
   roomBelow(FOCUS.at);
   scrollTo({ top: FOCUS.at, behavior: now || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
+// Rows in a list: picked, a row turns reverse video for a beat (the terminal's "selected") and then opens;
+// coming back, the row you just read lights the same way and fades, so you know where you were.
+const PICK = 110;
+function lightRow(row, fade) {
+  if (!row || still()) return;
+  row.classList.remove('was'); row.classList.add('lit');
+  if (fade) setTimeout(() => { row.classList.add('was'); row.classList.remove('lit'); setTimeout(() => row.classList.remove('was'), 900); }, 520);
+}
 logEl.addEventListener('click', ev => {
-  const b = ev.target.closest('[data-run]'); if (b) { run(b.dataset.run, true); return; }
+  const b = ev.target.closest('[data-run]');
+  if (b) { const go = () => run(b.dataset.run, true); if (b.closest('.ls') && !still()) { lightRow(b); setTimeout(() => { go(); b.classList.remove('lit'); }, PICK); } else go(); return; }
   // a note from the list opens like a work: in this tab, at once (no typing on arrival), and the list is one step back
   const a = ev.target.closest('.ls a[href]');
   if (a && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && !ev.altKey && ev.button === 0) {
     const path = new URL(a.href, location.href).pathname;
     try { sessionStorage.setItem('post-handoff', path); sessionStorage.setItem('post-from-list', path); } catch (e) {}
+    if (!still()) { ev.preventDefault(); lightRow(a); setTimeout(() => { location.href = a.href; }, PICK); }
   }
 });
+// the page after it bfcache-restores still shows the row lit from the way out
+addEventListener('pagehide', () => logEl.querySelectorAll('.ls .lit').forEach(r => r.classList.remove('lit')));
 // back from a note to the list (post.js leaves a note in post-return). Kept in memory by the browser: the list is
 // still there, so it comes back under the date card, as after a work. Reloaded instead: list the notes again.
 function backFromNote(kept) {
@@ -1079,12 +1080,14 @@ function backFromNote(kept) {
   try { r = JSON.parse(sessionStorage.getItem('post-return') || 'null'); sessionStorage.removeItem('post-return'); } catch (e) {}
   if (!r || !r.toList || Date.now() - r.t > 30 * 60e3 || new URLSearchParams(location.search).get('view')) return;
   const list = kept && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls a[href]'));
-  if (list) { focusLine(list); return; } // as after a work: the list glides up under the date card
+  const readRow = blk => blk && [...blk.querySelectorAll('.ls a[href]')].find(a => new URL(a.href, location.href).pathname === r.path);
+  if (list) { focusLine(list); lightRow(readRow(list), true); return; } // as after a work: the list glides up under the date card
   // the page was loaded afresh: put the list back as it was, at once (it was already printed once)
   const block = document.createElement('div'); block.className = 'block';
   block.innerHTML = prompt('ls notes') + COMMANDS['ls notes']();
   logEl.append(block);
   focusLine(block, true);
+  lightRow(readRow(block), true);
 }
 addEventListener('pageshow', e => backFromNote(e.persisted));
 // the buttons: one bar for the whole page (see placeBar). A button runs its command; run() brings the line into view.
@@ -1135,7 +1138,7 @@ function showOverlay(el) {
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
 function closeOverlays() {
-  reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline');
+  reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); document.body.classList.remove('tl-in');
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
   updateMore();
@@ -1145,7 +1148,8 @@ const WORK = { fromList: false };
 function backToWorks() {
   const list = WORK.fromList && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls [data-run^="open works/"]'));
   closeOverlays();
-  if (list) focusLine(list); else setTimeout(() => run('ls works', true), 60);
+  if (list) { focusLine(list); lightRow(list.querySelector(`.ls [data-run="open works/${WORK.slug}"]`), true); }
+  else setTimeout(() => run('ls works', true), 60);
 }
 function openWork(slug) {
   const w = WORKS.find(x => x.slug === slug);
@@ -1161,8 +1165,9 @@ function openWork(slug) {
     ${w.url ? `<p class="out"><a href="${w.url}" target="_blank" rel="noopener">${esc(w.urlLabel || 'open the portfolio')} ↗</a></p>` : ''}
     <div class="nav-row"><button type="button" class="back" data-go="works">← cd ..</button></div>`;
   // opened from the list in the terminal: going back just closes the page, and the list is still there underneath
-  WORK.fromList = !!logEl.querySelector(`.ls [data-run="open works/${w.slug}"]`);
+  WORK.fromList = !!logEl.querySelector(`.ls [data-run="open works/${w.slug}"]`); WORK.slug = w.slug;
   showOverlay(reader);
+  if (!still()) reveal($('readerBody'), 260); // the page prints in from the top, like cat, in about a quarter second
 }
 function snapshot(scene, opts, maxW, maxH) {
   const w = getWorld(scene, opts, 0); drawWorld(w, 1.3);
@@ -1345,6 +1350,7 @@ function settleBack() {
   paintDissolved(cv, TL.cur, 0);
 }
 function openTl(date) {
+  document.body.classList.add('tl-in'); // today's words step aside first, so the two captions never overlap
   TL.list = tlEntries(); TL.idx = -1; TL.cur = null; TL.token = (TL.token || 0) + 1;
   const k = Math.max(0, TL.list.findIndex(x => x.id === date));
   $('tlBody').innerHTML = `<div class="tlm wrap">
@@ -1459,7 +1465,7 @@ function leaveTl(setup, hash) {
   setup();
   scrollTo(0, 0);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; renderText(); updateMore(); return; }
+  if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; document.body.classList.remove('tl-in'); renderText(); updateMore(); return; }
   const at = dispInner(), to = rectLike(img, at.img, at.rect), g = ghostOf(img, to);
   const fromRect = rectLike(img, cv, from);
   disp.style.opacity = '0';
@@ -1468,7 +1474,7 @@ function leaveTl(setup, hash) {
   headerNow();
   flyFrom(g, fromRect, MOVE);
   setTimeout(() => {
-    tl.hidden = true; tl.classList.remove('clear'); document.body.style.overflow = '';
+    tl.hidden = true; tl.classList.remove('clear'); document.body.style.overflow = ''; document.body.classList.remove('tl-in');
     disp.style.transition = 'opacity .25s ease'; disp.style.opacity = '1';
     setTimeout(() => { g.remove(); disp.style.transition = ''; }, 260);
     updateMore();
