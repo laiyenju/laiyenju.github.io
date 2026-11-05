@@ -133,6 +133,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* the picture is larger than the stage when the shadow is long: it spills over the page, never cut at its own edge.
    It takes no taps (the stage does), and the words sit above it. */
 .stage canvas { pointer-events: none; }
+/* the platform under the building (day.js placePlate): behind it, placed by script on the same pixel grid */
+.stage .plate { position: absolute; z-index: 0; }
+.stage .plate[hidden] { display: none; }
+.stage canvas.bld { position: relative; z-index: 1; }
 .tools, .caption { position: relative; z-index: 1; }
 /* the first screen is the building and its words only; the terminal starts below it (the buttons are enough to start) */
 .hero { overflow-x: clip; min-height: 100svh; box-sizing: border-box; }
@@ -157,7 +161,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .thumb[aria-current="true"] span { border-bottom: 1.5px solid var(--accent); }
 .thumb:not([aria-current="true"]) canvas { opacity: .72; }
 
-.caption { text-align: center; display: grid; gap: 4px; max-width: 34em; padding-bottom: 8px; }
+/* padding-top: room for the platform's front corner under the building (day.js placePlate) */
+.caption { text-align: center; display: grid; gap: 4px; max-width: 34em; padding-top: 24px; padding-bottom: 8px; }
 .caption .name { font: 700 21px/1.45 var(--sans); letter-spacing: .01em; text-wrap: balance; }
 .caption .name.past { font: 700 17px/1.65 var(--sans); letter-spacing: 0; }
 .caption .meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); }
@@ -279,9 +284,14 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .past-tag { display: block; margin: 0 0 6px; font: 500 13px/1.5 var(--mono); letter-spacing: .02em; color: var(--accent); }
 
 /* timeline mode: the building, its name and place, and a time ruler. Nothing else. */
+/* The building's box in the timeline: the home page's own box (--stage-top, -w, -h: day.js sizeStage), made a little
+   smaller (--tl-k) from the same top, on every screen. So going in, the building shrinks a little towards its top and
+   the room under the date card does not grow; its name follows right under it. */
+:root { --tl-k: .85; } /* set again from day.js TL_K, which also sizes the building: change it there */
 .tlm { min-height: 100%; display: grid; justify-items: center; align-content: start; text-align: center;
-  padding-top: calc(var(--card-top) + 80px); padding-bottom: 110px; }
-.tl-stage { position: relative; width: min(100%, 560px); height: 54svh; display: grid; place-items: end center;
+  padding-top: var(--stage-top, calc(var(--card-top) + 80px)); padding-bottom: 110px; }
+.tl-stage { position: relative; width: min(100%, calc(var(--stage-w, 560px) * var(--tl-k))); height: calc(var(--stage-h, 54svh) * var(--tl-k));
+  display: grid; place-items: end center;
   touch-action: pan-y; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tl-stage canvas { image-rendering: pixelated; will-change: transform; }
 .tl-stage #tlc { position: relative; z-index: 1; }
@@ -354,11 +364,8 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
   .bar-slot { min-height: 50px; }
   .bar-slot .cmdbar { justify-content: center; }
   .term .cmdbar { position: sticky; bottom: 0; margin-top: 6px; padding-inline: 0; }
-  /* the timeline. --tl-h: the building's box; 238px: the card's row below its top, the name and the ruler;
-     --tl-lift: the room left over, split above and below so the block sits in the middle under the card */
-  :root { --tl-h: clamp(300px, calc(100svh - 318px - var(--card-top)), 560px);
-    --tl-lift: max(0px, calc((100svh - var(--card-top) - var(--tl-h) - 238px) / 2)); }
-  .tlm { padding-top: calc(var(--card-top) + 80px + var(--tl-lift)); padding-bottom: 0; }
-  .tl-stage { height: var(--tl-h); }
-  .ruler { bottom: var(--tl-lift); background: none; padding-bottom: 12px; }
+  /* the timeline: the ruler right under the name, in the flow, not pinned to the bottom edge (phones: at the bottom,
+     under the thumb) */
+  .tlm { padding-bottom: 0; }
+  .ruler { position: static; background: none; padding: 20px max(16px, env(safe-area-inset-left, 0px)) 32px; }
 }
