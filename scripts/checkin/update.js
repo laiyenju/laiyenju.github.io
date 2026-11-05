@@ -1,7 +1,8 @@
 // One check-in → the new location.json (run by .github/workflows/checkin.yml, README 3.5).
 // Usage: PLACE=office LABEL="" node scripts/checkin/update.js last.json > location.json
 // The file holds words only, never coordinates:
-//   place     home | office | out
+//   place     home | office | out | left_home | left_office (the last two: on the way, so the homepage
+//             trusts them for a shorter time, README 3.5)
 //   label     what the homepage says: "Yen is {label}, Taipei."
 //   at        when (UTC)
 //   office_at the last office check-in, kept across check-ins: the homepage shows the office
@@ -11,7 +12,7 @@
 'use strict';
 const fs = require('fs');
 
-const LABELS = { home: 'at home', office: 'at the office', out: 'out somewhere in the city' };
+const LABELS = { home: 'at home', office: 'at the office', out: 'out somewhere in the city', left_home: 'heading out', left_office: 'on the way home' };
 const place = String(process.env.PLACE || '').trim();
 if (!LABELS[place]) { console.error(`place must be one of: ${Object.keys(LABELS).join(', ')} (got "${place}")`); process.exit(1); }
 

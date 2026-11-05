@@ -11,7 +11,7 @@ on:
         description: Where Yen is
         required: true
         type: choice
-        options: [home, office, out]
+        options: [home, office, out, left_home, left_office]
       label:
         description: 'Optional words, e.g. "at a café in Daan" (no coordinates)'
         required: false
