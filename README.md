@@ -125,7 +125,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 平日／假日 | `assets/js/day.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
 | 所在城市 | `assets/js/day.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、背景顏色和影子方向。出國時改這裡 |
 | 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | `CHECKIN` 之後會接自動打卡（見第 4 節） |
-| terminal 按鈕 | `assets/js/day.js` 的 `CHIPS` | About Yen、Notes、Work、Where is Yen now、Clear | 在 terminal 裡面。按鈕寫白話，點了 terminal 會打出真正的指令。可輸入的指令在 `COMMANDS` |
+| terminal 按鈕 | `assets/js/day.js` 的 `CHIPS` | About Yen、Notes、Work、Where is Yen now、Clear | 在 terminal 裡面。按鈕寫白話，點了 terminal 會打出真正的指令。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
 | 首頁的指令按鈕 | `assets/js/day.js` 的 `QUICK`；樣式在 `assets/css/day.css` 的 `.quick` | `$`、whoami、ls notes、ls works、whereis yen | 按鈕直接寫指令，讓人知道下面有 terminal。點了會捲到 terminal 並執行；點 `$` 跳到輸入框。寬螢幕（≥ 900px）放在今天的說明下面，只在今天的建築出現；手機固定在畫面底部，看得到 terminal 的按鈕、正在輸入、打開 Timeline／作品頁、或在往年今日時會隱藏 |
 | 瀏覽器分頁標題 | `index.md` 的 `title` | `hey, I'm Yen` | |
 

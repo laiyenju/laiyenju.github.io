@@ -959,7 +959,12 @@ async function run(raw, typed) {
   const cmd = raw.trim().toLowerCase().replace(/\s+/g, ' ');
   if (!cmd || typing) return;
   const key = ALIASES[cmd] || cmd;
-  if (key === 'clear') { logEl.innerHTML = ''; return; }
+  // clear = close the terminal: empty it and go back to the top, where the page started
+  if (key === 'clear') {
+    logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur();
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    return;
+  }
   const block = document.createElement('div'); block.className = 'block';
   block.innerHTML = prompt(typed ? '' : raw.trim());
   logEl.append(block);
