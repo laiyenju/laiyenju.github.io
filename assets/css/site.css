@@ -149,6 +149,14 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
 .post-home svg { width: 16px; height: 16px; }
 @media (min-width: 480px) { .post-when { width: 300px; } }
 @media (max-width: 399px) { .post-when .wd { display: none; } }
+/* the live time in the date card: HH:MM:SS, each digit rolls (sky.js rollClock) */
+.roll { display: inline-flex; font-variant-numeric: tabular-nums; vertical-align: bottom; }
+.roll .rg { display: inline-block; height: 1.35em; line-height: 1.35em; overflow: hidden; }
+.roll .rs { display: grid; transition: transform .42s cubic-bezier(.25, .9, .3, 1); }
+.roll .rs span, .roll > span { height: 1.35em; line-height: 1.35em; }
+.roll .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .roll .rs { transition: none !important; } }
+
 body.theme-night .post-home { background: color-mix(in srgb, var(--sky-sheet, #151820) 62%, transparent); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
 
 .post-bar,

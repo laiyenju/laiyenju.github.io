@@ -867,17 +867,17 @@ let STAGE = { w: 300, h: 300 };
 function sizeStage() {
   const wide = innerWidth >= 900;
   let h, lift = 0;
-  if (wide) h = Math.round(cl(innerHeight - 76 - 56, 260, 760));
+  if (wide) h = Math.round(cl(innerHeight - 76 - 32, 260, 820));
   else {
-    // phones: the building always gets half the screen, the same size whether or not the day has other years
+    // phones: the building always gets 60% of the screen height, the same size whether or not the day has other years
     // (the thumbnail row) or a long sentence: those may run below the first screen, the page scrolls.
     // When the words do fit, the space left is split above and below, so the building and its words stay together.
     const room = innerHeight - 76 - $('cmdbar').offsetHeight;
     const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight + 8 + 12;
-    h = Math.round(cl(innerHeight * .5, 180, 520));
+    h = Math.round(cl(innerHeight * .6, 200, 620));
     lift = Math.max(0, Math.round((room - words - h) / 2));
   }
-  STAGE = { w: wide ? Math.round(group.clientWidth * .53) : group.clientWidth, h };
+  STAGE = { w: wide ? Math.round(group.clientWidth * .6) : group.clientWidth, h };
   stage.style.width = STAGE.w + 'px'; stage.style.height = STAGE.h + 'px';
   group.style.paddingTop = lift ? lift + 'px' : '';
 }
@@ -889,7 +889,7 @@ function fitCanvas(w) {
   if (disp.width !== w.view.width || disp.height !== w.view.height) { disp.width = w.view.width; disp.height = w.view.height; }
   // sized and placed by the building alone; negative margins let the shadow spill past the stage, uncut
   const [, , iw, ih] = innerOf(w), [t, r, b, l] = w.pad;
-  const f = wholePixels(Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 3.4) * .86));
+  const f = wholePixels(Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 4.4) * .97));
   disp.style.width = Math.round(disp.width * f) + 'px'; disp.style.height = Math.round(disp.height * f) + 'px';
   disp.style.margin = `${-t * f}px ${-r * f}px ${-b * f}px ${-l * f}px`;
 }
@@ -945,7 +945,7 @@ function nearestFrame(it, a) {
 }
 function renderText() {
   const dd = fromDayMs(state.day), it = state.items[state.index];
-  if (document.getElementById('tl').hidden) dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name} ${pad(Math.floor(state.minute / 60))}:${pad(state.minute % 60)}`);
+  if (document.getElementById('tl').hidden) dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name}`, true);
   $('capName').textContent = it.name; $('capName').classList.toggle('past', !it.about && !it.main);
   $('capMeta').textContent = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
@@ -1326,7 +1326,8 @@ function pureImage(x) {
   return c;
 }
 // header date as a dial: each digit is a strip 0–9 that slides to its number
-function dialTo(iso, sub) {
+// sub: the line under the date; live: end it with the time now, to the second (siteSky.rollClock, ticked by secondTick)
+function dialTo(iso, sub, live = false) {
   const el = $('date'), text = iso.replace(/-/g, '.');
   if (!el.querySelector('.dial') || el.querySelector('.dial').children.length !== text.length) {
     el.innerHTML = `<span class="dial">${[...text].map(ch => /\d/.test(ch)
@@ -1340,9 +1341,14 @@ function dialTo(iso, sub) {
   });
   const c = $('clock');
   // "Thursday · Taipei 16:15": the weekday goes in its own span, so a narrow screen can leave it out
-  const put = () => { const k = sub.indexOf(' · '); c.innerHTML = k > 0 ? `<span class="wd">${esc(sub.slice(0, k + 3))}</span>${esc(sub.slice(k + 3))}` : esc(sub); };
-  if (c.textContent !== sub) {
-    if (!c.textContent || c.textContent === 'Taipei —') put();
+  const put = () => {
+    const k = sub.indexOf(' · ');
+    c.innerHTML = (k > 0 ? `<span class="wd">${esc(sub.slice(0, k + 3))}</span>${esc(sub.slice(k + 3))}` : esc(sub)) + (live ? ' <span class="roll" id="clockRoll"></span>' : '');
+    c._key = sub + '|' + live;
+    if (live) siteSky.rollClock($('clockRoll'));
+  };
+  if (c._key !== sub + '|' + live) {
+    if (!c._key) put();
     else { c.classList.add('swap'); clearTimeout(c._t); c._t = setTimeout(() => { put(); c.classList.remove('swap'); }, 220); }
   }
 }
@@ -1602,7 +1608,7 @@ function leaveTl(setup, hash) {
     updateMore();
   }, MOVE);
 }
-function headerNow() { const dd = fromDayMs(state.day); dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name} ${pad(Math.floor(state.minute / 60))}:${pad(state.minute % 60)}`); }
+function headerNow() { const dd = fromDayMs(state.day); dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name}`, true); }
 function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Timeline'); }
 function tapTl() {
   const x = TL.list[TL.idx];
@@ -1743,6 +1749,14 @@ function openView() {
   try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
   setTimeout(() => { scrollTo({ top: document.querySelector('.term').offsetTop - 80 }); run(v === 'notes' ? 'ls notes' : 'ls works', true); }, 300);
 }
+
+/* the seconds in the date card, on the second */
+function secondTick() {
+  const r = $('clockRoll');
+  if (r && !document.hidden) siteSky.rollClock(r);
+  setTimeout(secondTick, 1000 - Date.now() % 1000 + 15);
+}
+secondTick();
 
 /* loop */
 var t0 = performance.now();

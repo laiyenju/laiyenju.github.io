@@ -404,8 +404,14 @@
     if (!date || !time) return;
     date.textContent = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate());
     // the weekday in its own span: a narrow screen leaves it out (site.css .wd)
-    time.innerHTML = '<span class="wd">' + DAYS[d.getUTCDay()] + " · </span>" + CITY.name + " " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
-    window.setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
+    var wd = DAYS[d.getUTCDay()];
+    // the weekday and city stay put; the time, to the second, rolls digit by digit (sky.js rollClock)
+    if (time.getAttribute("data-wd") !== wd) {
+      time.setAttribute("data-wd", wd);
+      time.innerHTML = '<span class="wd">' + wd + " · </span>" + CITY.name + ' <span class="roll"></span>';
+    }
+    if (window.siteSky && siteSky.rollClock) siteSky.rollClock(time.querySelector(".roll"));
+    window.setTimeout(tick, 1000 - (Date.now() % 1000) + 15);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
