@@ -94,25 +94,23 @@ let STAGE = { w: 300, h: 300 };
 function sizeStage() {
   const wide = innerWidth >= 900;
   let h, lift = 0;
+  const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight;
   if (wide) {
-    // wide screens: the stage is only as tall as a building needs at this width, and the date card, the building
-    // and its words sit together as one block in the middle of the screen (--lift: the room above the block).
-    // The timeline uses the same --lift, so the card stays where it is between the two.
-    const w = Math.round(group.clientWidth * .6);
-    h = Math.round(cl(Math.min(innerHeight - 76 - 32, w * .82), 260, 720));
-    const free = Math.max(0, Math.round((innerHeight - (76 + h + 32)) / 2));
-    document.documentElement.style.setProperty('--lift', free + 'px');
+    // wide screens: the date card is in the bottom-left corner, so the building has the top of the screen and its words
+    // sit under it. The building takes what the words leave (between 260 and 640px); the block is centred in the
+    // room between a 40px top margin and the bottom line (96px: the corner card's row).
+    const top = 40, bottom = 96, room = innerHeight - top - bottom - words;
+    h = Math.round(cl(room, 260, 640));
+    lift = top + Math.max(0, Math.round((room - h) / 2));
   } else {
-    document.documentElement.style.removeProperty('--lift');
     // phones: the building always gets 60% of the screen height, the same size whether or not the day has other years
     // (the thumbnail row) or a long sentence: those may run below the first screen, the page scrolls.
     // When the words do fit, the space left is split above and below, so the building and its words stay together.
     const room = innerHeight - 76 - $('cmdbar').offsetHeight;
-    const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight + 8 + 12;
     h = Math.round(cl(innerHeight * .6, 200, 620));
-    lift = Math.max(0, Math.round((room - words - h) / 2));
+    lift = Math.max(0, Math.round((room - (words + 8 + 12) - h) / 2));
   }
-  STAGE = { w: wide ? Math.round(group.clientWidth * .6) : group.clientWidth, h };
+  STAGE = { w: wide ? Math.min(group.clientWidth, 900) : group.clientWidth, h };
   stage.style.width = STAGE.w + 'px'; stage.style.height = STAGE.h + 'px';
   group.style.paddingTop = lift ? lift + 'px' : '';
 }
@@ -435,8 +433,8 @@ function roomBelow(target, hold) {
   if (hold && Math.abs(scrollY - target) > 1 && Math.abs(scrollY - target) < innerHeight) scrollTo({ top: target, behavior: 'instant' });
 }
 function focusLine(block, now) {
-  // the card's height as it sits at the very top (on wide screens it rests lower only before the page scrolls)
-  const below = document.querySelector('.top').offsetHeight + 20;
+  // phones: just under the date card at the top. Wide screens: the card is down in the corner, so near the top edge.
+  const below = innerWidth >= 900 ? 40 : document.querySelector('.top').offsetHeight + 20;
   FOCUS.at = Math.max(0, Math.round(scrollY + block.getBoundingClientRect().top - below));
   roomBelow(FOCUS.at);
   scrollTo({ top: FOCUS.at, behavior: now || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
@@ -973,15 +971,8 @@ function updateMore() {
 function onScroll() {
   const p = cl(scrollY / (STAGE.h * .9), 0, 1);
   document.documentElement.style.setProperty('--p', p.toFixed(3));
-  // wide screens: the building slides to the middle, above the terminal; --dx is how far
-  const st = $('stage'); let x = 0;
-  for (let e = st; e; e = e.offsetParent) x += e.offsetLeft;
-  // q: 0 at the top, 1 once the terminal's top is 70% down the screen
+  // q: 0 at the top, 1 once the terminal's top is 70% down the screen (when the buttons move down into the terminal)
   const q = cl(scrollY / Math.max(1, document.querySelector('.term').offsetTop - innerHeight * .7), 0, 1);
-  const dx = innerWidth >= 900 ? (innerWidth / 2 - (x + st.offsetWidth / 2)) * q : 0;
-  document.documentElement.style.setProperty('--dx', dx.toFixed(1) + 'px');
-  document.documentElement.style.setProperty('--q', q.toFixed(3));
-  document.body.classList.toggle('words-off', q > .6);
   placeBar(q);
   updateMore();
 }
