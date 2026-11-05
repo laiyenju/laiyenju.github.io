@@ -333,41 +333,22 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .toast { position: fixed; z-index: 9; left: 50%; top: 56px; transform: translateX(-50%); background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 12px; color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) { .stage canvas { transition: none; } .cursor { animation: none; } }
 /* wide screens (≥ 900px). Phones keep the layout above unchanged.
-   The date card leaves the top and stands in the bottom-left corner, on one line with the timeline's ruler and the
-   terminal's buttons; the building has the top of the screen to itself and today's words sit under it, centred.
-   --edge: where the corner card ends (16px gutter + 330px card + 16px gap); the ruler and the buttons start right of it
-   when the screen is too narrow to centre them clear of the card. */
+   The same stack as on a phone (date card, building, today's words and buttons), as one block in the middle of the
+   screen: the card rests just above the building (--lift, day.js sizeStage) and glides up to the top edge as the page
+   scrolls to the terminal (--q). The timeline is one block too: card, building, name, then the ruler right under it. */
 @media (min-width: 900px) {
-  :root { --edge: 362px; }
-  .top {
-    top: auto; right: auto; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    padding: 0; background: none;
-  }
-  .hero-inner { padding-top: 0; }
+  .top { transform: translateY(calc(var(--lift, 0px) * (1 - var(--q, 0)))); }
+  body:has(#tl:not([hidden])) .top { transform: translateY(var(--tl-lift)); }
+  body.tl-in .top, body:has(#reader:not([hidden])) .top { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+  body:has(#reader:not([hidden])) .top { transform: none; }
   .caption { max-width: 40em; }
   /* the buttons' room under the words is kept while they are down in the terminal, so the page never shifts */
   .bar-slot { min-height: 50px; }
   .bar-slot .cmdbar { justify-content: center; }
-  /* in the terminal: fixed on the bottom line beside the corner card (level with its middle, 44px up), as wide as the
-     terminal, centred on the screen when that leaves the card clear, else starting right of it (the same rule as the ruler) */
-  .term .cmdbar { --bw: min(680px, calc(100vw - var(--edge) - 16px));
-    position: fixed; left: 0; bottom: 0; width: var(--bw); box-sizing: border-box; justify-content: center;
-    margin: 0 0 0 max(var(--edge), calc((100vw - var(--bw)) / 2));
-    padding: 22px 0 calc(27px + env(safe-area-inset-bottom, 0px)); }
-  /* a work's page keeps the frame of the notes (site.css): the card and Home at the top, centred */
-  body:has(#reader:not([hidden])) .top {
-    top: 0; bottom: auto; left: 0; right: 0;
-    padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 10px;
-    background: linear-gradient(color-mix(in srgb, var(--bg) 55%, transparent), transparent);
-  }
-  /* the timeline: the building and its name in the middle of the room above the bottom line (card | ruler) */
-  :root { --tl-h: clamp(300px, calc(100svh - 330px), 560px); }
-  .tlm { min-height: 100svh; box-sizing: border-box; align-content: center; padding-top: 32px; padding-bottom: 120px; }
+  .term .cmdbar { position: sticky; bottom: 0; margin-top: 6px; padding-inline: 0; }
+  /* the timeline. --tl-h: the building's box; 250px: the card's row, the name and the ruler */
+  :root { --tl-h: clamp(300px, calc(100svh - 330px), 560px); --tl-lift: max(0px, calc((100svh - var(--tl-h) - 250px) / 2)); }
+  .tlm { padding-top: calc(92px + var(--tl-lift)); padding-bottom: 0; }
   .tl-stage { height: var(--tl-h); }
-  /* the ruler on the card's line: its needle's middle level with the card's middle; centred on the screen when that
-     leaves the card clear, else starting right of it. It takes no taps outside the track (the card is under it). */
-  .ruler { --rw: min(760px, calc(100vw - var(--edge) - 16px)); background: none; pointer-events: none;
-    padding: 0 0 calc(25px + env(safe-area-inset-bottom, 0px)); }
-  .ruler .stats, .ruler-track { width: var(--rw); max-width: none; margin-left: max(var(--edge), calc((100vw - var(--rw)) / 2)); margin-right: 0; }
-  .ruler-track { pointer-events: auto; }
+  .ruler { bottom: var(--tl-lift); background: none; padding-bottom: 12px; }
 }
