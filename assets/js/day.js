@@ -6,7 +6,8 @@
    _data/days.yml (places) and _data/little.yml (small things, shown for a week). */
 const SITE = JSON.parse(document.getElementById('site-data').textContent);
 const CITY = siteSky.CITY; // where Yen is: assets/js/sky.js
-const NOTES = SITE.notes || [];
+// a note's slug is its file name without .html: /published/2026-10-29-markdown-styles.html → #note-2026-10-29-markdown-styles
+const NOTES = (SITE.notes || []).map(n => ({ ...n, slug: decodeURIComponent(n.url.split('/').pop()).replace(/\.html?$/, '') }));
 const WORKS = (SITE.works || []).map(w => ({ slug: w.slug, year: String(w.year || ''), title: w.title, sub: w.sub || '', role: w.role || '',
   problem: w.problem || '', did: w.did || '', result: w.result || '', url: w.url || '', urlLabel: w.url_label || '' }));
 const BIO = 'Yen decides what gets built, then builds some of it. Writes about how those decisions get made.';
@@ -297,9 +298,9 @@ function nearestFrame(it, a) {
   return null;
 }
 function renderText() {
-  const dd = fromDayMs(state.day), it = state.items[state.index];
-  if (document.getElementById('tl').hidden) dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name}`, true);
-  $('capName').textContent = it.name; $('capName').classList.toggle('past', !it.about && !it.main);
+  const it = state.items[state.index];
+  if (document.getElementById('tl').hidden) dialTo(todayISO(), 'Today', true);
+  $('capName').textContent = it.name;
   $('capMeta').innerHTML = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
@@ -379,15 +380,13 @@ function renderPast(date) {
   ctaFor('Today');
   scrollTo(0, 0);
 }
-// the top card's button. Timeline on today's page; Today anywhere else in time; on a work page the card turns
-// into the way back to the list (← Work, on its left) and a Home button stands inside it, at its right end.
+// the buttons beside the date card. Timeline on today's page; Today anywhere else in time (a past day, the timeline).
+// On a work or a note: ← Work / ← Notes on the card's left goes back to the list, Home on its right.
 function ctaFor(word) {
-  const back = word === 'Work';
-  $('ctaText').textContent = word;
-  $('ctaTl').classList.toggle('is-back', back);
-  document.querySelector('.top').classList.toggle('has-home', back);
-  $('homeBtn').hidden = !back;
-  $('whenBtn').setAttribute('aria-label', back ? 'Back to all work' : word === 'Today' ? 'Back to today' : 'Open the timeline');
+  const back = word === 'Work' || word === 'Notes';
+  $('backBtn').hidden = !back; $('homeBtn').hidden = !back; $('tlBtn').hidden = back;
+  if (back) { $('backText').textContent = word; $('backBtn').setAttribute('aria-label', word === 'Work' ? 'Back to all work' : 'Back to all notes'); }
+  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', word === 'Today' ? 'Back to today' : 'Open the timeline'); }
 }
 function exitPast() {
   if (!state.pastDate) return;
@@ -453,7 +452,7 @@ const logEl = $('log');
 document.querySelectorAll('.city').forEach(el => { el.textContent = CITY.short; }); // the input line's yen@<city>
 // notes and works share one list: date or year | title, then a short line under it (subtitle or description).
 // Each row carries its language, so Chinese titles get Chinese line breaking and spacing.
-const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
+const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" data-run="open notes/${esc(r.slug)}" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
 const line = (t, cls = '') => `<div class="out-line ${cls}">${esc(t)}</div>`;
 const COMMANDS = {
   'whoami': () => line(BIO.replace(/^Yen /, 'Yen Lai, product manager, ')) + `<div class="out-line mono"><a href="https://github.com/laiyenju" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/laiyenju/" target="_blank" rel="noopener">linkedin</a> · <a href="https://x.com/theYenLai" target="_blank" rel="noopener">x</a></div>`,
@@ -468,6 +467,7 @@ const COMMANDS = {
     ['timeline', 'every day kept so far'], ['cd ~', 'back to the top'], ['clear', 'clear the screen'],
   ].map(([c, d]) => `${c.padEnd(12, '\u00a0')}${d}`).join('<br>')}</div>`,
 };
+for (const n of NOTES) COMMANDS['open notes/' + n.slug] = () => { go2('#note-' + n.slug); return line(`Opened ${n.title}.`); };
 for (const w of WORKS) {
   COMMANDS['open works/' + w.slug] = () => { go2('#work-' + w.slug); return line(`Opened ${w.title}.`); };
   COMMANDS['cat works/' + w.slug] = () => `<div class="out-line"><b>${esc(w.title)}</b> <span class="soft">· ${esc(w.sub)}</span></div><dl class="case">
@@ -568,36 +568,12 @@ function lightRow(row, fade) {
 }
 logEl.addEventListener('click', ev => {
   const b = ev.target.closest('[data-run]');
-  if (b) { const go = () => run(b.dataset.run, true); if (b.closest('.ls') && !still()) { lightRow(b); setTimeout(() => { go(); b.classList.remove('lit'); }, PICK); } else go(); return; }
-  // a note from the list opens like a work: in this tab, at once (no typing on arrival), and the list is one step back
-  const a = ev.target.closest('.ls a[href]');
-  if (a && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && !ev.altKey && ev.button === 0) {
-    const path = new URL(a.href, location.href).pathname;
-    try { sessionStorage.setItem('post-handoff', path); sessionStorage.setItem('post-from-list', path); } catch (e) {}
-    if (!still()) { ev.preventDefault(); lightRow(a); setTimeout(() => { location.href = a.href; }, PICK); }
-  }
+  // a note's row is also a link: opened in a new tab (⌘-click, middle click) it is the note's own page
+  if (!b || (b.matches('a') && (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0))) return;
+  ev.preventDefault();
+  const go = () => run(b.dataset.run, true);
+  if (b.closest('.ls') && !still()) { lightRow(b); setTimeout(() => { go(); b.classList.remove('lit'); }, PICK); } else go();
 });
-// the page after it bfcache-restores still shows the row lit from the way out
-addEventListener('pagehide', () => logEl.querySelectorAll('.ls .lit').forEach(r => r.classList.remove('lit')));
-// back from a note to the list (post.js leaves a note in post-return). Kept in memory by the browser: the list is
-// still there, so it comes back under the date card, as after a work. Reloaded instead: list the notes again.
-function backFromNote(kept) {
-  let r = null;
-  try { r = JSON.parse(sessionStorage.getItem('post-return') || 'null'); sessionStorage.removeItem('post-return'); } catch (e) {}
-  if (!r || Date.now() - r.t > 30 * 60e3 || new URLSearchParams(location.search).get('view')) return;
-  if (r.home) { if (kept) { clearTerm(); scrollTo(0, 0); } return; } // back from a note by Home: a clean home page
-  // otherwise (← Notes, or the browser's back button) the list comes back
-  const list = kept && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls a[href]'));
-  const readRow = blk => blk && [...blk.querySelectorAll('.ls a[href]')].find(a => new URL(a.href, location.href).pathname === r.path);
-  if (list) { focusLine(list); lightRow(readRow(list), true); return; } // as after a work: the list glides up under the date card
-  // the page was loaded afresh: put the list back as it was, at once (it was already printed once)
-  const block = document.createElement('div'); block.className = 'block';
-  block.innerHTML = prompt('ls notes') + COMMANDS['ls notes']();
-  logEl.append(block);
-  focusLine(block, true);
-  lightRow(readRow(block), true);
-}
-addEventListener('pageshow', e => backFromNote(e.persisted));
 // the buttons: one bar for the whole page (see placeBar). A button runs its command; run() brings the line into view.
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
 {
@@ -645,28 +621,30 @@ const openOverlay = () => (!reader.hidden && reader) || (!tl.hidden && tl) || nu
 function go2(hash) { if (location.hash !== hash) { try { history.pushState(null, '', hash); } catch (e) { location.hash = hash; return; } } route(); }
 function showOverlay(el) {
   for (const o of [reader, tl]) o.hidden = o !== el;
-  ctaFor(location.hash.startsWith('#work-') ? 'Work' : 'Today');
+  ctaFor(location.hash.startsWith('#work-') ? 'Work' : location.hash.startsWith('#note-') ? 'Notes' : 'Today');
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
 function closeOverlays(keep) {
   if (!keep) clearTerm();
-  reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); document.body.classList.remove('tl-in');
+  reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Timeline'); document.body.classList.remove('tl-in');
   unrollPlate(420);
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
   updateMore();
 }
-const WORK = { fromList: false };
-// back to all the work: the list it was opened from, or a fresh `ls works` when it came from a link
-function backToWorks() {
-  const list = WORK.fromList && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls [data-run^="open works/"]'));
+// what the reader shows: a work (works) or a note (notes), and whether it was opened from a list in the terminal
+const READ = { kind: 'works', slug: '', fromList: false };
+// back to the list: the one it was opened from (it is still there under the page), or a fresh `ls` when it came from a link
+function backToList() {
+  const list = READ.fromList && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector(`.ls [data-run^="open ${READ.kind}/"]`));
   closeOverlays(!!list);
-  if (list) { focusLine(list); lightRow(list.querySelector(`.ls [data-run="open works/${WORK.slug}"]`), true); }
-  else setTimeout(() => run('ls works', true), 60);
+  if (list) { focusLine(list); lightRow(list.querySelector(`.ls [data-run="open ${READ.kind}/${READ.slug}"]`), true); }
+  else setTimeout(() => run('ls ' + READ.kind, true), 60);
 }
 function openWork(slug) {
   const w = WORKS.find(x => x.slug === slug);
   if (!w) return;
+  endNote();
   $('readerBody').innerHTML = `
     <h1>${esc(w.title)}</h1>
     <p class="sub">${esc(w.sub)}</p>
@@ -676,11 +654,38 @@ function openWork(slug) {
     <h2>The result</h2><p>${esc(w.result)}</p>
     ${w.url ? `<p class="out"><a href="${w.url}" target="_blank" rel="noopener">${esc(w.urlLabel || 'open the portfolio')} ↗</a></p>` : ''}
 `;
-  // opened from the list in the terminal: going back (← Work, or works/ in the path) closes the page, and the list is still there underneath
-  WORK.fromList = !!logEl.querySelector(`.ls [data-run="open works/${w.slug}"]`); WORK.slug = w.slug;
+  // opened from the list in the terminal: going back (← Work) closes the page, and the list is still there underneath
+  Object.assign(READ, { kind: 'works', slug: w.slug, fromList: !!logEl.querySelector(`.ls [data-run="open works/${w.slug}"]`) });
   showOverlay(reader);
   if (!still()) reveal($('readerBody'), 260); // the page prints in from the top, like cat, in about a quarter second
 }
+/* A note opens the way a work does: the same reader, the same card and buttons (← Notes, Home), the same way back.
+   Its words are the note's own page (published/…), framed whole in the reader, so a note has one look to keep up,
+   the one in site.css. Framed, that page leaves out its own card and prints in from the top like a work
+   (default.html, post.js: embedded). */
+function openNote(slug) {
+  const n = NOTES.find(x => x.slug === slug);
+  if (!n) return;
+  Object.assign(READ, { kind: 'notes', slug, fromList: !!logEl.querySelector(`.ls [data-run="open notes/${slug}"]`) });
+  const f = document.createElement('iframe');
+  f.className = 'note-frame'; f.title = n.title; f.src = n.url;
+  // keys go to the note at once (space and arrows scroll it)
+  f.addEventListener('load', () => { try { f.contentWindow.focus({ preventScroll: true }); } catch (e) {} });
+  reader.classList.add('is-note');
+  $('readerBody').replaceChildren(f);
+  showOverlay(reader);
+}
+function endNote() {
+  document.body.classList.remove('note-lb');
+  if (!reader.classList.contains('is-note')) return;
+  reader.classList.remove('is-note'); $('readerBody').replaceChildren();
+}
+// the framed note tells the page when Esc is pressed in it, and when a picture is opened large (the card steps aside)
+addEventListener('message', ev => {
+  if (ev.origin !== location.origin || !ev.data || typeof ev.data !== 'object') return;
+  if (ev.data.note === 'escape' && !reader.hidden) closeOverlays();
+  if (ev.data.note === 'lightbox') document.body.classList.toggle('note-lb', !!ev.data.open);
+});
 function snapshot(scene, opts, maxW, maxH) {
   const w = getWorld(scene, opts, 0); drawWorld(w, 1.3);
   const [sx, sy, sw, sh] = innerOf(w), k = Math.min(maxW / sw, maxH / sh);
@@ -713,12 +718,12 @@ function pureImage(x) {
 // header date as a dial: each digit is a strip 0–9 that slides to its number
 // sub: the line under the date; live: end it with the time now, to the second (siteSky.rollClock, ticked by secondTick)
 // past: a day gone by (the timeline), written in the accent like the line above a past building (.past-tag)
-// The card's two lines. live (today: the home page, a work): the time on top, rolling each second (sky.js rollClock),
-// and "2026.11.06 · Friday · Taipei" under it. Otherwise (the timeline): the date on top, its digits turning like a
-// dial, and "Friday · seven years ago" under it. Switching between the two, the top line fades out and back in.
+// The card's two lines. live (now: the home page, a work, a note): the time on top, rolling each second (sky.js rollClock),
+// and just "Today" under it (the date and weekday are in the timeline). Otherwise (the timeline): the date on top, its
+// digits turning like a dial, and "Friday · seven years ago" under it. Switching between the two, both lines fade out and back in.
 function dialTo(iso, sub, live = false, past = false) {
   const el = $('date'), text = iso.replace(/-/g, '.');
-  $('whenBtn').classList.toggle('is-past-day', past);
+  $('whenCard').classList.toggle('is-past-day', past);
   const build = () => {
     if (live) {
       if (!$('clockRoll')) { el.innerHTML = '<span class="roll" id="clockRoll"></span>'; siteSky.rollClock($('clockRoll')); }
@@ -739,14 +744,8 @@ function dialTo(iso, sub, live = false, past = false) {
   if (el._live === undefined || el._live === live) build();
   else { el.classList.add('swap'); clearTimeout(el._t); el._t = setTimeout(() => { build(); el.classList.remove('swap'); }, 220); }
   el._live = live;
-  const c = $('clock'), line = (live ? text + ' · ' : '') + sub;
-  // the weekday goes in its own span, so a narrow screen can leave it out
-  const put = () => {
-    const k = sub.indexOf(' · ');
-    c.innerHTML = (live ? esc(text) + ' · ' : '') + (k > 0 ? `<span class="wd">${esc(sub.slice(0, k + 3))}</span>${esc(sub.slice(k + 3))}` : esc(sub));
-    c.classList.toggle('live', live);
-    c._key = line;
-  };
+  const c = $('clock'), line = sub;
+  const put = () => { c.textContent = sub; c._key = line; };
   if (c._key !== line) {
     if (!c._key) put();
     else { c.classList.add('swap'); clearTimeout(c._t); c._t = setTimeout(() => { put(); c.classList.remove('swap'); }, 220); }
@@ -1060,7 +1059,7 @@ function leaveTl(setup, hash) {
     updateMore();
   }, MOVE);
 }
-function headerNow() { const dd = fromDayMs(state.day); dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name}`, true); }
+function headerNow() { dialTo(todayISO(), 'Today', true); }
 function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Timeline'); }
 function tapTl() {
   const x = TL.list[TL.idx];
@@ -1081,12 +1080,13 @@ function route() {
   const h = location.hash;
   let m;
   if ((m = h.match(/^#work-(.+)$/))) openWork(m[1]);
+  else if ((m = h.match(/^#note-(.+)$/))) openNote(decodeURIComponent(m[1]));
   else if (h === '#timeline') { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(todayISO()); else showTlDay(TL.list.length - 1); }
   else if ((m = h.match(/^#day-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(m[1]); }
-  else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; renderPast(m[1]); updateMore(); }
+  else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; endNote(); renderPast(m[1]); updateMore(); }
   else {
-    if (openOverlay() || state.pastDate) { if (reader.hidden || !WORK.fromList) clearTerm(); }
-    if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); unrollPlate(420); }
+    if (openOverlay() || state.pastDate) { if (reader.hidden || !READ.fromList) clearTerm(); }
+    if (openOverlay()) { reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Timeline'); unrollPlate(420); }
     if (state.pastDate) exitPast(); else renderText();
     updateMore();
   }
@@ -1160,12 +1160,12 @@ addEventListener('keydown', ev => {
   if (ev.key === 'ArrowRight') go(state.index + 1);
   if (ev.key === 'ArrowLeft') go(state.index - 1);
 });
-$('whenBtn').addEventListener('click', () => {
+$('tlBtn').addEventListener('click', () => {
   if (!tl.hidden) leaveToToday();
-  else if (!reader.hidden) backToWorks();
   else if (state.pastDate) closeOverlays();
   else openTimeline();
 });
+$('backBtn').addEventListener('click', backToList);
 $('homeBtn').addEventListener('click', () => { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); });
 function toast(text) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = text; document.body.append(t);

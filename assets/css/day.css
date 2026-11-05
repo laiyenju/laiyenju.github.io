@@ -17,10 +17,14 @@
   --sans: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   --p: 0;
   --shrink: 38svh;
-  /* frosted glass for the buttons that float over the page (the date card, Home, the command bar):
-     the page shows through, blurred, so you can still tell what scrolls behind them. Flat: one thin border,
-     no shine along the top and no drop shadow */
+  /* frosted glass for what floats over the page (the date card, its buttons, the command bar): the page shows
+     through, blurred, so you can still tell what scrolls behind it. Flat: no border, no shine, no drop shadow.
+     What you can press has colour, what you only read has almost none: a button is the glass with a little ink in
+     it (--btn), so it reads as a piece even on a white noon sky; the date card is a fainter glass (--card-glass). */
   --glass: color-mix(in srgb, var(--sheet) 62%, transparent);
+  --btn: color-mix(in srgb, var(--ink) 12%, var(--glass));
+  --btn-hover: color-mix(in srgb, var(--ink) 18%, var(--glass));
+  --card-glass: color-mix(in srgb, var(--sheet) 18%, transparent);
   --glass-blur: blur(14px) saturate(1.5);
 }
 [hidden] { display: none !important; }
@@ -45,41 +49,55 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hero-inner { padding-top: calc(var(--card-top) + 64px); }
 .top {
   position: fixed; z-index: 7; top: 0; left: 0; right: 0;
-  display: flex; justify-content: center; align-items: center; gap: 12px;
   padding-top: var(--card-top); padding-bottom: 10px;
   /* only a light veil: the glass card itself does the work, so the page can be seen behind it */
   background: linear-gradient(color-mix(in srgb, var(--bg) 55%, transparent), transparent);
 }
 .soft { color: var(--ink-soft); }
-.when {
-  display: flex; align-items: center; gap: 12px; text-align: left;
-  padding: 6px 6px 6px 12px; border: 1px solid var(--rule); border-radius: 12px;
-  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  transition: border-color .15s ease, transform .15s ease, background-color 1.2s ease;
-}
-.when:hover { border-color: var(--ink-soft); }
-.when:active { transform: scale(.98); }
-/* The date card is the same size and in the same place on every page (home, timeline, a work, a note: site.css has
-   the same): --card-w wide, 50px tall, --card-top from the top, centred. What it says changes; its box never does.
+/* The date card only tells the time; it is not a button. The buttons stand apart from it, each its own piece of glass,
+   as tall as the card: on the left the way back to the list (a work or a note), on the right Timeline / Today on the
+   home page or Home on a work or a note (site.css has the same for a note opened from a link).
+   Narrow screens (< 640px): card and buttons share the card's usual box (--card-w), the card takes what is left.
+   Wider: the card keeps --card-w, centred, and the buttons stand outside it, 8px away.
+   The card's two lines take the same two sizes on every page (site.css has the same): --card-title on top (the time,
+   or in the timeline the date), --card-sub under it (Today, or in the timeline the weekday and how long ago).
    Phones: 12px from the top. Wide screens: lower, by the screen's height (9%, 28–96px), so the page sits towards the
-   middle instead of hugging the top edge.
-   Its two lines take the same two sizes on every page (site.css has the same): --card-title on top (the time, or in
-   the timeline the date), --card-sub under it (the date, the weekday and the city, or in the timeline how long ago). */
+   middle instead of hugging the top edge. */
 :root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px));
   --card-title: 15px; --card-sub: 12px; }
 @media (min-width: 900px) { :root { --card-top: clamp(28px, 9svh, 96px); } }
-.when { padding: 6px 7px 6px 16px; gap: 12px; width: var(--card-w); height: 50px; justify-content: space-between; box-sizing: border-box; }
+.top-row { display: flex; gap: 8px; width: var(--card-w); margin: 0 auto; }
+.when, .top-btn {
+  height: 50px; border: 0; border-radius: 12px;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  transition: transform .15s ease, background-color .15s ease;
+}
+.when { background: var(--card-glass); }
+.top-btn { background: var(--btn); }
+.when { display: flex; align-items: center; flex: 1; min-width: 0; padding: 6px 12px; }
 .when .txt { display: grid; line-height: 1.3; text-align: center; flex: 1; min-width: 0; }
 .when b { font: 500 var(--card-title)/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; }
 /* on the card (a lifted colour), so one step darker than other grey words to stay readable */
-.when .txt > span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: var(--card-sub); }
+.when .txt > span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: var(--card-sub); overflow: hidden; text-overflow: ellipsis; }
+.top-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px;
+  color: var(--ink); font: 500 12px/1 var(--mono); white-space: nowrap; }
+.top-btn:hover { background: var(--btn-hover); }
+.top-btn:active { transform: scale(.96); }
+.top-btn svg { width: 12px; height: 12px; flex: none; }
+.home-btn { width: 50px; padding: 0; }
+.home-btn svg { width: 16px; height: 16px; }
+@media (min-width: 640px) {
+  .top-row { width: 100%; display: grid; grid-template-columns: 1fr var(--card-w) 1fr; }
+  .back-btn { grid-column: 1; grid-row: 1; justify-self: end; }
+  .when { grid-column: 2; grid-row: 1; }
+  #tlBtn, .home-btn { grid-column: 3; grid-row: 1; justify-self: start; }
+}
 #date, #clock { transition: opacity .25s ease, color .3s ease; }
 #date.swap { opacity: 0; }
 /* the timeline on a past day: the date and its line in the accent, the same colour as the line above a past building */
 .when.is-past-day b, .when.is-past-day .txt > span { color: var(--accent); }
 /* the colour change fades on the date and the line only; the digit strips inside keep their own roll
    (.dial .strip, .roll .rs) and take the colour from them */
-.when #clock .wd { transition: color .3s ease; }
 .when .txt b span { color: inherit; font-size: inherit; }
 /* the live time in the date card: HH:MM:SS, each digit rolls (sky.js rollClock) */
 .roll { display: inline-flex; font-variant-numeric: tabular-nums; vertical-align: bottom; }
@@ -90,37 +108,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 @media (prefers-reduced-motion: reduce) { .roll .rs { transition: none !important; } }
 
 #clock.swap { opacity: 0; }
-.when .cta {
-  display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px;
-  background: var(--ink); color: var(--bg); font: 500 12px/1 var(--mono); white-space: nowrap;
-}
-.when .cta svg { width: 12px; height: 12px; }
-.when .cta .i-back, .when .cta.is-back .i-cal { display: none; }
-.when .cta.is-back .i-back { display: block; }
-/* a work page: the same card, its button (on its left) goes back to the list. Home stands beside it, outside it on
-   the right: a 50px glass square, as tall as the card, an icon only. It never moves the card: where there is room
-   (508px and wider) it sits right of the card; on narrower screens the card gives up 58px on its right for it, so the
-   card's left edge, top and height stay put and the two together fill the card's usual box (site.css: the same). */
-.top.has-home .when { padding: 6px 16px 6px 7px; }
-.top.has-home .when .cta { order: -1; }
-.home-btn {
-  position: absolute; top: var(--card-top); left: calc(50% + var(--card-w) / 2 + 8px);
-  display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; padding: 0;
-  border: 1px solid var(--rule); border-radius: 12px;
-  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); color: var(--ink);
-  transition: border-color .15s ease, transform .15s ease, background-color 1.2s ease;
-}
-.home-btn[hidden] { display: none; }
-.home-btn:hover { border-color: var(--ink-soft); }
-.home-btn:active { transform: scale(.96); }
-.home-btn svg { width: 16px; height: 16px; }
-@media (max-width: 507px) {
-  .top.has-home .when { width: calc(var(--card-w) - 58px); margin-right: 58px; }
-  .home-btn { left: calc(50% + var(--card-w) / 2 - 50px); }
-  .top.has-home .wd { display: none; }
-}
-/* the home page on a narrow phone: the day line (date · weekday · city) leaves the weekday out to fit */
-@media (max-width: 389px) { #clock.live .wd { display: none; } }
 
 .group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 
@@ -163,12 +150,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* padding-top: room for the platform's front corner under the building (day.js placePlate) */
 .caption { text-align: center; display: grid; gap: 4px; max-width: 34em; padding-top: 24px; padding-bottom: 8px; }
-.caption .name { font: 700 21px/1.45 var(--sans); letter-spacing: .01em; text-wrap: balance; }
-.caption .name.past { font: 700 17px/1.65 var(--sans); letter-spacing: 0; }
+/* the title and the words under it in one size (the title only bolder), so the first screen stays quiet */
+.caption .name { font: 700 21px/1.5 var(--sans); letter-spacing: .01em; text-wrap: balance; }
 .caption .meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); }
 .caption .meta a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .meta a:hover { color: var(--ink); border-bottom-style: solid; }
-.caption .note { font: 17px/1.65 var(--sans); color: var(--ink); text-wrap: pretty; margin-top: 10px; }
+.caption .note { font: 21px/1.5 var(--sans); color: var(--ink); text-wrap: pretty; margin-top: 10px; }
 .caption .note a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .note a:hover { border-bottom-style: solid; }
 
@@ -217,10 +204,10 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 }
 .cmdbar::-webkit-scrollbar { display: none; }
 .cmdbar.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
-.cmdbar button { flex: none; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono);
-  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
-.cmdbar button:hover { border-color: var(--ink-soft); }
-.cmdbar .dollar { border-color: transparent; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; color: var(--accent); padding-inline: 4px; }
+.cmdbar button { flex: none; border: 0; border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono);
+  background: var(--btn); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); transition: background-color .15s ease; }
+.cmdbar button:hover { background: var(--btn-hover); }
+.cmdbar .dollar { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; color: var(--accent); padding-inline: 4px; }
 /* no divider and no solid band: the buttons are glass and float on the page, so what scrolls under them shows through,
    blurred. A light veil at the very bottom keeps the words from running straight into the buttons. */
 .term .cmdbar {
@@ -242,7 +229,7 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
   .bar-slot .cmdbar { margin-top: 14px; overflow: visible; flex-wrap: wrap; }
   .bar-slot .cmdbar .dollar { padding-left: 0; }
 }
-.cmdbar button:active { border-color: var(--accent); color: var(--accent); }
+.cmdbar button:active { color: var(--accent); }
 /* notes and works: one list. Date | title, a quieter line under the title, a rule between rows. All in the terminal's font. */
 .ls { display: grid; }
 .ls a, .ls button { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: baseline;
@@ -269,7 +256,9 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 #tl .tl-cap, #tl .ruler, #tl .tl-row { transition: opacity .35s ease; }
 #tl.clear .tl-cap, #tl.clear .ruler, #tl.clear .tl-row { opacity: 0; }
 .ghost { position: fixed; z-index: 6; pointer-events: none; image-rendering: pixelated; transform-origin: 0 0; }
-.reader-inner { max-width: 680px; margin: 0 auto; padding-top: calc(var(--card-top) + 72px); padding-bottom: 20svh; }
+/* the same column as a note (site.css .post): 680px with 20px inside on each side, so a work and a note line up */
+#reader { padding-left: 0; padding-right: 0; }
+.reader-inner { max-width: 680px; margin: 0 auto; padding: calc(var(--card-top) + 72px) 20px 20svh; }
 /* the title right under the card, with the same room as on a note (site.css .post-title) */
 .reader h1 { font: 400 30px/1.4 var(--sans); margin: 18px 0 6px; text-wrap: balance; letter-spacing: -.005em; }
 .reader .sub { font: 18px/1.6 var(--sans); color: var(--ink-soft); margin: 0 0 14px; }
@@ -343,6 +332,12 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .tl-item:hover .n { text-decoration: underline; text-underline-offset: 3px; }
 .tl-item[aria-current="true"] .d { color: var(--accent); }
 .reader p a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
+/* a note in the reader: its own page, framed whole (day.js openNote); it scrolls inside the frame, under the card */
+.reader.is-note { overflow: hidden; padding: 0; }
+.reader.is-note .reader-inner { max-width: none; height: 100%; padding: 0; }
+.note-frame { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
+/* a picture in the note opened large: the card and its buttons step aside */
+body.note-lb .top { visibility: hidden; }
 
 /* tells the reader there is more below */
 .more {

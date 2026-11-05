@@ -3,24 +3,20 @@
 <head>
   {% include head.html %}
   <script>
-    // Arrival. Opened from inside the site (the notes list on the home page),
-    // the page cuts straight in and prints from the top in a quarter second, like a work does:
-    // no typing, and no cross-fade (the sky is already painted in head.html, so there is no flash). Opened from outside (a shared link), it types itself out
-    // (post.js), unless motion is reduced.
+    // Arrival. Framed in the home page's reader (a note opened from the list, day.js openNote): the page leaves out its
+    // own card and prints in from the top in a quarter second, like a work (post-embed, post-rise). Opened on its own
+    // (a shared link), it types itself out (post.js), unless motion is reduced.
     (function () {
       var root = document.documentElement;
-      var handoff = false;
-      try {
-        handoff = sessionStorage.getItem("post-handoff") === location.pathname;
-        sessionStorage.removeItem("post-handoff");
-      } catch (e) {}
-      if (handoff) {
-        // from inside the site (the list): no typing, the page prints in from the top in a quarter second
-        if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) root.classList.add("post-rise");
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var framed = false;
+      try { framed = window.self !== window.top && window.parent.location.origin === location.origin; } catch (e) {}
+      if (framed) {
+        root.classList.add("post-embed");
+        if (!reduce) root.classList.add("post-rise");
         return;
       }
-      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      root.classList.add("post-print");
+      if (!reduce) root.classList.add("post-print");
     })();
   </script>
 </head>
@@ -30,13 +26,15 @@
   {% assign chars = content | strip_html | strip_newlines | remove: " " | size %}
 
   {% comment %}The same frame as a work on the home page: the date card at the top, the same size and in the same place
-     as on every page (← Notes on its left goes back to the list, Home at its right end), then the title on the left.{% endcomment %}
+     as on every page, with its buttons apart from it (← Notes on its left goes back to the list, Home on its right),
+     then the title on the left. Framed in the home page (a note opened from the list), the home page's own card is used
+     and this one is left out (site.css html.post-embed).{% endcomment %}
   <div class="post-top">
-    <a class="post-when post-to-notes" href="{{ '/' | relative_url }}?view=notes" aria-label="Back to all notes">
-      <span class="cta"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 6h-9M4.5 3 1.5 6l3 3"/></svg>Notes</span>
-      <span class="txt"><b data-clock="time">&nbsp;</b><span data-clock="day">Taipei</span></span>
-    </a>
-    <a class="post-home" href="{{ '/' | relative_url }}" aria-label="Home"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 6 6 1.8 10.5 6M3 4.8v5.7h6V4.8"/></svg></a>
+    <div class="post-row">
+      <a class="post-btn post-to-notes" href="{{ '/' | relative_url }}?view=notes" aria-label="Back to all notes"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 6h-9M4.5 3 1.5 6l3 3"/></svg>Notes</a>
+      <div class="post-when"><span class="txt"><b data-clock="time">&nbsp;</b><span>Today</span></span></div>
+      <a class="post-btn post-home" href="{{ '/' | relative_url }}" aria-label="Home"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 6 6 1.8 10.5 6M3 4.8v5.7h6V4.8"/></svg></a>
+    </div>
   </div>
 
   <article class="post">
