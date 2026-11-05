@@ -1,7 +1,5 @@
 (function () {
   "use strict";
-  // where Yen is: one setting for the whole site (assets/js/sky.js); Taipei if that file did not load
-  var CITY = (window.siteSky && window.siteSky.CITY) || { name: "Taipei", short: "taipei", tz: 8 };
 
   /* —— Article pages: plain paper, nothing moving while reading. Footnotes
         move into the right margin on wide screens. —— */
@@ -162,6 +160,7 @@
       showAt(i);
       lb.hidden = false;
       document.documentElement.classList.add("lb-lock");
+      if (EMBED) tellHome({ note: "lightbox", open: true });
       requestAnimationFrame(function () { lb.classList.add("is-open"); });
       // Focus the dialog itself: keys work at once, and no ring around close after a click.
       lb.focus();
@@ -169,6 +168,7 @@
     function closeLightbox() {
       lb.classList.remove("is-open");
       document.documentElement.classList.remove("lb-lock");
+      if (EMBED) tellHome({ note: "lightbox", open: false });
       lb.hidden = true;
       if (lbReturn && lbReturn.focus) lbReturn.focus();
     }
@@ -332,82 +332,35 @@
     typeTitle(function () { typeMeta(streamProse); });
   }
 
-  /* —— Back to the list. Opened from the notes list, the list is still one
-        step back in history, and the browser keeps that page as it was
-        (back/forward cache): going back shows it at once, as it was, with
-        no reload. Opened any other way (a shared link, a new tab),
-        follow the link to the home page's notes view. —— */
-  // opened from the list on the home page (it says so as it leaves, day.js): the list is one step back
-  var FROM_LIST = false;
-  try { FROM_LIST = sessionStorage.getItem("post-from-list") === location.pathname; sessionStorage.removeItem("post-from-list"); } catch (e) {}
-  function cameFromNotes() {
-    var nav = window.navigation, canBack = nav && typeof nav.canGoBack === "boolean" ? nav.canGoBack : history.length > 1;
-    if (FROM_LIST) return canBack;
-    var from;
-    try { from = new URL(document.referrer); } catch (e) { return false; }
-    if (from.origin !== location.origin) return false;
-    if (!/\/notes\/?$/.test(from.pathname) && from.searchParams.get("view") !== "notes") return false;
-    return canBack;
-  }
-  function backToNotes() {
-    markReturn(true);
-    if (cameFromNotes()) { history.back(); return; }
-    var a = document.querySelector(".post-to-notes");
-    location.href = a ? a.href : new URL("./?view=notes", document.baseURI).href;
-  }
-  // ← Notes on the date card: back to the list
-  document.querySelectorAll(".post-to-notes").forEach(function (el) {
-    el.addEventListener("click", function (e) {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      e.preventDefault();
-      backToNotes();
+  /* —— Framed in the home page's reader (a note opened from the list; default.html adds post-embed): the home page
+        has the card and its buttons, and the way back (day.js openNote). Links leave the frame for the whole window
+        (a footnote's #link stays in the note); Esc closes the note, as it does a work; a picture opened large tells
+        the home page, so its card steps aside. —— */
+  var EMBED = document.documentElement.classList.contains("post-embed");
+  function tellHome(msg) { try { window.parent.postMessage(msg, location.origin); } catch (e) {} }
+  if (EMBED) {
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[href]");
+      if (a && !a.target && (a.getAttribute("href") || "").charAt(0) !== "#") a.target = "_top";
     });
-  });
-
-  /* —— Leaving: the home page reads this, so it can come back the way a
-        shell does when a pager quits: no fade, the notes list as it was with
-        `cat <file>` in its history, and other views printed line by line.
-        Set on every way out (the link, a typed command, the back button). —— */
-  var FILE = decodeURIComponent(location.pathname.split("/").pop() || "").replace(/\.html?$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "") + ".md";
-  // toList: leaving for the notes list (← Notes), so the home page shows the list again.
-  // home: leaving by Home, so the home page starts clean. Neither (the browser's back button): back to the list too.
-  var leavingToList = false, leavingHome = false;
-  function markReturn(to) {
-    if (to === true) leavingToList = true;
-    if (to === "home") leavingHome = true;
-    try { sessionStorage.setItem("post-return", JSON.stringify({ path: location.pathname, file: FILE, t: Date.now(), toList: leavingToList, home: leavingHome })); } catch (e) {}
+    window.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !(lb && !lb.hidden)) tellHome({ note: "escape" });
+    });
   }
-  document.querySelectorAll(".post-home").forEach(function (el) {
-    el.addEventListener("click", function () { markReturn("home"); });
-  });
-  window.addEventListener("pagehide", function () { markReturn(); });
-  window.addEventListener("pageshow", function (e) {
-    if (!e.persisted) return;
-    leavingToList = false; leavingHome = false;
-    try { sessionStorage.removeItem("post-return"); } catch (err) {}
-  });
 
-  /* —— The date card at the top: today where Yen is, as on the home page (CITY: see the top of this file). —— */
-  var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  function two(n) { return (n < 10 ? "0" : "") + n; }
+  /* —— The date card at the top: the time where Yen is, as on the home page (CITY: see the top of this file),
+        and "Today" under it. —— */
   function tick() {
-    var d = new Date(Date.now() + CITY.tz * 3600e3);
-    var time = document.querySelector('[data-clock="time"]'), day = document.querySelector('[data-clock="day"]');
-    if (!time || !day) return;
-    // on top, the time to the second, rolling digit by digit (sky.js rollClock), as on the home page
+    var time = document.querySelector('[data-clock="time"]');
+    if (!time) return;
+    // the time to the second, rolling digit by digit (sky.js rollClock), as on the home page
     if (!time.querySelector(".roll")) time.innerHTML = '<span class="roll"></span>';
     if (window.siteSky && siteSky.rollClock) siteSky.rollClock(time.querySelector(".roll"));
-    // under it: date · weekday · city. The weekday in its own span: a narrow screen leaves it out (site.css .wd)
-    var date = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate()), wd = DAYS[d.getUTCDay()];
-    if (day.getAttribute("data-day") !== date) {
-      day.setAttribute("data-day", date);
-      day.innerHTML = date + ' · <span class="wd">' + wd + " · </span>" + CITY.name;
-    }
     window.setTimeout(tick, 1000 - (Date.now() % 1000) + 15);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    tick();
+    if (!EMBED) tick();
     // Start typing once the fonts are in (at most 400ms), so the first
     // characters don't stall while the Chinese face is still coming in.
     requestAnimationFrame(function () {
