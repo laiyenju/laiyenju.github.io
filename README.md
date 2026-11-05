@@ -14,7 +14,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `published/` | 已發布的文章。放進這裡就是發布 |
 | `index.md`、`_layouts/home.html` | 首頁：每天一棟 pixel 建築、Timeline、下方的 terminal（notes、works 都在 terminal 裡）。`home.html` 把文章清單和 `_data/` 的資料寫成 JSON 放進頁面，畫面全部由 `assets/js/day.js` 畫出來 |
-| `_layouts/default.html` | 文章頁。和首頁的作品頁同一個框架：頂部分成兩塊，左邊是日期卡片（左側按鈕 `← Notes`，整張卡片點了回 notes 清單；時間由 `assets/js/post.js` 的 `tick` 填），右邊是 Home（手機上只有圖示）、`yen@taipei ~ $ cat notes/<檔名>.md`（路徑可以點：`~` 回首頁、`notes/` 回清單）、靠左的標題、文末的 terminal 和 `← cd ..`（回清單） |
+| `_layouts/default.html` | 文章頁。和首頁的作品頁同一個框架：頂部分成兩塊，左邊是日期卡片（左側按鈕 `← Notes`，整張卡片點了回 notes 清單；時間由 `assets/js/post.js` 的 `tick` 填），右邊是 Home（正方形圖示按鈕）、`yen@taipei ~ $ cat notes/<檔名>.md`（路徑可以點：`~` 回首頁、`notes/` 回清單）、靠左的標題、文末的 terminal 和 `← cd ..`（回清單） |
 | `_includes/` | 每頁共用的 `<head>`、SEO 標籤、文章頁在第一次畫面前套上天色與介面語言（`theme-boot.html`） |
 | `_data/works.yml` | 作品集（terminal 的 `ls works`，每件作品一頁 `#work-<slug>`） |
 | `_data/days.yml` | 去過的地方：首頁的往年今日建築、Timeline 的每一天 |
@@ -34,7 +34,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `assets/js/pixel-engine.js` | 產生的檔案，不要直接改。改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 3.3） |
 | 首頁網址 | `#timeline`、`#day-YYYY-MM-DD`（Timeline 停在那天；同一天第二棟以後加 `-2`、`-3`）、`#past-YYYY-MM-DD`（和首頁同一個畫面，只是主建築換成那天的，標題上方有一行主題色的「幾年前・日期」（`day.css` 的 `.past-tag`）；頂部按鈕變成 Today，點了回到今天；點建築打開 Timeline 的那一天）、`#work-<slug>`（一件作品）。分享這些網址會直接打開那個畫面 |
-| 頂部卡片 | 首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：分成兩塊，左邊日期卡片的按鈕在左側、寫 `← Work`／`← Notes`，點了回清單；右邊是 Home。兩塊加起來不會超過螢幕寬：寬度小於 480px 時 Home 只剩圖示，小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
+| 頂部卡片 | 首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：分成兩塊，左邊日期卡片的按鈕在左側、寫 `← Work`／`← Notes`，點了回清單；右邊是 Home：和卡片一樣高的正方形（50×50px）圖示按鈕。兩塊加起來不會超過螢幕寬：寬度小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
 | 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`CLAUDE.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
