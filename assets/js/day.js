@@ -945,6 +945,7 @@ function whereNow() {
 /* ================= terminal ================= */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const logEl = $('log');
+document.querySelectorAll('.city').forEach(el => { el.textContent = CITY.short; }); // the input line's yen@<city>
 // notes and works share one list: date or year | title, then a short line under it (subtitle or description).
 // Each row carries its language, so Chinese titles get Chinese line breaking and spacing.
 const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" target="_blank" rel="noopener" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;

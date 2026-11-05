@@ -1,5 +1,7 @@
 (function () {
   "use strict";
+  // where Yen is: one setting for the whole site (assets/js/sky.js); Taipei if that file did not load
+  var CITY = (window.siteSky && window.siteSky.CITY) || { name: "Taipei", short: "taipei", tz: 8 };
 
   /* —— Article pages: plain paper, nothing moving while reading. Footnotes
         move into the right margin on wide screens. —— */
@@ -350,7 +352,7 @@
     function say(text, prompt) {
       var p = document.createElement("p");
       if (prompt) {
-        p.innerHTML = '<span class="sh-dir">yen@taipei ~/notes</span> <span class="sh-arrow">$</span> ';
+        p.innerHTML = '<span class="sh-dir">yen@' + CITY.short + ' ~/notes</span> <span class="sh-arrow">$</span> ';
         p.appendChild(document.createTextNode(text));
       } else {
         p.className = "sh-dim";
@@ -483,19 +485,20 @@
     try { sessionStorage.removeItem("post-return"); } catch (err) {}
   });
 
-  /* —— The date card at the top: today in Taipei, as on the home page. —— */
+  /* —— The date card at the top: today where Yen is, as on the home page (CITY: see the top of this file). —— */
   var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   function two(n) { return (n < 10 ? "0" : "") + n; }
   function tick() {
-    var d = new Date(Date.now() + 8 * 3600e3);
+    var d = new Date(Date.now() + CITY.tz * 3600e3);
     var date = document.querySelector('[data-clock="date"]'), time = document.querySelector('[data-clock="time"]');
     if (!date || !time) return;
     date.textContent = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate());
-    time.textContent = DAYS[d.getUTCDay()] + " · Taipei " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
+    time.textContent = DAYS[d.getUTCDay()] + " · " + CITY.name + " " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
     window.setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-city]").forEach(function (el) { el.textContent = CITY.short; });
     tick();
     // Start typing once any page transition has finished (pagereveal has fired
     // by the first frame) and the fonts are in (at most 400ms), so the first

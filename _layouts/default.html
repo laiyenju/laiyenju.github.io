@@ -57,7 +57,7 @@
 
   <article class="post">
     <header class="post-head">
-      <p class="post-bar">yen@taipei ~ <i>$</i> <b>cat notes/{{ slug }}.md</b></p>
+      <p class="post-bar">yen@<span data-city>taipei</span> ~ <i>$</i> <b>cat notes/{{ slug }}.md</b></p>
       <h1 class="post-title">{{ page.title }}</h1>
       {% if page.subtitle %}<p class="post-subtitle">{{ page.subtitle }}</p>{% endif %}
       <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>
@@ -76,7 +76,7 @@
       </nav>
       {% endif %}
       <div class="sh-out" aria-live="polite"></div>
-      <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taipei ~/notes</span> <span class="sh-arrow">$</span></span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="post-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
+      <label class="sh-line sh-live"><span><span class="sh-prompt">yen@<span data-city>taipei</span> ~/notes</span> <span class="sh-arrow">$</span></span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="post-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
       <p class="sh-keys"><span class="i-en">type <kbd>help</kbd></span><span class="i-zh">輸入 <kbd>help</kbd> 查看操作指令</span></p>
       {% comment %}Straight to the home page's notes view: /notes/ is only a redirect, a second page load.{% endcomment %}
       <p class="post-backrow"><a class="post-back" href="{{ '/' | relative_url }}?view=notes">← cd ..</a></p>
