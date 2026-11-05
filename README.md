@@ -257,25 +257,86 @@ flowchart LR
 | `at` | 打卡時間（UTC） |
 | `office_at` | 最近一次在辦公室打卡的時間，每次打卡都會保留。首頁用它判斷今天是不是辦公室（見 2.4） |
 
-**第一次設定（只做一次）：**
+**第一次設定（只做一次，約 15 分鐘）**
 
-1. **Token**：GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token。
-   - Repository access：Only select repositories → `laiyenju.github.io`
-   - Permissions：**Actions → Read and write**（只能觸發 Action，不能改程式碼）
-   - Expiration：1 年。到期後打卡會失效，14 天後首頁自動回到作息表和日曆；換一個新 token 貼進捷徑就好。
-2. **捷徑「打卡」**：新增一個捷徑，加入「取得 URL 內容」（Get Contents of URL）：
-   - URL：`https://api.github.com/repos/laiyenju/laiyenju.github.io/actions/workflows/checkin.yml/dispatches`
-   - 方法：`POST`
-   - 標頭：`Authorization` = `Bearer <token>`、`Accept` = `application/vnd.github+json`
-   - 要求本文：JSON，`ref` = `main`；`inputs`（辭典）：`place` = `office`（或 `home`、`out`），`label` = 空白或自己寫的字
-   - 成功時 GitHub 不回任何內容（204）。
-3. **自動化**：捷徑 App → 自動化 → 新增：
-   - 「抵達」辦公室 → 執行 `place` = `office` 的捷徑
-   - 「抵達」家 → 執行 `place` = `home` 的捷徑
-   - 兩個都選「立即執行」，不用每次確認。
-4. **出門在外（手動，可選）**：再做一個捷徑，先「要求輸入」文字當 `label`，`place` = `out`。
+先做「家」、測試成功後再複製成「辦公室」，因為測試時會真的打一次卡，打辦公室會讓今天變成辦公室日。
 
-不用手機時：GitHub（網頁或 App）→ Actions → **Check in** → Run workflow，選 `place`、填 `label`。
+**步驟 1：在電腦上建立 token**（打卡用的鑰匙，只能觸發打卡，不能改網站）
+
+1. 打開 <https://github.com/settings/personal-access-tokens/new>
+2. Token name：`website check-in`
+3. Expiration：選最長的（1 年）
+4. Repository access：**Only select repositories** → 選 `laiyenju.github.io`
+5. Permissions：**Add permissions** → **Actions** → Access 改成 **Read and write**（Metadata 會自動加上唯讀，不用管）
+6. **Generate token**，複製 `github_pat_…` 開頭的那串字。只會顯示這一次，先存進密碼管理器，再傳到手機
+
+**步驟 2：在 iPhone 建立捷徑「打卡：家」**（捷徑 App，括號裡是英文介面的名稱）
+
+1. 「捷徑」分頁 → 右上 **＋** → 最上面的名稱改成 `打卡：家`
+2. 搜尋動作 `URL` → 點 **取得 URL 內容**（Get Contents of URL）
+3. 點動作裡藍色的 **URL**，貼上：
+   `https://api.github.com/repos/laiyenju/laiyenju.github.io/actions/workflows/checkin.yml/dispatches`
+4. 點動作右邊的 **›**（展開），會出現「方法」「標頭」「要求本文」
+5. **方法**（Method）：`GET` 改成 `POST`
+6. **標頭**（Headers）→ **新增新標頭**（Add new header），加兩個：
+
+   | 鍵 | 值 |
+   |---|---|
+   | `Authorization` | `Bearer github_pat_…`（Bearer、一個空格、你的 token） |
+   | `Accept` | `application/vnd.github+json` |
+
+7. **要求本文**（Request Body）選 **JSON**，然後：
+   - **新增新欄位**（Add new field）→ **文字**（Text）→ 鍵 `ref`，值 `main`
+   - **新增新欄位** → **辭典**（Dictionary）→ 鍵 `inputs` → 點這一列進去 → **新增新欄位** → **文字** → 鍵 `place`，值 `home` → 左上返回
+8. 完成後應該長這樣：
+
+   ```
+   取得 URL 內容  https://api.github.com/repos/…/checkin.yml/dispatches
+     方法     POST
+     標頭     Authorization: Bearer github_pat_…
+              Accept: application/vnd.github+json
+     要求本文 JSON
+              ref: main
+              inputs (辭典)
+                place: home
+   ```
+
+**步驟 3：測試**
+
+1. 在捷徑裡按右下 **▶︎** 執行。沒有跳出任何訊息就是成功（GitHub 成功時不回內容）
+2. 到 GitHub → Actions → **Check in**，應該有一筆綠色勾勾
+3. 約 5 分鐘後，首頁 terminal 按 **Where's Yen**，會看到 `Yen is at home, Taipei. Checked in at HH:MM.`
+
+跳出一段英文時，看裡面的數字或 message：
+
+| 訊息 | 原因 |
+|---|---|
+| `Bad credentials`（401） | token 貼錯、過期，或 `Bearer` 後面少了空格 |
+| `Resource not accessible`（403） | token 的權限不是 Actions：Read and write |
+| `Not Found`（404） | URL 打錯，或 token 沒選 `laiyenju.github.io` |
+| `Unprocessable`（422） | 要求本文錯：`ref` 不是 `main`、`place` 不是 `home`／`office`／`out`，或 `inputs` 不是辭典 |
+
+**步驟 4：複製出「打卡：辦公室」**
+
+長按「打卡：家」→ **複製**（Duplicate）→ 名稱改成 `打卡：辦公室` → 把 `inputs` 裡的 `place` 改成 `office`。不要執行它。
+
+**步驟 5：設定自動化（兩個）**
+
+1. 「自動化」分頁 → 右上 **＋** → **抵達**（Arrive）
+2. 位置 → **選擇** → 搜尋家的地址 → 完成；時間選 **任何時間**
+3. 選 **立即執行**（Run Immediately）。「執行時通知」可以關掉
+4. **下一步** → 選捷徑 **打卡：家** → 完成
+5. 再做一次：位置選公司、捷徑選 **打卡：辦公室**
+
+第一次可能會問位置權限，選允許。
+
+**可選：「打卡：外出」**（手動按，例如在咖啡店）：複製「打卡：家」，在最前面加一個動作 **要求輸入**（Ask for Input，文字，提示寫 `在哪裡？用英文，例如 at a café in Daan`）；`place` 改成 `out`；`inputs` 裡再加一個文字欄位，鍵 `label`，值點一下選 **提供的輸入**（Provided Input）。
+
+**注意**
+
+- 捷徑裡有 token，不要分享這些捷徑。
+- token 一年後到期，打卡會失效：做一個新的 token，換掉三個捷徑裡的 `Authorization`。沒換的話，14 天後首頁自動回到作息表。
+- 不用手機時：GitHub（網頁或 App）→ Actions → **Check in** → Run workflow，選 `place`、填 `label`。
 
 ---
 
