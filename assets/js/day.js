@@ -744,7 +744,7 @@ function buildItems() {
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
     .sort(byDate).map(m => {
       const year = +m.date.slice(0, 4);
-      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, meta: '', html: sentenceFor(m, dd.y - year) };
+      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: '', html: sentenceFor(m, dd.y - year) };
     });
   const day = r.holiday || (r.rest ? 'Weekend' : 'Weekday');
   items.push({
@@ -773,8 +773,8 @@ function sizeStage() {
     // above and below, so the building and its words stay together in the middle instead of drifting apart.
     const room = innerHeight - 76 - $('cmdbar').offsetHeight;
     const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight + 8 + 12;
-    h = state.pastDate ? Math.round(cl(innerHeight * .46, 200, 520)) : Math.round(cl(Math.min(innerHeight * .5, room - words), 180, 520));
-    if (!state.pastDate) lift = Math.max(0, Math.round((room - words - h) / 2));
+    h = Math.round(cl(Math.min(innerHeight * .5, room - words), 180, 520));
+    lift = Math.max(0, Math.round((room - words - h) / 2));
   }
   STAGE = { w: wide ? Math.round(group.clientWidth * .53) : group.clientWidth, h };
   stage.style.width = STAGE.w + 'px'; stage.style.height = STAGE.h + 'px';
@@ -883,13 +883,14 @@ function go(k) {
   renderText();
   mount(true);
 }
-/* the homepage, but on a past day: only reached from the timeline (#past-YYYY-MM-DD) */
+/* the homepage, but on a past day: only reached from the timeline (#past-YYYY-MM-DD).
+   Same page as today, only the main building is swapped; the badge says which day it is,
+   the top button says Today and goes back, tapping the building opens the timeline there. */
 function renderPast(date) {
   const x = tlEntries().find(e => e.id === date && !e.today);
   if (!x) { exitPast(); return; }
   const id = date; date = x.date;
   const m = x.m, d = parseDay(date), now = fromDayMs(state.day).y, md = date.slice(5);
-  const nav = `<div class="nav-row"><button type="button" class="back" id="pastBack">← Timeline</button><button type="button" class="back" id="pastToday">Back to today</button></div>`;
   state.pastDate = id;
   document.body.classList.add('is-past');
   // that day's homepage: earlier years on the same date on the left, that building as the main one
@@ -898,21 +899,20 @@ function renderPast(date) {
     const y = +o.date.slice(0, 4), main = o.id === id;
     return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: main,
       tag: `${ago(now - d.y)} · ${LONG_MON[d.m - 1]} ${d.d}, ${d.y}`,
-      name: o.zh && !o.noZh ? `${o.name} · ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) + (main ? nav : '') };
+      name: o.zh && !o.noZh ? `${o.name}\u00a0· ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) };
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
   renderText(); renderThumbs(); sizeStage(); mount(false);
-  $('ctaText').textContent = 'Timeline';
+  ctaFor('Today');
   scrollTo(0, 0);
 }
-document.addEventListener('click', ev => {
-  if (ev.target.closest('#pastBack') && state.pastDate) { TL.from = { rect: disp.getBoundingClientRect(), img: disp, id: state.pastDate }; go2('#day-' + state.pastDate); }
-  else if (ev.target.closest('#pastToday')) closeOverlays();
-});
+// the top button: Timeline on today's page, Today anywhere else (it then goes back to today)
+function ctaFor(word) { $('ctaText').textContent = word; $('whenBtn').setAttribute('aria-label', word === 'Today' ? 'Back to today' : 'Open the timeline'); }
 function exitPast() {
   if (!state.pastDate) return;
   state.pastDate = null;
   document.body.classList.remove('is-past');
+  ctaFor('Timeline');
   renderDay();
 }
 function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
@@ -1037,11 +1037,11 @@ const openOverlay = () => (!reader.hidden && reader) || (!tl.hidden && tl) || nu
 function go2(hash) { if (location.hash !== hash) { try { history.pushState(null, '', hash); } catch (e) { location.hash = hash; return; } } route(); }
 function showOverlay(el) {
   for (const o of [reader, tl]) o.hidden = o !== el;
-  $('ctaText').textContent = location.hash.startsWith('#work-') ? 'Timeline' : 'Today';
+  ctaFor(location.hash.startsWith('#work-') ? 'Timeline' : 'Today');
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
 function closeOverlays() {
-  reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; $('ctaText').textContent = 'Timeline';
+  reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline');
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
   updateMore();
@@ -1081,7 +1081,7 @@ function timelineEntries() {
   const today = state.items[state.items.length - 1];
   const past = MEMORIES.filter(m => m.date < todayISO() && checkMemory(m)).sort(byDate).reverse();
   return [{ date: todayISO(), id: todayISO(), today: true, scene: today.scene, opts: today.opts, name: today.name, html: escHtml(today.meta) }]
-    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name} · ${m.zh}` : m.name, html: plainSentence(m) })));
+    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, html: plainSentence(m) })));
 }
 /* ---------- timeline mode ----------
    Days go left (oldest) to right (today), like the homepage. Changing day: the building
@@ -1251,7 +1251,7 @@ function openTl(date) {
   TL.from = null;
   if (fly) tl.classList.add('clear');
   showOverlay(tl);
-  $('ctaText').textContent = 'Today';
+  ctaFor('Today');
   renderRuler();
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
@@ -1370,7 +1370,7 @@ function leaveTl(setup, hash) {
   }, MOVE);
 }
 function headerNow() { const dd = fromDayMs(state.day); dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name} ${pad(Math.floor(state.minute / 60))}:${pad(state.minute % 60)}`); }
-function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } $('ctaText').textContent = 'Timeline'; }
+function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Timeline'); }
 function tapTl() {
   const x = TL.list[TL.idx];
   if (x.today) { leaveTl(() => { homeToday(); const k = state.items.length - 1; if (state.index !== k) { state.index = k; renderThumbs(); mount(false); } renderText(); }); return; }
@@ -1415,7 +1415,7 @@ function route() {
   else if ((m = h.match(/^#day-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(m[1]); }
   else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; renderPast(m[1]); updateMore(); }
   else {
-    if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; $('ctaText').textContent = 'Timeline'; }
+    if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); }
     if (state.pastDate) exitPast(); else renderText();
     updateMore();
   }
@@ -1501,7 +1501,7 @@ addEventListener('keydown', ev => {
 });
 $('whenBtn').addEventListener('click', () => {
   if (!tl.hidden) leaveToToday();
-  else if (!reader.hidden) closeOverlays();
+  else if (!reader.hidden || state.pastDate) closeOverlays();
   else openTimeline();
 });
 function toast(text) {

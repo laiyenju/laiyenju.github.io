@@ -125,7 +125,6 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .cmdbar button { flex: none; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono); background: var(--sheet); }
 .cmdbar button:hover { border-color: var(--ink-soft); }
 .cmdbar .dollar { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 4px; }
-body.is-past .cmdbar { display: none; }
 /* no divider: the page fades out under the bar, so the buttons float on the page instead of sitting in a toolbar */
 .term .cmdbar {
   z-index: 6; padding: 22px max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
@@ -179,13 +178,7 @@ body.is-past .cmdbar { display: none; }
 .reader .draft { color: var(--ink-soft); font: 14px/1.7 var(--sans); border-left: 2px solid var(--rule); padding-left: 12px; margin-top: 30px; }
 
 /* the homepage as it was on a past day: same look, that day's building is the main one */
-body.is-past .term { display: none; }
 .past-tag { display: inline-block; margin: 0 auto 6px; padding: 3px 10px; border: 1px solid var(--rule); border-radius: 999px; font: 12.5px/1.4 var(--mono); color: var(--ink-soft); background: var(--sheet); }
-.caption .record { text-align: left; margin-top: 10px; }
-.caption .record p { font: 17px/1.8 var(--sans); margin: 0 0 12px; }
-.caption .record .day-meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); }
-.caption .record .day-meta a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
-.caption .record .nav-row { justify-content: center; margin-top: 24px; }
 
 /* timeline mode: the building, its name and place, and a time ruler. Nothing else. */
 .tlm { min-height: 100%; display: grid; justify-items: center; align-content: start; text-align: center;
@@ -256,6 +249,7 @@ body.is-past .term { display: none; }
   .tools { justify-content: flex-start; align-self: end; height: auto; padding-bottom: 8px; }
   .thumbs { justify-content: flex-start; }
   .caption { text-align: left; align-self: start; }
+  .past-tag { justify-self: start; margin-left: 0; }
   /* scrolling down to the terminal: today's words fade, the building moves to the middle (--dx and --q in day.js onScroll) */
   .caption > :not(.bar-slot), .tools { opacity: calc(1 - var(--q, 0) * 1.6); }
   .words-off .caption, .words-off .tools { pointer-events: none; }
