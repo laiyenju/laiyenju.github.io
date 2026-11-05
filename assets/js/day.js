@@ -1017,7 +1017,7 @@ async function run(raw, typed) {
     const out = document.createElement('div'); out.className = 'result';
     out.innerHTML = fn ? fn() : line(`Command not found: ${raw.trim()}. Try one of the buttons below.`, 'err');
     block.append(out);
-    if (key !== 'cd ~' && !openOverlay()) roomBelow(FOCUS.at);
+    if (key !== 'cd ~' && !openOverlay()) roomBelow(FOCUS.at, true);
     if (!still() && !quick) await reveal(out);
   } finally { typing = false; }
 }
@@ -1047,11 +1047,15 @@ async function reveal(out) {
 // the line being typed goes near the top of the screen, just under the date card, so the eye knows where to look;
 // the output then reads downwards from there. The terminal grows empty room below when there is not enough page to scroll.
 const FOCUS = { at: 0 };
-function roomBelow(target) {
+// The room is worked out from the page as it stands, never by removing it first: taking it away even for a moment
+// shortens the page, the browser pulls the view up to fit, and the line jumps down just as the output arrives.
+function roomBelow(target, hold) {
   const term = document.querySelector('.term'), base = Math.round(innerHeight * .3);
-  term.style.paddingBottom = '';
-  const short = target + innerHeight - document.documentElement.scrollHeight;
-  if (short > 0) term.style.paddingBottom = base + short + 'px';
+  const now = parseFloat(getComputedStyle(term).paddingBottom) || 0;
+  const content = document.documentElement.scrollHeight - now;
+  term.style.paddingBottom = Math.max(base, target + innerHeight - content) + 'px';
+  // once the output is in (hold), the view stays on the line, whatever the room did
+  if (hold && Math.abs(scrollY - target) > 1 && Math.abs(scrollY - target) < innerHeight) scrollTo({ top: target, behavior: 'instant' });
 }
 function focusLine(block) {
   const below = document.querySelector('.top').getBoundingClientRect().bottom + 20;
