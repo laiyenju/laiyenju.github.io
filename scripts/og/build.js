@@ -14,6 +14,7 @@ const ROOT = path.resolve(__dirname, "../..");
 const OUT = path.join(ROOT, "assets/og");
 const CARD = path.join(__dirname, "card.html");
 const MANIFEST = path.join(OUT, "manifest.json");
+const DRAWN_WITH = ["sky.js", "pixel-engine.js", "scenes.js"].map((f) => path.join(ROOT, "assets/js", f));
 
 // Same text as the page's description (_includes/seo.html): the front
 // matter's description, else the opening of the note, 120 characters.
@@ -51,13 +52,13 @@ function frontMatter(file) {
 function cards() {
   const list = [];
   const home = frontMatter(path.join(ROOT, "index.md")).data;
+  // home: the office, no date on the postmark
   list.push({
     out: "home.jpg",
-    path: "~",
     cmd: "whoami",
     title: home.title || "hey, I'm Yen",
-    summary: "I decide what gets built, then build some of it. I write down how those decisions get made. 產品決策的中文筆記。",
-    meta: "notes/ · works/",
+    summary: "I decide what gets built, then build some of it. I write down how those decisions get made.",
+    date: "",
   });
   const dir = path.join(ROOT, "published");
   for (const name of fs.readdirSync(dir).filter((f) => f.endsWith(".md")).sort()) {
@@ -65,13 +66,13 @@ function cards() {
     const parts = name.split("-");
     const file = parts.length > 3 && parts[0].length === 4 ? parts.slice(3).join("-") : name;
     const text = plain(body);
+    // a note: a postcard from its date, with that day's building
     list.push({
       out: name.replace(/\.md$/, ".jpg"),
-      path: "~/notes",
-      cmd: "cat " + file,
+      cmd: "cat notes/" + file,
       title: data.title || file,
-      summary: data.description || truncate(text, 120),
-      meta: [data.date ? String(data.date).slice(0, 10) : null, "~/notes"].filter(Boolean).join(" · "),
+      summary: data.subtitle || data.description || truncate(text, 120),
+      date: data.date ? String(data.date).slice(0, 10) : name.slice(0, 10),
     });
   }
   return list;
@@ -79,7 +80,9 @@ function cards() {
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
-  const design = crypto.createHash("sha1").update(fs.readFileSync(CARD)).digest("hex");
+  // the design is the card page and everything it draws the building with
+  const design = crypto.createHash("sha1")
+    .update([CARD, ...DRAWN_WITH].map((f) => fs.readFileSync(f, "utf8")).join("\n")).digest("hex");
   let manifest = {};
   try { manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8")); } catch (e) {}
   const todo = cards();
