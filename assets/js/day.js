@@ -765,10 +765,20 @@ let mainWorld = null;
 let STAGE = { w: 300, h: 300 };
 function sizeStage() {
   const wide = innerWidth >= 900;
-  // phones: the building takes a bit under half the screen, so the title and the first lines show without scrolling
-  const h = wide ? Math.round(cl(innerHeight - 76 - 56, 260, 760)) : Math.round(cl(innerHeight * .46, 200, 520));
+  let h, lift = 0;
+  if (wide) h = Math.round(cl(innerHeight - 76 - 56, 260, 760));
+  else {
+    // phones: the first screen holds the building, today's words and the bar, with nothing hidden under the bar.
+    // The building gets what is left after the words (up to half the screen); any space still left is split
+    // above and below, so the building and its words stay together in the middle instead of drifting apart.
+    const room = innerHeight - 76 - $('cmdbar').offsetHeight;
+    const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight + 8 + 12;
+    h = state.pastDate ? Math.round(cl(innerHeight * .46, 200, 520)) : Math.round(cl(Math.min(innerHeight * .5, room - words), 180, 520));
+    if (!state.pastDate) lift = Math.max(0, Math.round((room - words - h) / 2));
+  }
   STAGE = { w: wide ? Math.round(group.clientWidth * .53) : group.clientWidth, h };
   stage.style.width = STAGE.w + 'px'; stage.style.height = STAGE.h + 'px';
+  group.style.paddingTop = lift ? lift + 'px' : '';
 }
 const disp = document.createElement('canvas');
 stage.append(disp);
@@ -891,7 +901,7 @@ function renderPast(date) {
       name: o.zh && !o.noZh ? `${o.name} · ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) + (main ? nav : '') };
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
-  sizeStage(); renderText(); renderThumbs(); mount(false);
+  renderText(); renderThumbs(); sizeStage(); mount(false);
   $('ctaText').textContent = 'Timeline';
   scrollTo(0, 0);
 }
@@ -905,7 +915,7 @@ function exitPast() {
   document.body.classList.remove('is-past');
   renderDay();
 }
-function renderDay() { state.ang = 0; sizeStage(); buildItems(); renderText(); renderThumbs(); mount(false); }
+function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
 /* ================= where is Yen now =================
    1. A check-in wins if it is less than 6 hours old. In the real site it comes from location.json,
       which an iPhone Shortcut updates when Yen arrives at or leaves a place (only a label, never coordinates).

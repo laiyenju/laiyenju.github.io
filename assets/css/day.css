@@ -76,6 +76,8 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .stage canvas.turn-in { transform: scaleX(.08); opacity: .4; transition: none; }
 
 .tools { display: flex; align-items: center; justify-content: center; gap: 10px; height: 92px; flex: none; }
+/* most days have no other years: then the row folds away so the words sit right under the building */
+.tools:has(.thumbs.none) { height: 0; }
 .rot { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); background: var(--sheet); display: grid; place-items: center; color: var(--ink-soft); }
 .rot:hover { color: var(--ink); border-color: var(--ink-soft); }
 .rot:active { transform: scale(.94); }
