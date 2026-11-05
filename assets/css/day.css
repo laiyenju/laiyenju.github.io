@@ -108,7 +108,7 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .caption .meta { font: 14.5px/1.7 var(--mono); color: var(--ink-soft); }
 .caption .meta a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .meta a:hover { color: var(--ink); border-bottom-style: solid; }
-.caption .note { font: 17px/1.85 var(--sans); color: var(--ink); text-wrap: pretty; margin-top: 10px; }
+.caption .note { font: 17px/1.65 var(--sans); color: var(--ink); text-wrap: pretty; margin-top: 10px; }
 .caption .note a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 .caption .note a:hover { border-bottom-style: solid; }
 
@@ -194,7 +194,7 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 .reader .sub { font: 18px/1.6 var(--sans); color: var(--ink-soft); margin: 0 0 14px; }
 .reader .byline { font: 14px/1.6 var(--mono); color: var(--ink-soft); margin: 0 0 34px; }
 .reader h2 { font: 500 14px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); margin: 34px 0 8px; }
-.reader p { font: 17.5px/1.85 var(--sans); margin: 0 0 14px; }
+.reader p { font: 17px/1.7 var(--sans); margin: 0 0 14px; }
 .reader .out { font: 14.5px/1.7 var(--mono); }
 .reader .out a { border-bottom: 1px dotted var(--ink-soft); text-decoration: none; }
 .reader .back { display: inline-flex; margin-top: 40px; border: 1px solid var(--rule); border-radius: 8px; padding: 9px 14px; background: var(--sheet); font: 14px/1.2 var(--mono); }

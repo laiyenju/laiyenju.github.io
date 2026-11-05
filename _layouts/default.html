@@ -45,12 +45,19 @@
     {% endif %}
   {% endfor %}
 
+  {% assign slug = page.name | remove: '.md' | slice: 11, 200 %}
+  {% comment %}The same frame as a work on the home page: the date card at the top (it opens the timeline),
+     the command that printed the note, the title on the left, and the way back at the end.{% endcomment %}
+  <div class="post-top">
+    <a class="post-when" href="{{ '/' | relative_url }}#timeline" aria-label="Open the timeline">
+      <span class="txt"><b data-clock="date">&nbsp;</b><span data-clock="time">Taipei</span></span>
+      <span class="cta"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="1.5" y="2.5" width="9" height="8" rx="1.5"/><path d="M1.5 5h9M4 1v3M8 1v3"/></svg>Timeline</span>
+    </a>
+  </div>
+
   <article class="post">
     <header class="post-head">
-      <div class="post-bar">
-        {% comment %}Straight to the home page's notes view: /notes/ is only a redirect, a second page load.{% endcomment %}
-        <a class="post-back" href="{{ '/' | relative_url }}?view=notes"><span class="sh-dollar">$</span> cd ..</a>
-      </div>
+      <p class="post-bar">yen@taipei ~ <i>$</i> <b>cat notes/{{ slug }}.md</b></p>
       <h1 class="post-title">{{ page.title }}</h1>
       {% if page.subtitle %}<p class="post-subtitle">{{ page.subtitle }}</p>{% endif %}
       <p class="post-meta">{% if page.date %}<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time> · {% endif %}{{ chars }} chars</p>
@@ -69,8 +76,10 @@
       </nav>
       {% endif %}
       <div class="sh-out" aria-live="polite"></div>
-      <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taiwan</span>:<span class="sh-path">~/notes</span>$</span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="post-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
+      <label class="sh-line sh-live"><span><span class="sh-prompt">yen@taipei ~/notes</span> <span class="sh-arrow">$</span></span><span class="sh-caret" aria-hidden="true"></span><input class="sh-input" id="post-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command, e.g. help" data-label-zh="輸入指令，例如 help"></label>
       <p class="sh-keys"><span class="i-en">type <kbd>help</kbd></span><span class="i-zh">輸入 <kbd>help</kbd> 查看操作指令</span></p>
+      {% comment %}Straight to the home page's notes view: /notes/ is only a redirect, a second page load.{% endcomment %}
+      <p class="post-backrow"><a class="post-back" href="{{ '/' | relative_url }}?view=notes">← cd ..</a></p>
     </footer>
   </article>
 

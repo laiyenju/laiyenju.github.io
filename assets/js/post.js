@@ -350,7 +350,7 @@
     function say(text, prompt) {
       var p = document.createElement("p");
       if (prompt) {
-        p.innerHTML = '<span class="sh-dir">~/notes</span> <span class="sh-arrow">❯</span> ';
+        p.innerHTML = '<span class="sh-dir">yen@taipei ~/notes</span> <span class="sh-arrow">$</span> ';
         p.appendChild(document.createTextNode(text));
       } else {
         p.className = "sh-dim";
@@ -423,7 +423,7 @@
     // Touch screens: the commands as buttons, so the keyboard never comes up.
     var row = document.createElement("div");
     row.className = "sh-taps";
-    ["help", "top", "cd ..", "theme"].forEach(function (cmd) {
+    ["help", "top", "theme"].forEach(function (cmd) {
       var b = document.createElement("button");
       b.type = "button";
       b.textContent = cmd;
@@ -483,7 +483,20 @@
     try { sessionStorage.removeItem("post-return"); } catch (err) {}
   });
 
+  /* —— The date card at the top: today in Taipei, as on the home page. —— */
+  var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function tick() {
+    var d = new Date(Date.now() + 8 * 3600e3);
+    var date = document.querySelector('[data-clock="date"]'), time = document.querySelector('[data-clock="time"]');
+    if (!date || !time) return;
+    date.textContent = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate());
+    time.textContent = DAYS[d.getUTCDay()] + " · Taipei " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
+    window.setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    tick();
     // Start typing once any page transition has finished (pagereveal has fired
     // by the first frame) and the fonts are in (at most 400ms), so the first
     // characters don't stall while the Chinese face is still coming in.
