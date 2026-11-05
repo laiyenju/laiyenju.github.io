@@ -22,7 +22,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `_config.yml` | 網站資訊、哪些檔案要建置 |
 | `assets/css/`、`assets/js/` | 兩邊共用：`sky.js`（所在城市、太陽位置、依太陽決定的背景顏色）。首頁：`day.css`、`day.js`（Timeline、terminal、版面）、`scenes.js`（建築模型 `SCENES`、光線、影子和窗燈，分享卡片也用它）、`pixel-engine.js`（產生的檔案）。文章頁：`site.css`、`theme.js`（每分鐘跟著天色更新）、`post.js`。Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
 | `assets/vendor/pixel-plays/`、`scripts/pixel-engine/` | Pixel Plays 引擎原檔（MIT，作者 AmirMushich，`LICENSE` 在同一個資料夾）和把它轉成 `assets/js/pixel-engine.js` 的程式 |
-| `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action。卡片是一張明信片：左邊是那篇筆記當天首頁的建築（平日辦公室、假日家，那天下午的光線），右邊是郵票、郵戳（城市、日期、星期）、`cat notes/<檔名>`、標題、副標題（沒有就用摘要）和寄件地址。首頁的卡片是辦公室，郵戳不寫日期（`scripts/og/card.html`） |
+| `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action。卡片是一張明信片：左邊是那篇筆記當天的建築，像 Timeline 一樣只有建築、沒有影子，盡量放大，底色是由上往下淡出的暖色天空（網站太陽約 8° 時的顏色）。建築的選法：那天在 `_data/days.yml` 有地點就用那個地點，下面寫名稱、城市・國家、經緯度（`coords`）；沒有就照首頁的規則，平日辦公室、假日家，下面寫 The office／Home 和 Taipei · Taiwan。右邊是郵戳（城市、日期、星期）、`cat notes/<檔名>`、標題、副標題（沒有就用摘要）和寄件地址，沒有郵票。首頁的卡片是辦公室，郵戳不寫日期（`scripts/og/card.html`，地點由 `scripts/og/build.js` 的 `places` 讀 `days.yml`） |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
 | `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。notes 和作品的進出方式一樣：清單裡點一篇，在同一個分頁直接切過去，不播打字動畫（`day.js` 留下 `post-handoff`、`post-from-list`）。回清單（`← Notes`、`notes/`）用瀏覽器的「上一頁」回到首頁，清單捲回日期卡片下方；瀏覽器沒有保留首頁時，直接把清單印回來，不再打字（`post.js` 的 `backToNotes`，`day.js` 的 `backFromNote`）。不是從清單進來的文章，回清單就連到 `/?view=notes`。作品頁的 `← Work` 和 `works/` 一樣回到清單：從清單打開的就關掉作品頁、把清單捲回日期卡片下方，從連結打開的就執行一次 `ls works`（`day.js` 的 `backToWorks`） |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
@@ -103,6 +103,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `extra` | 否 | 補充一句 |
 | `map` | 否 | Google Maps 搜尋文字，預設用 `name, place` |
 | `country` | 否 | 預設 `Japan`。Timeline 的國家數由它算 |
+| `coords` | 否 | `[緯度, 經度]`，例如 `[40.7527, -73.9772]`。那天寫的筆記，分享卡片上會印出來 |
 
 缺必填欄位、沒有中文名、或模型不存在時，那一筆不會出現，瀏覽器的 console 會列出缺了什麼。
 

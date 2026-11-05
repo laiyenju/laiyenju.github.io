@@ -3,14 +3,16 @@
 #   when ("Seven years ago · January 22, 2019", from date), name, place (a map link), and one sentence:
 #   "Yen {did}[ with {with}].[ {extra}]"
 # So `did` says what happened, not when or where, and does not name the building again (the title does).
-# Required: date ("YYYY-MM-DD", in quotes), scene (a model in assets/js/day.js SCENES), name,
+# Required: date ("YYYY-MM-DD", in quotes), scene (a model in assets/js/scenes.js SCENES), name,
 #   zh (Chinese name; write no_zh: true to leave it out), place, did.
-# Optional: with (a name, or a list), extra (one short sentence),
+# Optional: with (a name, or a list), extra (one short sentence), coords ([latitude, longitude], shown on a
+#   note's share card when the note is from this day),
 #   map (search text for Google Maps), country (default "Japan").
 
 # USA, January 2019 (dates from the photos; on a day with several, in the order the photos were taken)
 - date: "2019-01-22"
   scene: grandcentral
+  coords: [40.7527, -73.9772]
   name: Grand Central Terminal
   no_zh: true
   place: New York
@@ -19,6 +21,7 @@
   map: Grand Central Terminal, New York
 - date: "2019-01-23"
   scene: unitednations
+  coords: [40.7489, -73.9680]
   name: United Nations Headquarters
   no_zh: true
   place: Turtle Bay, New York
@@ -27,6 +30,7 @@
   map: United Nations Headquarters, New York
 - date: "2019-01-26"
   scene: google
+  coords: [40.7411, -74.0029]
   name: 111 Eighth Avenue
   no_zh: true
   place: Chelsea, New York
@@ -36,6 +40,7 @@
   map: 111 8th Avenue, New York
 - date: "2019-01-26"
   scene: highline
+  coords: [40.7480, -74.0048]
   name: The High Line
   no_zh: true
   place: Chelsea, New York
@@ -44,6 +49,7 @@
   map: The High Line, New York
 - date: "2019-01-26"
   scene: whitney
+  coords: [40.7396, -74.0089]
   name: Whitney Museum of American Art
   no_zh: true
   place: Meatpacking District, New York
@@ -52,6 +58,7 @@
   map: Whitney Museum of American Art, New York
 - date: "2019-01-26"
   scene: nyt
+  coords: [40.7562, -73.9899]
   name: The New York Times Building
   no_zh: true
   place: Midtown, New York
@@ -60,6 +67,7 @@
   map: The New York Times Building, New York
 - date: "2019-01-27"
   scene: capitol
+  coords: [38.8899, -77.0091]
   name: United States Capitol
   no_zh: true
   place: Washington, D.C.
@@ -68,6 +76,7 @@
   map: United States Capitol, Washington DC
 - date: "2019-01-28"
   scene: whitehouse
+  coords: [38.8977, -77.0365]
   name: The White House
   no_zh: true
   place: Washington, D.C.
@@ -76,6 +85,7 @@
   map: The White House, Washington DC
 - date: "2019-01-30"
   scene: washington
+  coords: [38.8895, -77.0353]
   name: Washington Monument
   no_zh: true
   place: Washington, D.C.
@@ -86,6 +96,7 @@
 
 - date: "2019-01-30"
   scene: lincoln
+  coords: [38.8893, -77.0502]
   name: Lincoln Memorial
   no_zh: true
   place: Washington, D.C.
@@ -97,6 +108,7 @@
 # South Korea, October 2014 (around Oct 26; the exact days are not remembered)
 - date: "2014-10-25"
   scene: mbc
+  coords: [37.5813, 126.8915]
   name: MBC headquarters
   zh: MBC 電視台總部
   place: Sangam, Seoul
@@ -105,6 +117,7 @@
   map: MBC Sangam, Seoul
 - date: "2014-10-26"
   scene: hongik
+  coords: [37.5509, 126.9250]
   name: Hongik University
   zh: 弘益大學
   place: Hongdae, Seoul

@@ -49,7 +49,25 @@ function frontMatter(file) {
   return { data, body: m[2] };
 }
 
+// _data/days.yml, read just far enough for the cards: a list of flat "key: value" items
+function places() {
+  const list = [];
+  let item = null;
+  for (const raw of fs.readFileSync(path.join(ROOT, "_data/days.yml"), "utf8").split("\n")) {
+    const line = raw.replace(/\s+#.*$/, "");
+    if (/^\s*#/.test(line) || !line.trim()) continue;
+    const kv = line.match(/^(-\s+|\s+)(\w+):\s*(.*)$/);
+    if (!kv) continue;
+    if (kv[1].startsWith("-")) list.push((item = {}));
+    let v = kv[3].trim().replace(/^["']|["']$/g, "");
+    if (/^\[.*\]$/.test(v)) v = v.slice(1, -1).split(",").map((x) => x.trim().replace(/^["']|["']$/g, ""));
+    if (item) item[kv[2]] = v;
+  }
+  return list;
+}
+
 function cards() {
+  const days = places();
   const list = [];
   const home = frontMatter(path.join(ROOT, "index.md")).data;
   // home: the office, no date on the postmark
@@ -74,6 +92,9 @@ function cards() {
       summary: data.subtitle || data.description || truncate(text, 120),
       date: data.date ? String(data.date).slice(0, 10) : name.slice(0, 10),
     });
+    // a note written on a day in _data/days.yml gets that place's building, name, city, country and coordinates
+    const day = list[list.length - 1].date, at = days.find((d) => d.date === day);
+    if (at) list[list.length - 1].place = { scene: at.scene, name: at.name, city: at.place, country: at.country || "Japan", coords: (at.coords || []).map(Number) };
   }
   return list;
 }

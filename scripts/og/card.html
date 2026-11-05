@@ -6,10 +6,12 @@
 <!--
   The share card (1200 × 630), one per note plus one for home. build.js opens this page, calls render(data)
   and saves a screenshot to assets/og/.
-  A postcard from that day. The picture side (left): the building the home page showed on the note's date,
-  drawn with the site's own models (assets/js/scenes.js) in that afternoon's light: the office on a weekday,
-  home on a rest day. The writing side (right): a stamp, a postmark with the city and the date, the command
-  that prints the note, its title and opening words, and the return address. Flat, in the site's colours.
+  A postcard from that day. The picture side (left): the building of the note's date, drawn with the site's own
+  models (assets/js/scenes.js) as the timeline draws it (no shadow, nothing around it), large, on a soft sky:
+  a place from _data/days.yml if the note is from that day, else the office on a weekday and home on a rest day.
+  Under it, what and where: for a place, its name, city and country, and its coordinates. The writing side
+  (right): a postmark with the city and the date, the command that prints the note, its title and opening
+  words, and the return address. Flat, in the site's colours.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,39 +20,29 @@
   @font-face { font-family: "iA Writer Quattro"; src: url("../../assets/fonts/quattro/iAWriterQuattroS-Bold.woff2") format("woff2"); font-weight: 700; }
   @font-face { font-family: "iA Writer Quattro"; src: url("../../assets/fonts/quattro/iAWriterQuattroS-Regular.woff2") format("woff2"); font-weight: 400; }
   :root {
-    --paper: #f8f8f5; --ink: #262421; --soft: #5a544e; --faint: #736d66; --accent: #b5531e; --rule: rgba(38, 36, 33, .16);
+    --paper: #f8f8f5; --sky: #f4e6d4; --ink: #262421; --soft: #5a544e; --faint: #736d66; --accent: #b5531e; --rule: rgba(38, 36, 33, .16);
     --mono: "JetBrains Mono", "Noto Sans TC", monospace;
     --sans: "iA Writer Quattro", "Noto Sans TC", sans-serif;
   }
   html, body { margin: 0; }
   body { width: 1200px; height: 630px; overflow: hidden; background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
-  .card { position: relative; width: 1200px; height: 630px; display: grid; grid-template-columns: 620px 1px 1fr; }
+  .card { position: relative; width: 1200px; height: 630px; display: grid; grid-template-columns: 640px 1fr; }
 
-  /* the picture side */
-  .pic { position: relative; overflow: hidden; }
+  /* the picture side: a soft sky, the site's own colour for a lower sun, fading to paper where the building stands */
+  .pic { position: relative; overflow: hidden; background: linear-gradient(var(--sky), var(--paper) 78%); }
   .pic canvas { image-rendering: pixelated; display: block; position: absolute; }
-  .pic .cap { position: absolute; left: 56px; bottom: 44px; font: 400 17px/1.4 var(--mono); color: var(--faint); letter-spacing: .02em; }
+  .cap { position: absolute; left: 48px; right: 40px; bottom: 36px; display: grid; gap: 4px; }
+  .cap .n { font: 700 20px/1.3 var(--sans); color: var(--ink); }
+  .cap .p, .cap .g { font: 400 15px/1.4 var(--mono); color: var(--faint); letter-spacing: .02em; }
 
-  /* the postcard's middle line */
-  .split { background: var(--rule); margin: 64px 0; }
-
-  /* the writing side */
-  .back { position: relative; padding: 56px 60px 48px 44px; display: flex; flex-direction: column; }
-  .stamp {
-    position: absolute; top: 48px; right: 56px; width: 116px; height: 138px; box-sizing: border-box; padding: 9px;
-    /* a perforated edge: the paper bites half circles out of the stamp's rim */
-    background: radial-gradient(circle, var(--paper) 3.4px, transparent 3.9px) -5px -5px / 10px 10px, var(--sheet, #fff);
-  }
-  .stamp .in { width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    background: var(--stamp); color: var(--paper); padding-bottom: 7px; overflow: hidden; }
-  .stamp canvas { image-rendering: pixelated; margin-bottom: auto; margin-top: 8px; }
-  .stamp .city { font: 600 12px/1 var(--mono); letter-spacing: .14em; }
-  /* the postmark only bites the stamp's edge, so its date stays readable */
-  .mark { position: absolute; top: 70px; right: 140px; width: 280px; height: 128px; color: var(--ink); opacity: .55; transform: rotate(-6deg); }
+  /* the writing side; its left edge is the postcard's middle line */
+  .back { position: relative; padding: 56px 60px 48px 48px; display: flex; flex-direction: column; border-left: 1px solid var(--rule); }
+  /* the postmark: a round date stamp with wavy lines, top right */
+  .mark { position: absolute; top: 44px; right: 48px; width: 280px; height: 128px; color: var(--ink); opacity: .55; transform: rotate(-6deg); }
   .mark text { font: 500 12px var(--mono); letter-spacing: .14em; fill: currentColor; }
   .mark .day { font: 600 14px var(--mono); letter-spacing: .02em; }
 
-  .msg { margin-top: 186px; }
+  .msg { margin-top: 176px; }
   .cmd { margin: 0; font: 400 18px/1.4 var(--mono); color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cmd i { font-style: normal; color: var(--accent); }
   h1 { margin: 14px 0 0; font: 700 40px/1.3 var(--sans); letter-spacing: -.005em; text-wrap: balance;
@@ -65,12 +57,9 @@
 </head>
 <body>
 <div class="card">
-  <div class="pic"><canvas id="pic"></canvas><div class="cap" id="cap"></div></div>
-  <div class="split"></div>
+  <div class="pic"><canvas id="pic"></canvas><div class="cap"><div class="n" id="capName"></div><div class="p" id="capPlace"></div><div class="g" id="capGeo"></div></div></div>
   <div class="back">
-    <div class="stamp"><div class="in"><canvas id="mini"></canvas><span class="city" id="stampCity"></span></div></div>
-    <svg class="mark" viewBox="0 0 260 120" aria-hidden="true">
-      <!-- the cancellation: wavy lines running left from a round date stamp -->
+    <svg class="mark" viewBox="0 0 280 128" aria-hidden="true">
       <g fill="none" stroke="currentColor" stroke-width="2">
         <path d="M0 44 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0"/>
         <path d="M0 64 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0"/>
@@ -98,7 +87,8 @@
 <script src="../../assets/js/pixel-engine.js"></script>
 <script src="../../assets/js/scenes.js"></script>
 <script>
-  /* data: { title, summary, cmd, date ("YYYY-MM-DD", or empty for the home card) } */
+  /* data: { title, summary, cmd, date ("YYYY-MM-DD", or empty for the home card),
+             place (optional: { scene, name, city, country, coords: [lat, lon] }) } */
   var CITY = siteSky.CITY;
   function two(n) { return (n < 10 ? '0' : '') + n; }
   // the building the home page shows on that day (day.js buildItems): home on a rest day, else the office
@@ -106,42 +96,51 @@
     var wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
     return wd === 0 || wd === 6 || HOLIDAYS[two(m) + '-' + two(d)] ? 'home' : 'studio';
   }
-  // the building's own box inside a world's picture (the rest is its shadow)
-  function inner(w) { return [w.pad[3], w.pad[0], w.view.width - w.pad[1] - w.pad[3], w.view.height - w.pad[0] - w.pad[2]]; }
-  // the picture side: sized by the building alone, at a whole number of pixels per model pixel, centred on the
-  // building; its shadow is drawn in full and may run to the edge of the picture side
-  function paintPicture(cv, w, boxW, boxH, areaW, areaH) {
-    var b = inner(w), k = Math.max(1, Math.floor(Math.min(boxW / b[2], boxH / b[3])));
-    cv.width = w.view.width * k; cv.height = w.view.height * k;
-    var g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(w.view, 0, 0, cv.width, cv.height);
-    cv.style.left = Math.round(areaW * .46 - (b[0] + b[2] / 2) * k) + 'px'; // a little left: the shadow falls right
-    cv.style.top = Math.round(areaH / 2 - 10 - (b[1] + b[3] / 2) * k) + 'px';
+  // 40.7527, -73.9772 → "40.753° N, 73.977° W"
+  function geo(c) {
+    if (!c || c.length < 2 || isNaN(c[0])) return '';
+    return Math.abs(c[0]).toFixed(3) + '° ' + (c[0] >= 0 ? 'N' : 'S') + ', ' + Math.abs(c[1]).toFixed(3) + '° ' + (c[1] >= 0 ? 'E' : 'W');
   }
-  // the stamp: the building alone, made to fit (smoothed when it has to shrink)
-  function paintStamp(cv, w, maxW, maxH) {
-    var b = inner(w), k = Math.min(maxW / b[2], maxH / b[3]);
-    k = k >= 1 ? Math.floor(k) : k;
-    cv.width = Math.round(b[2] * k); cv.height = Math.round(b[3] * k);
-    var g = cv.getContext('2d'); g.imageSmoothingEnabled = k < 1; g.drawImage(w.view, b[0], b[1], b[2], b[3], 0, 0, cv.width, cv.height);
+  // the building alone, as large as fits, at a whole number of pixels per model pixel, centred above the caption
+  function paintPicture(cv, w, boxW, boxH, areaW, midY) {
+    // the building's own pixels, tight (the world's picture keeps a margin around it)
+    var px = w.view.getContext('2d').getImageData(0, 0, w.view.width, w.view.height).data, x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+    for (var iy = 0; iy < w.view.height; iy++) for (var ix = 0; ix < w.view.width; ix++) {
+      if (!px[(iy * w.view.width + ix) * 4 + 3]) continue;
+      if (ix < x0) x0 = ix; if (ix > x1) x1 = ix; if (iy < y0) y0 = iy; if (iy > y1) y1 = iy;
+    }
+    var b = [x0, y0, x1 - x0 + 1, y1 - y0 + 1];
+    // whole pixels per model pixel; rounds up when that is at most 8% larger than the box
+    var f = Math.min(boxW / b[2], boxH / b[3]), k = Math.max(1, Math.round(f) <= f * 1.08 ? Math.round(f) : Math.floor(f));
+    cv.width = b[2] * k; cv.height = b[3] * k;
+    var g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+    g.drawImage(w.view, b[0], b[1], b[2], b[3], 0, 0, cv.width, cv.height);
+    cv.style.left = Math.round((areaW - cv.width) / 2) + 'px';
+    cv.style.top = Math.round(midY - cv.height / 2) + 'px';
   }
   window.render = async function (data) {
     var parts = (data.date || '').split('-').map(Number), y = parts[0], m = parts[1], d = parts[2];
-    var scene = data.date ? sceneFor(y, m, d) : 'studio';
-    // that afternoon's light in the city, so the shadow falls as it did; the card keeps the light of day
+    var place = data.place || null;
+    var scene = place ? place.scene : data.date ? sceneFor(y, m, d) : 'studio';
+    // the light of that afternoon in the city, so the colours are the site's own for that hour
     var day = data.date ? Date.UTC(y, m - 1, d) : Date.UTC(2026, 9, 29);
     LIGHT = lightFor(day + (15.5 - CITY.tz) * 3600e3);
     var c = siteSky.colours(LIGHT.bg), root = document.documentElement.style;
     root.setProperty('--paper', c.bg); root.setProperty('--ink', c.ink); root.setProperty('--soft', c.soft);
-    root.setProperty('--faint', c.faint); root.setProperty('--accent', c.accent); root.setProperty('--sheet', c.sheet);
-    root.setProperty('--stamp', c.accent);
+    root.setProperty('--faint', c.faint); root.setProperty('--accent', c.accent);
+    // the sky at the top of the picture: the site's colour for a sun about 8° up, the warm hour before evening
+    root.setProperty('--sky', siteSky.hex(siteSky.bgFor(8)));
 
-    var w = getWorld(scene, { notes: [1, 2, 3] }, 0, false);
-    drawWorld(w, 1.3);
-    paintPicture(document.getElementById('pic'), w, 470, 440, 620, 630);
-    paintStamp(document.getElementById('mini'), w, 86, 82);
-    document.getElementById('cap').textContent = (scene === 'home' ? 'Home' : 'The office') + ' · ' + CITY.name;
+    // drawn as the timeline draws it: the building only, no shadow, nothing around it
+    var w = getWorld(scene, { pure: true, notes: [] }, 0, false);
+    drawWorld(w, 0);
+    paintPicture(document.getElementById('pic'), w, 540, 440, 640, 262);
 
-    document.getElementById('stampCity').textContent = CITY.name.toUpperCase();
+    var name = place ? place.name : scene === 'home' ? 'Home' : 'The office';
+    document.getElementById('capName').textContent = name;
+    document.getElementById('capPlace').textContent = place ? place.city + ' · ' + place.country : CITY.name + ' · Taiwan';
+    document.getElementById('capGeo').textContent = place ? geo(place.coords) : '';
+
     document.getElementById('addrFrom').textContent = 'yen@' + CITY.short;
     document.getElementById('pmCity').textContent = CITY.name.toUpperCase();
     document.getElementById('pmDay').textContent = data.date ? data.date.replace(/-/g, '.') : 'YEN LAI';
@@ -152,14 +151,14 @@
     cmd.appendChild(document.createTextNode(data.cmd));
     document.getElementById('title').textContent = data.title;
     document.getElementById('sum').textContent = data.summary;
-    var all = data.title + data.summary + data.cmd;
+    var all = data.title + data.summary + data.cmd + name;
     await Promise.all([
-      document.fonts.load('700 40px "iA Writer Quattro"', data.title),
+      document.fonts.load('700 40px "iA Writer Quattro"', all),
       document.fonts.load('700 40px "Noto Sans TC"', data.title),
       document.fonts.load('400 21px "iA Writer Quattro"', data.summary),
       document.fonts.load('400 21px "Noto Sans TC"', data.summary),
-      document.fonts.load('400 18px "JetBrains Mono"', all + 'fromat'),
-      document.fonts.load('600 16px "JetBrains Mono"', '0123456789.'),
+      document.fonts.load('400 18px "JetBrains Mono"', all + 'fromat°NSEW'),
+      document.fonts.load('600 14px "JetBrains Mono"', '0123456789.'),
     ]);
     await document.fonts.ready;
   };
