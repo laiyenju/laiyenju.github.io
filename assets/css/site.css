@@ -170,13 +170,13 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
       left, the subtitle, the date and size in mono; ← cd .. at the end. —— */
 .post-top {
   position: fixed; z-index: 7; top: 0; left: 0; right: 0;
-  display: flex; justify-content: center;
+  display: flex; justify-content: center; gap: 8px;
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 10px;
   background: linear-gradient(var(--sky, #fafaf7) 70%, transparent);
 }
 .post-when {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  width: min(330px, calc(100vw - 32px)); padding: 7px 7px 7px 16px;
+  width: min(300px, calc(100vw - 32px - 48px)); padding: 7px 16px 7px 7px;
   border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px; background: var(--sky-sheet, #fff);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); color: var(--t-ink, #2a2420);
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
@@ -192,6 +192,25 @@ body.theme-night .sh-keys kbd { border-color: rgba(232, 230, 227, 0.3); }
   background: var(--t-ink, #2a2420); color: #fafaf7; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap;
 }
 .post-when .cta svg { width: 12px; height: 12px; }
+/* Home, beside the date card: an icon on phones, the word too on wider screens */
+.post-home {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-width: 40px; padding: 0 10px; border: 1px solid rgba(42, 36, 32, 0.14); border-radius: 12px;
+  background: var(--sky-sheet, #fff); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); color: var(--t-ink, #2a2420);
+  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace; font-size: 12px; font-weight: 500; line-height: 1;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.post-home:hover { border-color: var(--t-faint, #736d66); }
+.post-home:active { transform: scale(0.96); }
+.post-home svg { width: 14px; height: 14px; }
+.post-home .lbl { display: none; }
+@media (min-width: 480px) {
+  .post-when { width: 300px; }
+  .post-home { padding: 0 14px; }
+  .post-home .lbl { display: inline; }
+}
+@media (max-width: 399px) { .post-when .wd { display: none; } }
+body.theme-night .post-home { background: var(--sky-sheet, #151820); border-color: rgba(232, 230, 227, 0.18); color: var(--t-ink, #e8e6e3); }
 
 .post-bar,
 .post-meta {

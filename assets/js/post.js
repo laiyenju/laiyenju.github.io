@@ -487,7 +487,8 @@
     var date = document.querySelector('[data-clock="date"]'), time = document.querySelector('[data-clock="time"]');
     if (!date || !time) return;
     date.textContent = d.getUTCFullYear() + "." + two(d.getUTCMonth() + 1) + "." + two(d.getUTCDate());
-    time.textContent = DAYS[d.getUTCDay()] + " · " + CITY.name + " " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
+    // the weekday in its own span: a narrow screen leaves it out (site.css .wd)
+    time.innerHTML = '<span class="wd">' + DAYS[d.getUTCDay()] + " · </span>" + CITY.name + " " + two(d.getUTCHours()) + ":" + two(d.getUTCMinutes());
     window.setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
   }
 

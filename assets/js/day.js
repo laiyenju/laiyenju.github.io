@@ -916,7 +916,16 @@ function renderPast(date) {
   scrollTo(0, 0);
 }
 // the top button: Timeline on today's page, Today anywhere else (it then goes back to today)
-function ctaFor(word) { $('ctaText').textContent = word; $('whenBtn').setAttribute('aria-label', word === 'Today' ? 'Back to today' : 'Open the timeline'); }
+// the top card's button. Timeline on today's page; Today anywhere else in time; on a work page the card turns
+// into the way back to the list (← Work, on its left) and a Home button stands beside it.
+function ctaFor(word) {
+  const back = word === 'Work';
+  $('ctaText').textContent = word;
+  $('ctaTl').classList.toggle('is-back', back);
+  document.querySelector('.top').classList.toggle('has-home', back);
+  $('homeBtn').hidden = !back;
+  $('whenBtn').setAttribute('aria-label', back ? 'Back to all work' : word === 'Today' ? 'Back to today' : 'Open the timeline');
+}
 function exitPast() {
   if (!state.pastDate) return;
   state.pastDate = null;
@@ -1095,7 +1104,7 @@ const openOverlay = () => (!reader.hidden && reader) || (!tl.hidden && tl) || nu
 function go2(hash) { if (location.hash !== hash) { try { history.pushState(null, '', hash); } catch (e) { location.hash = hash; return; } } route(); }
 function showOverlay(el) {
   for (const o of [reader, tl]) o.hidden = o !== el;
-  ctaFor(location.hash.startsWith('#work-') ? 'Timeline' : 'Today');
+  ctaFor(location.hash.startsWith('#work-') ? 'Work' : 'Today');
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
 function closeOverlays() {
@@ -1176,9 +1185,11 @@ function dialTo(iso, sub) {
     strip.style.transform = `translateY(${-(+text[k]) * 1.35}em)`;
   });
   const c = $('clock');
+  // "Thursday · Taipei 16:15": the weekday goes in its own span, so a narrow screen can leave it out
+  const put = () => { const k = sub.indexOf(' · '); c.innerHTML = k > 0 ? `<span class="wd">${esc(sub.slice(0, k + 3))}</span>${esc(sub.slice(k + 3))}` : esc(sub); };
   if (c.textContent !== sub) {
-    if (!c.textContent || c.textContent === 'Taipei —') c.textContent = sub;
-    else { c.classList.add('swap'); clearTimeout(c._t); c._t = setTimeout(() => { c.textContent = sub; c.classList.remove('swap'); }, 220); }
+    if (!c.textContent || c.textContent === 'Taipei —') put();
+    else { c.classList.add('swap'); clearTimeout(c._t); c._t = setTimeout(() => { put(); c.classList.remove('swap'); }, 220); }
   }
 }
 const BAYER8 = (() => { const b = [0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29, 53, 21]; return (x, y) => b[(y & 7) * 8 + (x & 7)] / 64; })();
@@ -1572,9 +1583,11 @@ addEventListener('keydown', ev => {
 });
 $('whenBtn').addEventListener('click', () => {
   if (!tl.hidden) leaveToToday();
-  else if (!reader.hidden || state.pastDate) closeOverlays();
+  else if (!reader.hidden) backToWorks();
+  else if (state.pastDate) closeOverlays();
   else openTimeline();
 });
+$('homeBtn').addEventListener('click', () => { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); });
 function toast(text) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = text; document.body.append(t);
   setTimeout(() => t.remove(), 2200);
