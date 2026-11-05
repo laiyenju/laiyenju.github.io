@@ -86,5 +86,33 @@
     root.setProperty('--sheet', c.sheet);
     root.colorScheme = dark ? 'dark' : 'light';
   }
-  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, contrast: contrast };
+  // The live time in the date card, HH:MM:SS in the city, each digit on a strip 0–9 that rolls to its number
+  // (home page and notes alike; styles .roll in day.css and site.css). Each strip ends in a second 0, so 9 → 0
+  // keeps rolling forward instead of running back through every digit; it then snaps to the first 0 unseen.
+  function rollClock(el, ms) {
+    var d = new Date((ms == null ? Date.now() : ms) + CITY.tz * 3600e3);
+    var two = function (n) { return (n < 10 ? '0' : '') + n; };
+    var text = two(d.getUTCHours()) + ':' + two(d.getUTCMinutes()) + ':' + two(d.getUTCSeconds());
+    if (!el.firstChild || el.getAttribute('data-roll') !== '1') {
+      el.setAttribute('data-roll', '1');
+      el.innerHTML = '<span class="sr"></span>' + text.split('').map(function (ch) {
+        return /\d/.test(ch) ? '<span class="rg" aria-hidden="true"><span class="rs">' + '01234567890'.split('').map(function (n) { return '<span>' + n + '</span>'; }).join('') + '</span></span>' : '<span aria-hidden="true">' + ch + '</span>';
+      }).join('');
+    }
+    // screen readers get the time once a minute, as text, not ten digits per strip
+    if (el.firstChild.textContent !== text.slice(0, 5)) el.firstChild.textContent = text.slice(0, 5);
+    var digits = el.querySelectorAll('.rs'), k = 0;
+    text.replace(/:/g, '').split('').forEach(function (ch) {
+      var strip = digits[k++], to = +ch, from = strip._n == null ? to : strip._n;
+      strip._n = to;
+      if (to === from) { if (strip._snap == null) strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; return; }
+      clearTimeout(strip._snap);
+      strip.style.transition = '';
+      if (to < from) { // wrapped: roll on to the last 0, then jump back to the first
+        strip.style.transform = 'translateY(' + -10 * 1.35 + 'em)';
+        strip._snap = setTimeout(function () { strip.style.transition = 'none'; strip.style.transform = 'translateY(0)'; strip._snap = null; }, 450);
+      } else { strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null; }
+    });
+  }
+  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, contrast: contrast, rollClock: rollClock };
 })();

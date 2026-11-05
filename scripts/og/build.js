@@ -14,6 +14,7 @@ const ROOT = path.resolve(__dirname, "../..");
 const OUT = path.join(ROOT, "assets/og");
 const CARD = path.join(__dirname, "card.html");
 const MANIFEST = path.join(OUT, "manifest.json");
+const DRAWN_WITH = ["sky.js", "pixel-engine.js", "scenes.js"].map((f) => path.join(ROOT, "assets/js", f));
 
 // Same text as the page's description (_includes/seo.html): the front
 // matter's description, else the opening of the note, 120 characters.
@@ -48,16 +49,34 @@ function frontMatter(file) {
   return { data, body: m[2] };
 }
 
+// _data/days.yml, read just far enough for the cards: a list of flat "key: value" items
+function places() {
+  const list = [];
+  let item = null;
+  for (const raw of fs.readFileSync(path.join(ROOT, "_data/days.yml"), "utf8").split("\n")) {
+    const line = raw.replace(/\s+#.*$/, "");
+    if (/^\s*#/.test(line) || !line.trim()) continue;
+    const kv = line.match(/^(-\s+|\s+)(\w+):\s*(.*)$/);
+    if (!kv) continue;
+    if (kv[1].startsWith("-")) list.push((item = {}));
+    let v = kv[3].trim().replace(/^["']|["']$/g, "");
+    if (/^\[.*\]$/.test(v)) v = v.slice(1, -1).split(",").map((x) => x.trim().replace(/^["']|["']$/g, ""));
+    if (item) item[kv[2]] = v;
+  }
+  return list;
+}
+
 function cards() {
+  const days = places();
   const list = [];
   const home = frontMatter(path.join(ROOT, "index.md")).data;
+  // home: the office, no date on the postmark
   list.push({
     out: "home.jpg",
-    path: "~",
     cmd: "whoami",
     title: home.title || "hey, I'm Yen",
-    summary: "Product manager @Taiwan. I write about how products get decided. 關於產品決策的中文筆記。",
-    meta: "notes/ · works/",
+    summary: "I decide what gets built, then build some of it. I write down how those decisions get made.",
+    date: "",
   });
   const dir = path.join(ROOT, "published");
   for (const name of fs.readdirSync(dir).filter((f) => f.endsWith(".md")).sort()) {
@@ -65,21 +84,26 @@ function cards() {
     const parts = name.split("-");
     const file = parts.length > 3 && parts[0].length === 4 ? parts.slice(3).join("-") : name;
     const text = plain(body);
+    // a note: a postcard from its date, with that day's building
     list.push({
       out: name.replace(/\.md$/, ".jpg"),
-      path: "~/notes",
-      cmd: "cat " + file,
+      cmd: "cat notes/" + file,
       title: data.title || file,
-      summary: data.description || truncate(text, 120),
-      meta: [data.date ? String(data.date).slice(0, 10) : null, "~/notes"].filter(Boolean).join(" · "),
+      summary: data.subtitle || data.description || truncate(text, 120),
+      date: data.date ? String(data.date).slice(0, 10) : name.slice(0, 10),
     });
+    // a note written on a day in _data/days.yml gets that place's building, name, city, country and coordinates
+    const day = list[list.length - 1].date, at = days.find((d) => d.date === day);
+    if (at) list[list.length - 1].place = { scene: at.scene, name: at.name, city: at.place, country: at.country || "Japan", coords: (at.coords || []).map(Number) };
   }
   return list;
 }
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
-  const design = crypto.createHash("sha1").update(fs.readFileSync(CARD)).digest("hex");
+  // the design is the card page and everything it draws the building with
+  const design = crypto.createHash("sha1")
+    .update([CARD, ...DRAWN_WITH].map((f) => fs.readFileSync(f, "utf8")).join("\n")).digest("hex");
   let manifest = {};
   try { manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8")); } catch (e) {}
   const todo = cards();

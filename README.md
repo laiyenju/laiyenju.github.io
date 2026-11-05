@@ -20,9 +20,9 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `_data/days.yml` | 去過的地方：首頁的往年今日建築、Timeline 的每一天 |
 | `_data/little.yml` | 小事（例如散步遇到柴犬），在今天的建築旁出現一週 |
 | `_config.yml` | 網站資訊、哪些檔案要建置 |
-| `assets/css/`、`assets/js/` | 兩邊共用：`sky.js`（所在城市、太陽位置、依太陽決定的背景顏色）。首頁：`day.css`、`day.js`（建築模型 `SCENES`、Timeline、terminal、影子和窗燈）、`pixel-engine.js`（產生的檔案）。文章頁：`site.css`、`theme.js`（每分鐘跟著天色更新）、`post.js`。Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
+| `assets/css/`、`assets/js/` | 兩邊共用：`sky.js`（所在城市、太陽位置、依太陽決定的背景顏色）。首頁：`day.css`、`day.js`（Timeline、terminal、版面）、`scenes.js`（建築模型 `SCENES`、光線、影子和窗燈，分享卡片也用它）、`pixel-engine.js`（產生的檔案）。文章頁：`site.css`、`theme.js`（每分鐘跟著天色更新）、`post.js`。Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
 | `assets/vendor/pixel-plays/`、`scripts/pixel-engine/` | Pixel Plays 引擎原檔（MIT，作者 AmirMushich，`LICENSE` 在同一個資料夾）和把它轉成 `assets/js/pixel-engine.js` 的程式 |
-| `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action |
+| `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action。卡片是一張明信片：左邊是那篇筆記當天的建築，像 Timeline 一樣只有建築、沒有影子，盡量放大，底色是由上往下淡出的暖色天空（網站太陽約 8° 時的顏色）。建築的選法：那天在 `_data/days.yml` 有地點就用那個地點，下面寫名稱、城市・國家、經緯度（`coords`）；沒有就照首頁的規則，平日辦公室、假日家，下面寫 The office／Home 和 Taipei · Taiwan。右邊是郵戳（城市、日期、星期）、`cat notes/<檔名>`、標題、副標題（沒有就用摘要）和寄件地址，沒有郵票。首頁的卡片是辦公室，郵戳不寫日期（`scripts/og/card.html`，地點由 `scripts/og/build.js` 的 `places` 讀 `days.yml`） |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
 | `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。notes 和作品的進出方式一樣：清單裡點一篇，在同一個分頁直接切過去，不播打字動畫（`day.js` 留下 `post-handoff`、`post-from-list`）。回清單（`← Notes`、`notes/`）用瀏覽器的「上一頁」回到首頁，清單捲回日期卡片下方；瀏覽器沒有保留首頁時，直接把清單印回來，不再打字（`post.js` 的 `backToNotes`，`day.js` 的 `backFromNote`）。不是從清單進來的文章，回清單就連到 `/?view=notes`。作品頁的 `← Work` 和 `works/` 一樣回到清單：從清單打開的就關掉作品頁、把清單捲回日期卡片下方，從連結打開的就執行一次 `ls works`（`day.js` 的 `backToWorks`） |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
@@ -34,7 +34,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|
 | `assets/js/pixel-engine.js` | 產生的檔案，不要直接改。改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 3.3） |
 | 首頁網址 | `#timeline`、`#day-YYYY-MM-DD`（Timeline 停在那天；同一天第二棟以後加 `-2`、`-3`）、`#past-YYYY-MM-DD`（和首頁同一個畫面，只是主建築換成那天的，標題上方有一行主題色的「幾年前・日期」（`day.css` 的 `.past-tag`）；頂部按鈕變成 Today，點了回到今天；點建築打開 Timeline 的那一天）、`#work-<slug>`（一件作品）。分享這些網址會直接打開那個畫面 |
-| 頂部卡片 | 首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：分成兩塊，左邊日期卡片的按鈕在左側、寫 `← Work`／`← Notes`，點了回清單；右邊是 Home：和卡片一樣高的正方形（50×50px）圖示按鈕。卡片和 Home 都是扁平的毛玻璃（半透明加模糊，頁面捲動時看得到後面；只有一條細框線，沒有反光、沒有陰影；首頁在 `day.css` 開頭的 `--glass`、`--glass-blur`，文章頁在 `site.css` 的 `.post-when`、`.post-home`）。兩塊加起來不會超過螢幕寬：寬度小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
+| 頂部卡片 | 日期下面是現在的時間，到秒（`HH:MM:SS`），每個數字像翻牌一樣往上捲到下一個（`assets/js/sky.js` 的 `rollClock`，首頁由 `day.js` 的 `secondTick`、文章頁由 `post.js` 的 `tick` 每秒呼叫；樣式在 `day.css`、`site.css` 的 `.roll`；系統設定「減少動態效果」時直接換數字）。Timeline 裡這一行改寫那天是幾年前，不顯示時間；停在過去某一天時，日期和這一行用強調色（`day.css` 的 `.when.is-past-day`）。首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：分成兩塊，左邊日期卡片的按鈕在左側、寫 `← Work`／`← Notes`，點了回清單；右邊是 Home：和卡片一樣高的正方形（50×50px）圖示按鈕。卡片和 Home 都是扁平的毛玻璃（半透明加模糊，頁面捲動時看得到後面；只有一條細框線，沒有反光、沒有陰影；首頁在 `day.css` 開頭的 `--glass`、`--glass-blur`，文章頁在 `site.css` 的 `.post-when`、`.post-home`）。兩塊加起來不會超過螢幕寬：寬度小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
 | 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`CLAUDE.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
@@ -51,7 +51,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 設定 | 預設 | 說明 |
 |---|---|---|
 | `title` | `Yen Lai` | 文章頁標題的後半段（「標題 · Yen Lai」） |
-| `description` | 一句英文 + 一句中文 | 首頁的搜尋摘要 |
+| `description` | 一句英文 + 一句中文 | 首頁的搜尋摘要。英文那句和自我介紹（2.4 的 `BIO`）說同一件事 |
 | `url` | `https://laiyenju.github.io` | 換網域時要改 |
 | `author.name` | `Yen Lai` | 結構化資料的作者 |
 | `author.twitter` | `theYenLai` | X 分享卡片的帳號 |
@@ -89,21 +89,21 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 ### 2.3.1 去過的地方：`_data/days.yml`
 
-一筆是一天、一棟建築。建築底下的句子由同一條規則組出來：`{幾年前}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]`
+一筆是一天、一棟建築。建築底下每件事只說一次：上面一行主題色的「幾年前・日期」（從 `date` 算，`day.js` 的 `whenTag`）、名稱、地點（Google Maps 連結，`placeFor`），最後一句由同一條規則組出來：`Yen {did}[ with {with}].[ {extra}]`（`sentenceFor`）。所以 `did` 只寫發生了什麼，不寫時間、地點，也不要再寫一次建築名稱（標題已經有）
 
 | 欄位 | 必填 | 說明 |
 |---|---|---|
 | `date` | 是 | `"YYYY-MM-DD"`，要加引號。同一天可以有好幾筆（好幾棟建築），網址會依順序變成 `#day-2019-01-26`、`#day-2019-01-26-2`… |
-| `scene` | 是 | 建築模型的名字，要先在 `assets/js/day.js` 的 `SCENES` 裡有這個模型。目前有：`studio`（工作地點：富邦遼寧大樓）、`home`（家）、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`google`、`highline`、`whitney`、`nyt`、`capitol`、`whitehouse`、`washington`、`lincoln`、`mbc`、`hongik` |
+| `scene` | 是 | 建築模型的名字，要先在 `assets/js/scenes.js` 的 `SCENES` 裡有這個模型。目前有：`studio`（工作地點：富邦遼寧大樓）、`home`（家）、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`google`、`highline`、`whitney`、`nyt`、`capitol`、`whitehouse`、`washington`、`lincoln`、`mbc`、`hongik` |
 | `name` | 是 | 英文名稱 |
 | `zh` | 是 | 中文名稱。不要中文時改寫 `no_zh: true` |
 | `place` | 是 | 城市或地區，例如 `Sangam, Seoul`，會變成 Google Maps 連結 |
 | `did` | 是 | Yen 做了什麼，小寫開頭、不加句號 |
-| `prep` | 否 | `in`（預設）或 `on`（島） |
 | `with` | 否 | 同行者，一個人或一串 `[Mei, Ken]` |
 | `extra` | 否 | 補充一句 |
 | `map` | 否 | Google Maps 搜尋文字，預設用 `name, place` |
 | `country` | 否 | 預設 `Japan`。Timeline 的國家數由它算 |
+| `coords` | 否 | `[緯度, 經度]`，例如 `[40.7527, -73.9772]`。那天寫的筆記，分享卡片上會印出來 |
 
 缺必填欄位、沒有中文名、或模型不存在時，那一筆不會出現，瀏覽器的 console 會列出缺了什麼。
 
@@ -121,9 +121,9 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 | 設定 | 位置 | 預設 | 注意 |
 |---|---|---|---|
-| 自我介紹 | `assets/js/day.js` 的 `BIO` | `Product manager in Taipei. Writes about how products get decided.` | 今天的建築底下和 terminal 的 `whoami` 都用它。一起改：文章頁 `whoami`（`assets/js/post.js`）、首頁分享卡片文字（`scripts/og/build.js`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
+| 自我介紹 | `assets/js/day.js` 的 `BIO` | `Yen decides what gets built, then builds some of it. Writes about how those decisions get made.` | 今天的建築底下用它；terminal 的 `whoami` 把開頭的 Yen 換成「Yen Lai, product manager,」。一起改：首頁分享卡片文字（`scripts/og/build.js`，卡片上用第一人稱「I decide…」；push 後 Action 會重畫卡片）、首頁搜尋摘要（`_config.yml` 的 `description`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
 | 社群連結 | `assets/js/day.js` 的 `whoami` | github、linkedin、x | 首頁不直接放連結，要執行 `whoami` 才看得到。一起改：`_includes/seo.html` 的 `sameAs`；X 帳號另有 `_config.yml` 的 `author.twitter` |
-| 平日／假日 | `assets/js/day.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
+| 平日／假日 | `assets/js/scenes.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 分享卡片也照這個規則選建築。農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
 | 所在城市 | `assets/js/sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、首頁和文章頁的背景顏色、影子方向。出國時只要改這裡，首頁和文章頁的時間、提示字 `yen@taipei` 都會跟著變 |
 | 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | `CHECKIN` 之後會接自動打卡（見第 4 節） |
 | terminal 按鈕 | `assets/js/day.js` 的 `CHIPS`、`placeBar`；樣式在 `assets/css/day.css` 的 `.cmdbar` | `$`、About Yen、Notes、Work、Where's Yen、Clear | 整個首頁只有這一排。寬螢幕（≥ 900px）：一開始在今天的說明下面（`_layouts/home.html` 的 `#barSlot`），往下捲到 terminal 時滑進 terminal、貼在輸入框下面，捲回去再滑回來。手機：一直固定在畫面底部。沒有分隔線；按鈕是毛玻璃（和頂部卡片同一組 `--glass` 設定），底下只留一層淡淡的漸層，捲過去的內容看得到、但會模糊。只在 Timeline、作品頁打開時隱藏。點了分三拍：先把這一行捲到日期卡片正下方、停穩，再帶著游標一個字一個字打出指令、停一下像按了 Enter，最後輸出一列一列淡入（`day.js` 的 `run`、`focusLine`、`reveal`；頁面不夠長時 terminal 下方會自動留白；系統設定「減少動態效果」時直接顯示）。清單裡點一列（`open works/…`）會立刻打開，不打字；點 `$` 也會把輸入框捲到那裡。放不下時可以左右滑，右邊會淡出提示。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
@@ -133,11 +133,11 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 | 設定 | 位置 | 預設 | 其他選項／注意 |
 |---|---|---|---|
-| 首頁和文章頁顏色 | `assets/js/sky.js` 的 `BG_STOPS`（背景）、`TEXT`（文字原本的顏色）、`colours`；首頁的光線和窗燈在 `day.js` 的 `lightFor` | 跟著 `CITY` 的真實太陽高度變：白天接近白、黃昏暖色、夜晚深藍。晚上每棟建築都有光：窗戶亮燈（`api.emissive`，辦公大樓約兩成樓層不亮），紀念建築和鳥居打燈（`api.emissive(…, 'flood')`，保留白天的顏色、偏暖）。整個網站沒有日夜切換，只有這一條規則 | 每一種文字顏色（內文、副標、日期與提示、強調色）都先用 `TEXT` 的顏色，讀不清楚時才往深或淺移一點，對比至少 4.5。黃昏的中間色也會稍微調深或調淺。程式碼區塊和行內程式碼的底色是「天色加一點文字色」（`site.css` 的 `--washi`），任何時間都看得出邊界 |
+| 首頁和文章頁顏色 | `assets/js/sky.js` 的 `BG_STOPS`（背景）、`TEXT`（文字原本的顏色）、`colours`；首頁的光線和窗燈在 `scenes.js` 的 `lightFor` | 跟著 `CITY` 的真實太陽高度變：白天接近白、黃昏暖色、夜晚深藍。晚上每棟建築都有光：窗戶亮燈（`api.emissive`，辦公大樓約兩成樓層不亮），紀念建築和鳥居打燈（`api.emissive(…, 'flood')`，保留白天的顏色、偏暖）。整個網站沒有日夜切換，只有這一條規則 | 每一種文字顏色（內文、副標、日期與提示、強調色）都先用 `TEXT` 的顏色，讀不清楚時才往深或淺移一點，對比至少 4.5。黃昏的中間色也會稍微調深或調淺。程式碼區塊和行內程式碼的底色是「天色加一點文字色」（`site.css` 的 `--washi`），任何時間都看得出邊界 |
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題 21px（行高 1.45）、說明 17px（行高 1.65，和標題之間多 10px）；頂部日期首頁 14px、Timeline 19px | |
-| 建築大小 | `assets/js/day.js` 的 `sizeStage`、`fitCanvas`（`* .86`）、`fitTl`（`* .86`） | 手機：建築固定佔畫面一半高，不會因為有往年縮圖或說明比較長而縮小（放不下的說明往下捲就看得到）；說明放得下、還有空間時平均分到上下，讓建築和說明靠在一起、整組置中。沒有往年今日時，縮圖那一列會收起來（`day.css` 的 `.tools:has(.thumbs.none)`） | 寬螢幕往下捲到 terminal 時，建築移到中間、右邊的文字和年份縮圖淡出（`onScroll` 的 `--dx`、`--q`）。大小和位置只看建築本身；影子完整畫出來，可以超出建築的範圍、壓到文字下面（`getWorld` 的 `pad`、`fitCanvas` 的負 margin），手機上只會在螢幕邊緣被切掉。縮圖不含超出的影子 |
-| 首頁才會動的細節 | `assets/js/day.js` 的 `e.moving`（`flag`、`usFlag`、`krFlag`、`birds`、`ripples`、`beacon`） | 旗子飄、樹和植物搖、鳥繞著飛、水面波紋、噴泉、屋頂紅色警示燈閃。只在首頁動，Timeline 裡同一棟建築是靜止的，用來分辨現在在哪一頁 | 新模型要加會動的東西，在 `build` 裡用 `e.moving((e, t) => …)`；`t` 是 `null` 時畫靜止的樣子（Timeline）。系統設定「減少動態效果」時不動 |
-| 建築的邊緣 | `assets/js/day.js` 的 `getWorld`、`cleanShadow`、`wholePixels` | 沒有地面的模型（`bare`）不畫地面的陰暗邊（`bakeOcclusion`），影子邊緣整理成一條乾淨的線；畫面縮放取整數倍螢幕像素 | 避免建築四周出現像去背沒去乾淨的灰點 |
+| 建築大小 | `assets/js/day.js` 的 `sizeStage`、`fitCanvas`（`* .97`，最多放大 4.4 倍）、`fitTl`（`* .86`）；寬螢幕的左右比例在 `day.css` 的 `.group`（`1.5fr` 對 `1fr`） | 寬螢幕：建築佔左邊六成寬、幾乎整個畫面高。手機：建築固定佔畫面六成高，不會因為有往年縮圖或說明比較長而縮小（放不下的說明往下捲就看得到）；說明放得下、還有空間時平均分到上下，讓建築和說明靠在一起、整組置中。沒有往年今日時，縮圖那一列會收起來（`day.css` 的 `.tools:has(.thumbs.none)`） | 寬螢幕往下捲到 terminal 時，建築移到中間、右邊的文字和年份縮圖淡出（`onScroll` 的 `--dx`、`--q`）。大小和位置只看建築本身；影子完整畫出來，可以超出建築的範圍、壓到文字下面（`getWorld` 的 `pad`、`fitCanvas` 的負 margin），手機上只會在螢幕邊緣被切掉。縮圖不含超出的影子 |
+| 首頁才會動的細節 | `assets/js/scenes.js` 的 `e.moving`（`flag`、`usFlag`、`krFlag`、`birds`、`ripples`、`beacon`） | 旗子飄、樹和植物搖、鳥繞著飛、水面波紋、噴泉、屋頂紅色警示燈閃。只在首頁動，Timeline 裡同一棟建築是靜止的，用來分辨現在在哪一頁 | 新模型要加會動的東西，在 `build` 裡用 `e.moving((e, t) => …)`；`t` 是 `null` 時畫靜止的樣子（Timeline）。系統設定「減少動態效果」時不動 |
+| 建築的邊緣 | `assets/js/scenes.js` 的 `getWorld`、`cleanShadow`，`day.js` 的 `wholePixels` | 沒有地面的模型（`bare`）不畫地面的陰暗邊（`bakeOcclusion`），影子邊緣整理成一條乾淨的線；畫面縮放取整數倍螢幕像素 | 避免建築四周出現像去背沒去乾淨的灰點 |
 | Timeline 的動畫 | `assets/js/day.js` 的 `buildUp`（一磚一磚，磚塊 4×3 像素）、`dissolve`、`MOVE` | 蓋起來 0.9 秒、溶解 0.2 秒、首頁和 Timeline 之間移動 0.48 秒 | 系統設定「減少動態效果」時都直接跳到結果 |
 | 頁面之間的轉場 | `day.js` 的 `lightRow`、`reveal`、`openTl`／`leaveTl`（`tl-in`）；文章在 `_layouts/default.html` 的開頭和 `site.css` 的 `post-rise` | 一套動作：terminal 的輸出一列一列往上浮現，選中的列像 terminal 的選取：整列反白，底色是文字色、字是頁面底色，左右各多出 10px，沒有圓角；滑鼠指到的列先有一層很淡的同色塊（`day.css` 的 `.ls .lit`、`.ls a:not(.lit):hover`）。清單點一列：那一列先標上 0.11 秒再打開。作品頁、從站內打開的文章（清單、上一篇／下一篇）：直接切過去，內容由上往下約 0.25 秒浮現，不打字。回到清單：清單捲回日期卡片下方，剛讀的那一列先反白再慢慢退掉。進出 Timeline：今天的文字先退開，Timeline 的文字才出現，離開時反過來，兩者不重疊。首頁在第一個畫面前就套上天色，不會先白再變色 | 從外部連結打開文章時，標題照舊一個字一個字打出來。系統設定「減少動態效果」時都直接切換 |
 | Timeline 的尺標 | `assets/js/day.js` 的 `renderRuler`；樣式在 `assets/css/day.css` 的 `.ruler-track` | 每棟建築一格、等距排列（同一天的建築間距減半），最舊的在左邊；不標年份（頂部日期已經有） | 點一格跳過去；手指按住左右滑可以快速切換（滑動時不播動畫，放開就停在那棟）；鍵盤可用左右方向鍵 |
@@ -189,10 +189,10 @@ notes 清單顯示的是 `title`；從清單點開文章時，`cat` 指令和分
 
 ```mermaid
 flowchart TD
-  P["push 到 main<br/>改到 published/**、index.md 或 scripts/og/**"] --> W["og.yml"]
+  P["push 到 main<br/>改到 published/**、index.md、scripts/og/**<br/>或 assets/js 的 sky.js、pixel-engine.js、scenes.js"] --> W["og.yml"]
   W --> N["安裝 Node 20 + Playwright 1.48.2 + Chromium"]
   N --> B["node scripts/og/build.js"]
-  B --> H{"hash（card.html + 卡片文字）<br/>和 manifest.json 一樣？"}
+  B --> H{"hash（card.html、sky.js、pixel-engine.js、scenes.js<br/>+ 卡片文字）和 manifest.json 一樣？"}
   H -- 一樣 --> S["跳過"]
   H -- 不一樣 --> R["用 card.html 截圖<br/>寫入 assets/og/檔名.jpg"]
   B --> X["刪掉已不存在文章的卡片"]
@@ -200,7 +200,7 @@ flowchart TD
   M --> C["有變動就 commit<br/>「Update share cards」並 push 到 main"]
 ```
 
-- 改了 `card.html`，所有卡片都會重畫。新文章的卡片產生前，先用 `home.jpg`。
+- 改了 `card.html` 或畫建築的程式（`assets/js/sky.js`、`pixel-engine.js`、`scenes.js`），所有卡片都會重畫；`og.yml` 也會因為這些檔案的改動而執行。新文章的卡片產生前，先用 `home.jpg`。
 - 目前的三張卡片是手動產生後 commit 的，Action 還沒有自己 commit 過卡片。第一篇新文章 push 後，到 GitHub → Actions 確認它有執行成功。
 - 也可以在 GitHub → Actions → Share cards → **Run workflow** 手動執行。
 - 本機執行：
@@ -225,7 +225,7 @@ flowchart LR
 node scripts/pixel-engine/build.js
 ```
 
-新增建築模型不用重新產生：模型寫在 `assets/js/day.js` 的 `SCENES`。
+新增建築模型不用重新產生：模型寫在 `assets/js/scenes.js` 的 `SCENES`。
 
 ### 3.4 本機預覽
 

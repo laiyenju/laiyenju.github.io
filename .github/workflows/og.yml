@@ -10,6 +10,9 @@ on:
       - "published/**"
       - "index.md"
       - "scripts/og/**"
+      - "assets/js/scenes.js"
+      - "assets/js/pixel-engine.js"
+      - "assets/js/sky.js"
   workflow_dispatch:
 
 permissions:
