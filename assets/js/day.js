@@ -65,7 +65,7 @@ function isRestDay(dd) { const md = pad(dd.m) + '-' + pad(dd.d); return { rest: 
 // left → right: oldest year → today
 function buildItems() {
   const dd = fromDayMs(state.day), md = pad(dd.m) + '-' + pad(dd.d);
-  const r = isRestDay(dd), base = r.rest ? 'home' : 'studio';
+  const r = isRestDay(dd), base = todayScene();
   const little = LITTLE.filter(l => state.day >= l.day && state.day < l.day + 7 * 864e5);
   const extra = little.map(l => l.text).join(' ');
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
@@ -272,21 +272,47 @@ function exitPast() {
   renderDay();
 }
 function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
+/* ================= check-ins (README 3.5) =================
+   location.json on the checkin branch, written by .github/workflows/checkin.yml when an iPhone Shortcut
+   checks Yen in: { place: home|office|out, label, at, office_at }. Words only, never coordinates.
+   Today's building:
+   1. the office if Yen checked in at the office today (also on a weekend: a make-up workday);
+   2. home on weekends and HOLIDAYS;
+   3. on other weekdays the office, until 12:00: from then on, while check-ins are on (one in the last 14 days),
+      no office check-in means a day off, and home. No calendar to keep up: the check-ins say it. */
+const CHECKIN_URL = 'https://raw.githubusercontent.com/laiyenju/laiyenju.github.io/checkin/location.json';
+const CHECKIN_FRESH = 6 * 3600e3, CHECKINS_ON = 14 * 864e5, DAY_OFF_FROM = 12 * 60;
+let CHECKIN = null;
+const sameDay = (ms, day) => { const t = taipeiParts(ms); return dayMs(t.y, t.m, t.d) === day; };
+function todayScene() {
+  const c = CHECKIN;
+  if (c && c.office_at && sameDay(Date.parse(c.office_at), state.day)) return 'studio';
+  if (isRestDay(fromDayMs(state.day)).rest) return 'home';
+  if (c && Date.now() - Date.parse(c.at) < CHECKINS_ON && state.minute >= DAY_OFF_FROM) return 'home';
+  return 'studio';
+}
+// redraw today only when its building changes, and only on today's page
+function refreshToday() {
+  const t = state.items[state.items.length - 1];
+  if (t && t.scene !== todayScene() && tl.hidden && !state.pastDate) renderDay();
+}
+function loadCheckin() {
+  fetch(CHECKIN_URL, { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)
+    .then(c => { if (c && c.label && Date.parse(c.at)) { CHECKIN = c; refreshToday(); } }).catch(() => {});
+}
 /* ================= where is Yen now =================
-   1. A check-in wins if it is less than 6 hours old. In the real site it comes from location.json,
-      which an iPhone Shortcut updates when Yen arrives at or leaves a place (only a label, never coordinates).
+   1. A check-in wins if it is less than 6 hours old.
    2. Otherwise the page reads Yen's usual day from the clock, and says "usually" so nobody takes it as fact. */
-const CHECKIN = null; // e.g. { label: 'at a café in Daan', at: '2026-11-04T15:20:00+08:00' }
 const WEEKDAY = [[0, 'asleep'], [7 * 60, 'on the way to the office'], [9 * 60, 'at the office'], [12 * 60, 'out for lunch near the office'],
   [13 * 60 + 30, 'at the office'], [18 * 60 + 30, 'on the way home'], [19 * 60 + 30, 'at home']];
 const RESTDAY = [[0, 'asleep'], [9 * 60, 'having a slow morning at home'], [12 * 60, 'out somewhere in the city'], [19 * 60, 'at home']];
 function whereNow() {
   const hm = `${pad(Math.floor(state.minute / 60))}:${pad(state.minute % 60)}`;
-  if (CHECKIN && Date.now() - Date.parse(CHECKIN.at) < 6 * 3600e3) {
+  if (CHECKIN && Date.now() - Date.parse(CHECKIN.at) < CHECKIN_FRESH) {
     const t = taipeiParts(Date.parse(CHECKIN.at));
     return `Yen is ${CHECKIN.label}, ${CITY.name}. Checked in at ${pad(t.h)}:${pad(t.min)}.`;
   }
-  const rest = isRestDay(fromDayMs(state.day)).rest, plan = rest ? RESTDAY : WEEKDAY;
+  const rest = todayScene() === 'home', plan = rest ? RESTDAY : WEEKDAY;
   let now = plan[0][1];
   for (const [from, label] of plan) if (state.minute >= from) now = label;
   return `It's ${hm} in ${CITY.name}${rest ? ' on a day off' : ''}. At this hour Yen is usually ${now}.`;
@@ -993,7 +1019,8 @@ function frame(now) {
 setInterval(() => {
   const r = taipeiParts(Date.now()), day = dayMs(r.y, r.m, r.d);
   state.minute = r.h * 60 + r.min;
-  if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; refreshLight(true); renderDay(); } else refreshLight(true);
+  if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; refreshLight(true); renderDay(); } else { refreshLight(true); refreshToday(); }
+  if (r.min % 10 === 0) loadCheckin(); // a page left open hears of new check-ins
 }, 60e3);
 addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); onScroll(); });
 // the words change height once the web fonts arrive (Quattro sets wider than the fallback), so measure again
@@ -1003,6 +1030,7 @@ applyTheme(LIGHT);
 refreshLight(false);
 renderLists();
 renderDay();
+loadCheckin();
 onScroll();
 route();
 openView();

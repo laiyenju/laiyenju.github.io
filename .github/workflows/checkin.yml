@@ -1,0 +1,49 @@
+# Check-ins: an iPhone Shortcut (or Run workflow here) says where Yen is.
+# scripts/checkin/update.js writes location.json, which goes to the `checkin`
+# branch as its only commit (overwritten each time, so no history piles up).
+# The homepage reads it from raw.githubusercontent.com. See README 3.5.
+name: Check in
+
+on:
+  workflow_dispatch:
+    inputs:
+      place:
+        description: Where Yen is
+        required: true
+        type: choice
+        options: [home, office, out]
+      label:
+        description: 'Optional words, e.g. "at a café in Daan" (no coordinates)'
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: checkin
+  cancel-in-progress: false
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read the last check-in
+        run: |
+          if git fetch --depth=1 origin checkin 2>/dev/null; then
+            git show origin/checkin:location.json > "$RUNNER_TEMP/last.json" || echo '{}' > "$RUNNER_TEMP/last.json"
+          else
+            echo '{}' > "$RUNNER_TEMP/last.json"
+          fi
+      - name: Write location.json
+        env:
+          PLACE: ${{ inputs.place }}
+          LABEL: ${{ inputs.label }}
+        run: node scripts/checkin/update.js "$RUNNER_TEMP/last.json" > "$RUNNER_TEMP/location.json" && cat "$RUNNER_TEMP/location.json"
+      - name: Replace the checkin branch with one commit
+        run: |
+          blob=$(git hash-object -w "$RUNNER_TEMP/location.json")
+          tree=$(printf '100644 blob %s\tlocation.json\n' "$blob" | git mktree)
+          commit=$(git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit-tree "$tree" -m "Check in")
+          git push -f origin "$commit:refs/heads/checkin"

@@ -3,7 +3,7 @@
 Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 - 純 Jekyll，由 GitHub Pages 建置（`main` 分支、根目錄）。沒有主題，沒有外掛，沒有 `Gemfile`。
-- 只有兩個自動流程：**GitHub Pages 建置網站**、**GitHub Action 畫分享卡片**。
+- 只有三個自動流程：**GitHub Pages 建置網站**、**GitHub Action 畫分享卡片**、**GitHub Action 記錄打卡**。
 - 只有一個手動步驟：改了 pixel 引擎（`assets/vendor/pixel-plays/engine.js`）或 `scripts/pixel-engine/build.js` 之後，要重新產生 `assets/js/pixel-engine.js`（見 3.3）。
 
 ---
@@ -22,7 +22,8 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `_config.yml` | 網站資訊、哪些檔案要建置 |
 | `assets/css/`、`assets/js/` | 兩邊共用：`sky.js`（所在城市、太陽位置、依太陽決定的背景顏色）。首頁：`day.css`、`day.js`（Timeline、terminal、版面）、`scenes.js`（建築模型 `SCENES`、光線、影子和窗燈，分享卡片也用它）、`pixel-engine.js`（產生的檔案）。文章頁：`site.css`、`theme.js`（每分鐘跟著天色更新）、`post.js`。Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
 | `assets/vendor/pixel-plays/`、`scripts/pixel-engine/` | Pixel Plays 引擎原檔（MIT，作者 AmirMushich，`LICENSE` 在同一個資料夾）和把它轉成 `assets/js/pixel-engine.js` 的程式 |
-| `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action。卡片是一張明信片：左邊是那篇筆記當天的建築，像 Timeline 一樣只有建築、沒有影子，盡量放大，底色是由上往下淡出的暖色天空（網站太陽約 8° 時的顏色）。建築的選法：那天在 `_data/days.yml` 有地點就用那個地點，下面寫名稱、城市・國家、經緯度（`coords`）；沒有就照首頁的規則，平日辦公室、假日家，下面寫 The office／Home 和 Taipei · Taiwan。右邊是郵戳（城市、日期、星期）、`cat notes/<檔名>`、標題、副標題（沒有就用摘要）和寄件地址，沒有郵票。首頁的卡片是辦公室，郵戳不寫日期（`scripts/og/card.html`，地點由 `scripts/og/build.js` 的 `places` 讀 `days.yml`） |
+| `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action。卡片是一張明信片：左邊是那篇筆記當天的建築，像 Timeline 一樣只有建築、沒有影子，盡量放大，底色是由上往下淡出的暖色天空（網站太陽約 8° 時的顏色）。建築的選法：那天在 `_data/days.yml` 有地點就用那個地點，下面寫名稱、城市・國家、經緯度（`coords`）；沒有就照日曆：平日辦公室，週末和 `HOLIDAYS` 是家（卡片不看打卡），下面寫 The office／Home 和 Taipei · Taiwan。右邊是郵戳（城市、日期、星期）、`cat notes/<檔名>`、標題、副標題（沒有就用摘要）和寄件地址，沒有郵票。首頁的卡片是辦公室，郵戳不寫日期（`scripts/og/card.html`，地點由 `scripts/og/build.js` 的 `places` 讀 `days.yml`） |
+| `.github/workflows/checkin.yml`、`scripts/checkin/`、`checkin` 分支 | 打卡：iPhone 捷徑觸發 Action，`scripts/checkin/update.js` 寫出 `location.json`，放在 `checkin` 分支；首頁讀它決定今天的建築和「Where is Yen now」（見 3.5） |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
 | `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。notes 和作品的進出方式一樣：清單裡點一篇，在同一個分頁直接切過去，不播打字動畫（`day.js` 留下 `post-handoff`、`post-from-list`）。回清單（`← Notes`、`notes/`）用瀏覽器的「上一頁」回到首頁，清單捲回日期卡片下方；瀏覽器沒有保留首頁時，直接把清單印回來，不再打字（`post.js` 的 `backToNotes`，`day.js` 的 `backFromNote`）。不是從清單進來的文章，回清單就連到 `/?view=notes`。作品頁的 `← Work` 和 `works/` 一樣回到清單：從清單打開的就關掉作品頁、把清單捲回日期卡片下方，從連結打開的就執行一次 `ls works`（`day.js` 的 `backToWorks`） |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
@@ -36,6 +37,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 首頁網址 | `#timeline`、`#day-YYYY-MM-DD`（Timeline 停在那天；同一天第二棟以後加 `-2`、`-3`）、`#past-YYYY-MM-DD`（和首頁同一個畫面，只是主建築換成那天的，標題上方有一行主題色的「幾年前・日期」（`day.css` 的 `.past-tag`）；頂部按鈕變成 Today，點了回到今天；點建築打開 Timeline 的那一天）、`#work-<slug>`（一件作品）。分享這些網址會直接打開那個畫面 |
 | 頂部卡片 | 日期下面是現在的時間，到秒（`HH:MM:SS`），每個數字像翻牌一樣往上捲到下一個（`assets/js/sky.js` 的 `rollClock`，首頁由 `day.js` 的 `secondTick`、文章頁由 `post.js` 的 `tick` 每秒呼叫；樣式在 `day.css`、`site.css` 的 `.roll`；系統設定「減少動態效果」時直接換數字）。Timeline 裡這一行改寫那天是幾年前，不顯示時間；停在過去某一天時，日期和這一行用強調色（`day.css` 的 `.when.is-past-day`）。首頁：一張日期卡片，按鈕寫 Timeline（今天）或 Today（其他日子、Timeline 裡）。作品頁和文章頁：分成兩塊，左邊日期卡片的按鈕在左側、寫 `← Work`／`← Notes`，點了回清單；右邊是 Home：和卡片一樣高的正方形（50×50px）圖示按鈕。卡片和 Home 都是扁平的毛玻璃（半透明加模糊，頁面捲動時看得到後面；只有一條細框線，沒有反光、沒有陰影；首頁在 `day.css` 開頭的 `--glass`、`--glass-blur`，文章頁在 `site.css` 的 `.post-when`、`.post-home`）。兩塊加起來不會超過螢幕寬：寬度小於 400px 時時間不顯示星期（`day.js` 的 `ctaFor`，`day.css` 的 `.top.has-home`、`.home-btn`；文章頁在 `site.css` 的 `.post-when`、`.post-home`） |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
+| `checkin` 分支 | Action 每次打卡都整個覆寫，只有一個 commit、一個 `location.json`。不要手動改，也不要合併進 `main` |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
 | 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`CLAUDE.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
 | 文章網址 | `published/2026-10-29-題目.md` → `/published/2026-10-29-題目.html`。改檔名會改網址，舊連結會失效 |
@@ -123,9 +125,9 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|---|---|
 | 自我介紹 | `assets/js/day.js` 的 `BIO` | `Yen decides what gets built, then builds some of it. Writes about how those decisions get made.` | 今天的建築底下用它；terminal 的 `whoami` 把開頭的 Yen 換成「Yen Lai, product manager,」。一起改：首頁分享卡片文字（`scripts/og/build.js`，卡片上用第一人稱「I decide…」；push 後 Action 會重畫卡片）、首頁搜尋摘要（`_config.yml` 的 `description`）、職稱（`_includes/seo.html` 的 `jobTitle`） |
 | 社群連結 | `assets/js/day.js` 的 `whoami` | github、linkedin、x | 首頁不直接放連結，要執行 `whoami` 才看得到。一起改：`_includes/seo.html` 的 `sameAs`；X 帳號另有 `_config.yml` 的 `author.twitter` |
-| 平日／假日 | `assets/js/scenes.js` 的 `HOLIDAYS` | 週六日和固定日期的國定假日（元旦、228、兒童節、勞動節、國慶）是「家」，其他是「工作室」 | 分享卡片也照這個規則選建築。農曆假日（春節、清明、端午、中秋）每年日期不同，要每年補進 `HOLIDAYS` |
+| 今天的建築（家／辦公室） | `assets/js/day.js` 的 `todayScene`；固定日期的假日在 `assets/js/scenes.js` 的 `HOLIDAYS` | 1. 今天在辦公室打過卡 → 辦公室（週末補班也是）。2. 週末和 `HOLIDAYS`（元旦、228、兒童節、勞動節、教師節、國慶、光復節、行憲紀念日）→ 家。3. 其他平日：12:00 前是辦公室；12:00 起，打卡有在用（14 天內打過卡）但今天沒在辦公室打卡 → 家（`DAY_OFF_FROM`、`CHECKINS_ON`） | 農曆假日、請假、補班都不用改程式，靠打卡。分享卡片不看打卡，只照週末和 `HOLIDAYS` |
 | 所在城市 | `assets/js/sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、首頁和文章頁的背景顏色、影子方向。出國時只要改這裡，首頁和文章頁的時間、提示字 `yen@taipei` 都會跟著變 |
-| 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | `CHECKIN` 之後會接自動打卡（見第 4 節） |
+| 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY` | 平日：00–07 asleep、07–09 on the way to the office、09–12 at the office、12–13:30 lunch、13:30–18:30 at the office、18:30–19:30 on the way home、之後 at home；假日另一張表 | 6 小時內的打卡優先（`CHECKIN_FRESH`），說「Yen is {label}, Taipei. Checked in at HH:MM.」；沒有才用作息表。今天是家的日子就用假日那張表 |
 | terminal 按鈕 | `assets/js/day.js` 的 `CHIPS`、`placeBar`；樣式在 `assets/css/day.css` 的 `.cmdbar` | `$`、About Yen、Notes、Work、Where's Yen、Clear | 整個首頁只有這一排。寬螢幕（≥ 900px）：一開始在今天的說明下面（`_layouts/home.html` 的 `#barSlot`），往下捲到 terminal 時滑進 terminal、貼在輸入框下面，捲回去再滑回來。手機：一直固定在畫面底部。沒有分隔線；按鈕是毛玻璃（和頂部卡片同一組 `--glass` 設定），底下只留一層淡淡的漸層，捲過去的內容看得到、但會模糊。只在 Timeline、作品頁打開時隱藏。點了分三拍：先把這一行捲到日期卡片正下方、停穩，再帶著游標一個字一個字打出指令、停一下像按了 Enter，最後輸出一列一列淡入（`day.js` 的 `run`、`focusLine`、`reveal`；頁面不夠長時 terminal 下方會自動留白；系統設定「減少動態效果」時直接顯示）。清單裡點一列（`open works/…`）會立刻打開，不打字；點 `$` 也會把輸入框捲到那裡。放不下時可以左右滑，右邊會淡出提示。可輸入的指令在 `COMMANDS`。`clear` 會清空 terminal 並捲回頂端（在 `run` 裡） |
 | 瀏覽器分頁標題 | `index.md` 的 `title` | `hey, I'm Yen` | |
 
@@ -201,7 +203,6 @@ flowchart TD
 ```
 
 - 改了 `card.html` 或畫建築的程式（`assets/js/sky.js`、`pixel-engine.js`、`scenes.js`），所有卡片都會重畫；`og.yml` 也會因為這些檔案的改動而執行。新文章的卡片產生前，先用 `home.jpg`。
-- 目前的三張卡片是手動產生後 commit 的，Action 還沒有自己 commit 過卡片。第一篇新文章 push 後，到 GitHub → Actions 確認它有執行成功。
 - 也可以在 GitHub → Actions → Share cards → **Run workflow** 手動執行。
 - 本機執行：
 
@@ -237,6 +238,45 @@ jekyll serve
 
 輸出在 `_site/`（已在 `.gitignore`）。
 
+### 3.5 打卡（自動）
+
+```mermaid
+flowchart LR
+  A["iPhone 捷徑<br/>抵達辦公室／家、或手動"] -- "POST（place、label）" --> W["checkin.yml"]
+  W --> U["scripts/checkin/update.js<br/>寫出 location.json"]
+  U --> B["整個覆寫 checkin 分支<br/>（只有一個 commit）"]
+  B --> H["首頁讀 raw.githubusercontent.com<br/>（約 5 分鐘內看到；開著的頁面每 10 分鐘再讀一次）"]
+```
+
+`location.json` 只有文字，沒有座標：
+
+| 欄位 | 內容 |
+|---|---|
+| `place` | `home`、`office`、`out` |
+| `label` | 首頁說的話，接在「Yen is」後面，例如 `at a café in Daan`。沒填就用 `at home`、`at the office`、`out somewhere in the city`（`update.js` 的 `LABELS`，最多 60 字） |
+| `at` | 打卡時間（UTC） |
+| `office_at` | 最近一次在辦公室打卡的時間，每次打卡都會保留。首頁用它判斷今天是不是辦公室（見 2.4） |
+
+**第一次設定（只做一次）：**
+
+1. **Token**：GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token。
+   - Repository access：Only select repositories → `laiyenju.github.io`
+   - Permissions：**Actions → Read and write**（只能觸發 Action，不能改程式碼）
+   - Expiration：1 年。到期後打卡會失效，14 天後首頁自動回到作息表和日曆；換一個新 token 貼進捷徑就好。
+2. **捷徑「打卡」**：新增一個捷徑，加入「取得 URL 內容」（Get Contents of URL）：
+   - URL：`https://api.github.com/repos/laiyenju/laiyenju.github.io/actions/workflows/checkin.yml/dispatches`
+   - 方法：`POST`
+   - 標頭：`Authorization` = `Bearer <token>`、`Accept` = `application/vnd.github+json`
+   - 要求本文：JSON，`ref` = `main`；`inputs`（辭典）：`place` = `office`（或 `home`、`out`），`label` = 空白或自己寫的字
+   - 成功時 GitHub 不回任何內容（204）。
+3. **自動化**：捷徑 App → 自動化 → 新增：
+   - 「抵達」辦公室 → 執行 `place` = `office` 的捷徑
+   - 「抵達」家 → 執行 `place` = `home` 的捷徑
+   - 兩個都選「立即執行」，不用每次確認。
+4. **出門在外（手動，可選）**：再做一個捷徑，先「要求輸入」文字當 `label`，`place` = `out`。
+
+不用手機時：GitHub（網頁或 App）→ Actions → **Check in** → Run workflow，選 `place`、填 `label`。
+
 ---
 
 ## 4. 待處理
@@ -245,5 +285,3 @@ jekyll serve
 |---|------|------|------|
 | 1 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡 | 第一篇正式文章上線後刪除 |
 | 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample*.svg`（三張） | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
-| 3 | 「Where is Yen now」的自動打卡 | 目前只用作息表推算（`day.js` 的 `CHECKIN` 是 `null`） | 網站穩定後再設定 iPhone 捷徑：抵達或離開時更新一個只有文字標籤的檔案 |
-| 4 | 農曆國定假日 | `HOLIDAYS` 只有固定日期的假日 | 每年補一次 |

@@ -2,8 +2,10 @@
    Shared by the home page (assets/js/day.js) and the share cards (scripts/og/card.html).
    Needs assets/js/sky.js and assets/js/pixel-engine.js, loaded first. */
 'use strict';
-// rest days: weekends and these fixed-date public holidays are "home", other days "the office" (README 2.4)
-const HOLIDAYS = { '01-01': "New Year's Day", '02-28': 'Peace Memorial Day', '04-04': "Children's Day", '05-01': 'Labor Day', '10-10': 'National Day' };
+// rest days: weekends and these fixed-date public holidays are "home", other days "the office" (README 2.4).
+// Only the fixed dates: on the homepage, check-ins cover the rest (lunar holidays, days off, make-up workdays).
+const HOLIDAYS = { '01-01': "New Year's Day", '02-28': 'Peace Memorial Day', '04-04': "Children's Day", '05-01': 'Labor Day',
+  '09-28': "Teachers' Day", '10-10': 'National Day', '10-25': 'Retrocession Day', '12-25': 'Constitution Day' };
 /* ================= sun & light =================
    The sun and the page colour come from assets/js/sky.js (the notes use them too). */
 const sunAt = ms => siteSky.sunAt(ms);
