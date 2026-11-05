@@ -19,13 +19,16 @@
   --shrink: 38svh;
   /* frosted glass for what floats over the page (the date card, its buttons, the command bar): the page shows
      through, blurred, so you can still tell what scrolls behind it. Flat: no border, no shine, no drop shadow.
-     What you can press has colour, what you only read has almost none: a button is the glass with a little ink in
-     it (--btn), so it reads as a piece even on a white noon sky; the date card is a fainter glass (--card-glass). */
+     Every piece is see-through glass, about half opaque, so what passes under it shows blurred. On an empty sky the
+     card and the buttons are still pieces you can see: each has a little ink in it. What you can press has more
+     (--btn, about 16%), the date card you only read has less and more of the sky's lifted colour (--card-glass, 5% ink on a
+     half-opaque glass), so on a dusk sky the card is lighter than the page and the buttons darker. */
   --glass: color-mix(in srgb, var(--sheet) 62%, transparent);
-  --btn: color-mix(in srgb, var(--ink) 12%, var(--glass));
-  --btn-hover: color-mix(in srgb, var(--ink) 18%, var(--glass));
-  --card-glass: color-mix(in srgb, var(--sheet) 18%, transparent);
-  --glass-blur: blur(14px) saturate(1.5);
+  --glass-thin: color-mix(in srgb, var(--sheet) 40%, transparent);
+  --btn: color-mix(in srgb, var(--ink) 16%, var(--glass-thin));
+  --btn-hover: color-mix(in srgb, var(--ink) 22%, var(--glass-thin));
+  --card-glass: color-mix(in srgb, var(--ink) 5%, color-mix(in srgb, var(--sheet) 50%, transparent));
+  --glass-blur: blur(16px) saturate(1.6);
 }
 [hidden] { display: none !important; }
 *, *::before, *::after { box-sizing: border-box; }
