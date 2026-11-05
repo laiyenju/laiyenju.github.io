@@ -333,4 +333,17 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
   /* scrolling down to the terminal: today's words fade, the building moves to the middle (--dx and --q in day.js onScroll) */
   .caption > :not(.bar-slot), .tools { opacity: calc(1 - var(--q, 0) * 1.6); }
   .words-off .caption, .words-off .tools { pointer-events: none; }
+  /* one block in the middle of the screen: the date card rests just above the building (--lift, day.js sizeStage)
+     and glides up to the top edge as the page scrolls to the terminal (--q) */
+  .hero-inner { padding-top: calc(76px + var(--lift, 0px)); }
+  .top { transform: translateY(calc(var(--lift, 0px) * (1 - var(--q, 0)))); }
+  body:has(#tl:not([hidden])) .top { transform: translateY(var(--tl-lift)); }
+  body.tl-in .top, body:has(#reader:not([hidden])) .top { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+  body:has(#reader:not([hidden])) .top { transform: none; }
+  /* the timeline: one block too (card, building, name, ruler), in the middle of the screen; the ruler sits right under
+     the words, not at the bottom edge. --tl-h: the building's box; 250px: the card's row, the words and the ruler. */
+  :root { --tl-h: clamp(300px, calc(100svh - 330px), 560px); --tl-lift: max(0px, calc((100svh - var(--tl-h) - 250px) / 2)); }
+  .tlm { padding-top: calc(92px + var(--tl-lift)); padding-bottom: 0; }
+  .tl-stage { height: var(--tl-h); }
+  .ruler { bottom: var(--tl-lift); background: none; padding-bottom: 12px; }
 }

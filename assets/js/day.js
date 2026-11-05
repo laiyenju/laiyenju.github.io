@@ -94,8 +94,16 @@ let STAGE = { w: 300, h: 300 };
 function sizeStage() {
   const wide = innerWidth >= 900;
   let h, lift = 0;
-  if (wide) h = Math.round(cl(innerHeight - 76 - 32, 260, 820));
-  else {
+  if (wide) {
+    // wide screens: the stage is only as tall as a building needs at this width, and the date card, the building
+    // and its words sit together as one block in the middle of the screen (--lift: the room above the block).
+    // The timeline uses the same --lift, so the card stays where it is between the two.
+    const w = Math.round(group.clientWidth * .6);
+    h = Math.round(cl(Math.min(innerHeight - 76 - 32, w * .82), 260, 720));
+    const free = Math.max(0, Math.round((innerHeight - (76 + h + 32)) / 2));
+    document.documentElement.style.setProperty('--lift', free + 'px');
+  } else {
+    document.documentElement.style.removeProperty('--lift');
     // phones: the building always gets 60% of the screen height, the same size whether or not the day has other years
     // (the thumbnail row) or a long sentence: those may run below the first screen, the page scrolls.
     // When the words do fit, the space left is split above and below, so the building and its words stay together.
@@ -427,7 +435,8 @@ function roomBelow(target, hold) {
   if (hold && Math.abs(scrollY - target) > 1 && Math.abs(scrollY - target) < innerHeight) scrollTo({ top: target, behavior: 'instant' });
 }
 function focusLine(block, now) {
-  const below = document.querySelector('.top').getBoundingClientRect().bottom + 20;
+  // the card's height as it sits at the very top (on wide screens it rests lower only before the page scrolls)
+  const below = document.querySelector('.top').offsetHeight + 20;
   FOCUS.at = Math.max(0, Math.round(scrollY + block.getBoundingClientRect().top - below));
   roomBelow(FOCUS.at);
   scrollTo({ top: FOCUS.at, behavior: now || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
