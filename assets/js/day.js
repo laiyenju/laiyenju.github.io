@@ -97,30 +97,31 @@ function sizeStage() {
   const words = $('group').querySelector('.tools').offsetHeight + $('group').querySelector('.caption').offsetHeight;
   if (wide) {
     // wide screens: the phone's stack (building, words) under the date card. The building takes what the card's
-    // row (--card-top + the card, day.css), the words and a 32px bottom margin leave, between 260 and 640px; any room
-    // left is split above and below, so the building and its words sit in the middle of the screen under the card.
+    // row (--card-top + the card, day.css), the words and a 32px bottom margin leave, between 260 and 760px (as large
+    // as the screen allows, so the moving details are easy to see); any room left is split above and below, so the
+    // building and its words sit in the middle of the screen under the card.
     const room = innerHeight - (document.querySelector('.top').offsetHeight + 4) - 32 - words;
-    h = Math.round(cl(room, 260, 640));
+    h = Math.round(cl(room, 260, 760));
     lift = Math.max(0, Math.round((room - h) / 2));
   } else {
     // phones: the building always gets 60% of the screen height, the same size whether or not the day has other years
-    // (the thumbnail row) or a long sentence: those may run below the first screen, the page scrolls.
+    // (the thumbnail row) or a long sentence: those may run below the first screen, the page scrolls. No taller than
+    // 1.25x the screen's width, though: the width is what limits a building on a phone, and a taller box only leaves
+    // empty room above it, under the date card.
     // When the words do fit, the space left is split above and below, so the building and its words stay together.
     const room = innerHeight - 76 - $('cmdbar').offsetHeight;
-    h = Math.round(cl(innerHeight * .6, 200, 620));
+    h = Math.round(cl(Math.min(innerHeight * .6, group.clientWidth * 1.25), 200, 620));
     lift = Math.max(0, Math.round((room - (words + 8 + 12) - h) / 2));
   }
   STAGE = { w: wide ? Math.min(group.clientWidth, 900) : group.clientWidth, h };
   stage.style.width = STAGE.w + 'px'; stage.style.height = STAGE.h + 'px';
   group.style.paddingTop = lift ? lift + 'px' : '';
-  // wide screens: the timeline puts its building in this same box (--stage-top/-w/-h, day.css), so going in and out
-  // the building stays where it is, the same size; only the words around it change
+  // the timeline's box is this one, a little smaller (--tl-k, day.css), from the same top: on every screen the
+  // building shrinks a little going in, towards its top, so the room under the date card does not grow
   const root = document.documentElement.style;
-  if (wide) {
-    let top = 0; // from the layout, not the screen: the stage shrinks a little as the page scrolls (--p)
-    for (let e = stage; e; e = e.offsetParent) top += e.offsetTop;
-    root.setProperty('--stage-top', top + 'px'); root.setProperty('--stage-w', STAGE.w + 'px'); root.setProperty('--stage-h', STAGE.h + 'px');
-  } else ['--stage-top', '--stage-w', '--stage-h'].forEach(v => root.removeProperty(v));
+  let top = 0; // from the layout, not the screen: the stage shrinks a little as the page scrolls (--p)
+  for (let e = stage; e; e = e.offsetParent) top += e.offsetTop;
+  root.setProperty('--stage-top', top + 'px'); root.setProperty('--stage-w', STAGE.w + 'px'); root.setProperty('--stage-h', STAGE.h + 'px');
 }
 const disp = document.createElement('canvas');
 disp.className = 'bld';
@@ -134,7 +135,7 @@ function fitCanvas(w) {
   if (disp.width !== w.view.width || disp.height !== w.view.height) { disp.width = w.view.width; disp.height = w.view.height; }
   // sized and placed by the building alone; negative margins let the shadow spill past the stage, uncut
   const [, , iw, ih] = innerOf(w), [t, r, b, l] = w.pad;
-  const f = wholePixels(Math.max(.4, Math.min(STAGE.w / iw, STAGE.h / ih, 4.4) * .97));
+  const f = homeScale(iw, ih);
   disp.style.width = Math.round(disp.width * f) + 'px'; disp.style.height = Math.round(disp.height * f) + 'px';
   disp.style.margin = `${-t * f}px ${-r * f}px ${-b * f}px ${-l * f}px`;
   placePlate(w, f);
@@ -219,16 +220,21 @@ function placePlate(w = mainWorld, f) {
 }
 // into the timeline: the platform is drawn into the building's middle, faster and faster, like dust into a vacuum.
 // It goes as a ghost above the timeline as it comes in (the home page goes under it), and stays away until we are back.
-function suckPlate(ms) {
+// to: where the building's own box goes in the timeline (its rect there), from: where it is now; the platform's
+// middle follows the building there as it shrinks, so it is drawn into the building wherever the building goes
+function suckPlate(ms, from, to) {
   if (plate.hidden || plate.style.visibility === 'hidden') return;
   const r = plate.getBoundingClientRect(), gh = plate.cloneNode(false);
+  const [ox, oy] = plate.style.transformOrigin.split(' ').map(parseFloat), cx = r.left + ox, cy = r.top + oy;
+  const k = from && to && from.width ? to.width / from.width : 1;
+  const dx = from && to ? to.left + (cx - from.left) * k - cx : 0, dy = from && to ? to.top + (cy - from.top) * k - cy : 0;
   gh.getContext('2d').drawImage(plate, 0, 0);
   gh.className = 'ghost';
   Object.assign(gh.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', transformOrigin: plate.style.transformOrigin, margin: 0 });
   document.body.insertBefore(gh, document.querySelector('.ghost'));
   plate.style.visibility = 'hidden';
   if (still()) { gh.remove(); return; }
-  gh.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0)', opacity: .3 }], { duration: ms, easing: 'cubic-bezier(.6, 0, .9, .3)', fill: 'forwards' })
+  gh.animate([{ transform: 'translate(0, 0) scale(1)', opacity: 1 }, { transform: `translate(${dx}px, ${dy}px) scale(0)`, opacity: .3 }], { duration: ms, easing: 'cubic-bezier(.6, 0, .9, .3)', fill: 'forwards' })
     .finished.then(() => gh.remove(), () => gh.remove());
 }
 // back on the home page: it comes out of the building again, slowing as it reaches its edges
@@ -238,10 +244,13 @@ function unrollPlate(ms) {
   if (!still() && !plate.hidden) plate.animate([{ transform: 'scale(0)', opacity: .3 }, { transform: 'scale(1)', opacity: 1 }], { duration: ms, easing: 'cubic-bezier(.2, .8, .2, 1)' });
 }
 // whole screen pixels per model pixel: an in-between scale makes some pixels one wider than the next, and the
-// building's outline turns ragged. Rounds to the nearest whole step, never more than 12% larger than asked.
+// building's outline turns ragged. Rounds to the nearest whole step, never more than 12% larger than asked; and never
+// more than a fifth smaller (on a 1x screen 1.9 would fall to 1): then the asked scale is kept as it is.
 function wholePixels(f) {
   const dpr = window.devicePixelRatio || 1, k = f * dpr;
-  return k < 1.5 ? f : (Math.round(k) <= k * 1.12 ? Math.round(k) : Math.floor(k)) / dpr;
+  if (k < 1.5) return f;
+  const r = Math.round(k) <= k * 1.12 ? Math.round(k) : Math.floor(k);
+  return r / k < .8 ? f : r / dpr;
 }
 // the building part of what is on screen now, as its own picture and place (for the timeline's fly-in and fly-out)
 function dispInner() {
@@ -809,11 +818,15 @@ function buildUp(cv, img, ms, token) {
     requestAnimationFrame(tick);
   });
 }
-// the timeline building's scale. Wide screens: the same as the home page (fitCanvas), in the same box, so the building
-// does not change size between the two; phones: a little smaller, under the date card
+// the home page's building: as large as its box allows (up to 4.4x), so the moving details are easy to see
+function homeScale(w, h) { return wholePixels(Math.max(.4, Math.min(STAGE.w / w, STAGE.h / h, 4.4) * .97)); }
+// the timeline's: the same building a little smaller (TL_K of the home page's size, on every screen). Whole pixels
+// when they stay between 75% and 90% of it; otherwise (a 1x screen: 3x would fall to 2x) exactly TL_K.
+const TL_K = .85;
+document.documentElement.style.setProperty('--tl-k', TL_K); // the timeline's box, made smaller the same way (day.css)
 function tlScale(w, h) {
-  const st = $('tlStage'), wide = innerWidth >= 900;
-  return wholePixels(Math.max(.4, Math.min(st.clientWidth / w, st.clientHeight / h, wide ? 4.4 : 3.2) * (wide ? .97 : .86)));
+  const f = homeScale(w, h), t = f * TL_K, s = wholePixels(t);
+  return s <= f * .9 && s >= f * .75 ? s : t;
 }
 function fitTl(cv) {
   const f = tlScale(cv.width, cv.height);
@@ -930,8 +943,8 @@ function openTl(date) {
   if (!fly) plate.style.visibility = 'hidden'; // under the timeline anyway; it comes back out when we leave
   showTlDay(k, true).then(() => {
     if (!fly) return;
-    suckPlate(Math.round(MOVE * .8));
     const cv = $('tlc'), tlRect = cv.getBoundingClientRect(), g = ghostOf(fly.img, rectLike(fly.img, cv, tlRect));
+    suckPlate(Math.round(MOVE * .8), fly.rect, tlRect);
     const homeRectForTl = rectLike(cv, fly.img, fly.rect);
     disp.style.opacity = '0'; // the homepage copy would show through while the page fades in
     setTimeout(() => { disp.style.opacity = ''; }, MOVE + 60);
