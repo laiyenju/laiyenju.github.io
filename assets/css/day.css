@@ -17,10 +17,14 @@
   --sans: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   --p: 0;
   --shrink: 38svh;
-  /* frosted glass for the buttons that float over the page (the date card, Home, the command bar):
-     the page shows through, blurred, so you can still tell what scrolls behind them. Flat: one thin border,
-     no shine along the top and no drop shadow */
+  /* frosted glass for what floats over the page (the date card, its buttons, the command bar): the page shows
+     through, blurred, so you can still tell what scrolls behind it. Flat: no border, no shine, no drop shadow.
+     What you can press has colour, what you only read has almost none: a button is the glass with a little ink in
+     it (--btn), so it reads as a piece even on a white noon sky; the date card is a fainter glass (--card-glass). */
   --glass: color-mix(in srgb, var(--sheet) 62%, transparent);
+  --btn: color-mix(in srgb, var(--ink) 12%, var(--glass));
+  --btn-hover: color-mix(in srgb, var(--ink) 18%, var(--glass));
+  --card-glass: color-mix(in srgb, var(--sheet) 18%, transparent);
   --glass-blur: blur(14px) saturate(1.5);
 }
 [hidden] { display: none !important; }
@@ -64,10 +68,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 @media (min-width: 900px) { :root { --card-top: clamp(28px, 9svh, 96px); } }
 .top-row { display: flex; gap: 8px; width: var(--card-w); margin: 0 auto; }
 .when, .top-btn {
-  height: 50px; border: 1px solid var(--rule); border-radius: 12px;
-  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  transition: border-color .15s ease, transform .15s ease, background-color 1.2s ease;
+  height: 50px; border: 0; border-radius: 12px;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  transition: transform .15s ease, background-color .15s ease;
 }
+.when { background: var(--card-glass); }
+.top-btn { background: var(--btn); }
 .when { display: flex; align-items: center; flex: 1; min-width: 0; padding: 6px 12px; }
 .when .txt { display: grid; line-height: 1.3; text-align: center; flex: 1; min-width: 0; }
 .when b { font: 500 var(--card-title)/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; }
@@ -75,7 +81,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .when .txt > span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: var(--card-sub); overflow: hidden; text-overflow: ellipsis; }
 .top-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px;
   color: var(--ink); font: 500 12px/1 var(--mono); white-space: nowrap; }
-.top-btn:hover { border-color: var(--ink-soft); }
+.top-btn:hover { background: var(--btn-hover); }
 .top-btn:active { transform: scale(.96); }
 .top-btn svg { width: 12px; height: 12px; flex: none; }
 .home-btn { width: 50px; padding: 0; }
@@ -198,10 +204,10 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 }
 .cmdbar::-webkit-scrollbar { display: none; }
 .cmdbar.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
-.cmdbar button { flex: none; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono);
-  background: var(--glass); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
-.cmdbar button:hover { border-color: var(--ink-soft); }
-.cmdbar .dollar { border-color: transparent; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; color: var(--accent); padding-inline: 4px; }
+.cmdbar button { flex: none; border: 0; border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono);
+  background: var(--btn); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); transition: background-color .15s ease; }
+.cmdbar button:hover { background: var(--btn-hover); }
+.cmdbar .dollar { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; color: var(--accent); padding-inline: 4px; }
 /* no divider and no solid band: the buttons are glass and float on the page, so what scrolls under them shows through,
    blurred. A light veil at the very bottom keeps the words from running straight into the buttons. */
 .term .cmdbar {
@@ -223,7 +229,7 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
   .bar-slot .cmdbar { margin-top: 14px; overflow: visible; flex-wrap: wrap; }
   .bar-slot .cmdbar .dollar { padding-left: 0; }
 }
-.cmdbar button:active { border-color: var(--accent); color: var(--accent); }
+.cmdbar button:active { color: var(--accent); }
 /* notes and works: one list. Date | title, a quieter line under the title, a rule between rows. All in the terminal's font. */
 .ls { display: grid; }
 .ls a, .ls button { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: baseline;
