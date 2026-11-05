@@ -26,12 +26,12 @@ function fromDayMs(ms) { const d = new Date(ms); return { y: d.getUTCFullYear(),
 const REAL = taipeiParts(Date.now());
 const REAL_DAY = dayMs(REAL.y, REAL.m, REAL.d);
 const REAL_MD = pad(REAL.m) + '-' + pad(REAL.d);
-/* Places (_data/days.yml). The sentence under each building is written by one rule (sentenceFor):
-     "{N years ago}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]"
+/* Places (_data/days.yml). Under each building: when (whenTag), the name, where (placeFor) and one sentence
+   (sentenceFor): "Yen {did}[ with {with}].[ {extra}]". No date or "years ago" in the sentence: the line above says it.
    Required: date, scene, name, zh (Chinese name; no_zh: true leaves it out), place, did.
-   Optional: prep (default "in"), with, extra, map, country (default "Japan"). */
+   Optional: with, extra, map, country (default "Japan"). */
 const MEMORIES = (SITE.days || []).map(d => ({ date: String(d.date), scene: d.scene, name: d.name, zh: d.zh, noZh: !!d.no_zh,
-  place: d.place, prep: d.prep, did: d.did, with: d.with, extra: d.extra, map: d.map, country: d.country }));
+  place: d.place, did: d.did, with: d.with, extra: d.extra, map: d.map, country: d.country }));
 // a day can have more than one building: the first keeps the date as its id, the next ones get date-2, date-3 …
 { const seen = {}; for (const m of MEMORIES) { seen[m.date] = (seen[m.date] || 0) + 1; m.id = seen[m.date] > 1 ? `${m.date}-${seen[m.date]}` : m.date; } }
 const byDate = (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
@@ -44,12 +44,17 @@ function checkMemory(m) {
   if (missing.length) console.warn(`Memory "${m.name || m.date}" is missing: ${missing.join(', ')}`);
   return !missing.length;
 }
-// returns HTML: the place becomes a Google Maps link
-function sentenceFor(m, years) {
-  const esc = escHtml;
-  const map = `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.map || m.name + ', ' + m.place)}" target="_blank" rel="noopener">${esc(m.place)} ↗</a>`;
-  const withWho = m.with ? ` with ${esc(listOf(m.with))}` : '';
-  return `${ago(years)}, ${m.prep || 'in'} ${map}, Yen ${esc(m.did)}${withWho}.` + (m.extra ? ' ' + esc(m.extra) : '');
+/* Each fact is said once, in one place: when (the accent line above the title, or the date card in the timeline),
+   what (the title), where (the line under it, a Google Maps link) and what happened (the sentence). */
+function placeFor(m) {
+  return `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.map || m.name + ', ' + m.place)}" target="_blank" rel="noopener">${escHtml(m.place)} ↗</a>`;
+}
+// "Seven years ago · January 22, 2019": the one place a past building says when
+function whenTag(date, nowY) { const d = parseDay(date); return `${ago(nowY - d.y)} · ${LONG_MON[d.m - 1]} ${d.d}, ${d.y}`; }
+// "Yen {did}[ with {with}].[ {extra}]" (HTML)
+function sentenceFor(m) {
+  const withWho = m.with ? ` with ${escHtml(listOf(m.with))}` : '';
+  return `Yen ${escHtml(m.did)}${withWho}.` + (m.extra ? ' ' + escHtml(m.extra) : '');
 }
 // small things (a Shiba on a walk…): each shows for seven days from its date
 const LITTLE = (SITE.little || []).map(l => { const [y, m, d] = String(l.date).split('-').map(Number); return { day: dayMs(y, m, d), kind: l.kind, text: l.text }; });
@@ -845,14 +850,15 @@ function buildItems() {
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
     .sort(byDate).map(m => {
       const year = +m.date.slice(0, 4);
-      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: '', html: sentenceFor(m, dd.y - year) };
+      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), pastView: true, tag: whenTag(m.date, dd.y), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: placeFor(m), html: sentenceFor(m) };
     });
   const day = r.holiday || (r.rest ? 'Weekend' : 'Weekday');
   items.push({
     scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
     name: base === 'home' ? 'Yen is at home today.' : 'Yen is at the office today.',
     place: base === 'home' ? 'home' : 'the office',
-    meta: `${day} · ${CITY.name}`,
+    // the date card already says the weekday and the city: only a holiday's name is news here
+    meta: r.holiday ? escHtml(r.holiday) : '',
     note: BIO + (extra ? ' ' + extra : ''),
   });
   state.items = items; state.index = items.length - 1;
@@ -947,7 +953,7 @@ function renderText() {
   const dd = fromDayMs(state.day), it = state.items[state.index];
   if (document.getElementById('tl').hidden) dialTo(todayISO(), `${LONG_DAY[dd.wd]} · ${CITY.name}`, true);
   $('capName').textContent = it.name; $('capName').classList.toggle('past', !it.about && !it.main);
-  $('capMeta').textContent = it.meta; $('capMeta').hidden = !it.meta;
+  $('capMeta').innerHTML = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
 }
@@ -1017,9 +1023,9 @@ function renderPast(date) {
   const same = MEMORIES.filter(o => o.date.slice(5) === md && o.date <= date && checkMemory(o)).sort(byDate);
   state.items = same.map(o => {
     const y = +o.date.slice(0, 4), main = o.id === id;
-    return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: main,
-      tag: `${ago(now - d.y)} · ${LONG_MON[d.m - 1]} ${d.d}, ${d.y}`,
-      name: o.zh && !o.noZh ? `${o.name}\u00a0· ${o.zh}` : o.name, meta: '', html: sentenceFor(o, now - y) };
+    return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: true,
+      tag: whenTag(o.date, now),
+      name: o.zh && !o.noZh ? `${o.name}\u00a0· ${o.zh}` : o.name, meta: placeFor(o), html: sentenceFor(o) };
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
   renderText(); renderThumbs(); sizeStage(); mount(false);
@@ -1302,16 +1308,11 @@ const LONG_MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July'
 const LONG_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const parseDay = d => { const [y, m, dd] = d.split('-').map(Number); return fromDayMs(dayMs(y, m, dd)); };
 const todayISO = () => { const d = fromDayMs(state.day); return `${d.y}-${pad(d.m)}-${pad(d.d)}`; };
-// the sentence without "N years ago": used in the timeline, where the date is already shown
-function plainSentence(m) {
-  const html = sentenceFor(m, 1).replace(/^A year ago, /, '');
-  return html.charAt(0).toUpperCase() + html.slice(1);
-}
 function timelineEntries() {
   const today = state.items[state.items.length - 1];
   const past = MEMORIES.filter(m => m.date < todayISO() && checkMemory(m)).sort(byDate).reverse();
-  return [{ date: todayISO(), id: todayISO(), today: true, scene: today.scene, opts: today.opts, name: today.name, html: escHtml(today.meta) }]
-    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, html: plainSentence(m) })));
+  return [{ date: todayISO(), id: todayISO(), today: true, scene: today.scene, opts: today.opts, name: today.name, html: today.meta }]
+    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, html: sentenceFor(m) })));
 }
 /* ---------- timeline mode ----------
    Days go left (oldest) to right (today), like the homepage. Changing day: the building
@@ -1327,8 +1328,10 @@ function pureImage(x) {
 }
 // header date as a dial: each digit is a strip 0–9 that slides to its number
 // sub: the line under the date; live: end it with the time now, to the second (siteSky.rollClock, ticked by secondTick)
-function dialTo(iso, sub, live = false) {
+// past: a day gone by (the timeline), written in the accent like the line above a past building (.past-tag)
+function dialTo(iso, sub, live = false, past = false) {
   const el = $('date'), text = iso.replace(/-/g, '.');
+  $('whenBtn').classList.toggle('is-past-day', past);
   if (!el.querySelector('.dial') || el.querySelector('.dial').children.length !== text.length) {
     el.innerHTML = `<span class="dial">${[...text].map(ch => /\d/.test(ch)
       ? `<span class="dg"><span class="strip">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span>${ch}</span>`).join('')}</span>`;
@@ -1458,7 +1461,7 @@ async function showTlDay(k, first, fromP = 0, instant = false) {
   try { history.replaceState(null, '', '#day-' + x.id); } catch (e) {}
   markRuler();
   $('tlCap').classList.add('hide');
-  dialTo(x.date, `${LONG_DAY[d.wd]} · ${years > 0 ? ago(years).toLowerCase() : 'today'}`);
+  dialTo(x.date, `${LONG_DAY[d.wd]} · ${years > 0 ? ago(years).toLowerCase() : 'today'}`, false, years > 0);
   cv.classList.add('snapback'); cv.style.transform = '';
   const img = tlImage(x);
   // quick chained swipes shorten the animation instead of queueing it

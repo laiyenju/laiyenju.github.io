@@ -89,7 +89,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 ### 2.3.1 去過的地方：`_data/days.yml`
 
-一筆是一天、一棟建築。建築底下的句子由同一條規則組出來：`{幾年前}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]`
+一筆是一天、一棟建築。建築底下每件事只說一次：上面一行主題色的「幾年前・日期」（從 `date` 算，`day.js` 的 `whenTag`）、名稱、地點（Google Maps 連結，`placeFor`），最後一句由同一條規則組出來：`Yen {did}[ with {with}].[ {extra}]`（`sentenceFor`）。所以 `did` 只寫發生了什麼，不寫時間、地點，也不要再寫一次建築名稱（標題已經有）
 
 | 欄位 | 必填 | 說明 |
 |---|---|---|
@@ -99,7 +99,6 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `zh` | 是 | 中文名稱。不要中文時改寫 `no_zh: true` |
 | `place` | 是 | 城市或地區，例如 `Sangam, Seoul`，會變成 Google Maps 連結 |
 | `did` | 是 | Yen 做了什麼，小寫開頭、不加句號 |
-| `prep` | 否 | `in`（預設）或 `on`（島） |
 | `with` | 否 | 同行者，一個人或一串 `[Mei, Ken]` |
 | `extra` | 否 | 補充一句 |
 | `map` | 否 | Google Maps 搜尋文字，預設用 `name, place` |

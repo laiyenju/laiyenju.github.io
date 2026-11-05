@@ -1,9 +1,11 @@
 # Places Yen has been. Each one is a building on the homepage (on the same month and day in later
-# years) and a day in the timeline. A day can have more than one building. The sentence under the building is made by one rule:
-#   "{N years ago}, {prep} {place}, Yen {did}[ with {with}].[ {extra}]"
+# years) and a day in the timeline. A day can have more than one building. Under the building, each fact once:
+#   when ("Seven years ago · January 22, 2019", from date), name, place (a map link), and one sentence:
+#   "Yen {did}[ with {with}].[ {extra}]"
+# So `did` says what happened, not when or where, and does not name the building again (the title does).
 # Required: date ("YYYY-MM-DD", in quotes), scene (a model in assets/js/day.js SCENES), name,
 #   zh (Chinese name; write no_zh: true to leave it out), place, did.
-# Optional: prep (default "in"), with (a name, or a list), extra (one short sentence),
+# Optional: with (a name, or a list), extra (one short sentence),
 #   map (search text for Google Maps), country (default "Japan").
 
 # USA, January 2019 (dates from the photos; on a day with several, in the order the photos were taken)
@@ -21,7 +23,7 @@
   no_zh: true
   place: Turtle Bay, New York
   country: USA
-  did: looked out over the East River from inside the United Nations
+  did: looked out over the East River from inside
   map: United Nations Headquarters, New York
 - date: "2019-01-26"
   scene: google
@@ -29,7 +31,8 @@
   no_zh: true
   place: Chelsea, New York
   country: USA
-  did: walked past the old Port of New York Authority building, Google's office now, early in the morning
+  did: walked past it early in the morning
+  extra: It was built for the Port of New York Authority; Google works there now.
   map: 111 8th Avenue, New York
 - date: "2019-01-26"
   scene: highline
@@ -37,7 +40,7 @@
   no_zh: true
   place: Chelsea, New York
   country: USA
-  did: walked the High Line in the early sun
+  did: walked the old rail line in the early sun
   map: The High Line, New York
 - date: "2019-01-26"
   scene: whitney
@@ -45,7 +48,7 @@
   no_zh: true
   place: Meatpacking District, New York
   country: USA
-  did: saw the Andy Warhol show at the Whitney
+  did: saw the Andy Warhol show
   map: Whitney Museum of American Art, New York
 - date: "2019-01-26"
   scene: nyt
@@ -53,7 +56,7 @@
   no_zh: true
   place: Midtown, New York
   country: USA
-  did: looked up at the ceramic rods of The New York Times Building
+  did: looked up at the ceramic rods that screen its glass
   map: The New York Times Building, New York
 - date: "2019-01-27"
   scene: capitol
@@ -61,7 +64,7 @@
   no_zh: true
   place: Washington, D.C.
   country: USA
-  did: looked out at the Capitol on a grey afternoon
+  did: looked out at the dome on a grey afternoon
   map: United States Capitol, Washington DC
 - date: "2019-01-28"
   scene: whitehouse
@@ -77,7 +80,7 @@
   no_zh: true
   place: Washington, D.C.
   country: USA
-  did: took a photo at the foot of the Washington Monument
+  did: took a photo at its foot
   with: three friends
   map: Washington Monument, Washington DC
 
@@ -87,7 +90,7 @@
   no_zh: true
   place: Washington, D.C.
   country: USA
-  did: watched the Washington Monument in the Reflecting Pool from the steps of the Lincoln Memorial
+  did: watched the Washington Monument in the Reflecting Pool from the steps
   with: three friends
   map: Lincoln Memorial, Washington DC
 

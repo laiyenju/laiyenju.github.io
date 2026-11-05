@@ -67,6 +67,9 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
 /* on the card (a lifted colour), so one step darker than other grey words to stay readable */
 .when .txt span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: 12px; }
 #clock { transition: opacity .25s ease; }
+/* the timeline on a past day: the date and its line in the accent, the same colour as the line above a past building */
+.when.is-past-day b, .when.is-past-day .txt span { color: var(--accent); }
+.when b, .when .txt span { transition: color .3s ease; }
 /* the live time in the date card: HH:MM:SS, each digit rolls (sky.js rollClock) */
 .roll { display: inline-flex; font-variant-numeric: tabular-nums; vertical-align: bottom; }
 .roll .rg { display: inline-block; height: 1.35em; line-height: 1.35em; overflow: hidden; }
