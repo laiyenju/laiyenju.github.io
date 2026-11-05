@@ -959,7 +959,7 @@ const logEl = $('log');
 document.querySelectorAll('.city').forEach(el => { el.textContent = CITY.short; }); // the input line's yen@<city>
 // notes and works share one list: date or year | title, then a short line under it (subtitle or description).
 // Each row carries its language, so Chinese titles get Chinese line breaking and spacing.
-const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" target="_blank" rel="noopener" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
+const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
 const line = (t, cls = '') => `<div class="out-line ${cls}">${esc(t)}</div>`;
 const COMMANDS = {
   'whoami': () => line(`Yen Lai. ${BIO}`) + `<div class="out-line mono"><a href="https://github.com/laiyenju" target="_blank" rel="noopener">github</a> · <a href="https://www.linkedin.com/in/laiyenju/" target="_blank" rel="noopener">linkedin</a> · <a href="https://x.com/theYenLai" target="_blank" rel="noopener">x</a></div>`,
@@ -1057,13 +1057,36 @@ function roomBelow(target, hold) {
   // once the output is in (hold), the view stays on the line, whatever the room did
   if (hold && Math.abs(scrollY - target) > 1 && Math.abs(scrollY - target) < innerHeight) scrollTo({ top: target, behavior: 'instant' });
 }
-function focusLine(block) {
+function focusLine(block, now) {
   const below = document.querySelector('.top').getBoundingClientRect().bottom + 20;
   FOCUS.at = Math.max(0, Math.round(scrollY + block.getBoundingClientRect().top - below));
   roomBelow(FOCUS.at);
-  scrollTo({ top: FOCUS.at, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  scrollTo({ top: FOCUS.at, behavior: now || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
-logEl.addEventListener('click', ev => { const b = ev.target.closest('[data-run]'); if (b) run(b.dataset.run, true); });
+logEl.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-run]'); if (b) { run(b.dataset.run, true); return; }
+  // a note from the list opens like a work: in this tab, at once (no typing on arrival), and the list is one step back
+  const a = ev.target.closest('.ls a[href]');
+  if (a && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && !ev.altKey && ev.button === 0) {
+    const path = new URL(a.href, location.href).pathname;
+    try { sessionStorage.setItem('post-handoff', path); sessionStorage.setItem('post-from-list', path); } catch (e) {}
+  }
+});
+// back from a note to the list (post.js leaves a note in post-return). Kept in memory by the browser: the list is
+// still there, so it comes back under the date card, as after a work. Reloaded instead: list the notes again.
+function backFromNote(kept) {
+  let r = null;
+  try { r = JSON.parse(sessionStorage.getItem('post-return') || 'null'); sessionStorage.removeItem('post-return'); } catch (e) {}
+  if (!r || !r.toList || Date.now() - r.t > 30 * 60e3 || new URLSearchParams(location.search).get('view')) return;
+  const list = kept && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls a[href]'));
+  if (list) { focusLine(list); return; } // as after a work: the list glides up under the date card
+  // the page was loaded afresh: put the list back as it was, at once (it was already printed once)
+  const block = document.createElement('div'); block.className = 'block';
+  block.innerHTML = prompt('ls notes') + COMMANDS['ls notes']();
+  logEl.append(block);
+  focusLine(block, true);
+}
+addEventListener('pageshow', e => backFromNote(e.persisted));
 // the buttons: one bar for the whole page (see placeBar). A button runs its command; run() brings the line into view.
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
 {
