@@ -120,7 +120,8 @@ body:has(#tl:not([hidden])) .when b { font-size: 19px; font-weight: 600; }
    It takes no taps (the stage does), and the words sit above it. */
 .stage canvas { pointer-events: none; }
 .tools, .caption { position: relative; z-index: 1; }
-.hero { overflow-x: clip; }
+/* the first screen is the building and its words only; the terminal starts below it (the buttons are enough to start) */
+.hero { overflow-x: clip; min-height: 100svh; box-sizing: border-box; }
 .stage canvas.out { transform: scale(.62); opacity: 0; }
 .stage canvas.in { transform: scale(.62); opacity: 0; transition: none; }
 .stage canvas.turn-out { transform: scaleX(.08); opacity: .4; }
@@ -249,8 +250,8 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 /* reading view for a work: a whole article, same look as the notes */
 .reader { position: fixed; inset: 0; z-index: 5; background: var(--bg); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; transition: background-color .45s ease; }
 .reader.clear { background-color: transparent; }
-#tl .tl-cap, #tl .ruler { transition: opacity .35s ease; }
-#tl.clear .tl-cap, #tl.clear .ruler { opacity: 0; }
+#tl .tl-cap, #tl .ruler, #tl .tl-row { transition: opacity .35s ease; }
+#tl.clear .tl-cap, #tl.clear .ruler, #tl.clear .tl-row { opacity: 0; }
 .ghost { position: fixed; z-index: 6; pointer-events: none; image-rendering: pixelated; transform-origin: 0 0; }
 .reader-inner { max-width: 680px; margin: 0 auto; padding-top: calc(84px + env(safe-area-inset-top, 0px)); padding-bottom: 20svh; }
 .reader .prompt { display: block; margin-bottom: 26px; }
@@ -272,6 +273,15 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .tl-stage { position: relative; width: min(100%, 560px); height: 54svh; display: grid; place-items: end center;
   touch-action: pan-y; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tl-stage canvas { image-rendering: pixelated; will-change: transform; }
+.tl-stage #tlc { position: relative; z-index: 1; }
+/* wide screens: the other days in a row either side, small and grey; the chosen one is the big canvas (day.js renderRow) */
+.tl-row { position: absolute; left: 50%; bottom: 0; width: 0; height: 100%; pointer-events: none; }
+.tl-row .tl-nb { position: absolute; bottom: 0; left: 0; transform: translateX(calc(var(--x, 0px) - 50%));
+  filter: grayscale(1) brightness(.6); opacity: .42; pointer-events: auto; cursor: pointer;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1), opacity .3s ease; will-change: auto; }
+.tl-row .tl-nb:hover { opacity: .7; }
+.tl-row .tl-nb.on { opacity: 0; pointer-events: none; }
+@media (max-width: 899px) { .tl-row { display: none; } }
 .tl-stage:focus-visible, .stage:focus-visible { outline: 1px dashed var(--rule); outline-offset: 6px; }
 .tl-stage canvas.snapback { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
 .tl-cap { margin-top: 18px; display: grid; gap: 4px; transition: opacity .3s ease; }

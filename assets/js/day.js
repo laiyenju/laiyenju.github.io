@@ -368,7 +368,7 @@ async function run(raw, typed) {
   const key = ALIASES[cmd] || cmd;
   // clear = close the terminal: empty it and go back to the top, where the page started
   if (key === 'clear') {
-    logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur(); document.querySelector('.term').style.paddingBottom = '';
+    clearTerm();
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     return;
   }
@@ -467,7 +467,8 @@ addEventListener('pagehide', () => logEl.querySelectorAll('.ls .lit').forEach(r 
 function backFromNote(kept) {
   let r = null;
   try { r = JSON.parse(sessionStorage.getItem('post-return') || 'null'); sessionStorage.removeItem('post-return'); } catch (e) {}
-  if (!r || !r.toList || Date.now() - r.t > 30 * 60e3 || new URLSearchParams(location.search).get('view')) return;
+  if (!r || Date.now() - r.t > 30 * 60e3 || new URLSearchParams(location.search).get('view')) return;
+  if (!r.toList) { if (kept) { clearTerm(); scrollTo(0, 0); } return; } // back from a note some other way (Home, ~): a clean home page
   const list = kept && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls a[href]'));
   const readRow = blk => blk && [...blk.querySelectorAll('.ls a[href]')].find(a => new URL(a.href, location.href).pathname === r.path);
   if (list) { focusLine(list); lightRow(readRow(list), true); return; } // as after a work: the list glides up under the date card
@@ -516,6 +517,9 @@ function placeBar(q) {
 function barEdge() { const c = $('cmdbar'); c.classList.toggle('more-right', c.scrollLeft + c.clientWidth < c.scrollWidth - 4); }
 $('cmdbar').addEventListener('scroll', barEdge, { passive: true }); addEventListener('resize', barEdge); barEdge();
 function renderLists() { logEl.innerHTML = ''; }
+// the terminal empty, as on a fresh page: what the home page looks like whenever it is come back to from another view
+// (the timeline, a work's page via Home, a past day). Only going back to a list (← Work, works/, or back from a note) keeps it.
+function clearTerm() { logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur(); document.querySelector('.term').style.paddingBottom = ''; }
 
 /* overlays: one work (#work-<slug>), the timeline (#timeline), one day (#day-YYYY-MM-DD) */
 const reader = $('reader'), tl = $('tl');
@@ -526,7 +530,8 @@ function showOverlay(el) {
   ctaFor(location.hash.startsWith('#work-') ? 'Work' : 'Today');
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
-function closeOverlays() {
+function closeOverlays(keep) {
+  if (!keep) clearTerm();
   reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); document.body.classList.remove('tl-in');
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
@@ -536,7 +541,7 @@ const WORK = { fromList: false };
 // back to all the work: the list it was opened from, or a fresh `ls works` when it came from a link
 function backToWorks() {
   const list = WORK.fromList && [...logEl.querySelectorAll('.block')].reverse().find(b => b.querySelector('.ls [data-run^="open works/"]'));
-  closeOverlays();
+  closeOverlays(!!list);
   if (list) { focusLine(list); lightRow(list.querySelector(`.ls [data-run="open works/${WORK.slug}"]`), true); }
   else setTimeout(() => run('ls works', true), 60);
 }
@@ -703,7 +708,40 @@ function markRuler() {
   $('needle').style.left = TL.pos(TL.idx) + '%';
   const x = TL.list[TL.idx], t = $('rulerTrack');
   t.setAttribute('aria-valuenow', TL.idx + 1);
+  layoutRow();
   t.setAttribute('aria-valuetext', x.today ? 'Today' : `${x.name}, ${x.date}`);
+}
+/* wide screens: the other days stand in a row either side of the chosen one, small and grey (not chosen yet), so the
+   timeline is not one building in an empty screen. The row runs past the screen's edges when there are many.
+   Click one to go to it. Phones: hidden (.tl-row in day.css), and not drawn. */
+const ROW = { box: 220, gap: 26 };
+function renderRow() {
+  const row = $('tlRow'); if (!row || innerWidth < 900) return;
+  const st = $('tlStage'), H = st.clientHeight * .6;
+  row.innerHTML = '';
+  TL.list.forEach((x, k) => {
+    const img = tlImage(x), c = document.createElement('canvas');
+    c.className = 'tl-nb'; c.dataset.k = k; c.width = img.width; c.height = img.height;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const f = wholePixels(Math.min(ROW.box / img.width, H / img.height, 2.4) * .86);
+    c.style.width = Math.round(img.width * f) + 'px'; c.style.height = Math.round(img.height * f) + 'px';
+    row.append(c);
+  });
+  layoutRow(true);
+}
+function layoutRow(first) {
+  const row = $('tlRow'); if (!row || !row.children.length) return;
+  // the first ones stand close to the chosen one (a big building may overlap them a little: they sit behind it)
+  const half = Math.min($('tlStage').clientWidth / 2, 210), step = ROW.box + ROW.gap;
+  for (const c of row.children) {
+    const d = +c.dataset.k - TL.idx;
+    if (first) c.style.transition = 'none';
+    c.classList.toggle('on', d === 0);
+    // the chosen one hides here (the big canvas shows it); the rest keep their places either side
+    const x = d === 0 ? 0 : Math.sign(d) * (half + ROW.gap + ROW.box / 2 + (Math.abs(d) - 1) * step);
+    c.style.setProperty('--x', x.toFixed(1) + 'px');
+    if (first) { c.getBoundingClientRect(); c.style.transition = ''; }
+  }
 }
 function placeLine(x) {
   if (x.today) return 'Taiwan';
@@ -746,7 +784,7 @@ function openTl(date) {
   TL.list = tlEntries(); TL.idx = -1; TL.cur = null; TL.token = (TL.token || 0) + 1;
   const k = Math.max(0, TL.list.findIndex(x => x.id === date));
   $('tlBody').innerHTML = `<div class="tlm wrap">
-      <div class="tl-stage" id="tlStage" role="button" tabindex="0" aria-label="This day's building. Tap to read the day. Swipe left or right for other days."><canvas id="tlc"></canvas></div>
+      <div class="tl-stage" id="tlStage" role="button" tabindex="0" aria-label="This day's building. Tap to read the day. Swipe left or right for other days."><div class="tl-row" id="tlRow" aria-hidden="true"></div><canvas id="tlc"></canvas></div>
       <div class="tl-cap hide" id="tlCap"><div class="n" id="tlName"></div><div class="s" id="tlPlace"></div></div>
     </div>
     <div class="ruler"><div class="stats" id="tlStats"></div><div class="ruler-track" id="rulerTrack" role="slider" tabindex="0" aria-label="Days kept, oldest on the left" aria-valuemin="1" aria-valuemax="${TL.list.length}"></div></div>`;
@@ -755,7 +793,7 @@ function openTl(date) {
   if (fly) tl.classList.add('clear');
   showOverlay(tl);
   ctaFor('Today');
-  renderRuler();
+  renderRuler(); renderRow();
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
   $('tlStats').textContent = `${new Set(TL.list.map(x => x.date)).size} days kept · ${nPlaces} places · ${nCountries} countries`;
@@ -792,7 +830,10 @@ function openTl(date) {
     const dx = ev.clientX - sw.x, dy = ev.clientY - sw.y, p = sw.p;
     if (sw.moved && Math.abs(dx) > 40 && p > 0) showTlDay(TL.idx + (dx < 0 ? 1 : -1), false, p);
     else if (sw.moved) settleBack();
-    else if (Math.hypot(dx, dy) < 10 && ev.type === 'pointerup') tapTl();
+    else if (Math.hypot(dx, dy) < 10 && ev.type === 'pointerup') {
+      const nb = ev.target.closest && ev.target.closest('.tl-nb:not(.on)');
+      nb ? showTlDay(+nb.dataset.k) : tapTl();
+    }
     sw = null;
   };
   st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
@@ -854,6 +895,7 @@ function leaveTl(setup, hash) {
   const cv = $('tlc'), from = cv && cv.getBoundingClientRect(), img = TL.cur;
   TL.token++;
   try { history.pushState(null, '', hash || (location.pathname + location.search)); } catch (e) {}
+  clearTerm();
   setup();
   scrollTo(0, 0);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -897,6 +939,7 @@ function route() {
   else if ((m = h.match(/^#day-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(m[1]); }
   else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; renderPast(m[1]); updateMore(); }
   else {
+    if (openOverlay() || state.pastDate) { if (reader.hidden || !WORK.fromList) clearTerm(); }
     if (openOverlay()) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; ctaFor('Timeline'); }
     if (state.pastDate) exitPast(); else renderText();
     updateMore();
