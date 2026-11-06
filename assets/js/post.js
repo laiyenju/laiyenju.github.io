@@ -348,14 +348,16 @@
     });
   }
 
-  /* —— The date card at the top: the time where Yen is, as on the home page (CITY: see the top of this file),
-        and "Today" under it. —— */
+  /* —— The date card at the top: the time where Yen is, as on the home page (sky.js CITY),
+        and that day's weekday under it ("Fri"), as on the home page. —— */
   function tick() {
     var time = document.querySelector('[data-clock="time"]');
     if (!time) return;
     // the time to the second, rolling digit by digit (sky.js rollClock), as on the home page
     if (!time.querySelector(".roll")) time.innerHTML = '<span class="roll"></span>';
     if (window.siteSky && siteSky.rollClock) siteSky.rollClock(time.querySelector(".roll"));
+    var day = document.querySelector('[data-clock="day"]'), tz = window.siteSky ? siteSky.CITY.tz : 8;
+    if (day) day.textContent = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(Date.now() + tz * 3600e3).getUTCDay()];
     window.setTimeout(tick, 1000 - (Date.now() % 1000) + 15);
   }
 

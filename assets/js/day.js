@@ -81,7 +81,7 @@ function buildItems() {
     scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
     name: base === 'home' ? 'Yen is at home today.' : 'Yen is at the office today.',
     place: base === 'home' ? 'home' : 'the office',
-    // the date card already says the weekday and the city: only a holiday's name is news here
+    // the date card already says the weekday: only a holiday's name is news here
     meta: r.holiday ? escHtml(r.holiday) : '',
     note: BIO + (extra ? ' ' + extra : ''),
   });
@@ -301,7 +301,7 @@ function nearestFrame(it, a) {
 }
 function renderText() {
   const it = state.items[state.index];
-  if (document.getElementById('tl').hidden) dialTo(todayISO(), 'Today', true);
+  if (document.getElementById('tl').hidden) dialTo(todayISO(), todayWd(), true);
   $('capName').textContent = it.name;
   $('capMeta').innerHTML = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
@@ -700,7 +700,9 @@ addEventListener('message', ev => {
   if (ev.data.note === 'lightbox') document.body.classList.toggle('note-lb', !!ev.data.open);
 });
 const LONG_MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const LONG_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const SHORT_DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// the card's line under the time: today's weekday where Yen is ("Fri")
+const todayWd = () => SHORT_DAY[fromDayMs(state.day).wd];
 const parseDay = d => { const [y, m, dd] = d.split('-').map(Number); return fromDayMs(dayMs(y, m, dd)); };
 const todayISO = () => { const d = fromDayMs(state.day); return `${d.y}-${pad(d.m)}-${pad(d.d)}`; };
 function timelineEntries() {
@@ -722,8 +724,8 @@ function pureImage(x) {
   return c;
 }
 // The card's two lines. live (now: the home page, a work, a note): the time on top, rolling each second (sky.js rollClock),
-// and just "Today" under it (the date and weekday are in the timeline). Otherwise (the timeline): the date on top, its
-// digits turning like a dial, and "Friday · seven years ago" under it; past: a day gone by, in the accent (.past-tag).
+// and today's weekday under it ("Fri"). Otherwise (the timeline): the date on top, its digits turning like a dial, and
+// "Seven years ago" under it ("This year" earlier this year, "Today" on today); past: a day gone by, in the accent (.past-tag).
 // Both are in the same place at the same size, so nothing goes away in between: the time and the date sit on top of
 // each other and cross-fade (.face, day.css), and so does the line under them (two slots, the new words in the other).
 function dialTo(iso, sub, live = false, past = false) {
@@ -913,7 +915,8 @@ async function showTlDay(k, first, fromP = 0, instant = false) {
   try { history.replaceState(null, '', '#day-' + x.id); } catch (e) {}
   markRuler();
   $('tlCap').classList.add('hide');
-  dialTo(x.date, `${LONG_DAY[d.wd]} · ${years > 0 ? ago(years).toLowerCase() : 'today'}`, false, years > 0);
+  // an earlier day this year has no "years ago": it says This year (only today's own entry says Today)
+  dialTo(x.date, x.today ? 'Today' : years > 0 ? ago(years) : 'This year', false, !x.today);
   cv.classList.add('snapback'); cv.style.transform = '';
   const img = tlImage(x);
   // quick chained swipes shorten the animation instead of queueing it
@@ -1070,7 +1073,7 @@ function leaveTl(setup, hash) {
     updateMore();
   }, MOVE);
 }
-function headerNow() { dialTo(todayISO(), 'Today', true); }
+function headerNow() { dialTo(todayISO(), todayWd(), true); }
 function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Timeline'); }
 function tapTl() {
   const x = TL.list[TL.idx];
