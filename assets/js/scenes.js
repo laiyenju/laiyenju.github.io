@@ -270,6 +270,31 @@ function cat(e, x, y, z, yaw, t, k = 1.3) {
   add(P(.25, look, .53), P(.25, look, .53), .025, .025, C.CORAL);
   add(P(-.26, 0, .04), P(-.2, .18 + sw * .14, .05 + Math.abs(sw) * .06), .05, .04, C.CAT);
 }
+// the same cat walking: body level, legs stepping, tail up
+function catWalking(e, x, y, z, yaw, t, k = 1.3) {
+  const fx = Math.cos(yaw), fy = Math.sin(yaw);
+  const P = (a, b, c) => [x + (fx * a - fy * b) * k, y + (fy * a + fx * b) * k, z + c * k];
+  const add = (a, b, r0, r1, col) => e.dynamicAdd(a, b, r0 * k, r1 * k, () => col);
+  const st = Math.sin(t * 8) * .07;
+  for (const [a, b, s] of [[.14, .07, 1], [.14, -.07, -1], [-.14, .07, -1], [-.14, -.07, 1]]) add(P(a, b, .22), P(a + st * s, b, .03), .04, .035, C.CAT);
+  add(P(-.18, 0, .3), P(.16, 0, .32), .12, .12, C.CAT);
+  add(P(.08, 0, .24), P(.14, 0, .26), .07, .07, C.CREAM);
+  add(P(.3, 0, .42), P(.3, 0, .42), .12, .12, C.CAT);
+  add(P(.3, .07, .5), P(.31, .08, .6), .04, .02, C.CAT);
+  add(P(.3, -.07, .5), P(.31, -.08, .6), .04, .02, C.CAT);
+  add(P(.39, 0, .38), P(.39, 0, .38), .05, .05, C.CREAM);
+  add(P(-.3, 0, .34), P(-.38, Math.sin(t * 3) * .05, .62), .04, .03, C.CAT);
+}
+// now and then the cat gets up, walks along the back of the sofa, and sits down again at the other end
+function catOnSofa(e, t, x, ya, yb, z) {
+  if (e.STILL) return cat(e, x, ya, z, Math.PI / 2, 0);
+  const c = t % 24, walk = (from, to, f) => catWalking(e, x, from + (to - from) * f, z, to > from ? Math.PI / 2 : -Math.PI / 2, t);
+  if (c < 10) cat(e, x, ya, z, Math.PI / 2, t);
+  else if (c < 13) walk(ya, yb, (c - 10) / 3);
+  else if (c < 20) cat(e, x, yb, z, Math.PI / 2, t);
+  else if (c < 23) walk(yb, ya, (c - 20) / 3);
+  else cat(e, x, ya, z, Math.PI / 2, t);
+}
 function shibaLoop(e, t, cx, cy, rx, ry) {
   const th = t * .5;
   shiba(e, cx + Math.cos(th) * rx, cy + Math.sin(th) * ry, Math.atan2(ry * Math.cos(th), -rx * Math.sin(th)), t);
@@ -493,11 +518,11 @@ const SCENES = {
     },
     animate(e, t) {
       // the shiba lives here: a round from the book wall, out onto the sidewalk and back in past the table.
-      // The cat sits on the back of the sofa.
+      // The cat sits on the back of the sofa and now and then walks along it.
       const p = alongPath(HOME_WALK, e.STILL ? 3 : t * .55);
       const inside = p.x < 2.05 && p.y < 3.25;
       shiba(e, p.x, p.y, p.yaw, t, inside ? .34 : 0);
-      cat(e, 1.3, 1.9, 1.32, Math.PI / 2, t);
+      catOnSofa(e, t, 1.3, 1.9, .8, 1.32);
     },
   },
   itsukushima: {
