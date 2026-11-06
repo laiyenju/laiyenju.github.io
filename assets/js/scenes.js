@@ -41,7 +41,7 @@ const C = {
   ALU: [196, 200, 204], ALU_D: [120, 126, 134], BASE: [168, 166, 160], PLASTER: [238, 234, 226], OAK: [196, 160, 118], OAK_L: [214, 184, 142],
   STEEL: [62, 64, 70], LAMP: [250, 226, 170], SCREEN: [96, 150, 190], CODE: [210, 236, 250], CABINET: [236, 234, 228], COUNTER: [70, 70, 74],
   RUG: [214, 194, 160], SOFA: [128, 146, 128], MUSTARD: [214, 164, 58], CORAL: [214, 104, 84], SAGE: [150, 170, 130], STEAM: [236, 236, 236],
-  SHIBA: [212, 136, 70], CREAM: [244, 234, 214], DEER: [164, 116, 74], NOSE: [40, 30, 28],
+  SHIBA: [212, 136, 70], CAT: [58, 56, 62], CREAM: [244, 234, 214], DEER: [164, 116, 74], NOSE: [40, 30, 28],
 };
 const toneCache = new Map();
 function closeTones(e, base) {
@@ -167,6 +167,19 @@ function beacon(e, t, x, y, z) {
 
 /* The home: a book wall (one coloured book per note) and glass that lets the room under it show through. */
 const HOME_TREES = [[-2.9, 4.5], [3.5, -4.6]];
+// the shiba's round at home: along the book wall, out the open side onto the sidewalk, back in past the table
+const HOME_WALK = [[-.95, .9], [-.95, 2.4], [-.2, 2.9], [.4, 3.7], [2.6, 3.9], [3.3, 2.8], [3.3, -.5], [2.5, -1.0], [1.6, -1.0], [0, -.9], [-.6, .2]];
+// a point at distance d along a closed path of [x, y] corners, and the way it faces there
+function alongPath(pts, d) {
+  const segs = pts.map((a, k) => { const b = pts[(k + 1) % pts.length]; return [a, b, Math.hypot(b[0] - a[0], b[1] - a[1])]; });
+  let s = d % segs.reduce((n, g) => n + g[2], 0);
+  for (const [a, b, len] of segs) {
+    if (s > len) { s -= len; continue; }
+    const f = s / len;
+    return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, yaw: Math.atan2(b[1] - a[1], b[0] - a[0]) };
+  }
+  return { x: pts[0][0], y: pts[0][1], yaw: 0 };
+}
 const NOTE_BOOKS = [[214, 72, 52], [236, 176, 48], [44, 132, 140], [52, 84, 170], [126, 170, 84], [196, 96, 150]];
 const PLAIN_BOOKS = [[150, 146, 138], [178, 172, 160], [124, 122, 118], [204, 198, 184], [140, 132, 120], [166, 160, 152]];
 // shelves on the wall at x = x0 (front at x1), from y0 to y1 and z0 to z1. Grey books, plants, records and vases fill
@@ -226,9 +239,9 @@ function pacer(e, t, x0, x1, speed) {
   const L = x1 - x0, s = (e.STILL ? L * .4 : t * speed) % (2 * L), fwd = s < L;
   return { x: x0 + (fwd ? s : 2 * L - s), yaw: fwd ? 0 : Math.PI };
 }
-function shiba(e, x, y, yaw, t) {
+function shiba(e, x, y, yaw, t, z0 = 0) {
   const fx = Math.cos(yaw), fy = Math.sin(yaw);
-  const P = (a, b, c) => [x + fx * a - fy * b, y + fy * a + fx * b, c];
+  const P = (a, b, c) => [x + fx * a - fy * b, y + fy * a + fx * b, c + z0];
   const add = (a, b, r0, r1, col) => e.dynamicAdd(a, b, r0, r1, () => col);
   const sw = e.STILL ? 0 : Math.sin(t * 9) * .12;
   for (const [a, b, s] of [[.3, .14, 1], [.3, -.14, -1], [-.3, .14, -1], [-.3, -.14, 1]]) add(P(a, b, .45), P(a + sw * s, b, .06), .07, .06, C.SHIBA);
@@ -240,6 +253,22 @@ function shiba(e, x, y, yaw, t) {
   add(P(.48, .1, 1.0), P(.5, .1, 1.08), .06, .03, C.SHIBA);
   add(P(.48, -.1, 1.0), P(.5, -.1, 1.08), .06, .03, C.SHIBA);
   add(P(-.42, 0, .78), P(-.34, 0, .92), .1, .09, C.CREAM);
+}
+// a black-and-white cat sitting at (x, y) on a surface at height z, facing yaw; its tail sweeps and its head turns now and then
+function cat(e, x, y, z, yaw, t, k = 1.3) {
+  const fx = Math.cos(yaw), fy = Math.sin(yaw);
+  const P = (a, b, c) => [x + (fx * a - fy * b) * k, y + (fy * a + fx * b) * k, z + c * k];
+  const add = (a, b, r0, r1, col) => e.dynamicAdd(a, b, r0 * k, r1 * k, () => col);
+  const sw = e.STILL ? 0 : Math.sin(t * 2.2), look = e.STILL ? 0 : (Math.floor(t / 3) % 3 === 1 ? .06 : 0);
+  add(P(-.1, 0, .12), P(-.1, 0, .12), .2, .2, C.CAT);
+  add(P(-.04, 0, .2), P(.03, 0, .4), .15, .12, C.CAT);
+  add(P(.08, 0, .16), P(.09, 0, .34), .08, .07, C.CREAM);
+  add(P(.12, look, .55), P(.12, look, .55), .13, .13, C.CAT);
+  add(P(.12, look + .07, .64), P(.12, look + .08, .74), .04, .02, C.CAT);
+  add(P(.12, look - .07, .64), P(.12, look - .08, .74), .04, .02, C.CAT);
+  add(P(.22, look, .5), P(.22, look, .5), .05, .05, C.CREAM);
+  add(P(.25, look, .53), P(.25, look, .53), .025, .025, C.CORAL);
+  add(P(-.26, 0, .04), P(-.2, .18 + sw * .14, .05 + Math.abs(sw) * .06), .05, .04, C.CAT);
 }
 function shibaLoop(e, t, cx, cy, rx, ry) {
   const th = t * .5;
@@ -327,7 +356,7 @@ const SCENES = {
   // Home: a two-storey aluminium box, cut open on the two sides the page looks from (+x, +y), so the rooms show.
   // Inside: a book wall the full height of the double-height room (one coloured book per note), a loft with a
   // reading corner, a long table that is both desk and dining table, the kitchen, a sofa. A glass skylight over
-  // the tall room. Outside: a paved Minsheng-style sidewalk with street trees and people walking by.
+  // the tall room. Outside: a paved Minsheng-style sidewalk with street trees. A shiba and a cat live here.
   home: {
     S: 14, origin: 30, cx: .4, cy: -.2, R: 6, zmax: 5.2,
     ground(e, x, y, ix, iy, i) {
@@ -425,7 +454,7 @@ const SCENES = {
       // the skylight over the tall room: steel glazing bars, then glass that tints what is under it
       for (let y = LY + .9; y < Y1 - .3; y += .9) box(X0 + .2, y, TOP + .2, X1 - .2, y + .05, TOP + .26, C.ALU_D);
       glassPane(e, X0 + .2, LY, X1 - .2, Y1 - .2, TOP + .24);
-      // things that move: steam from the pot, the laptop screen, the plants, people walking by, the street trees
+      // things that move: steam from the pot, the laptop screen, the plants, the street trees
       e.moving((e, t) => {
         if (t == null) return;
         for (let k = 0; k < 3; k++) {
@@ -446,15 +475,6 @@ const SCENES = {
         e.sphere(1.15 - sw, 2.85, 1.7, .3, C.GREEN, 'rough');
         e.sphere(1.28 + sw * .6, -.92, LF + .75, .3, C.GREEN, 'rough');
       });
-      const WALKERS = [[-4.2, 3.4, 3.3, .45, [52, 72, 120], 0, 'y'], [-3.2, 3.6, 4.5, .38, [196, 88, 64], 2.4, 'x'], [-3.8, 3.0, 3.6, .3, [226, 222, 214], 5.1, 'y']];
-      e.moving((e, t) => WALKERS.forEach(([a0, a1, c, v, col, ph, axis]) => {
-        if (t == null) return;
-        const p = pacer(e, t + ph * 3, a0, a1, v), bob = e.STILL ? 0 : Math.abs(Math.sin((t + ph) * 7)) * .05;
-        const [x, y] = axis === 'x' ? [p.x, c] : [c, p.x];
-        e.capsule([x, y, .2 + bob], [x, y, .8 + bob], .2, .17, () => col);
-        e.sphere(x, y, 1.08 + bob, .16, [224, 190, 160]);
-        e.castShadow(x, y, .6, .25);
-      }));
       // light sliding over the skylight glass, and birds over the roof
       e.moving((e, t) => {
         if (t == null) return;
@@ -471,11 +491,13 @@ const SCENES = {
       boxShadow(e, X0, Y0, X1, Y0 + .2, TOP);
       for (let x = X0; x <= X1; x += .4) for (let y = Y0; y <= Y1; y += .4) e.castShadow(x, y, TOP + .2, .32);
     },
-    animate(e, t, o) {
-      if (!o.shiba) return;
-      // the shiba wanders between the book wall and the low table
-      const p = pacer(e, t, .9, 2.2, .5);
-      shiba(e, -.95, p.x, p.yaw + Math.PI / 2, t);
+    animate(e, t) {
+      // the shiba lives here: a round from the book wall, out onto the sidewalk and back in past the table.
+      // The cat sits on the back of the sofa.
+      const p = alongPath(HOME_WALK, e.STILL ? 3 : t * .55);
+      const inside = p.x < 2.05 && p.y < 3.25;
+      shiba(e, p.x, p.y, p.yaw, t, inside ? .34 : 0);
+      cat(e, 1.3, 1.9, 1.32, Math.PI / 2, t);
     },
   },
   itsukushima: {
