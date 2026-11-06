@@ -379,17 +379,17 @@ function renderPast(date) {
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
   renderText(); renderThumbs(); sizeStage(); mount(false);
-  ctaFor('Timeline'); // a past day is a day out of the timeline, so the button says so (That day is already its thumbnail's word)
+  ctaFor('Today');
   scrollTo(0, 0);
 }
-// the buttons beside the date card. The right one names the view you are in: Today on today's page, Timeline in the
-// timeline and on a past day's page. Pressing it changes view: Today opens the timeline, Timeline goes back to today.
+// the buttons beside the date card. The right one names the view you are in: Today on the home page (today's or a
+// past day's), Timeline in the timeline. Pressing it: on today's page it opens the timeline; anywhere else it goes back to today.
 // On a work or a note: ← Work / ← Notes on the card's left goes back to the list, Home on its right.
 function ctaFor(word) {
   const back = word === 'Work' || word === 'Notes';
   $('backBtn').hidden = !back; $('homeBtn').hidden = !back; $('tlBtn').hidden = back;
   if (back) { $('backText').textContent = word; $('backBtn').setAttribute('aria-label', word === 'Work' ? 'Back to all work' : 'Back to all notes'); }
-  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', `${word}. ${word === 'Today' ? 'Open the timeline' : 'Back to today'}`); }
+  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', `${word}. ${word === 'Today' && !state.pastDate ? 'Open the timeline' : 'Back to today'}`); }
 }
 function exitPast() {
   if (!state.pastDate) return;
