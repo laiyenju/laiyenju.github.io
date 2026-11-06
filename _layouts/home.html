@@ -28,18 +28,14 @@
 
 
 {% comment %}The date card says what time it is; the buttons stand apart from it, each its own glass piece.
-  Left: back to the list (a work or a note only). Right: the Today | Timeline switch (the view you are in has its
-  word, the other only its icon; on a past day neither is on), or Home on a work or a note.{% endcomment %}
+  Left: back to the list (a work or a note only). Right: Timeline / Today, or Home on a work or a note.{% endcomment %}
 <header class="top wrap">
   <div class="top-row">
     <button type="button" class="top-btn back-btn" id="backBtn" hidden><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 6h-9M4.5 3 1.5 6l3 3"/></svg><span id="backText">Work</span></button>
     <div class="when" id="whenCard">
       <span class="txt"><b id="date">—</b><span id="clock">&nbsp;</span></span>
     </div>
-    <div class="seg" id="seg" role="group" aria-label="View">
-      <button type="button" class="top-btn seg-btn" id="todayBtn" aria-pressed="true"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.8 1.2"/></svg><span>Today</span></button>
-      <button type="button" class="top-btn seg-btn" id="tlBtn" aria-pressed="false"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="1.5" y="2.5" width="9" height="8" rx="1.5"/><path d="M1.5 5h9M4 1v3M8 1v3"/></svg><span>Timeline</span></button>
-    </div>
+    <button type="button" class="top-btn" id="tlBtn" aria-label="Open the timeline"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="1.5" y="2.5" width="9" height="8" rx="1.5"/><path d="M1.5 5h9M4 1v3M8 1v3"/></svg><span id="tlText">Timeline</span></button>
     <button type="button" class="top-btn home-btn" id="homeBtn" aria-label="Home" hidden><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 6 6 1.8 10.5 6M3 4.8v5.7h6V4.8"/></svg></button>
   </div>
 </header>

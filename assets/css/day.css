@@ -64,24 +64,14 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
    one group with it; on a phone it takes the width, 20px inside like the text of a work and a note. The pressed block
    reaches 10px past the words, as on a list row */
 .top { padding-left: 0; padding-right: 0; }
-.top-row { display: grid; grid-template-columns: 1fr auto 1fr; column-gap: 8px; align-items: center; max-width: 440px; height: 50px; margin: 0 auto;
+.top-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; max-width: 440px; height: 50px; margin: 0 auto;
   padding: 0 max(20px, env(safe-area-inset-left, 0px)) 0 max(20px, env(safe-area-inset-right, 0px)); }
 .when { grid-column: 2; grid-row: 1; }
 .when .txt { display: grid; line-height: 1.3; text-align: center; }
 .when b { font: 500 var(--card-title)/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; }
 .when .txt > span { color: var(--ink-soft); white-space: nowrap; font-size: var(--card-sub); }
 .back-btn { grid-column: 1; grid-row: 1; justify-self: start; margin-left: -10px; }
-#seg, .home-btn { grid-column: 3; grid-row: 1; justify-self: end; margin-right: -10px; }
-/* the Today | Timeline switch (day.js ctaFor): the view you are in is filled like a selected row in the terminal
-   (ink block, page-colour words) and has its word; the other is only its icon, so both fit beside the card on a phone */
-.seg { display: flex; align-items: center; }
-.seg[hidden] { display: none; }
-.seg-btn { gap: 0; padding: 0 9px; }
-.seg-btn span { max-width: 0; opacity: 0; overflow: hidden; transition: max-width .25s ease, opacity .2s ease, margin .25s ease; }
-.seg-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); cursor: default; }
-.seg-btn[aria-pressed="true"] span { max-width: 6em; opacity: 1; margin-left: 6px; }
-@media (hover: hover) { .seg-btn[aria-pressed="true"]:hover { background: var(--ink); } }
-@media (prefers-reduced-motion: reduce) { .seg-btn span { transition: none; } }
+#tlBtn, .home-btn { grid-column: 3; grid-row: 1; justify-self: end; margin-right: -10px; }
 /* a button: words (or an icon) in the terminal's font, no box until you point at it */
 .top-btn, .cmdbar button {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none;
