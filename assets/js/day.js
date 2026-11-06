@@ -488,10 +488,16 @@ async function run(raw, typed) {
   const key = ALIASES[cmd] || cmd;
   // clear = close the terminal: empty it and go back to the top, where the page started
   if (key === 'clear') {
-    clearTerm();
-    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    // glide back up first, then close it (closing first would cut the page short and jump)
+    $('cmd').value = ''; $('cmd').blur();
+    if (scrollY < 2 || still()) { scrollTo(0, 0); clearTerm(); return; }
+    scrollTo({ top: 0, behavior: 'smooth' });
+    let done = false;
+    const fin = () => { if (done) return; done = true; removeEventListener('scrollend', fin); if (!typing) clearTerm(); };
+    addEventListener('scrollend', fin); setTimeout(fin, 900);
     return;
   }
+  openTerm();
   typing = true;
   try {
     // In three beats you can follow: the screen settles on the line, the command types out behind a cursor
@@ -581,7 +587,7 @@ logEl.addEventListener('click', ev => {
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
 {
   const d = document.createElement('button'); d.type = 'button'; d.className = 'arrow'; d.textContent = '❯'; d.title = 'Type a command';
-  d.addEventListener('click', () => { focusLine($('cmdForm')); $('cmd').focus({ preventScroll: true }); });
+  d.addEventListener('click', () => { openTerm(); focusLine($('cmdForm')); $('cmd').focus({ preventScroll: true }); });
   $('cmdbar').append(d);
 }
 CHIPS.forEach(([label, c]) => {
@@ -615,7 +621,9 @@ function barEdge() { const c = $('cmdbar'); c.classList.toggle('more-right', c.s
 $('cmdbar').addEventListener('scroll', barEdge, { passive: true }); addEventListener('resize', barEdge); barEdge();
 // the terminal empty, as on a fresh page: what the home page looks like whenever it is come back to from another view
 // (the timeline, a work's page via Home, a past day). Only going back to a list (← Work, works/, or back from a note) keeps it.
-function clearTerm() { logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur(); document.querySelector('.term').style.paddingBottom = ''; }
+// Closed, the terminal is only the bar: the first screen has nothing below it to scroll to. A button, ❯ or `/` opens it.
+function clearTerm() { logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur(); const t = document.querySelector('.term'); t.style.paddingBottom = ''; t.classList.remove('on'); onScroll(); }
+function openTerm() { document.querySelector('.term').classList.add('on'); }
 
 /* overlays: one work (#work-<slug>), the timeline (#timeline), one day (#day-YYYY-MM-DD) */
 const reader = $('reader'), tl = $('tl');
@@ -1155,7 +1163,7 @@ addEventListener('wheel', ev => {
 }, { passive: true });
 addEventListener('keydown', ev => {
   if (ev.target.closest('input')) return;
-  if (ev.key === '/' ) { ev.preventDefault(); $('cmd').focus(); $('cmd').scrollIntoView({ block: 'center' }); return; }
+  if (ev.key === '/' ) { ev.preventDefault(); openTerm(); $('cmd').focus(); $('cmd').scrollIntoView({ block: 'center' }); return; }
   if (ev.key === 'ArrowRight') go(state.index + 1);
   if (ev.key === 'ArrowLeft') go(state.index - 1);
 });
@@ -1182,7 +1190,7 @@ function openView() {
   const v = new URLSearchParams(location.search).get('view');
   if (v !== 'notes' && v !== 'works') return;
   try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
-  setTimeout(() => { scrollTo({ top: document.querySelector('.term').offsetTop - 80 }); run(v === 'notes' ? 'ls notes' : 'ls works', true); }, 300);
+  setTimeout(() => { openTerm(); scrollTo({ top: document.querySelector('.term').offsetTop - 80 }); run(v === 'notes' ? 'ls notes' : 'ls works', true); }, 300);
 }
 
 /* the seconds in the date card, on the second */
