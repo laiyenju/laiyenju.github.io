@@ -209,7 +209,10 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
   background: linear-gradient(color-mix(in srgb, var(--bg) 0%, transparent), var(--bg) 18px);
 }
 .term .cmdbar.off { opacity: 0; transform: translateY(100%); pointer-events: none; }
-.input-row { scroll-margin-bottom: 90px; }
+.input-row { scroll-margin-bottom: 90px; transition: opacity .25s ease; }
+/* a command typing out (day.js run): the input line and the buttons are hidden until its output is in, then fade back.
+   Hidden, not removed, so the page keeps its length and nothing moves. */
+body.term-busy .input-row, body.term-busy .cmdbar { opacity: 0; visibility: hidden; pointer-events: none; transition: none; }
 /* phones: fixed to the bottom from the first screen */
 @media (max-width: 899px) {
   .term .cmdbar { position: fixed; left: 0; right: 0; bottom: 0; padding-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px)); }
