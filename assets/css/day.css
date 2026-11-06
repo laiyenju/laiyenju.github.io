@@ -17,15 +17,11 @@
   --sans: "iA Writer Quattro", "Noto Sans TC", system-ui, sans-serif;
   --p: 0;
   --shrink: 38svh;
-  /* frosted glass for what floats over the page (the date card, its buttons, the command bar): the page shows
-     through, blurred, so you can still tell what scrolls behind it. Flat: no border, no shine, no drop shadow.
-     What you can press has colour, what you only read has almost none: a button is the glass with a little ink in
-     it (--btn), so it reads as a piece even on a white noon sky; the date card is a fainter glass (--card-glass). */
-  --glass: color-mix(in srgb, var(--sheet) 62%, transparent);
-  --btn: color-mix(in srgb, var(--ink) 12%, var(--glass));
-  --btn-hover: color-mix(in srgb, var(--ink) 18%, var(--glass));
-  --card-glass: color-mix(in srgb, var(--sheet) 18%, transparent);
-  --glass-blur: blur(14px) saturate(1.5);
+  /* One way to press, on the whole site, taken from the terminal's own selection (.ls .lit): what you can press is
+     words in the terminal's font, with no box. Pointing at it lays a faint ink block behind it (--press-soft); pressing
+     it turns it over, ink ground and sky-coloured words, square corners. Ink is the one colour sky.js keeps readable
+     on every sky, so nothing here is tuned per time of day. What you only read (the time) has no box either. */
+  --press-soft: color-mix(in srgb, var(--ink) 7%, transparent);
 }
 [hidden] { display: none !important; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -47,51 +43,46 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
 .hero-inner { padding-top: calc(var(--card-top) + 64px); }
-.top {
-  position: fixed; z-index: 7; top: 0; left: 0; right: 0;
-  padding-top: var(--card-top); padding-bottom: 10px;
-  /* only a light veil: the glass card itself does the work, so the page can be seen behind it */
-  background: linear-gradient(color-mix(in srgb, var(--bg) 55%, transparent), transparent);
-}
-.soft { color: var(--ink-soft); }
-/* The date card only tells the time; it is not a button. The buttons stand apart from it, each its own piece of glass,
-   as tall as the card: on the left the way back to the list (a work or a note), on the right Timeline / Today on the
-   home page or Home on a work or a note (site.css has the same for a note opened from a link).
-   Narrow screens (< 640px): card and buttons share the card's usual box (--card-w), the card takes what is left.
-   Wider: the card keeps --card-w, centred, and the buttons stand outside it, 8px away.
-   The card's two lines take the same two sizes on every page (site.css has the same): --card-title on top (the time,
+/* The top: one line, like a terminal's title bar, across the reading column (680px): the way back on the left (a work
+   or a note), the time in the middle, the way forward on the right (Timeline / Today on the home page, Home on a work
+   or a note). site.css has the same for a note opened from a link. Under it a band of the sky's own colour, fading
+   out, so what scrolls under the line never runs into it.
+   The time's two lines take the same two sizes on every page (site.css has the same): --card-title on top (the time,
    or in the timeline the date), --card-sub under it (Today, or in the timeline the weekday and how long ago).
    Phones: 12px from the top. Wide screens: lower, by the screen's height (9%, 28–96px), so the page sits towards the
    middle instead of hugging the top edge. */
+.top {
+  position: fixed; z-index: 7; top: 0; left: 0; right: 0;
+  padding-top: var(--card-top); padding-bottom: 18px;
+  background: linear-gradient(var(--bg) calc(100% - 18px), color-mix(in srgb, var(--bg) 0%, transparent));
+}
+.soft { color: var(--ink-soft); }
 :root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px));
   --card-title: 15px; --card-sub: 12px; }
 @media (min-width: 900px) { :root { --card-top: clamp(28px, 9svh, 96px); } }
-.top-row { display: flex; gap: 8px; width: var(--card-w); margin: 0 auto; }
-.when, .top-btn {
-  height: 50px; border: 0; border-radius: 12px;
-  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  transition: transform .15s ease, background-color .15s ease;
-}
-.when { background: var(--card-glass); }
-.top-btn { background: var(--btn); }
-.when { display: flex; align-items: center; flex: 1; min-width: 0; padding: 6px 12px; }
-.when .txt { display: grid; line-height: 1.3; text-align: center; flex: 1; min-width: 0; }
+/* the line is kept short (at most 440px, centred), so on a wide screen the buttons stay close to the time and read as
+   one group with it; on a phone it takes the width, 20px inside like the text of a work and a note. The pressed block
+   reaches 10px past the words, as on a list row */
+.top { padding-left: 0; padding-right: 0; }
+.top-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; max-width: 440px; height: 50px; margin: 0 auto;
+  padding: 0 max(20px, env(safe-area-inset-left, 0px)) 0 max(20px, env(safe-area-inset-right, 0px)); }
+.when { grid-column: 2; grid-row: 1; }
+.when .txt { display: grid; line-height: 1.3; text-align: center; }
 .when b { font: 500 var(--card-title)/1.35 var(--mono); letter-spacing: .02em; white-space: nowrap; }
-/* on the card (a lifted colour), so one step darker than other grey words to stay readable */
-.when .txt > span { color: var(--ink-card, var(--ink-soft)); white-space: nowrap; font-size: var(--card-sub); overflow: hidden; text-overflow: ellipsis; }
-.top-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px;
-  color: var(--ink); font: 500 12px/1 var(--mono); white-space: nowrap; }
-.top-btn:hover { background: var(--btn-hover); }
-.top-btn:active { transform: scale(.96); }
-.top-btn svg { width: 12px; height: 12px; flex: none; }
-.home-btn { width: 50px; padding: 0; }
-.home-btn svg { width: 16px; height: 16px; }
-@media (min-width: 640px) {
-  .top-row { width: 100%; display: grid; grid-template-columns: 1fr var(--card-w) 1fr; }
-  .back-btn { grid-column: 1; grid-row: 1; justify-self: end; }
-  .when { grid-column: 2; grid-row: 1; }
-  #tlBtn, .home-btn { grid-column: 3; grid-row: 1; justify-self: start; }
+.when .txt > span { color: var(--ink-soft); white-space: nowrap; font-size: var(--card-sub); }
+.back-btn { grid-column: 1; grid-row: 1; justify-self: start; margin-left: -10px; }
+#tlBtn, .home-btn { grid-column: 3; grid-row: 1; justify-self: end; margin-right: -10px; }
+/* a button: words (or an icon) in the terminal's font, no box until you point at it */
+.top-btn, .cmdbar button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none;
+  height: 34px; padding: 0 10px; border: 0; border-radius: 0; background: transparent;
+  color: var(--ink); font: 500 13px/1 var(--mono); white-space: nowrap;
+  transition: background-color .12s ease, color .12s ease;
 }
+.top-btn:hover, .cmdbar button:hover { background: var(--press-soft); }
+.top-btn:active, .cmdbar button:active { background: var(--ink); color: var(--bg); transition: none; }
+.top-btn svg { width: 12px; height: 12px; flex: none; }
+.home-btn svg { width: 15px; height: 15px; }
 #date, #clock { transition: opacity .25s ease, color .3s ease; }
 #date.swap { opacity: 0; }
 /* the timeline on a past day: the date and its line in the accent, the same colour as the line above a past building */
@@ -135,10 +126,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .tools { display: flex; align-items: center; justify-content: center; gap: 10px; height: 92px; flex: none; }
 /* most days have no other years: then the row folds away so the words sit right under the building */
 .tools:has(.thumbs.none) { height: 0; }
-.rot { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); background: var(--sheet); display: grid; place-items: center; color: var(--ink-soft); }
-.rot:hover { color: var(--ink); border-color: var(--ink-soft); }
-.rot:active { transform: scale(.94); }
-.rot svg { width: 18px; height: 18px; }
 .thumbs { display: flex; gap: 6px; }
 .thumbs.none { display: none; }
 .thumb { display: grid; justify-items: center; gap: 2px; padding: 2px 4px; color: var(--ink-soft); }
@@ -204,15 +191,12 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 }
 .cmdbar::-webkit-scrollbar { display: none; }
 .cmdbar.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
-.cmdbar button { flex: none; border: 0; border-radius: 8px; padding: 8px 12px; font: 14px/1.2 var(--mono);
-  background: var(--btn); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); transition: background-color .15s ease; }
-.cmdbar button:hover { background: var(--btn-hover); }
-.cmdbar .dollar { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; color: var(--accent); padding-inline: 4px; }
-/* no divider and no solid band: the buttons are glass and float on the page, so what scrolls under them shows through,
-   blurred. A light veil at the very bottom keeps the words from running straight into the buttons. */
+.cmdbar .dollar { color: var(--accent); }
+/* the bar: the same buttons as at the top, on a band of the sky's own colour that fades out upwards, so what scrolls
+   under it never runs into the words (the same as the top) */
 .term .cmdbar {
-  z-index: 6; padding: 22px max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
-  background: linear-gradient(color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 45%, transparent) 60%);
+  z-index: 6; padding: 18px max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(color-mix(in srgb, var(--bg) 0%, transparent), var(--bg) 18px);
 }
 .term .cmdbar.off { opacity: 0; transform: translateY(100%); pointer-events: none; }
 .input-row { scroll-margin-bottom: 90px; }
@@ -221,15 +205,13 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
   .term .cmdbar { position: fixed; left: 0; right: 0; bottom: 0; padding-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px)); }
   .cmdbar > :first-child { margin-left: auto; }
   .cmdbar > :last-child { margin-right: auto; }
-  .cmdbar { gap: 4px; } .cmdbar button { padding: 9px 7px; font-size: 12.5px; } .cmdbar .dollar { padding-inline: 2px; }
+  .cmdbar { gap: 2px; } .cmdbar button { padding: 0 7px; }
   .hero { padding-bottom: 64px; }
 }
 /* wide screens: under today's words, then inside the terminal, stuck to the bottom while the log is long */
 @media (min-width: 900px) {
-  .bar-slot .cmdbar { margin-top: 14px; overflow: visible; flex-wrap: wrap; }
-  .bar-slot .cmdbar .dollar { padding-left: 0; }
+  .bar-slot .cmdbar { margin-top: 14px; overflow: visible; flex-wrap: wrap; gap: 4px; }
 }
-.cmdbar button:active { color: var(--accent); }
 /* notes and works: one list. Date | title, a quieter line under the title, a rule between rows. All in the terminal's font. */
 .ls { display: grid; }
 .ls a, .ls button { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: baseline;
@@ -318,19 +300,6 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .dial .strip span { height: 1.35em; line-height: 1.35em; }
 @media (prefers-reduced-motion: reduce) { .dial .strip { transition: none; } }
 
-/* timeline (list, kept for reference) */
-.tl-stats { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 6px 0 30px; }
-.tl-stats div { display: grid; }
-.tl-stats b { font: 400 28px/1.2 var(--sans); }
-.tl-stats span { font: 13px/1.5 var(--mono); color: var(--ink-soft); }
-.tl-year { font: 500 14px/1.4 var(--mono); letter-spacing: .06em; color: var(--ink-soft); margin: 26px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
-.tl-item { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; width: 100%; text-align: left; padding: 12px 0; border-bottom: 1px solid var(--rule); }
-.tl-item canvas { width: 96px; height: 84px; image-rendering: pixelated; }
-.tl-item .d { font: 13.5px/1.5 var(--mono); color: var(--ink-soft); }
-.tl-item .n { font: 700 17px/1.55 var(--sans); }
-.tl-item .s { font: 15.5px/1.7 var(--sans); color: var(--ink-soft); margin-top: 2px; }
-.tl-item:hover .n { text-decoration: underline; text-underline-offset: 3px; }
-.tl-item[aria-current="true"] .d { color: var(--accent); }
 .reader p a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 /* a note in the reader: its own page, framed whole (day.js openNote); it scrolls inside the frame, under the card */
 .reader.is-note { overflow: hidden; padding: 0; }
@@ -347,8 +316,7 @@ body.note-lb .top { visibility: hidden; }
 }
 .more.off { opacity: 0; }
 
-.toast { position: fixed; z-index: 9; left: 50%; top: 56px; transform: translateX(-50%); background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 12px; color: var(--ink-soft); }
-@media (prefers-reduced-motion: reduce) { .stage canvas { transition: none; } .cursor { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .stage canvas { transition: none; } .cur { animation: none; } }
 /* wide screens (≥ 900px). Phones keep the layout above unchanged.
    The same stack as on a phone (date card, building, today's words and buttons). The card stays at the top, as on
    every page; the building and its words are centred in the room under it (day.js sizeStage). The timeline is one
