@@ -377,38 +377,26 @@ flowchart LR
 
 ### 3.6 外出那天的建築
 
-外出打卡（`place: out`）可以順便說今天在哪棟建築（`scene`）。今天的建築就是 `_data/days.yml` 裡今天日期的那棟（見 2.4），所以分兩種：
+外出打卡時用 `scene` 說今天在哪棟建築：
 
-```mermaid
-flowchart LR
-  A["打卡：外出<br/>選 scene"] --> W["checkin.yml"]
-  W -- "已有模型（nanshan…）" --> D["scripts/checkin/day.js<br/>days.yml 加今天<br/>commit 到 main"]
-  D --> H["幾分鐘後首頁換成那棟"]
-  W -- "new" --> I["開 issue「新建築：…」"]
-  I --> N["每晚 21:40 的 Claude 排程任務<br/>找資料、寫規格、推播通知"]
-  N -- "Yen 在那個對話確認" --> M["Claude 建模型、加 days.yml<br/>首頁實測、開 PR"]
-  M --> F["Yen 合併"]
-  W -- "none 或空白" --> X["只改 Where's Yen"]
-```
-
-`checkin.yml` 外出時多收三個欄位：
-
-| 欄位 | 內容 |
+| `scene` | 結果 |
 |---|---|
-| `scene` | 已有模型的名字（2.3.1 節 `scene` 列的那些，例如 `nanshan`）、`new`（新地點）或 `none`（不改建築） |
-| `did` | 做了什麼，英文小寫開頭、不加句號（建築底下那句話：`Yen {did}.`）。沒填時是 `spent time here` |
-| `note` | 只有 `new` 用：地方的名稱和樣子，例如照片的描述 |
+| 已有模型的名字（2.3.1 節的 `scene`，例如 `nanshan`） | `scripts/checkin/day.js` 複製那個地點在 `days.yml` 的資料，加上今天和 `did`，commit 到 `main`。幾分鐘後首頁換成那棟 |
+| `new` | 開 issue「新建築：…」。每晚 21:40 Claude 的排程任務找資料、寫規格、推播通知；在那個對話確認後，Claude 才畫，畫完開 PR |
+| `none` 或空白 | 只改 Where's Yen |
 
-- **已有模型**：`day.js` 從 `days.yml` 裡同一個 `scene` 的最後一筆複製名稱、地點、座標，換上今天（台北）的日期和 `did`，由 Action commit 到 `main`。同一天同一棟只會寫一次。`label` 沒填時，Where's Yen 會說「at {建築名稱}」。`scene` 打錯（`days.yml` 裡沒有）時，打卡照常，只是那一步在 Actions 裡顯示失敗。
-- **新地點**：Action 開一個標題是「新建築：…」的 issue。每晚的 Claude 排程任務看到它，就照 `CLAUDE.md`「新建築模型」找資料、寫一份短規格，再推播通知你。到 Claude 的 App 打開那個對話確認或修改規格，Claude 才會開始畫，畫完開 PR。合併後關掉 issue。當天來不及也沒關係：合併後那天照樣會出現在 Timeline，明年同一天也會出現在往年今日。
-- 自己拍的照片最能說明「印象中的樣子」和哪一面是正面。可以在那個對話裡直接傳給 Claude。
+- 另外兩個欄位：`did`（做了什麼，英文小寫開頭，不加句號，沒填時是 `spent time here`）；`note`（只有 `new` 用：Apple 地圖上的地點名稱和地址，可以再加照片描述）。
+- **怎麼確定是同一棟**：已有模型的地點是從列表選名字，不會選錯。新地點靠 `note` 裡的地址；Claude 的規格第一行會寫「認定是：名稱、地址、地圖連結」，不對就在確認時改。
+- `scene` 打錯時打卡照常，只是那一步在 Actions 裡失敗。issue 是公開的，和 Where's Yen 一樣會讓人知道當下在哪裡。
 
-**捷徑「打卡：外出」要加的步驟**（在 3.5 的「打卡：外出」之後）
+**捷徑「打卡：外出」**：在「要求輸入（在哪裡？）」後面加：
 
-1. 在「要求輸入」（在哪裡？）後面加 **從列表中選擇**（Choose from List），列表寫：`none`、`new`、`nanshan`。之後每多一個模型，就在這裡加一行它的名字。
-2. 加 **要求輸入**（文字），提示寫 `做了什麼？英文，例如 hosted a developer meetup`。
-3. （選用，選 `new` 時有用）加 **拍照**（Take Photo），再加 Claude 的 **Analyze Photo**，請它用一兩句英文描述建築的形狀、材質和顏色。不需要時可以跳過，`note` 留空。
-4. 在 **取得 URL 內容** 的 `inputs` 辭典裡再加三個文字欄位：`scene` 選第 1 步的 **選取的項目**、`did` 選第 2 步的 **提供的輸入**、`note` 選第 3 步的結果。
+1. **從列表中選擇**：`none`、`new`、`nanshan`（每多一個模型就加一行）。
+2. **要求輸入**：`做了什麼？英文，例如 hosted a developer meetup`。
+3. **取得目前位置** → **取得位置的詳細資訊**（名稱、街道地址）。可以再加 **拍照** 和 Claude 的 **Analyze Photo**。
+4. `inputs` 辭典加三個文字欄位：`scene` = 第 1 步的選取項目、`did` = 第 2 步的輸入、`note` = 第 3 步的結果。
+
+**測試**（改了這個流程後做一次）：GitHub → Actions → Check in → Run workflow，分支選要測的分支（不要選 `main`，`days.yml` 的 commit 會寫到那個分支），`place` 選 `out`。測 `scene: nanshan`：那個分支多一筆今天。測 `scene: new`：出現一個 issue，測完關掉。兩次都會真的改 Where's Yen，測完再打一次卡。
 
 ---
 

@@ -4,7 +4,7 @@
 # The homepage reads it from raw.githubusercontent.com. See README 3.5.
 # An out check-in can also name a building (README 3.6): a place that already
 # has a model gets today's day in _data/days.yml (scripts/checkin/day.js,
-# committed to main); "new" opens an issue for Claude to make the model.
+# committed to the branch the run is on, normally main); "new" opens an issue for Claude to make the model.
 name: Check in
 
 on:
@@ -65,7 +65,7 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           if ! git diff --quiet -- _data/days.yml; then
             git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Today at $name (check-in)" -- _data/days.yml
-            git push origin HEAD:main
+            git push origin "HEAD:$GITHUB_REF_NAME" # main; a test run on another branch writes there instead
           fi
       # a new place: an issue, which Claude's nightly task picks up (README 3.6)
       - name: Open an issue for a new building
