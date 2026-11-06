@@ -66,7 +66,7 @@ function isRestDay(dd) { const md = pad(dd.m) + '-' + pad(dd.d); return { rest: 
 // left → right: oldest year → today
 function buildItems() {
   const dd = fromDayMs(state.day), md = pad(dd.m) + '-' + pad(dd.d);
-  const r = isRestDay(dd), base = todayScene();
+  const r = isRestDay(dd), here = todayPlace(), base = here ? here.scene : todayScene();
   const little = LITTLE.filter(l => state.day >= l.day && state.day < l.day + 7 * 864e5);
   const extra = little.map(l => l.text).join(' ');
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
@@ -74,8 +74,10 @@ function buildItems() {
       const year = +m.date.slice(0, 4);
       return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), pastView: true, tag: whenTag(m.date, dd.y), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: placeFor(m), html: sentenceFor(m) };
     });
-  const day = r.holiday || (r.rest ? 'Weekend' : 'Weekday');
-  items.push({
+  // a place in days.yml dated today is today's building, in place of home or the office
+  if (here) items.push({ scene: here.scene, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
+    name: here.zh && !here.noZh ? `${here.name}\u00a0· ${here.zh}` : here.name, meta: placeFor(here), html: sentenceFor(here) + (extra ? ' ' + escHtml(extra) : '') });
+  else items.push({
     scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
     name: base === 'home' ? 'Yen is at home today.' : 'Yen is at the office today.',
     place: base === 'home' ? 'home' : 'the office',
@@ -409,6 +411,8 @@ const CHECKIN_FRESH = 6 * 3600e3, TRANSIT_FRESH = 90 * 60e3, TRANSIT = ['left_ho
 let CHECKIN = null;
 const sameDay = (ms, day) => { const t = taipeiParts(ms); return dayMs(t.y, t.m, t.d) === day; };
 const inOfficeHours = ms => { const t = taipeiParts(ms), m = t.h * 60 + t.min; return m >= OFFICE_HOURS[0] && m < OFFICE_HOURS[1]; };
+// the last place in days.yml dated today, if any (it replaces home or the office as today's building)
+function todayPlace() { const t = MEMORIES.filter(m => m.date === todayISO() && checkMemory(m)).sort(byDate); return t[t.length - 1] || null; }
 function todayScene() {
   const c = CHECKIN;
   if (c && c.office_at && sameDay(Date.parse(c.office_at), state.day)) return 'studio';
@@ -420,7 +424,7 @@ function todayScene() {
 // redraw today only when its building changes, and only on today's page
 function refreshToday() {
   const t = state.items[state.items.length - 1];
-  if (t && t.scene !== todayScene() && tl.hidden && !state.pastDate) renderDay();
+  if (t && t.scene !== (todayPlace() || { scene: todayScene() }).scene && tl.hidden && !state.pastDate) renderDay();
 }
 function loadCheckin() {
   fetch(CHECKIN_URL, { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)

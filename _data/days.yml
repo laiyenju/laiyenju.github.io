@@ -124,3 +124,14 @@
   country: South Korea
   did: walked through the giant gate of Hongmun Hall
   map: Hongik University, Seoul
+
+# Taiwan
+- date: "2026-11-06"
+  scene: nanshan
+  coords: [25.0340, 121.5668]
+  name: Taipei Nan Shan Plaza
+  zh: 微風南山
+  place: Xinyi, Taipei
+  country: Taiwan
+  did: hosted an Anthropic developer meetup at the AWS office, for colleagues from across the company
+  map: Taipei Nan Shan Plaza
