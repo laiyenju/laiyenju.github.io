@@ -610,7 +610,6 @@ function placeBar(q) {
 }
 function barEdge() { const c = $('cmdbar'); c.classList.toggle('more-right', c.scrollLeft + c.clientWidth < c.scrollWidth - 4); }
 $('cmdbar').addEventListener('scroll', barEdge, { passive: true }); addEventListener('resize', barEdge); barEdge();
-function renderLists() { logEl.innerHTML = ''; }
 // the terminal empty, as on a fresh page: what the home page looks like whenever it is come back to from another view
 // (the timeline, a work's page via Home, a past day). Only going back to a list (← Work, works/, or back from a note) keeps it.
 function clearTerm() { logEl.innerHTML = ''; $('cmd').value = ''; $('cmd').blur(); document.querySelector('.term').style.paddingBottom = ''; }
@@ -686,13 +685,6 @@ addEventListener('message', ev => {
   if (ev.data.note === 'escape' && !reader.hidden) closeOverlays();
   if (ev.data.note === 'lightbox') document.body.classList.toggle('note-lb', !!ev.data.open);
 });
-function snapshot(scene, opts, maxW, maxH) {
-  const w = getWorld(scene, opts, 0); drawWorld(w, 1.3);
-  const [sx, sy, sw, sh] = innerOf(w), k = Math.min(maxW / sw, maxH / sh);
-  const c = document.createElement('canvas'); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
-  const g = c.getContext('2d'); g.imageSmoothingEnabled = k < 1; g.drawImage(w.view, sx, sy, sw, sh, 0, 0, c.width, c.height);
-  return c;
-}
 const LONG_MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const LONG_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const parseDay = d => { const [y, m, dd] = d.split('-').map(Number); return fromDayMs(dayMs(y, m, dd)); };
@@ -1122,7 +1114,6 @@ addEventListener('scroll', onScroll, { passive: true });
 
 /* the building: swipe left/right = other years (left = newer), tap = timeline */
 let drag = null;
-const spinning = false;
 stage.addEventListener('pointerdown', ev => { drag = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, mode: null }; });
 stage.addEventListener('pointermove', ev => {
   if (!drag || ev.pointerId !== drag.id) return;
@@ -1167,10 +1158,6 @@ $('tlBtn').addEventListener('click', () => {
 });
 $('backBtn').addEventListener('click', backToList);
 $('homeBtn').addEventListener('click', () => { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); });
-function toast(text) {
-  const t = document.createElement('div'); t.className = 'toast'; t.textContent = text; document.body.append(t);
-  setTimeout(() => t.remove(), 2200);
-}
 
 /* light: follows the sun over the city at the real time */
 function minuteMs() { return state.day - CITY.tz * 3600e3 + state.minute * 60e3; }
@@ -1203,7 +1190,7 @@ var t0 = performance.now();
 const clockT = () => (performance.now() - t0) / 1000;
 let lastFrame = 0;
 function frame(now) {
-  if (mainWorld && !spinning && !document.hidden && now - lastFrame > 33 && scrollY < innerHeight * 1.2) { lastFrame = now; drawWorld(mainWorld, clockT()); blit(mainWorld.view); }
+  if (mainWorld && !document.hidden && now - lastFrame > 33 && scrollY < innerHeight * 1.2) { lastFrame = now; drawWorld(mainWorld, clockT()); blit(mainWorld.view); }
   requestAnimationFrame(frame);
 }
 setInterval(() => {
@@ -1218,7 +1205,6 @@ if (document.fonts) document.fonts.addEventListener('loadingdone', () => { sizeS
 
 applyTheme(LIGHT);
 refreshLight(false);
-renderLists();
 renderDay();
 loadCheckin();
 onScroll();

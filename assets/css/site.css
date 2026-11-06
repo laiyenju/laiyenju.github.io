@@ -135,9 +135,6 @@ html.post-embed::-webkit-scrollbar { display: none; }
 }
 .post-btn:hover { background: color-mix(in srgb, var(--t-ink, #2a2420) 7%, transparent); }
 .post-btn:active { background: var(--t-ink, #2a2420); color: var(--sky, #fafaf7); transition: none; }
-/* the main way on (← Notes) is turned over all the time; Home stays plain (day.css: the same) */
-.post-to-notes { background: var(--t-ink, #2a2420); color: var(--sky, #fafaf7); }
-.post-to-notes:hover { background: color-mix(in srgb, var(--t-ink, #2a2420) 82%, var(--sky, #fafaf7)); }
 .post-btn svg { width: 12px; height: 12px; flex: none; }
 .post-home svg { width: 15px; height: 15px; }
 .post-to-notes { grid-column: 1; justify-self: start; margin-left: -10px; }

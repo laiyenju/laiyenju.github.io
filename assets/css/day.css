@@ -81,10 +81,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 .top-btn:hover, .cmdbar button:hover { background: var(--press-soft); }
 .top-btn:active, .cmdbar button:active { background: var(--ink); color: var(--bg); transition: none; }
-/* the one main way on from each screen is turned over all the time, so the line has a clear place to press:
-   Timeline / Today on the home page and in the timeline, ← Work / ← Notes on a work or a note (Home stays plain) */
-#tlBtn, .back-btn { background: var(--ink); color: var(--bg); }
-#tlBtn:hover, .back-btn:hover { background: color-mix(in srgb, var(--ink) 82%, var(--bg)); }
 .top-btn svg { width: 12px; height: 12px; flex: none; }
 .home-btn svg { width: 15px; height: 15px; }
 #date, #clock { transition: opacity .25s ease, color .3s ease; }
@@ -130,10 +126,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .tools { display: flex; align-items: center; justify-content: center; gap: 10px; height: 92px; flex: none; }
 /* most days have no other years: then the row folds away so the words sit right under the building */
 .tools:has(.thumbs.none) { height: 0; }
-.rot { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); background: var(--sheet); display: grid; place-items: center; color: var(--ink-soft); }
-.rot:hover { color: var(--ink); border-color: var(--ink-soft); }
-.rot:active { transform: scale(.94); }
-.rot svg { width: 18px; height: 18px; }
 .thumbs { display: flex; gap: 6px; }
 .thumbs.none { display: none; }
 .thumb { display: grid; justify-items: center; gap: 2px; padding: 2px 4px; color: var(--ink-soft); }
@@ -308,19 +300,6 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 .dial .strip span { height: 1.35em; line-height: 1.35em; }
 @media (prefers-reduced-motion: reduce) { .dial .strip { transition: none; } }
 
-/* timeline (list, kept for reference) */
-.tl-stats { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 6px 0 30px; }
-.tl-stats div { display: grid; }
-.tl-stats b { font: 400 28px/1.2 var(--sans); }
-.tl-stats span { font: 13px/1.5 var(--mono); color: var(--ink-soft); }
-.tl-year { font: 500 14px/1.4 var(--mono); letter-spacing: .06em; color: var(--ink-soft); margin: 26px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
-.tl-item { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; width: 100%; text-align: left; padding: 12px 0; border-bottom: 1px solid var(--rule); }
-.tl-item canvas { width: 96px; height: 84px; image-rendering: pixelated; }
-.tl-item .d { font: 13.5px/1.5 var(--mono); color: var(--ink-soft); }
-.tl-item .n { font: 700 17px/1.55 var(--sans); }
-.tl-item .s { font: 15.5px/1.7 var(--sans); color: var(--ink-soft); margin-top: 2px; }
-.tl-item:hover .n { text-decoration: underline; text-underline-offset: 3px; }
-.tl-item[aria-current="true"] .d { color: var(--accent); }
 .reader p a { text-decoration: none; border-bottom: 1px dotted var(--ink-soft); }
 /* a note in the reader: its own page, framed whole (day.js openNote); it scrolls inside the frame, under the card */
 .reader.is-note { overflow: hidden; padding: 0; }
@@ -337,8 +316,7 @@ body.note-lb .top { visibility: hidden; }
 }
 .more.off { opacity: 0; }
 
-.toast { position: fixed; z-index: 9; left: 50%; top: 56px; transform: translateX(-50%); background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 12px; color: var(--ink-soft); }
-@media (prefers-reduced-motion: reduce) { .stage canvas { transition: none; } .cursor { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .stage canvas { transition: none; } .cur { animation: none; } }
 /* wide screens (≥ 900px). Phones keep the layout above unchanged.
    The same stack as on a phone (date card, building, today's words and buttons). The card stays at the top, as on
    every page; the building and its words are centred in the room under it (day.js sizeStage). The timeline is one
