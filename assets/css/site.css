@@ -101,61 +101,44 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
   padding: calc(var(--card-top) + 72px) 20px 96px;
 }
 
-/* —— The frame, the same as a work on the home page: the date card fixed at
-      the top, then the title on the left, the subtitle, the date and size in mono; (END) at the end.
-      The card only tells the time (--card-title, rolling each second) and "Today" under it (--card-sub); it is not a
-      button. Its buttons stand apart from it, each its own glass piece as tall as the card: ← Notes on its left, Home
-      on its right (day.css has the same). Narrow screens (< 640px): the three share the card's usual box (--card-w),
-      the card takes what is left. Wider: the card keeps --card-w, centred on the whole window (100vw, so a scrollbar
-      does not move it), and the buttons stand outside it, 8px away.
-      Framed in the home page (a note opened from the list): the home page's card and buttons are used, this one is
-      left out (html.post-embed). —— */
+/* —— The frame, the same as a work on the home page: one line at the top, like a terminal's title bar, across the
+      reading column: ← Notes on the left, the time in the middle (--card-title, rolling each second, and "Today" under
+      it, --card-sub), Home on the right; then the title on the left, the subtitle, the date and size in mono; (END) at
+      the end. Under the line a band of the sky's own colour, fading out, so the note never runs into it.
+      The buttons are words in the terminal's font, with no box: pointing at one lays a faint ink block behind it,
+      pressing it turns it over (ink ground, sky-coloured words), as a list row on the home page does (day.css: the same).
+      Framed in the home page (a note opened from the list): the home page's line is used, this one is left out
+      (html.post-embed). —— */
 :root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px));
   --card-title: 15px; --card-sub: 12px; }
 @media (min-width: 900px) { :root { --card-top: clamp(28px, 9svh, 96px); } }
 .post-top {
   position: fixed; z-index: 7; top: 0; left: 0; width: 100vw;
-  padding: var(--card-top) 0 10px;
-  /* only a light veil: the card and its buttons are frosted glass, so the note shows through behind them */
-  background: linear-gradient(color-mix(in srgb, var(--sky, #fafaf7) 55%, transparent), transparent);
+  padding: var(--card-top) 0 18px;
+  background: linear-gradient(var(--sky, #fafaf7) calc(100% - 18px), color-mix(in srgb, var(--sky, #fafaf7) 0%, transparent));
 }
 html.post-embed .post-top { display: none; }
 /* framed, no room kept for a scrollbar (the home page has none), so the column sits where a work's does */
 html.post-embed { scrollbar-gutter: auto; scrollbar-width: none; }
 html.post-embed::-webkit-scrollbar { display: none; }
-.post-row { display: flex; gap: 8px; width: var(--card-w); margin: 0 auto; }
-/* no borders: what you can press has colour (the glass with a little ink in it), the card you only read is a fainter
-   glass (day.css --btn, --card-glass: the same) */
-.post-when, .post-btn {
-  height: 50px;
-  border: 0; border-radius: 12px;
-  -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
-  color: var(--t-ink, #2a2420);
-  font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
-  transition: transform 0.15s ease, background-color 0.15s ease;
-  --glass: color-mix(in srgb, var(--sky-sheet, #fff) 62%, transparent);
-}
-.post-when { background: color-mix(in srgb, var(--sky-sheet, #fff) 18%, transparent); }
-.post-btn { background: color-mix(in srgb, var(--t-ink, #2a2420) 12%, var(--glass)); }
-.post-when { display: flex; align-items: center; flex: 1; min-width: 0; padding: 6px 12px; }
-.post-when .txt { display: grid; flex: 1; min-width: 0; text-align: center; line-height: 1.3; }
+.post-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; max-width: 680px; height: 50px; margin: 0 auto; padding: 0 20px;
+  color: var(--t-ink, #2a2420); font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace; }
+.post-when { grid-column: 2; }
+.post-when .txt { display: grid; text-align: center; line-height: 1.3; }
 .post-when b { font-size: var(--card-title); font-weight: 500; line-height: 1.35; letter-spacing: 0.02em; white-space: nowrap; }
 .post-when .txt > span { font-size: var(--card-sub); color: var(--t-soft, #736d66); white-space: nowrap; }
 .post-btn {
-  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px;
-  font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 34px; padding: 0 10px; color: inherit;
+  font-size: 13px; font-weight: 500; line-height: 1; white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
-.post-btn:hover { background: color-mix(in srgb, var(--t-ink, #2a2420) 18%, var(--glass)); }
-.post-btn:active { transform: scale(0.96); }
+.post-btn:hover { background: color-mix(in srgb, var(--t-ink, #2a2420) 7%, transparent); }
+.post-btn:active { background: var(--t-ink, #2a2420); color: var(--sky, #fafaf7); transition: none; }
 .post-btn svg { width: 12px; height: 12px; flex: none; }
-.post-home { width: 50px; padding: 0; }
-.post-home svg { width: 16px; height: 16px; }
-@media (min-width: 640px) {
-  .post-row { width: 100%; display: grid; grid-template-columns: 1fr var(--card-w) 1fr; }
-  .post-to-notes { grid-column: 1; justify-self: end; }
-  .post-when { grid-column: 2; }
-  .post-home { grid-column: 3; justify-self: start; }
-}
+.post-home svg { width: 15px; height: 15px; }
+.post-to-notes { grid-column: 1; justify-self: start; margin-left: -10px; }
+.post-home { grid-column: 3; justify-self: end; margin-right: -10px; }
 /* the live time in the date card: HH:MM:SS, each digit rolls (sky.js rollClock) */
 .roll { display: inline-flex; font-variant-numeric: tabular-nums; vertical-align: bottom; }
 .roll .rg { display: inline-block; height: 1.35em; line-height: 1.35em; overflow: hidden; }
@@ -164,7 +147,6 @@ html.post-embed::-webkit-scrollbar { display: none; }
 .roll .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .roll .rs { transition: none !important; } }
 
-body.theme-night .post-btn { --glass: color-mix(in srgb, var(--sky-sheet, #151820) 62%, transparent); color: var(--t-ink, #e8e6e3); }
 
 .post-meta {
   font-family: "JetBrains Mono", "Noto Sans TC", ui-monospace, monospace;
@@ -950,8 +932,7 @@ body.theme-night .post-meta,
 body.theme-night .post-eof { color: var(--t-faint, #8a8f99); }
 body.theme-night .post-title,
 body.theme-night .post-end { color: var(--t-ink, #e8e6e3); }
-body.theme-night .post-top { background: linear-gradient(color-mix(in srgb, var(--sky, #0d0f12) 55%, transparent), transparent); }
-body.theme-night .post-when { background: color-mix(in srgb, var(--sky-sheet, #151820) 18%, transparent); color: var(--t-ink, #e8e6e3); }
+body.theme-night .post-row { color: var(--t-ink, #e8e6e3); }
 body.theme-night .post-when .txt > span { color: var(--t-soft, #8a8f99); }
 body.theme-night .post-prose :not(pre) > code { background: rgba(232, 230, 227, 0.08); }
 body.theme-night .post-prose img { border-color: rgba(232, 230, 227, 0.1); }
