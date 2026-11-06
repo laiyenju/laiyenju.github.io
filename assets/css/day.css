@@ -79,8 +79,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   color: var(--ink); font: 500 13px/1 var(--mono); white-space: nowrap;
   transition: background-color .12s ease, color .12s ease;
 }
-.top-btn:hover, .cmdbar button:hover { background: var(--press-soft); }
+/* the faint block only where a pointer can point: on a phone a tapped button would keep it after the tap */
+@media (hover: hover) { .top-btn:hover, .cmdbar button:hover { background: var(--press-soft); } }
 .top-btn:active, .cmdbar button:active { background: var(--ink); color: var(--bg); transition: none; }
+/* the keyboard's mark: the accent ring, square like the button (site.css .post-btn: the same) */
+.top-btn:focus-visible, .cmdbar button:focus-visible { border-radius: 0; }
 .top-btn svg { width: 12px; height: 12px; flex: none; }
 .home-btn svg { width: 15px; height: 15px; }
 #date, #clock { transition: opacity .25s ease, color .3s ease; }
