@@ -86,8 +86,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .top-btn:focus-visible, .cmdbar button:focus-visible { border-radius: 0; }
 .top-btn svg { width: 12px; height: 12px; flex: none; }
 .home-btn svg { width: 15px; height: 15px; }
-#date, #clock { transition: opacity .25s ease, color .3s ease; }
-#date.swap { opacity: 0; }
+#date, #clock { transition: color .3s ease; }
+/* the time and the date (#date), and the two lines under them (#clock), lie on top of each other and cross-fade (day.js dialTo);
+   the one going out also goes soft (a little blur), so for the moment the two overlap they never read as a jumble */
+#date, #clock { display: grid; justify-items: center; }
+.when .face { grid-area: 1 / 1; opacity: 0; filter: blur(3px); transition: opacity .35s ease, filter .35s ease; }
+.when .face.on { opacity: 1; filter: none; }
+@media (prefers-reduced-motion: reduce) { .when .face { transition: none; } }
 /* the timeline on a past day: the date and its line in the accent, the same colour as the line above a past building */
 .when.is-past-day b, .when.is-past-day .txt > span { color: var(--accent); }
 /* the colour change fades on the date and the line only; the digit strips inside keep their own roll
@@ -100,8 +105,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .roll .rs span, .roll > span { height: 1.35em; line-height: 1.35em; }
 .roll .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .roll .rs { transition: none !important; } }
-
-#clock.swap { opacity: 0; }
 
 .group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 
