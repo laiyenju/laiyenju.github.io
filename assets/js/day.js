@@ -379,22 +379,23 @@ function renderPast(date) {
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
   renderText(); renderThumbs(); sizeStage(); mount(false);
-  ctaFor('Today');
+  ctaFor('That day');
   scrollTo(0, 0);
 }
-// the buttons beside the date card. Timeline on today's page; Today anywhere else in time (a past day, the timeline).
+// the buttons beside the date card. The right one names the view you are in: Today on today's page, Timeline in the
+// timeline, That day on a past day's page. Pressing it changes view: Today opens the timeline, the others go back to today.
 // On a work or a note: ← Work / ← Notes on the card's left goes back to the list, Home on its right.
 function ctaFor(word) {
   const back = word === 'Work' || word === 'Notes';
   $('backBtn').hidden = !back; $('homeBtn').hidden = !back; $('tlBtn').hidden = back;
   if (back) { $('backText').textContent = word; $('backBtn').setAttribute('aria-label', word === 'Work' ? 'Back to all work' : 'Back to all notes'); }
-  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', word === 'Today' ? 'Back to today' : 'Open the timeline'); }
+  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', `${word}. ${word === 'Today' ? 'Open the timeline' : 'Back to today'}`); }
 }
 function exitPast() {
   if (!state.pastDate) return;
   state.pastDate = null;
   document.body.classList.remove('is-past');
-  ctaFor('Timeline');
+  ctaFor('Today');
   renderDay();
 }
 function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
@@ -634,12 +635,12 @@ const openOverlay = () => (!reader.hidden && reader) || (!tl.hidden && tl) || nu
 function go2(hash) { if (location.hash !== hash) { try { history.pushState(null, '', hash); } catch (e) { location.hash = hash; return; } } route(); }
 function showOverlay(el) {
   for (const o of [reader, tl]) o.hidden = o !== el;
-  ctaFor(location.hash.startsWith('#work-') ? 'Work' : location.hash.startsWith('#note-') ? 'Notes' : 'Today');
+  ctaFor(location.hash.startsWith('#work-') ? 'Work' : location.hash.startsWith('#note-') ? 'Notes' : 'Timeline');
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
 function closeOverlays(keep) {
   if (!keep) clearTerm();
-  reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Timeline'); document.body.classList.remove('tl-in');
+  reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Today'); document.body.classList.remove('tl-in');
   unrollPlate(420);
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
@@ -948,7 +949,7 @@ function openTl(date) {
   TL.from = null;
   if (fly) tl.classList.add('clear');
   showOverlay(tl);
-  ctaFor('Today');
+  ctaFor('Timeline');
   renderRuler(); renderRow(k);
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
@@ -1074,7 +1075,7 @@ function leaveTl(setup, hash) {
   }, MOVE);
 }
 function headerNow() { dialTo(todayISO(), todayWd(), true); }
-function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Timeline'); }
+function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Today'); }
 function tapTl() {
   const x = TL.list[TL.idx];
   if (x.today) { leaveTl(() => { homeToday(); const k = state.items.length - 1; if (state.index !== k) { state.index = k; renderThumbs(); mount(false); } renderText(); }); return; }
@@ -1100,7 +1101,7 @@ function route() {
   else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; endNote(); renderPast(m[1]); updateMore(); }
   else {
     if (openOverlay() || state.pastDate) { if (reader.hidden || !READ.fromList) clearTerm(); }
-    if (openOverlay()) { reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Timeline'); unrollPlate(420); }
+    if (openOverlay()) { reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Today'); unrollPlate(420); }
     if (state.pastDate) exitPast(); else renderText();
     updateMore();
   }
