@@ -367,7 +367,7 @@ flowchart LR
 
 第一次可能會問位置權限，選允許（「在家嗎」要讀目前位置）。
 
-**「打卡：外出」**（唯一要手動按的，例如在咖啡店）：複製「打卡：家」，在最前面加一個動作 **要求輸入**（Ask for Input，文字，提示寫 `在哪裡？用英文，例如 at a café in Daan`）；`place` 改成 `out`；`inputs` 裡再加一個文字欄位，鍵 `label`，值點一下選 **提供的輸入**（Provided Input）。
+**「打卡：外出」**（唯一要手動按的，例如在咖啡店）：完整做法在 3.6，因為它也決定那天的建築。
 
 **注意**
 
@@ -389,13 +389,49 @@ flowchart LR
 - `did` 是建築底下那句話（`Yen {did}.`），英文小寫開頭，不加句號，沒填時是 `spent time here`。
 - 位置只用來比對和放進 issue，不會寫進 `location.json`。但 issue 和 Actions 的紀錄是公開的，和 Where's Yen 一樣會讓人知道當下在哪裡。
 
-**捷徑「打卡：外出」**：在「要求輸入（在哪裡？）」後面加：
+**捷徑「打卡：外出」怎麼做**
 
-1. **從選單中選擇**，提示 `要當成今天的建築嗎？`，選項 `是`、`否`。
-2. 在「是」底下：**要求輸入**（`做了什麼？英文，例如 hosted a developer meetup`）→ 設定變數 `did`；**取得目前位置** → **文字** `緯度,經度`（點變數選「緯度」「經度」）→ 設定變數 `latlon`；**取得位置的詳細資訊**（名稱、街道）→ **文字** 合在一起 → 設定變數 `note`。「否」底下留空。
-3. `inputs` 辭典加三個文字欄位：`latlon`、`did`、`note`，值分別選同名的變數。
+動作名稱用英文介面寫，括號裡是中文介面。在捷徑裡用搜尋找動作；加進來的動作會放在最下面，要按住它拖到要放的位置。
 
-**測試**（改了這個流程後做一次）：GitHub → Actions → Check in → Run workflow，分支選要測的分支（不要選 `main`，`days.yml` 的 commit 會寫到那個分支），`place` 選 `out`。`latlon` 填 `25.0346,121.5667`（南山）：那個分支多一筆今天（今天已經有就不加）。填 `25.0339,121.5645`（台北 101，沒有模型）：出現一個 issue，測完關掉。兩次都會真的改 Where's Yen，測完再打一次卡。
+1. 長按「打卡：家」→ **Duplicate**（複製），改名成 `打卡：外出`。
+2. 在最上面加 **Ask for Input**（要求輸入），類型 Text，Prompt 寫 `在哪裡？英文，例如 at a café in Daan`。
+3. 接著加 **Choose from Menu**（從選單中選擇），Prompt 寫 `要當成今天的建築嗎？`，兩個選項改成 `是`、`否`。
+4. 把下面這些動作拖到 `是` 和 `否` 中間，照這個順序：
+
+   | 動作 | 設定 |
+   |---|---|
+   | **Ask for Input**（要求輸入） | Prompt：`做了什麼？英文，例如 hosted a developer meetup` |
+   | **Set Variable**（設定變數） | 名稱 `did`，值選上一步的 **Provided Input**（提供的輸入） |
+   | **Get Current Location**（取得目前位置） | 不用設定 |
+   | **Text**（文字） | 點 Insert Variable 選 **Current Location**，再點它選 **Latitude**（緯度）；打一個逗號 `,`；再插入一次 **Current Location**，選 **Longitude**（經度）。結果像 `25.0346,121.5667` |
+   | **Set Variable** | 名稱 `latlon`，值選上一步的 **Text** |
+   | **Text** | 插入 **Current Location** 選 **Name**（名稱），打一個空格，再插入一次選 **Street**（街道） |
+   | **Set Variable** | 名稱 `note`，值選上一步的 **Text** |
+
+   `否` 底下什麼都不放。
+5. 在 **Get Contents of URL**（取得 URL 內容）的 Request Body，點 `inputs` 那一列進去：
+   - `place` 的值改成 `out`。
+   - 加一個 Text 欄位，鍵 `label`，值選第 2 步的 **Provided Input**。
+   - 再加三個 Text 欄位，鍵是 `latlon`、`did`、`note`，值各選同名的變數。
+
+完成後從上到下是：
+
+```
+Ask for Input（在哪裡？）
+Choose from Menu（要當成今天的建築嗎？）
+  是
+    Ask for Input（做了什麼？）→ Set Variable did
+    Get Current Location → Text（緯度,經度）→ Set Variable latlon
+    Text（名稱 街道）→ Set Variable note
+  否
+End Menu
+Get Contents of URL
+  inputs：place = out、label、latlon、did、note
+```
+
+做好後不要按 ▶︎ 試，它會真的打卡，選「是」也會真的開 issue。要試就用下面的測試。
+
+**測試**（改了 `checkin.yml` 或 `day.js` 後做一次）：GitHub → Actions → Check in → Run workflow，分支選要測的分支（不要選 `main`，`days.yml` 的 commit 會寫到那個分支），`place` 選 `out`。`latlon` 填 `25.0346,121.5667`（南山）：那個分支多一筆今天（今天已經有就不加）。填 `25.0339,121.5645`（台北 101，沒有模型）：出現一個 issue，測完關掉。兩次都會真的改 Where's Yen，測完再打一次卡。
 
 ---
 
