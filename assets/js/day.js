@@ -499,6 +499,9 @@ async function run(raw, typed) {
   }
   openTerm();
   typing = true;
+  // while a command types out and its output comes in, the empty input line and the buttons step away:
+  // one thing happens on the screen at a time. They come back once the output is in. (A row picked in a list opens at once.)
+  if (!key.startsWith('open ')) document.body.classList.add('term-busy');
   try {
     // In three beats you can follow: the screen settles on the line, the command types out behind a cursor
     // and waits a moment as if Enter were pressed, then the output comes in a row at a time.
@@ -522,7 +525,7 @@ async function run(raw, typed) {
     block.append(out);
     if (key !== 'cd ~' && !openOverlay()) roomBelow(FOCUS.at, true);
     if (!still() && !quick) await reveal(out);
-  } finally { typing = false; }
+  } finally { typing = false; document.body.classList.remove('term-busy'); }
 }
 const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wait = ms => new Promise(r => setTimeout(r, ms));
