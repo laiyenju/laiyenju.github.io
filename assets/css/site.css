@@ -133,8 +133,13 @@ html.post-embed::-webkit-scrollbar { display: none; }
   font-size: 13px; font-weight: 500; line-height: 1; white-space: nowrap;
   transition: background-color 0.12s ease, color 0.12s ease;
 }
-.post-btn:hover { background: color-mix(in srgb, var(--t-ink, #2a2420) 7%, transparent); }
-.post-btn:active { background: var(--t-ink, #2a2420); color: var(--sky, #fafaf7); transition: none; }
+/* the same as the home page's buttons in every state (day.css .top-btn), although these are links: no grey flash
+   from the phone on a tap, no link underline or colour change from the rules for links below, the faint block only
+   where a pointer can point, and the accent ring for the keyboard */
+.post-btn { -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { .post-btn:hover { background: color-mix(in srgb, var(--t-ink, #2a2420) 7%, transparent); color: inherit; } }
+.post-row .post-btn:active { background: var(--t-ink, #2a2420); color: var(--sky, #fafaf7); transition: none; }
+.post-row .post-btn:focus-visible { outline: 1.5px solid var(--accent); outline-offset: 3px; text-decoration: none; color: inherit; }
 .post-btn svg { width: 12px; height: 12px; flex: none; }
 .post-home svg { width: 15px; height: 15px; }
 .post-to-notes { grid-column: 1; justify-self: start; margin-left: -10px; }
