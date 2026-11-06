@@ -710,41 +710,46 @@ function pureImage(x) {
   const c = document.createElement('canvas'); c.width = w.view.width; c.height = w.view.height; c.getContext('2d').drawImage(w.view, 0, 0);
   return c;
 }
-// header date as a dial: each digit is a strip 0–9 that slides to its number
-// sub: the line under the date; live: end it with the time now, to the second (siteSky.rollClock, ticked by secondTick)
-// past: a day gone by (the timeline), written in the accent like the line above a past building (.past-tag)
 // The card's two lines. live (now: the home page, a work, a note): the time on top, rolling each second (sky.js rollClock),
 // and just "Today" under it (the date and weekday are in the timeline). Otherwise (the timeline): the date on top, its
-// digits turning like a dial, and "Friday · seven years ago" under it. Switching between the two, both lines fade out and back in.
+// digits turning like a dial, and "Friday · seven years ago" under it; past: a day gone by, in the accent (.past-tag).
+// Both are in the same place at the same size, so nothing goes away in between: the time and the date sit on top of
+// each other and cross-fade (.face, day.css), and so does the line under them (two slots, the new words in the other).
 function dialTo(iso, sub, live = false, past = false) {
   const el = $('date'), text = iso.replace(/-/g, '.');
   $('whenCard').classList.toggle('is-past-day', past);
-  const build = () => {
-    if (live) {
-      if (!$('clockRoll')) { el.innerHTML = '<span class="roll" id="clockRoll"></span>'; siteSky.rollClock($('clockRoll')); }
-      return;
-    }
-    if (!el.querySelector('.dial') || el.querySelector('.dial').children.length !== text.length) {
-      el.innerHTML = `<span class="dial">${[...text].map(ch => /\d/.test(ch)
+  if (!$('clockRoll')) {
+    el.innerHTML = '<span class="face on"><span class="roll" id="clockRoll"></span></span><span class="face" id="dayFace" aria-hidden="true"></span>';
+    siteSky.rollClock($('clockRoll'));
+  }
+  const face = $('dayFace');
+  if (!live) {
+    if (!face.firstChild || face.firstChild.children.length !== text.length) {
+      face.innerHTML = `<span class="dial">${[...text].map(ch => /\d/.test(ch)
         ? `<span class="dg"><span class="strip">${'0123456789'.split('').map(n => `<span>${n}</span>`).join('')}</span></span>` : `<span>${ch}</span>`).join('')}</span>`;
-      el.getBoundingClientRect(); // a new dial starts at 0 and turns to the date
     }
-    [...el.querySelector('.dial').children].forEach((c, k) => {
+    // coming in from the time, the date is already set as it fades in; from one day to the next, its digits turn
+    const turn = face.classList.contains('on');
+    [...face.firstChild.children].forEach((c, k) => {
       const strip = c.querySelector('.strip');
       if (!strip) return;
+      strip.style.transition = turn ? '' : 'none';
       strip.style.transitionDelay = (k * 35) + 'ms';
       strip.style.transform = `translateY(${-(+text[k]) * 1.35}em)`;
     });
-  };
-  if (el._live === undefined || el._live === live) build();
-  else { el.classList.add('swap'); clearTimeout(el._t); el._t = setTimeout(() => { build(); el.classList.remove('swap'); }, 220); }
-  el._live = live;
-  const c = $('clock'), line = sub;
-  const put = () => { c.textContent = sub; c._key = line; };
-  if (c._key !== line) {
-    if (!c._key) put();
-    else { c.classList.add('swap'); clearTimeout(c._t); c._t = setTimeout(() => { put(); c.classList.remove('swap'); }, 220); }
   }
+  el.children[0].classList.toggle('on', live); el.children[0].setAttribute('aria-hidden', String(!live));
+  face.classList.toggle('on', !live); face.setAttribute('aria-hidden', String(live));
+  const c = $('clock');
+  if (c._key === sub) return;
+  if (!c._key) { c.innerHTML = '<span class="face on"></span><span class="face" aria-hidden="true"></span>'; c.firstChild.textContent = sub; }
+  else {
+    const was = c.querySelector('.face.on'), next = was.nextElementSibling || c.firstChild;
+    next.textContent = sub;
+    was.classList.remove('on'); was.setAttribute('aria-hidden', 'true');
+    next.classList.add('on'); next.removeAttribute('aria-hidden');
+  }
+  c._key = sub;
 }
 const BAYER8 = (() => { const b = [0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29, 53, 21]; return (x, y) => b[(y & 7) * 8 + (x & 7)] / 64; })();
 // dissolve the current building with a dither pattern, from p0 to 1; stops if another change starts
