@@ -700,6 +700,17 @@ const SCENES = {
         box(x - .04, 4.6, 0, x + .04, 4.68, .8, C.WOOD);
         e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 1.6 + x) * .08), 4.64, 1.2, .45, C.GREEN, 'rough'));
       }
+      // the plaza on Songren Road in front of the entrance, with its long white bench
+      box(X1 + .6, -2.6, 0, X1 + 3.4, 2.6, .05, [222, 220, 214]);
+      box(X1 + 2.4, -1.8, .05, X1 + 2.8, 1.8, .35, [240, 238, 232]);
+      // people on the plazas: colleagues walking to the meetup, shoppers outside Breeze
+      const PEOPLE = [[-9.2, 6.0, 3.9, .55, [52, 72, 120], 0], [-8.4, 6.2, 4.1, .4, [196, 88, 64], 3.1], [-6, 2.4, 3.8, .5, [60, 60, 64], 1.7],
+        [-3, 7.8, 4.0, .6, [226, 222, 214], 5.2], [7.6, 9.4, -1.0, .35, [40, 44, 52], 0], [7.4, 9.6, 1.2, .45, [120, 150, 96], 2.4]];
+      e.moving((e, t) => PEOPLE.forEach(([x0, x1, y, v, col, ph]) => {
+        const p = pacer(e, (t || 0) + ph * 3, x0, x1, v), bob = e.STILL || t == null ? 0 : Math.abs(Math.sin((t + ph) * 7)) * .06;
+        e.capsule([p.x, y, .2 + bob], [p.x, y, .8 + bob], .2, .17, () => col);
+        e.sphere(p.x, y, 1.08 + bob, .16, [224, 190, 160]);
+      }));
       e.moving((e, t) => birds(e, t, 0, 0, 4.5, 16));
       boxShadow(e, -2.5, -1.8, 2.5, 1.8, TOP);
       boxShadow(e, -10.8, -3.6, -3.0, 3.4, 7.4);
