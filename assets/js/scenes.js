@@ -612,25 +612,54 @@ const SCENES = {
       boxShadow(e, -X - .1, -Y - .1, X + .1, Y + .1, 14.6);
     },
   },
-  // Taipei Nan Shan Plaza (Breeze Nan Shan, Xinyi), the office side: the lobby pavilion in front, an upside-down
-  // truncated pyramid of glass and bronze; right behind it the 48-floor tower of dark blue glass, narrowing near the top
+  // Taipei Nan Shan Plaza (Breeze Nan Shan, Xinyi), the office side: the 48-floor tower, a slim prism of blue-grey
+  // glass under a slanted glass crown; the lobby pavilion in front of it, an upside-down truncated pyramid of glass
+  // and bronze; the Breeze Nan Shan mall on the left, stacked boxes in a brown-grey grid
   nanshan: {
-    bare: true, S: 10, origin: 78, cx: 0, cy: 0, R: 6, zmax: 19,
+    bare: true, S: 9, origin: 92, cx: -2, cy: -1, R: 7.5, zmax: 23,
     build(e, api) {
-      const { box } = e, GL = [44, 62, 92], GL2 = [36, 52, 80], MUL = [70, 86, 110], MET2 = [150, 148, 142], WARM = [74, 84, 92];
-      // the tower: dark blue glass on a grid, two halves that lean together near the top
-      const TY0 = -4.2, TY1 = -.8, TOP = 17.6, step = .5;
+      const { box } = e, GL = [76, 104, 132], GL2 = [62, 88, 116], MUL = [120, 140, 158], WARM = [74, 84, 92];
+      // the tower: a tall prism of blue-grey glass with fine vertical mullions, a little narrower at the top,
+      // folded down the middle of its front; a silver-grey side wall with horizontal bands on the right; on top
+      // a crown of lighter glass whose upper edge is cut on a slant, rising to a point at the right corner
+      const CY = -2.5, TOP = 19.2, step = .4, SIL = [178, 182, 186], SIL2 = [150, 154, 160];
+      const wAt = z => 2.2 - .4 * z / TOP, dAt = z => 1.6 - .3 * z / TOP;
       for (let z = 0; z < TOP; z += step) {
-        const k = Math.max(0, (z - 9) / (TOP - 9)), w = 2.8 - 1.8 * k * k, d = (TY1 - TY0) * (1 - .4 * k * k) / 2, cy = (TY0 + TY1) / 2;
-        api.emissive(() => box(-w, cy - d, z, -.05, cy + d, z + step, GL, 1), 'floors');
-        api.emissive(() => box(.05, cy - d, z, w, cy + d, z + step, GL2, 2), 'floors');
-        box(-w - .02, cy - d - .02, z, w + .02, cy + d + .02, z + .05, MUL);
-        for (let x = -w + .35; x < w; x += .45) box(x, cy + d, z, x + .04, cy + d + .03, z + step, MUL);
-        for (let y = cy - d + .35; y < cy + d; y += .45) box(w, y, z, w + .03, y + .04, z + step, MUL);
+        const w = wAt(z), d = dAt(z);
+        api.emissive(() => box(-w, CY - d, z, 0, CY + d, z + step, GL, 1), 'floors');
+        api.emissive(() => box(0, CY - d, z, w, CY + d, z + step, GL2, 2), 'floors');
+        for (let x = -w + .15; x < w; x += .3) box(x, CY + d, z, x + .03, CY + d + .03, z + step, MUL);
+        for (let y = CY - d + .15; y < CY + d; y += .3) box(w, y, z, w + .03, y + .03, z + step, MUL);
+        box(-.04, CY + d, z, .04, CY + d + .06, z + step, [196, 206, 216]); // the fold down the front
+        // the silver side wall, set against the right face's back half
+        box(w, CY - d - .1, z, w + .45, CY - d + 1.0, z + step, SIL, 3);
+        box(w + .45, CY - d - .1, z + step - .08, w + .48, CY - d + 1.0, z + step, SIL2);
       }
-      box(-1, -3, TOP, 1, -2, TOP + .4, MET2);
-      box(-.06, -2.56, TOP + .4, .06, -2.44, TOP + 1.3, [150, 152, 156]);
-      e.moving((e, t) => beacon(e, t, 0, -2.5, TOP + 1.45));
+      const CR0 = TOP, CR = [150, 192, 214], CR2 = [128, 172, 198];
+      for (let x = -wAt(TOP); x < wAt(TOP); x += .2) {
+        const f = (x + wAt(TOP)) / (2 * wAt(TOP)), top = CR0 + 1.2 + 1.8 * f, d = dAt(TOP);
+        box(x, CY - d, CR0, x + .2, CY + d, top - .5, x < 0 ? CR : CR2, 4);
+        box(x, CY + d - .06, top - .5, x + .2, CY + d, top, CR); // the glass screen standing above the roof
+        box(x, CY - d, top - .5, x + .2, CY - d + .06, top, CR2);
+      }
+      for (let y = CY - dAt(TOP); y < CY + dAt(TOP); y += .2) box(wAt(TOP) - .06, y, CR0, wAt(TOP), y + .2, CR0 + 3.0, CR2);
+      for (let z = CR0 + .3; z < CR0 + 1.2; z += .3) box(-wAt(TOP) - .02, CY + dAt(TOP), z, wAt(TOP) + .02, CY + dAt(TOP) + .04, z + .05, [214, 226, 232]);
+      e.moving((e, t) => beacon(e, t, wAt(TOP) - .1, CY + dAt(TOP) - .1, CR0 + 3.2));
+      // Breeze Nan Shan, the mall on the left: stacked boxes in a brown-grey grid, the upper ones jutting out,
+      // with gardens on the ledges between them
+      const GRID = [126, 116, 104], GRID2 = [100, 92, 82], MX0 = -9.2, MX1 = -3.4;
+      const mall = (x0, y0, z0, x1, y1, z1, id) => {
+        box(x0, y0, z0, x1, y1, z1, GRID, id);
+        for (let x = x0 + .15; x < x1; x += .3) for (let z = z0 + .15; z < z1 - .1; z += .3) box(x, y1, z, x + .12, y1 + .02, z + .12, GRID2);
+        for (let y = y0 + .15; y < y1; y += .3) for (let z = z0 + .15; z < z1 - .1; z += .3) box(x1, y, z, x1 + .02, y + .12, z + .12, GRID2);
+      };
+      api.emissive(() => box(MX0 + .4, -3.6, 0, MX1 - .3, 1.2, 1.0, C.GLASS, 5), 'lobby');
+      mall(MX0, -4.0, 1.0, MX1, 1.6, 2.8, 6);
+      box(MX0 + .2, .9, 2.8, MX1 - .2, 1.6, 3.0, C.GREEN);
+      api.emissive(() => box(MX0 + .3, -4.0, 2.8, MX1 - .6, .9, 3.3, C.GLASS, 7));
+      mall(MX0 - .4, -4.4, 3.3, MX1 - .8, .6, 5.2, 8);
+      box(MX0 - .4, -4.4, 5.2, MX1 - .8, .6, 5.3, GRID2);
+      for (const x of [-8.4, -7.2, -6.0, -4.8]) e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 1.5 + x) * .06), 1.25, 3.25, .32, C.GREEN, 'rough'));
       // the lobby pavilion, right in front of the tower: an upside-down truncated pyramid, narrow at the street
       // and wide at the top. Glass walls with bronze mullions below; above them the walls lean out further, a
       // bronze shell over a lit ceiling of fins; a thick bronze rim around the flat top
@@ -657,8 +686,9 @@ const SCENES = {
         box(x - .04, 5.6, 0, x + .04, 5.68, .8, C.WOOD);
         e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 1.6 + x) * .08), 5.64, 1.2, .45, C.GREEN, 'rough'));
       }
-      e.moving((e, t) => birds(e, t, 0, -2.5, 4.5, 15));
-      boxShadow(e, -2.8, TY0, 2.8, TY1, TOP);
+      e.moving((e, t) => birds(e, t, 0, -2.5, 4.5, 14));
+      boxShadow(e, -2.2, CY - 1.6, 2.7, CY + 1.6, TOP);
+      boxShadow(e, MX0 - .4, -4.4, MX1, 1.6, 5.2);
       boxShadow(e, VX - 3.7, VY - 2.8, VX + 3.7, VY + 2.8, 4.5);
     },
   },
