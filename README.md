@@ -23,7 +23,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `assets/css/`、`assets/js/` | 兩邊共用：`sky.js`（所在城市、太陽位置、依太陽決定的背景顏色）。首頁：`day.css`、`day.js`（Timeline、terminal、版面）、`scenes.js`（建築模型 `SCENES`、光線、影子和窗燈，分享卡片也用它）、`pixel-engine.js`（產生的檔案）。文章頁：`site.css`、`theme.js`（每分鐘跟著天色更新）、`post.js`。Markdown 樣式在 `site.css` 的 `.post-prose`；文章圖片排版和點開放大在 `assets/js/post.js`（`buildFigures`、`buildLightbox`）和 `site.css` 的 `.post-fig`、`.post-gallery`、`.lb` |
 | `assets/vendor/pixel-plays/`、`scripts/pixel-engine/` | Pixel Plays 引擎原檔（MIT，作者 AmirMushich，`LICENSE` 在同一個資料夾）和把它轉成 `assets/js/pixel-engine.js` 的程式 |
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片：圖檔、產生程式、自動執行的 Action。卡片是一張明信片：左邊是那篇筆記當天的建築，像 Timeline 一樣只有建築、沒有影子，盡量放大，底色是由上往下淡出的暖色天空（網站太陽約 8° 時的顏色）。建築的選法：那天在 `_data/days.yml` 有地點就用那個地點，下面寫名稱、城市・國家、經緯度（`coords`）；沒有就照日曆：平日辦公室，週末和 `HOLIDAYS` 是家（卡片不看打卡），下面寫 The office／Home 和 Taipei · Taiwan。右邊是郵戳（城市、日期、星期）、`cat notes/<檔名>`、標題、副標題（沒有就用摘要）和寄件地址，沒有郵票。首頁的卡片是辦公室，郵戳不寫日期（`scripts/og/card.html`，地點由 `scripts/og/build.js` 的 `places` 讀 `days.yml`） |
-| `.github/workflows/checkin.yml`、`scripts/checkin/`、`checkin` 分支 | 打卡：iPhone 捷徑觸發 Action，`scripts/checkin/update.js` 寫出 `location.json`，放在 `checkin` 分支；首頁讀它決定今天的建築和「Where is Yen now」（見 3.5）。外出時選了建築：已有模型的由 `scripts/checkin/day.js` 在 `_data/days.yml` 加上今天、commit 到 `main`；新地點開一個 issue 給 Claude（見 3.6） |
+| `.github/workflows/checkin.yml`、`scripts/checkin/`、`checkin` 分支 | 打卡：iPhone 捷徑觸發 Action，`scripts/checkin/update.js` 寫出 `location.json`，放在 `checkin` 分支；首頁讀它決定今天的建築和「Where is Yen now」（見 3.5）。外出時要當成今天的建築：附近有模型的地點由 `scripts/checkin/day.js` 在 `_data/days.yml` 加上今天、commit 到 `main`；其他地點開一個 issue 給 Claude（見 3.6） |
 | `assets/icons/`、`assets/fonts/`、`assets/images/` | favicon、文章字型、文章圖片 |
 | `notes/`、`works/` | `/notes/`、`/works/` 網址轉到首頁的 `?view=notes`、`?view=works`，首頁會捲到 terminal 並執行 `ls notes`／`ls works`。notes 直接用作品的那一套，沒有另外的程式：清單裡點一篇（`open notes/<檔名>`、`open works/<slug>`），在首頁的閱讀畫面打開（`#note-<檔名>`、`#work-<slug>`，`day.js` 的 `openNote`、`openWork`），同樣的卡片和按鈕（`← Notes`／`← Work`、Home），同樣的回清單方式（`backToList`：從清單打開的就關掉、把清單捲回日期卡片下方、剛讀的那一列反白再退掉；從連結打開的就執行一次 `ls notes`／`ls works`），Home 和 Esc 回到乾淨的首頁。文章的內容是文章頁本身，整頁放在閱讀畫面裡（`iframe`），所以文章的樣式只有 `site.css` 一份；放在裡面時，文章裡的連結開在整個視窗、Esc 和放大圖片會通知首頁（`post.js` 的 `EMBED`、`tellHome`）。清單的列也是連結：⌘／Ctrl 點或中鍵點，會在新分頁打開文章頁本身 |
 | `sitemap.xml`、`robots.txt` | 給搜尋引擎的檔案 |
@@ -38,7 +38,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 日期卡片 | 頂部是一行，像 terminal 的標題列，置中、最寬 440px（寬螢幕上按鈕才不會離時間太遠，看起來是一組；手機上左右各留 20px，和作品、文章的內文對齊）：左邊回清單（`← Work`／`← Notes`，只在作品和文章），中間是時間，右邊在首頁是 Timeline（今天）或 Today（其他日子、Timeline 裡），在作品和文章是 Home（只有圖示）。時間沒有框，只是字。這一行底下是一條天色的帶子、往下淡出，捲動時內容不會撞到字（首頁 `_layouts/home.html` 的 `.top-row`、`day.css` 的 `.top`；文章頁 `_layouts/default.html` 的 `.post-row`、`site.css` 的 `.post-top`）。離頂端 `--card-top`：手機 12px；寬螢幕（≥ 900px）是畫面高度的 9%（28–96px）；在 `day.css` 和 `site.css` 各有一份，要一起改。時間有兩行，字級每一頁都一樣：上面一行 `--card-title`（15px），下面一行 `--card-sub`（12px），也是兩份要一起改。首頁、作品頁和文章頁：上面是現在的時間，到秒（`HH:MM:SS`），下面只寫 `Today`（日期和星期在 Timeline 裡看）。時間的每個數字像翻牌一樣往上捲到下一個（`assets/js/sky.js` 的 `rollClock`，首頁由 `day.js` 的 `secondTick`、文章頁由 `post.js` 的 `tick` 每秒呼叫；樣式在 `day.css`、`site.css` 的 `.roll`；系統設定「減少動態效果」時直接換數字）。Timeline 裡上面一行改成那天的日期（數字像轉盤一樣轉到那天），下面是「星期 · 幾年前」，不顯示時間；進出 Timeline 時兩行先淡出再換（`day.js` 的 `dialTo`）；停在過去某一天時，日期和這一行用強調色（`day.css` 的 `.when.is-past-day`）。按鈕的切換在 `day.js` 的 `ctaFor` |
 | `assets/og/` | Action 自動產生並 commit，不要手動改或刪 |
 | `checkin` 分支 | Action 每次打卡都整個覆寫，只有一個 commit、一個 `location.json`。不要手動改，也不要合併進 `main` |
-| 打卡寫進 `main` 的 commit | 外出時選了已有模型的建築，Action 會直接 commit「Today at …（check-in）」到 `main`（改 `_data/days.yml`）。本機改東西前先 `git pull` |
+| 打卡寫進 `main` 的 commit | 外出時在已有模型的地點選「當成今天的建築」，Action 會直接 commit「Today at …（check-in）」到 `main`（改 `_data/days.yml`）。本機改東西前先 `git pull` |
 | 草稿 | repo 裡目前沒有草稿。要把草稿放進 repo，就放在根目錄，檔名結尾用 `.draft.md`，不會上線 |
 | 不會上線的檔案 | 根目錄的 `*.draft.md`、`README.md`、`CLAUDE.md`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`（`_config.yml` 的 `exclude`） |
 | 文章網址 | `published/2026-10-29-題目.md` → `/published/2026-10-29-題目.html`。改檔名會改網址，舊連結會失效 |
@@ -377,26 +377,25 @@ flowchart LR
 
 ### 3.6 外出那天的建築
 
-外出打卡時用 `scene` 說今天在哪棟建築：
+外出打卡時，捷徑問「要當成今天的建築嗎？」。選「是」，就送出手機的位置（`latlon`），由位置判斷是哪棟，不用記名字：
 
-| `scene` | 結果 |
+| 位置 | 結果 |
 |---|---|
-| 已有模型的名字（2.3.1 節的 `scene`，例如 `nanshan`） | `scripts/checkin/day.js` 複製那個地點在 `days.yml` 的資料，加上今天和 `did`，commit 到 `main`。幾分鐘後首頁換成那棟 |
-| `new` | 開 issue「新建築：…」。每晚 21:40 Claude 的排程任務找資料、寫規格、推播通知；在那個對話確認後，Claude 才畫，畫完開 PR |
-| `none` 或空白 | 只改 Where's Yen |
+| 150 m 內有 `days.yml` 裡的地點（看 `coords`） | `scripts/checkin/day.js` 複製那個地點的資料，加上今天和 `did`，commit 到 `main`。幾分鐘後首頁換成那棟 |
+| 附近沒有 | 開 issue「新建築：…」（地點名稱、地址、地圖連結）。每晚 21:40 Claude 的排程任務找資料、寫規格、推播通知；在那個對話確認後，Claude 才畫，畫完開 PR |
+| 選「否」 | 只改 Where's Yen |
 
-- 另外兩個欄位：`did`（做了什麼，英文小寫開頭，不加句號，沒填時是 `spent time here`）；`note`（只有 `new` 用：Apple 地圖上的地點名稱和地址，可以再加照片描述）。
-- **怎麼確定是同一棟**：已有模型的地點是從列表選名字，不會選錯。新地點靠 `note` 裡的地址；Claude 的規格第一行會寫「認定是：名稱、地址、地圖連結」，不對就在確認時改。
-- `scene` 打錯時打卡照常，只是那一步在 Actions 裡失敗。issue 是公開的，和 Where's Yen 一樣會讓人知道當下在哪裡。
+- **怎麼確定是同一棟**：已有模型的，看位置；新地點的，Claude 的規格第一行寫「認定是：名稱、地址、地圖連結」，不對就在確認時改。
+- `did` 是建築底下那句話（`Yen {did}.`），英文小寫開頭，不加句號，沒填時是 `spent time here`。
+- 位置只用來比對和放進 issue，不會寫進 `location.json`。但 issue 和 Actions 的紀錄是公開的，和 Where's Yen 一樣會讓人知道當下在哪裡。
 
 **捷徑「打卡：外出」**：在「要求輸入（在哪裡？）」後面加：
 
-1. **從列表中選擇**：`none`、`new`、`nanshan`（每多一個模型就加一行）。
-2. **要求輸入**：`做了什麼？英文，例如 hosted a developer meetup`。
-3. **取得目前位置** → **取得位置的詳細資訊**（名稱、街道地址）。可以再加 **拍照** 和 Claude 的 **Analyze Photo**。
-4. `inputs` 辭典加三個文字欄位：`scene` = 第 1 步的選取項目、`did` = 第 2 步的輸入、`note` = 第 3 步的結果。
+1. **從選單中選擇**，提示 `要當成今天的建築嗎？`，選項 `是`、`否`。
+2. 在「是」底下：**要求輸入**（`做了什麼？英文，例如 hosted a developer meetup`）→ 設定變數 `did`；**取得目前位置** → **文字** `緯度,經度`（點變數選「緯度」「經度」）→ 設定變數 `latlon`；**取得位置的詳細資訊**（名稱、街道）→ **文字** 合在一起 → 設定變數 `note`。「否」底下留空。
+3. `inputs` 辭典加三個文字欄位：`latlon`、`did`、`note`，值分別選同名的變數。
 
-**測試**（改了這個流程後做一次）：GitHub → Actions → Check in → Run workflow，分支選要測的分支（不要選 `main`，`days.yml` 的 commit 會寫到那個分支），`place` 選 `out`。測 `scene: nanshan`：那個分支多一筆今天。測 `scene: new`：出現一個 issue，測完關掉。兩次都會真的改 Where's Yen，測完再打一次卡。
+**測試**（改了這個流程後做一次）：GitHub → Actions → Check in → Run workflow，分支選要測的分支（不要選 `main`，`days.yml` 的 commit 會寫到那個分支），`place` 選 `out`。`latlon` 填 `25.0346,121.5667`（南山）：那個分支多一筆今天（今天已經有就不加）。填 `25.0339,121.5645`（台北 101，沒有模型）：出現一個 issue，測完關掉。兩次都會真的改 Where's Yen，測完再打一次卡。
 
 ---
 
