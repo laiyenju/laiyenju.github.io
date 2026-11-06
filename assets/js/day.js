@@ -379,11 +379,11 @@ function renderPast(date) {
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
   renderText(); renderThumbs(); sizeStage(); mount(false);
-  ctaFor('That day');
+  ctaFor('Timeline'); // a past day is a day out of the timeline, so the button says so (That day is already its thumbnail's word)
   scrollTo(0, 0);
 }
 // the buttons beside the date card. The right one names the view you are in: Today on today's page, Timeline in the
-// timeline, That day on a past day's page. Pressing it changes view: Today opens the timeline, the others go back to today.
+// timeline and on a past day's page. Pressing it changes view: Today opens the timeline, Timeline goes back to today.
 // On a work or a note: ← Work / ← Notes on the card's left goes back to the list, Home on its right.
 function ctaFor(word) {
   const back = word === 'Work' || word === 'Notes';
