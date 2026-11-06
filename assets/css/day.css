@@ -194,7 +194,7 @@ body.tl-in .hero .caption, body.tl-in .hero .tools { opacity: 0; transition-dura
 }
 .cmdbar::-webkit-scrollbar { display: none; }
 .cmdbar.more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
-.cmdbar .dollar { color: var(--accent); }
+.cmdbar .arrow { color: var(--accent); }
 /* the bar: the same buttons as at the top, on a band of the sky's own colour that fades out upwards, so what scrolls
    under it never runs into the words (the same as the top) */
 .term .cmdbar {

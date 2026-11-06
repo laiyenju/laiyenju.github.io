@@ -449,7 +449,6 @@ function whereNow() {
 /* ================= terminal ================= */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const logEl = $('log');
-document.querySelectorAll('.city').forEach(el => { el.textContent = CITY.short; }); // the input line's yen@<city>
 // notes and works share one list: date or year | title, then a short line under it (subtitle or description).
 // Each row carries its language, so Chinese titles get Chinese line breaking and spacing.
 const lsRows = rows => `<div class="ls">${rows.map(r => `<a href="${r.url}" data-run="open notes/${esc(r.slug)}" lang="${esc(r.lang || 'zh-Hant')}"><span class="d">${r.date}</span><span class="t">${esc(r.title)}</span>${r.sub ? `<span class="r">${esc(r.sub)}</span>` : ''}</a>`).join('')}</div>`;
@@ -478,7 +477,7 @@ const ALIASES = { 'ls notes/': 'ls notes', 'ls works/': 'ls works', 'whereis': '
 // plain-language labels on the buttons; the terminal still shows the real command being typed
 const CHIPS = [['About Yen', 'whoami'], ['Notes', 'ls notes'], ['Work', 'ls works'], ["Where's Yen", 'whereis yen'], ['Clear', 'clear']];
 let typing = false;
-function prompt(cmd) { return `<span class="prompt">yen@${CITY.short} ~ <i>$</i> <b>${esc(cmd)}</b></span>`; }
+function prompt(cmd) { return `<span class="prompt"><i>❯</i> <b>${esc(cmd)}</b></span>`; }
 async function run(raw, typed) {
   const cmd = raw.trim().toLowerCase().replace(/\s+/g, ' ');
   if (!cmd || typing) return;
@@ -577,7 +576,7 @@ logEl.addEventListener('click', ev => {
 // the buttons: one bar for the whole page (see placeBar). A button runs its command; run() brings the line into view.
 $('cmdForm').addEventListener('submit', ev => { ev.preventDefault(); const v = $('cmd').value; $('cmd').value = ''; run(v, false); });
 {
-  const d = document.createElement('button'); d.type = 'button'; d.className = 'dollar'; d.textContent = '$'; d.title = 'Type a command';
+  const d = document.createElement('button'); d.type = 'button'; d.className = 'arrow'; d.textContent = '❯'; d.title = 'Type a command';
   d.addEventListener('click', () => { focusLine($('cmdForm')); $('cmd').focus({ preventScroll: true }); });
   $('cmdbar').append(d);
 }
