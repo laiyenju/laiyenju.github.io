@@ -81,7 +81,7 @@ function buildItems() {
     scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
     name: base === 'home' ? 'Yen is at home today.' : 'Yen is at the office today.',
     place: base === 'home' ? 'home' : 'the office',
-    // the date card already says the weekday and the city: only a holiday's name is news here
+    // the date card already says the weekday: only a holiday's name is news here
     meta: r.holiday ? escHtml(r.holiday) : '',
     note: BIO + (extra ? ' ' + extra : ''),
   });
@@ -301,7 +301,7 @@ function nearestFrame(it, a) {
 }
 function renderText() {
   const it = state.items[state.index];
-  if (document.getElementById('tl').hidden) dialTo(todayISO(), 'Today', true);
+  if (document.getElementById('tl').hidden) dialTo(todayISO(), todayWd(), true);
   $('capName').textContent = it.name;
   $('capMeta').innerHTML = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
@@ -379,22 +379,24 @@ function renderPast(date) {
   });
   state.index = Math.max(0, state.items.findIndex(it => it.main));
   renderText(); renderThumbs(); sizeStage(); mount(false);
-  ctaFor('Today');
+  ctaFor('past');
   scrollTo(0, 0);
 }
-// the buttons beside the date card. Timeline on today's page; Today anywhere else in time (a past day, the timeline).
-// On a work or a note: ← Work / ← Notes on the card's left goes back to the list, Home on its right.
-function ctaFor(word) {
-  const back = word === 'Work' || word === 'Notes';
-  $('backBtn').hidden = !back; $('homeBtn').hidden = !back; $('tlBtn').hidden = back;
-  if (back) { $('backText').textContent = word; $('backBtn').setAttribute('aria-label', word === 'Work' ? 'Back to all work' : 'Back to all notes'); }
-  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', word === 'Today' ? 'Back to today' : 'Open the timeline'); }
+// the buttons beside the date card. The Today | Timeline switch says which view this is: the one you are in is
+// filled, with its word; the other is only its icon (the phone has no room for both words). On a past day neither
+// is on. On a work or a note: ← Work / ← Notes on the card's left goes back to the list, Home on its right.
+function ctaFor(view) {
+  const back = view === 'Work' || view === 'Notes';
+  $('backBtn').hidden = !back; $('homeBtn').hidden = !back; $('seg').hidden = back;
+  if (back) { $('backText').textContent = view; $('backBtn').setAttribute('aria-label', view === 'Work' ? 'Back to all work' : 'Back to all notes'); return; }
+  $('todayBtn').setAttribute('aria-pressed', String(view === 'today'));
+  $('tlBtn').setAttribute('aria-pressed', String(view === 'timeline'));
 }
 function exitPast() {
   if (!state.pastDate) return;
   state.pastDate = null;
   document.body.classList.remove('is-past');
-  ctaFor('Timeline');
+  ctaFor('today');
   renderDay();
 }
 function renderDay() { state.ang = 0; buildItems(); renderText(); renderThumbs(); sizeStage(); mount(false); }
@@ -634,12 +636,12 @@ const openOverlay = () => (!reader.hidden && reader) || (!tl.hidden && tl) || nu
 function go2(hash) { if (location.hash !== hash) { try { history.pushState(null, '', hash); } catch (e) { location.hash = hash; return; } } route(); }
 function showOverlay(el) {
   for (const o of [reader, tl]) o.hidden = o !== el;
-  ctaFor(location.hash.startsWith('#work-') ? 'Work' : location.hash.startsWith('#note-') ? 'Notes' : 'Today');
+  ctaFor(location.hash.startsWith('#work-') ? 'Work' : location.hash.startsWith('#note-') ? 'Notes' : 'timeline');
   el.scrollTop = 0; document.body.style.overflow = 'hidden'; updateMore();
 }
 function closeOverlays(keep) {
   if (!keep) clearTerm();
-  reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Timeline'); document.body.classList.remove('tl-in');
+  reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('today'); document.body.classList.remove('tl-in');
   unrollPlate(420);
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
@@ -700,7 +702,9 @@ addEventListener('message', ev => {
   if (ev.data.note === 'lightbox') document.body.classList.toggle('note-lb', !!ev.data.open);
 });
 const LONG_MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const LONG_DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const SHORT_DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// the card's line under the time: today's weekday where Yen is ("Fri"); the switch beside it already says Today
+const todayWd = () => SHORT_DAY[fromDayMs(state.day).wd];
 const parseDay = d => { const [y, m, dd] = d.split('-').map(Number); return fromDayMs(dayMs(y, m, dd)); };
 const todayISO = () => { const d = fromDayMs(state.day); return `${d.y}-${pad(d.m)}-${pad(d.d)}`; };
 function timelineEntries() {
@@ -722,8 +726,8 @@ function pureImage(x) {
   return c;
 }
 // The card's two lines. live (now: the home page, a work, a note): the time on top, rolling each second (sky.js rollClock),
-// and just "Today" under it (the date and weekday are in the timeline). Otherwise (the timeline): the date on top, its
-// digits turning like a dial, and "Friday · seven years ago" under it; past: a day gone by, in the accent (.past-tag).
+// and today's weekday under it ("Fri"). Otherwise (the timeline): the date on top, its digits turning like a dial, and
+// "Seven years ago" under it ("Today" on today); past: a day gone by, in the accent (.past-tag).
 // Both are in the same place at the same size, so nothing goes away in between: the time and the date sit on top of
 // each other and cross-fade (.face, day.css), and so does the line under them (two slots, the new words in the other).
 function dialTo(iso, sub, live = false, past = false) {
@@ -913,7 +917,7 @@ async function showTlDay(k, first, fromP = 0, instant = false) {
   try { history.replaceState(null, '', '#day-' + x.id); } catch (e) {}
   markRuler();
   $('tlCap').classList.add('hide');
-  dialTo(x.date, `${LONG_DAY[d.wd]} · ${years > 0 ? ago(years).toLowerCase() : 'today'}`, false, years > 0);
+  dialTo(x.date, years > 0 ? ago(years) : 'Today', false, years > 0);
   cv.classList.add('snapback'); cv.style.transform = '';
   const img = tlImage(x);
   // quick chained swipes shorten the animation instead of queueing it
@@ -945,7 +949,7 @@ function openTl(date) {
   TL.from = null;
   if (fly) tl.classList.add('clear');
   showOverlay(tl);
-  ctaFor('Today');
+  ctaFor('timeline');
   renderRuler(); renderRow(k);
   const pastOnly = TL.list.filter(x => !x.today);
   const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
@@ -1070,8 +1074,8 @@ function leaveTl(setup, hash) {
     updateMore();
   }, MOVE);
 }
-function headerNow() { dialTo(todayISO(), 'Today', true); }
-function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Timeline'); }
+function headerNow() { dialTo(todayISO(), todayWd(), true); }
+function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('today'); }
 function tapTl() {
   const x = TL.list[TL.idx];
   if (x.today) { leaveTl(() => { homeToday(); const k = state.items.length - 1; if (state.index !== k) { state.index = k; renderThumbs(); mount(false); } renderText(); }); return; }
@@ -1097,7 +1101,7 @@ function route() {
   else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; endNote(); renderPast(m[1]); updateMore(); }
   else {
     if (openOverlay() || state.pastDate) { if (reader.hidden || !READ.fromList) clearTerm(); }
-    if (openOverlay()) { reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Timeline'); unrollPlate(420); }
+    if (openOverlay()) { reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('today'); unrollPlate(420); }
     if (state.pastDate) exitPast(); else renderText();
     updateMore();
   }
@@ -1170,11 +1174,12 @@ addEventListener('keydown', ev => {
   if (ev.key === 'ArrowRight') go(state.index + 1);
   if (ev.key === 'ArrowLeft') go(state.index - 1);
 });
-$('tlBtn').addEventListener('click', () => {
+$('todayBtn').addEventListener('click', () => {
   if (!tl.hidden) leaveToToday();
   else if (state.pastDate) closeOverlays();
-  else openTimeline();
 });
+// from a past day, the timeline opens on that day (openTimeline takes the main building's id)
+$('tlBtn').addEventListener('click', () => { if (tl.hidden) openTimeline(); });
 $('backBtn').addEventListener('click', backToList);
 $('homeBtn').addEventListener('click', () => { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); });
 

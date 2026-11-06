@@ -102,7 +102,7 @@ body.theme-night { --accent: var(--t-accent, #f5b942); }
 }
 
 /* —— The frame, the same as a work on the home page: one line at the top, like a terminal's title bar, across the
-      middle of the page (at most 440px, so the buttons stay close to the time): ← Notes on the left, the time in the middle (--card-title, rolling each second, and "Today" under
+      middle of the page (at most 440px, so the buttons stay close to the time): ← Notes on the left, the time in the middle (--card-title, rolling each second, and the weekday under
       it, --card-sub), Home on the right; then the title on the left, the subtitle, the date and size in mono; (END) at
       the end. Under the line a band of the sky's own colour, fading out, so the note never runs into it.
       The buttons are words in the terminal's font, with no box: pointing at one lays a faint ink block behind it,
