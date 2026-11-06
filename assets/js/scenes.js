@@ -35,10 +35,13 @@ function applyTheme(L) { siteSky.paintHome(L.bg); } // page and text colours for
 /* ================= scenes ================= */
 const C = {
   WHITE: [238, 236, 230], GLASS: [58, 72, 82], CURTAIN: [96, 116, 132], FIN: [214, 216, 214], CONC: [186, 184, 178], WOOD: [126, 90, 60], WOOD_L: [172, 130, 88],
-  SHOJI: [238, 232, 214], TILE: [84, 86, 96], STONE: [170, 168, 160], LANTERN: [150, 146, 138], GRAVEL: [214, 208, 194], PAVE: [198, 196, 190],
+  STONE: [170, 168, 160], PAVE: [204, 200, 192], CURB: [160, 158, 152],
   SAND: [226, 210, 172], WATER: [94, 148, 170], VERMIL: [204, 66, 40], INK: [44, 40, 40], BARKROOF: [120, 84, 64],
   POT: [176, 98, 64], GREEN: [86, 124, 70], DECK: [150, 112, 80],
-  SHIBA: [212, 136, 70], CREAM: [244, 234, 214], DEER: [164, 116, 74], NOSE: [40, 30, 28],
+  ALU: [196, 200, 204], ALU_D: [120, 126, 134], BASE: [168, 166, 160], PLASTER: [238, 234, 226], OAK: [196, 160, 118], OAK_L: [214, 184, 142],
+  STEEL: [62, 64, 70], LAMP: [250, 226, 170], SCREEN: [96, 150, 190], CODE: [210, 236, 250], CABINET: [236, 234, 228], COUNTER: [70, 70, 74],
+  RUG: [214, 194, 160], SOFA: [128, 146, 128], MUSTARD: [214, 164, 58], CORAL: [214, 104, 84], SAGE: [150, 170, 130], STEAM: [236, 236, 236],
+  SHIBA: [212, 136, 70], CAT: [58, 56, 62], CREAM: [244, 234, 214], DEER: [164, 116, 74], NOSE: [40, 30, 28],
 };
 const toneCache = new Map();
 function closeTones(e, base) {
@@ -162,22 +165,83 @@ function beacon(e, t, x, y, z) {
   if (t == null || Math.floor(t * 1.25) % 2 === 0) e.sphere(x, y, z, .14, [236, 52, 40], 'gloss');
 }
 
-function lantern(e, api, x, y, s = 1) {
-  const B = (a, b, c, d, z0, z1, col) => e.box(x + a * s, y + b * s, z0 * s, x + c * s, y + d * s, z1 * s, col);
-  B(-.4, -.4, .4, .4, 0, .3, C.STONE);
-  B(-.15, -.15, .15, .15, .3, 1.1, C.STONE);
-  api.emissive(() => B(-.35, -.35, .35, .35, 1.1, 1.55, C.LANTERN));
-  B(-.55, -.55, .55, .55, 1.55, 1.75, C.STONE);
-  B(-.15, -.15, .15, .15, 1.75, 1.95, C.STONE);
-  boxShadow(e, x - .5 * s, y - .5 * s, x + .5 * s, y + .5 * s, 1.75 * s);
+/* The home: a book wall (one coloured book per note) and glass that lets the room under it show through. */
+const HOME_TREES = [[-2.9, 4.5], [3.5, -4.6]];
+// the shiba's round at home: along the book wall, out the open side onto the sidewalk, back in past the table
+const HOME_WALK = [[-.95, .9], [-.95, 2.4], [-.2, 2.9], [.4, 3.7], [2.6, 3.9], [3.3, 2.8], [3.3, -.5], [2.5, -1.0], [1.6, -1.0], [0, -.9], [-.6, .2]];
+// a point at distance d along a closed path of [x, y] corners, and the way it faces there
+function alongPath(pts, d) {
+  const segs = pts.map((a, k) => { const b = pts[(k + 1) % pts.length]; return [a, b, Math.hypot(b[0] - a[0], b[1] - a[1])]; });
+  let s = d % segs.reduce((n, g) => n + g[2], 0);
+  for (const [a, b, len] of segs) {
+    if (s > len) { s -= len; continue; }
+    const f = s / len;
+    return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, yaw: Math.atan2(b[1] - a[1], b[0] - a[0]) };
+  }
+  return { x: pts[0][0], y: pts[0][1], yaw: 0 };
+}
+const NOTE_BOOKS = [[214, 72, 52], [236, 176, 48], [44, 132, 140], [52, 84, 170], [126, 170, 84], [196, 96, 150]];
+const PLAIN_BOOKS = [[150, 146, 138], [178, 172, 160], [124, 122, 118], [204, 198, 184], [140, 132, 120], [166, 160, 152]];
+// shelves on the wall at x = x0 (front at x1), from y0 to y1 and z0 to z1. Grey books, plants, records and vases fill
+// it from the start, so it never looks empty; each note turns one book into a coloured one, from the top left
+// (top shelf first; on screen, left is +y).
+function bookWall(e, notes, x0, x1, y0, y1, z0, z1) {
+  const { box } = e, rows = 8, cols = Math.round((y1 - y0) / .72), rh = (z1 - z0) / rows, cw = (y1 - y0) / cols;
+  for (let r = 0; r <= rows; r++) box(x0, y0, z0 + r * rh - .05, x1, y1, z0 + r * rh, C.OAK);
+  for (let c = 0; c <= cols; c++) box(x0, y0 + c * cw - .025, z0, x1, y0 + c * cw + .025, z1, C.OAK);
+  let j = 0;
+  const plants = [];
+  for (let r = rows - 1; r >= 0; r--) for (let c = cols - 1; c >= 0; c--) {
+    const zb = z0 + r * rh, ya = y0 + c * cw + .04, yb = y0 + (c + 1) * cw - .04, ym = (ya + yb) / 2, h = e.hash(c * 7 + 1, r * 5 + 2);
+    // a few cells (never the top-left one, where the coloured books start) hold something else
+    if (r < rows - 1 && h < .24) {
+      const kind = Math.floor(e.hash(c, r + 9) * 3) === 2 && r > 2 ? 0 : Math.floor(e.hash(c, r + 9) * 3);
+      if (kind === 0) {
+        box(x0 + .1, ym - .12, zb, x1 - .08, ym + .12, zb + .2, C.POT);
+        plants.push([(x0 + x1) / 2, ym, zb + .32]);
+      } else if (kind === 1) {
+        for (let k = 0; k < 3; k++) box(x0 + .04, ym - .2 + k * .03, zb, x1 - .06, ym - .17 + k * .03, zb + .4, [C.INK, C.CORAL, C.CREAM][k]);
+      } else {
+        e.capsule([(x0 + x1) / 2, ym, zb + .02], [(x0 + x1) / 2, ym, zb + .26], .1, .06, () => [222, 214, 196]);
+      }
+      continue;
+    }
+    for (let y = yb, k = 0; ; k++) {
+      const w = .07 + e.hash(c * 31 + k, r) * .05;
+      if (y - w < ya) break;
+      const note = j < notes.length, ht = note ? rh * .84 : rh * (.58 + e.hash(k, c * 3 + r) * .22);
+      box(x0 + .04, y - w, zb, x1 - .03 - (note ? 0 : .02), y - .008, zb + ht, note ? NOTE_BOOKS[j % NOTE_BOOKS.length] : PLAIN_BOOKS[Math.floor(e.hash(k * 3, c + r * 11) * PLAIN_BOOKS.length)]);
+      if (note) j++;
+      y -= w;
+    }
+  }
+  // the plants on the shelves trail and sway a little
+  e.moving((e, t) => plants.forEach(([x, y, z], k) => {
+    const sw = t == null ? 0 : Math.sin(t * 1.5 + k * 1.9) * .04;
+    e.sphere(x, y + sw, z, .17, C.GREEN, 'rough');
+    e.sphere(x + .06, y - sw, z - .2, .1, C.GREEN, 'rough');
+  }));
+}
+// a flat pane of glass at height z: it does not hide what is under it, it tints it, with a few bright streaks
+function glassPane(e, x0, y0, x1, y1, z) {
+  const seen = new Uint8Array(e.W * e.H), G = [168, 200, 214], HI = [240, 246, 248];
+  for (let a = x0; a <= x1; a += .03) for (let b = y0; b <= y1; b += .03) {
+    const p = e.project(a, b, z), ix = p.sx | 0, iy = p.sy | 0;
+    if (ix < 0 || iy < 0 || ix >= e.W || iy >= e.H) continue;
+    const i = iy * e.W + ix, c = e.pix[i];
+    if (seen[i] || p.d <= e.zb[i] || !(c >>> 24)) continue;
+    seen[i] = 1;
+    const streak = (((a + b) % 1.6) + 1.6) % 1.6 < .16, k = streak ? .62 : .42, to = streak ? HI : G;
+    e.pix[i] = e.rgb(mix(c & 255, to[0], k), mix(c >> 8 & 255, to[1], k), mix(c >> 16 & 255, to[2], k));
+  }
 }
 function pacer(e, t, x0, x1, speed) {
   const L = x1 - x0, s = (e.STILL ? L * .4 : t * speed) % (2 * L), fwd = s < L;
   return { x: x0 + (fwd ? s : 2 * L - s), yaw: fwd ? 0 : Math.PI };
 }
-function shiba(e, x, y, yaw, t) {
+function shiba(e, x, y, yaw, t, z0 = 0) {
   const fx = Math.cos(yaw), fy = Math.sin(yaw);
-  const P = (a, b, c) => [x + fx * a - fy * b, y + fy * a + fx * b, c];
+  const P = (a, b, c) => [x + fx * a - fy * b, y + fy * a + fx * b, c + z0];
   const add = (a, b, r0, r1, col) => e.dynamicAdd(a, b, r0, r1, () => col);
   const sw = e.STILL ? 0 : Math.sin(t * 9) * .12;
   for (const [a, b, s] of [[.3, .14, 1], [.3, -.14, -1], [-.3, .14, -1], [-.3, -.14, 1]]) add(P(a, b, .45), P(a + sw * s, b, .06), .07, .06, C.SHIBA);
@@ -189,6 +253,47 @@ function shiba(e, x, y, yaw, t) {
   add(P(.48, .1, 1.0), P(.5, .1, 1.08), .06, .03, C.SHIBA);
   add(P(.48, -.1, 1.0), P(.5, -.1, 1.08), .06, .03, C.SHIBA);
   add(P(-.42, 0, .78), P(-.34, 0, .92), .1, .09, C.CREAM);
+}
+// a black-and-white cat sitting at (x, y) on a surface at height z, facing yaw; its tail sweeps and its head turns now and then
+function cat(e, x, y, z, yaw, t, k = 1.3) {
+  const fx = Math.cos(yaw), fy = Math.sin(yaw);
+  const P = (a, b, c) => [x + (fx * a - fy * b) * k, y + (fy * a + fx * b) * k, z + c * k];
+  const add = (a, b, r0, r1, col) => e.dynamicAdd(a, b, r0 * k, r1 * k, () => col);
+  const sw = e.STILL ? 0 : Math.sin(t * 2.2), look = e.STILL ? 0 : (Math.floor(t / 3) % 3 === 1 ? .06 : 0);
+  add(P(-.1, 0, .12), P(-.1, 0, .12), .2, .2, C.CAT);
+  add(P(-.04, 0, .2), P(.03, 0, .4), .15, .12, C.CAT);
+  add(P(.08, 0, .16), P(.09, 0, .34), .08, .07, C.CREAM);
+  add(P(.12, look, .55), P(.12, look, .55), .13, .13, C.CAT);
+  add(P(.12, look + .07, .64), P(.12, look + .08, .74), .04, .02, C.CAT);
+  add(P(.12, look - .07, .64), P(.12, look - .08, .74), .04, .02, C.CAT);
+  add(P(.22, look, .5), P(.22, look, .5), .05, .05, C.CREAM);
+  add(P(.25, look, .53), P(.25, look, .53), .025, .025, C.CORAL);
+  add(P(-.26, 0, .04), P(-.2, .18 + sw * .14, .05 + Math.abs(sw) * .06), .05, .04, C.CAT);
+}
+// the same cat walking: body level, legs stepping, tail up
+function catWalking(e, x, y, z, yaw, t, k = 1.3) {
+  const fx = Math.cos(yaw), fy = Math.sin(yaw);
+  const P = (a, b, c) => [x + (fx * a - fy * b) * k, y + (fy * a + fx * b) * k, z + c * k];
+  const add = (a, b, r0, r1, col) => e.dynamicAdd(a, b, r0 * k, r1 * k, () => col);
+  const st = Math.sin(t * 8) * .07;
+  for (const [a, b, s] of [[.14, .07, 1], [.14, -.07, -1], [-.14, .07, -1], [-.14, -.07, 1]]) add(P(a, b, .22), P(a + st * s, b, .03), .04, .035, C.CAT);
+  add(P(-.18, 0, .3), P(.16, 0, .32), .12, .12, C.CAT);
+  add(P(.08, 0, .24), P(.14, 0, .26), .07, .07, C.CREAM);
+  add(P(.3, 0, .42), P(.3, 0, .42), .12, .12, C.CAT);
+  add(P(.3, .07, .5), P(.31, .08, .6), .04, .02, C.CAT);
+  add(P(.3, -.07, .5), P(.31, -.08, .6), .04, .02, C.CAT);
+  add(P(.39, 0, .38), P(.39, 0, .38), .05, .05, C.CREAM);
+  add(P(-.3, 0, .34), P(-.38, Math.sin(t * 3) * .05, .62), .04, .03, C.CAT);
+}
+// now and then the cat gets up, walks along the back of the sofa, and sits down again at the other end
+function catOnSofa(e, t, x, ya, yb, z) {
+  if (e.STILL) return cat(e, x, ya, z, Math.PI / 2, 0);
+  const c = t % 24, walk = (from, to, f) => catWalking(e, x, from + (to - from) * f, z, to > from ? Math.PI / 2 : -Math.PI / 2, t);
+  if (c < 10) cat(e, x, ya, z, Math.PI / 2, t);
+  else if (c < 13) walk(ya, yb, (c - 10) / 3);
+  else if (c < 20) cat(e, x, yb, z, Math.PI / 2, t);
+  else if (c < 23) walk(yb, ya, (c - 20) / 3);
+  else cat(e, x, ya, z, Math.PI / 2, t);
 }
 function shibaLoop(e, t, cx, cy, rx, ry) {
   const th = t * .5;
@@ -273,45 +378,151 @@ const SCENES = {
       if (o.shiba) shibaLoop(e, t, 1.2, 4.6, 2.2, .5);
     },
   },
+  // Home: a two-storey aluminium box, cut open on the two sides the page looks from (+x, +y), so the rooms show.
+  // Inside: a book wall the full height of the double-height room (one coloured book per note), a loft with a
+  // reading corner, a long table that is both desk and dining table, the kitchen, a sofa. A glass skylight over
+  // the tall room. Outside: a paved Minsheng-style sidewalk with street trees. A shiba and a cat live here.
   home: {
-    S: 15, origin: 22, cx: 0, cy: -.4, R: 6, zmax: 4.4,
+    S: 14, origin: 30, cx: .4, cy: -.2, R: 6, zmax: 5.2,
     ground(e, x, y, ix, iy, i) {
-      if (edgeOf(e, x, y, 5.6, 4.6, ix, iy) == null) return 0;
-      for (let k = 0; k < 4; k++) {
-        const sx = 1.6 + k * .6, sy = 1.9 + k * .7;
-        if (Math.hypot(x - sx, (y - sy) * 1.2) < .36 + e.noise(x * 3, y * 3) * .1) return surface(e, C.STONE, x, y, ix, iy, .5);
+      if (edgeOf(e, x - .2, y + .2, 5.4, 5.8, ix, iy) == null) return 0;
+      for (const [tx, ty] of HOME_TREES) {
+        const d = Math.max(Math.abs(x - tx), Math.abs(y - ty));
+        if (d < .62) return d > .54 ? surface(e, C.CURB, x, y, ix, iy, .3) : grassAt(e, x, y, ix, iy, i);
       }
-      if (x > -4 && x < 4 && y > -3.8 && y < 1.6) return surface(e, C.GRAVEL, x, y, ix, iy);
-      return grassAt(e, x, y, ix, iy, i);
+      // a planted strip behind the house, sidewalk pavers everywhere else
+      if (x < -2.7 || y < -4.3) return grassAt(e, x, y, ix, iy, i);
+      const gx = ((x % .6) + .6) % .6, gy = ((y % .6) + .6) % .6;
+      if (gx < .04 || gy < .04) return closeTones(e, C.PAVE)[0];
+      return surface(e, C.PAVE, Math.floor(x / .6) * 3.1, Math.floor(y / .6) * 2.3, ix, iy, .5);
     },
     build(e, api, o) {
       const { box } = e;
-      box(-3.4, -3.4, 0, 3.4, 1.0, .3, C.STONE, 1);
-      box(-3.0, -3.0, .3, 3.0, .6, 2.2, C.WOOD, 2);
-      api.emissive(() => box(-2.6, .6, .45, 2.6, .67, 2.0, C.SHOJI, 3));
-      for (let x = -2.6; x <= 2.61; x += .65) box(x, .67, .45, x + .07, .7, 2.0, C.WOOD);
-      for (const z of [.45, .97, 1.49, 1.94]) box(-2.6, .67, z, 2.6, .7, z + .06, C.WOOD);
-      box(-3.3, .7, 0, 3.3, 1.65, .42, C.WOOD_L, 4);
-      let top = 2.2;
-      for (let k = 0; k < 7; k++) {
-        const hw = 2.6 - k * .4;
-        if (hw < .15) break;
-        box(-3.6, -1.2 - hw, 2.2 + k * .24, 3.6, -1.2 + hw, 2.2 + (k + 1) * .24, C.TILE, 10 + k);
-        top = 2.2 + (k + 1) * .24;
-      }
-      box(-3.7, -1.38, top, 3.7, -1.02, top + .14, C.INK);
-      boxShadow(e, -3.6, -3.8, 3.6, 1.4, 2.4);
-      o.notes.forEach((_, j) => {
-        const px = -2.6 + j * .9;
-        e.capsule([px, 1.2, .42], [px, 1.2, .68], .2, .24, () => C.POT);
-        e.sphere(px, 1.2, .95, .3, C.GREEN, 'rough');
-        e.castShadow(px, 1.2, .8, .3);
+      const X0 = -2.0, X1 = 2.0, Y0 = -3.6, Y1 = 3.2, IX = -1.85, IY = -3.45, TOP = 4.75, LY = -.6, F = .34, LF = 2.7;
+      const SH = -1.49; // the front of the book wall
+      // the box: a concrete base, two aluminium walls at the back, the roof over the loft, a frame round the skylight
+      box(X0 - .12, Y0 - .12, 0, X1 + .12, Y1 + .12, .3, C.BASE, 1);
+      box(X0, Y0, .3, IX - .02, Y1, TOP, C.ALU, 2);
+      box(X0, Y0, .3, X1, IY - .02, TOP, C.ALU, 3);
+      box(X0 - .06, Y0 - .06, TOP, X1 + .06, LY, TOP + .28, C.ALU, 4);
+      box(X0 - .06, LY, TOP, X0 + .2, Y1 + .06, TOP + .28, C.ALU);
+      box(X1 - .2, LY, TOP, X1 + .06, Y1 + .06, TOP + .28, C.ALU);
+      box(X0 - .06, Y1 - .2, TOP, X1 + .06, Y1 + .06, TOP + .28, C.ALU);
+      box(X1 - .16, Y1 - .16, F, X1, Y1, TOP, C.ALU);
+      box(X1 - .12, LY - .12, F, X1, LY, LF, C.ALU);
+      api.emissive(() => box(X1, Y1 - .12, 1.4, X1 + .03, Y1 - .04, 2.3, C.LAMP));
+      // the rooms, lit from inside at night: wall lining, floors, the book wall, furniture
+      api.emissive(() => {
+        box(IX - .02, Y0 + .1, F, IX, Y1, TOP, C.PLASTER);
+        box(X0 + .1, IY - .02, F, X1, IY, TOP, C.PLASTER);
+        box(IX, IY, .3, X1 - .02, Y1 - .02, F, C.OAK, 5);
+        // the loft: its slab shows as an aluminium band, oak on top, a thin steel rail
+        box(SH, IY, LF - .25, X1, LY, LF, C.ALU);
+        box(SH, IY, LF, X1 - .02, LY, LF + .03, C.OAK, 6);
+        for (let x = SH + .3; x < X1; x += .5) box(x, LY - .04, LF, x + .03, LY, LF + .85, C.STEEL);
+        box(SH, LY - .05, LF + .85, X1, LY, LF + .89, C.STEEL);
+        for (let y = IY + .2; y < LY; y += .5) box(X1 - .04, y, LF, X1, y + .03, LF + .85, C.STEEL);
+        box(X1 - .05, IY, LF + .85, X1, LY, LF + .89, C.STEEL);
+        bookWall(e, o.notes || [], IX, SH, IY + .05, Y1 - .05, F, TOP);
+        // a library ladder up to the loft
+        for (let k = 0; k <= 8; k++) {
+          const f = k / 8, y = .3 - f * .85, z = F + f * (LF + .2 - F);
+          box(SH + .05, y - .04, z, SH + .45, y, z + .04, C.STEEL);
+        }
+        for (const x of [SH + .05, SH + .41]) for (let f = 0; f < 1; f += .02) box(x, .3 - f * .85 - .03, F + f * (LF + .2 - F), x + .04, .3 - f * .85, F + f * (LF + .2 - F) + .06, C.STEEL);
+        // kitchen along the back wall, under the loft: white counter, dark top, a pot on the hob, jars on a shelf
+        box(-1.3, IY, F, X1 - .1, IY + .6, 1.2, C.CABINET, 7);
+        box(-1.32, IY, 1.2, X1 - .08, IY + .64, 1.26, C.COUNTER);
+        box(.6, IY + .1, 1.26, 1.2, IY + .5, 1.28, C.INK);
+        e.capsule([.9, IY + .3, 1.3], [.9, IY + .3, 1.46], .17, .17, () => C.STEEL);
+        box(-1.2, IY, 1.9, 1.8, IY + .3, 1.95, C.OAK);
+        for (let x = -1.1; x < 1.7; x += .32) e.capsule([x, IY + .15, 1.97], [x, IY + .15, 2.1], .07 + e.hash(x * 9, 3) * .03, .06, () => [[200, 120, 70], [120, 150, 110], [230, 226, 214]][Math.floor(e.hash(x * 7, 1) * 3)]);
+        // the long table: desk by day, dining table at night. Steel legs, oak top, two chairs, a laptop
+        for (const [x, y] of [[-.9, -2.45], [1.25, -2.45], [-.9, -1.75], [1.25, -1.75]]) box(x, y, F, x + .05, y + .05, 1.0, C.STEEL);
+        box(-.95, -2.5, 1.0, 1.35, -1.68, 1.06, C.OAK_L, 8);
+        for (const x of [-.4, .6]) {
+          box(x - .18, -1.45, F, x + .18, -1.12, .78, C.STEEL);
+          box(x - .2, -1.48, .78, x + .2, -1.1, .84, C.OAK);
+          box(x - .2, -1.12, .84, x + .2, -1.08, 1.3, C.OAK);
+        }
+        box(-.1, -2.3, 1.06, .34, -2.02, 1.08, C.ALU_D);
+        box(.9, -2.2, 1.06, 1.05, -2.05, 1.18, C.PLASTER);
+        e.capsule([-.6, -2.1, 1.08], [-.6, -2.1, 1.14], .09, .09, () => C.CREAM);
+        // the living room: rug, a sofa facing the book wall, a low table, a floor lamp, a big plant in the corner
+        box(-1.2, .1, F, 1.4, 2.8, F + .02, C.RUG, 9);
+        box(.55, .3, F, 1.45, 2.5, .78, C.SOFA, 10);
+        box(1.15, .3, .78, 1.45, 2.5, 1.32, C.SOFA, 11);
+        box(.55, .3, .78, 1.45, .52, 1.02, C.SOFA); box(.55, 2.28, .78, 1.45, 2.5, 1.02, C.SOFA);
+        e.capsule([.95, .9, .95], [.95, 1.0, 1.1], .17, .15, () => C.MUSTARD);
+        box(-.6, .95, F, .15, 1.85, .66, C.OAK_L);
+        box(-.4, 1.2, .66, -.05, 1.45, .7, C.CORAL);
+        box(1.55, -.15, F, 1.65, -.05, 2.1, C.STEEL);
+        box(1.0, 2.75, F, 1.4, 3.1, .85, C.POT);
+        // the loft: a reading corner with a beanbag, a stack of books and a floor lamp
+        box(-1.2, -3.0, LF + .03, 1.2, -1.2, LF + .05, C.RUG);
+        box(1.45, -3.3, LF + .03, 1.55, -3.2, LF + 1.5, C.STEEL);
+        box(-.7, -1.8, LF + .03, -.3, -1.45, LF + .35, C.OAK_L);
+        for (let k = 0; k < 3; k++) box(-.65, -1.75, LF + .35 + k * .07, -.32 + k * .03, -1.5, LF + .42 + k * .07, [C.CORAL, C.SAGE, C.CREAM][k]);
+        e.sphere(.4, -2.1, LF + .38, .44, C.MUSTARD, 'rough');
+        box(1.1, -1.1, LF + .03, 1.45, -.75, LF + .45, C.POT);
+      }, 'flood');
+      // the lights: pendants over the table, the floor lamps, the laptop screen
+      api.emissive(() => {
+        for (const x of [-.25, .75]) {
+          box(x - .01, -2.1, 1.85, x + .01, -2.08, LF - .25, C.INK);
+          box(x - .16, -2.25, 1.72, x + .16, -1.93, 1.86, C.LAMP);
+        }
+        box(1.4, -.3, 2.1, 1.75, .05, 2.4, C.LAMP);
+        box(1.32, -3.4, LF + 1.5, 1.66, -3.08, LF + 1.8, C.LAMP);
+        box(-.1, -2.32, 1.08, .34, -2.29, 1.38, C.SCREEN);
       });
-      if (!o.pure) lantern(e, api, 4.0, 1.0, .8);
-      e.growTree(-4.4, -3.0, .55, 240, 20);
+      // the skylight over the tall room: steel glazing bars, then glass that tints what is under it
+      for (let y = LY + .9; y < Y1 - .3; y += .9) box(X0 + .2, y, TOP + .2, X1 - .2, y + .05, TOP + .26, C.ALU_D);
+      glassPane(e, X0 + .2, LY, X1 - .2, Y1 - .2, TOP + .24);
+      // things that move: steam from the pot, the laptop screen, the plants, the street trees
+      e.moving((e, t) => {
+        if (t == null) return;
+        for (let k = 0; k < 3; k++) {
+          const f = (t * .5 + k / 3) % 1;
+          e.sphere(.9 + Math.sin(t * 2 + k) * .08, IY + .3 + f * .2, 1.6 + f * .8, .08 + f * .08, C.STEAM);
+        }
+      });
+      e.moving((e, t) => {
+        const s = t == null ? 0 : Math.floor(t * 2);
+        for (let r = 0; r < 4; r++) {
+          const w = .1 + e.hash(r, s) * .22;
+          box(-.04, -2.285, 1.3 - r * .06, -.04 + w, -2.28, 1.32 - r * .06, C.CODE);
+        }
+      });
+      e.moving((e, t) => {
+        const sw = t == null ? 0 : Math.sin(t * 1.3) * .05;
+        e.sphere(1.2 + sw, 2.92, 1.25, .38, C.GREEN, 'rough');
+        e.sphere(1.15 - sw, 2.85, 1.7, .3, C.GREEN, 'rough');
+        e.sphere(1.28 + sw * .6, -.92, LF + .75, .3, C.GREEN, 'rough');
+      });
+      // light sliding over the skylight glass, and birds over the roof
+      e.moving((e, t) => {
+        if (t == null) return;
+        const c = e.rgb(244, 248, 250), mid = X0 + (t * .3 % 1) * 7 - 1.5;
+        for (let a = X0 + .25; a < X1 - .2; a += .04) for (let b = LY + .05; b < Y1 - .2; b += .04) {
+          const d = a + b * .5 - mid;
+          if (d > 0 && d < .25 && e.hash(Math.round(a * 50), Math.round(b * 50)) < .5) e.plot(a, b, TOP + .25, c);
+        }
+      });
+      e.moving((e, t) => birds(e, t, 0, -.2, 4.2, 7.2));
+      for (const [x, y] of HOME_TREES) e.growTree(x, y, .8, 300, Math.round(x * 13 + y));
+      // shade from what is solid: the two back walls and the roof (the open sides let the sun in)
+      boxShadow(e, X0, Y0, X0 + .2, Y1, TOP);
+      boxShadow(e, X0, Y0, X1, Y0 + .2, TOP);
+      for (let x = X0; x <= X1; x += .4) for (let y = Y0; y <= Y1; y += .4) e.castShadow(x, y, TOP + .2, .32);
     },
-    animate(e, t, o) {
-      if (o.shiba) shibaLoop(e, t, 1.8, 3.0, 1.6, .7);
+    animate(e, t) {
+      // the shiba lives here: a round from the book wall, out onto the sidewalk and back in past the table.
+      // The cat sits on the back of the sofa and now and then walks along it.
+      const p = alongPath(HOME_WALK, e.STILL ? 3 : t * .55);
+      const inside = p.x < 2.05 && p.y < 3.25;
+      shiba(e, p.x, p.y, p.yaw, t, inside ? .34 : 0);
+      catOnSofa(e, t, 1.3, 1.9, .8, 1.32);
     },
   },
   itsukushima: {

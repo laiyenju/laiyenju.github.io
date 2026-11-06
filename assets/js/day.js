@@ -144,7 +144,7 @@ function fitCanvas(w) {
   placePlate(w, f);
 }
 
-/* The platform: a building with no ground of its own (bare scenes; home has its garden) stands on a faint slab of
+/* The platform: a building with no ground of its own (bare scenes; home has its sidewalk) stands on a faint slab of
    square tiles, so it does not float. It is drawn at the engine's own pixels, in its projection, from the
    building's footprint (where it touches the ground, plateFor). Then .6 unit of margin
    around it, whole tiles of about 1 unit, and a thin edge facing us. Its colour is the page's ink, very faint, so it
