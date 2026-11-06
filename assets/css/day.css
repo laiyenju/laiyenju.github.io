@@ -154,6 +154,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* terminal: same page, same background — not a card */
 .term { position: relative; margin-top: 8svh; padding-block: 12px 30svh; }
+/* closed until a button (or `/`) opens it: no input line, no room below, so the first screen does not scroll.
+   The bar stays (phones: fixed at the bottom; wide screens: under today's words). day.js openTerm / clearTerm */
+.term:not(.on) { margin-top: 0; padding-block: 0; }
+.term:not(.on) .log, .term:not(.on) .input-row { display: none; }
 .term-inner { max-width: 680px; margin: 0 auto; display: grid; gap: 6px; }
 .prompt { color: var(--ink-soft); font: 14px/1.7 var(--mono); }
 .prompt i { font-style: normal; color: var(--accent); }
@@ -333,6 +337,8 @@ body.note-lb .top { visibility: hidden; }
   .bar-slot { min-height: 50px; }
   .bar-slot .cmdbar { justify-content: center; }
   .term .cmdbar { position: sticky; bottom: 0; margin-top: 6px; padding-inline: 0; }
+  /* the bar's ❯ sits right under the input line's ❯: pulled left by the button's own padding */
+  .term .cmdbar .arrow { margin-left: -10px; }
   /* the timeline: the ruler right under the name, in the flow, not pinned to the bottom edge (phones: at the bottom,
      under the thumb) */
   .tlm { padding-bottom: 0; }
