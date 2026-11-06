@@ -613,12 +613,12 @@ const SCENES = {
     },
   },
   // Taipei Nan Shan Plaza (Breeze Nan Shan, Xinyi), the office side: the 48-floor tower, a slim prism of blue-grey
-  // glass under a slanted glass crown; the lobby pavilion in front of it, an upside-down truncated pyramid of glass
-  // and bronze; the Breeze Nan Shan mall on the left, stacked boxes in a brown-grey grid
+  // glass under a slanted glass crown; the lobby pavilion in front of it and to the right, a dark glass gem with a
+  // silver facet sloping down its front to the street; the Breeze Nan Shan mall on the left, stacked boxes in a brown-grey grid
   nanshan: {
     bare: true, S: 9, origin: 92, cx: -2, cy: -1, R: 7.5, zmax: 23,
     build(e, api) {
-      const { box } = e, GL = [76, 104, 132], GL2 = [62, 88, 116], MUL = [120, 140, 158], WARM = [74, 84, 92];
+      const { box } = e, GL = [76, 104, 132], GL2 = [62, 88, 116], MUL = [120, 140, 158];
       // the tower: a tall prism of blue-grey glass with fine vertical mullions, a little narrower at the top,
       // folded down the middle of its front; a silver-grey side wall with horizontal bands on the right; on top
       // a crown of lighter glass whose upper edge is cut on a slant, rising to a point at the right corner
@@ -660,36 +660,38 @@ const SCENES = {
       mall(MX0 - .4, -4.4, 3.3, MX1 - .8, .6, 5.2, 8);
       box(MX0 - .4, -4.4, 5.2, MX1 - .8, .6, 5.3, GRID2);
       for (const x of [-8.4, -7.2, -6.0, -4.8]) e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 1.5 + x) * .06), 1.25, 3.25, .32, C.GREEN, 'rough'));
-      // the lobby pavilion, right in front of the tower: an upside-down truncated pyramid, narrow at the street
-      // and wide at the top. Glass walls with bronze mullions below; above them the walls lean out further, a
-      // bronze shell over a lit ceiling of fins; a thick bronze rim around the flat top
-      const VX = 0, VY = 2.2, BR = [128, 112, 92], BR2 = [104, 90, 74], FIN = [196, 176, 140];
-      for (let z = 0; z < 2.6; z += .26) {
-        const f = z / 2.6, ax = 2.3 + .5 * f, ay = 1.7 + .4 * f;
-        api.emissive(() => box(VX - ax, VY - ay, z, VX + ax, VY + ay, z + .26, WARM, 3));
-        for (let x = VX - ax + .25; x < VX + ax; x += .5) box(x, VY + ay, z, x + .06, VY + ay + .04, z + .26, BR2);
-        for (let y = VY - ay + .25; y < VY + ay; y += .5) box(VX + ax, y, z, VX + ax + .04, y + .06, z + .26, BR2);
+      // the lobby pavilion, in front of the tower and to its right: a cut gem of dark glass, narrow at the street and
+      // wide at the top, with a big silver facet on its front that slopes from the top edge almost to the ground,
+      // ending in a point (the same facet seen from the side is the slanted silver roof)
+      const VX = 2.6, VY = 2.6, DK = [58, 64, 72], FRM = [92, 98, 106], SV = [206, 208, 208];
+      for (let z = 0; z < 4.2; z += .3) {
+        const f = z / 4.2, ax = 2.0 + 1.3 * f, ay = 1.6 + .9 * f;
+        api.emissive(() => box(VX - ax, VY - ay, z, VX + ax, VY + ay, z + .3, DK, 3));
+        box(VX - ax - .02, VY - ay - .02, z + .26, VX + ax + .02, VY + ay + .02, z + .3, FRM);
+        for (let x = VX - ax + .4; x < VX + ax; x += .8) box(x, VY + ay, z, x + .05, VY + ay + .04, z + .3, FRM);
+        for (let y = VY - ay + .4; y < VY + ay; y += .8) box(VX + ax, y, z, VX + ax + .04, y + .05, z + .3, FRM);
       }
-      box(VX - 2.85, VY - 2.15, 2.5, VX + 2.85, VY + 2.15, 2.62, BR2); // the band between glass and shell
-      for (let z = 2.62; z < 4.1; z += .2) {
-        const f = (z - 2.62) / 1.5, ax = 2.85 + .75 * f, ay = 2.15 + .55 * f;
-        api.emissive(() => box(VX - ax, VY - ay, z, VX + ax, VY + ay, z + .2, FIN, 6)); // the lit ceiling seen through it
-        for (let x = VX - ax + .2; x < VX + ax; x += .4) box(x, VY + ay, z, x + .05, VY + ay + .04, z + .2, BR);
-        for (let y = VY - ay + .2; y < VY + ay; y += .4) box(VX + ax, y, z, VX + ax + .04, y + .05, z + .2, BR);
+      box(VX - 3.4, VY - 2.6, 4.2, VX + 3.4, VY + 2.6, 4.5, FRM, 7);
+      box(VX - 3.2, VY - 2.4, 4.5, VX + 3.2, VY + 2.4, 4.55, [72, 76, 82]);
+      // the silver facet: from the top's front edge down towards the street, narrowing to a point
+      const SY1 = VY + 2.6, SL = 4.2;
+      for (let k = 0; k < 14; k++) {
+        const g = k / 14, y = SY1 + g * SL, top = 4.5 - 3.9 * g, half = 3.4 * (1 - g * .9), cx = VX - 1.2 * g;
+        box(cx - half, y, Math.max(0, top - .35), cx + half, y + SL / 14, top, SV, 8);
+        box(cx - half, y, Math.max(0, top - .35 - 1.2 * (1 - g)), cx + half, y + SL / 14, top - .35, [72, 76, 82]);
+        box(cx - .03, y, top, cx + .03, y + SL / 14, top + .05, [232, 232, 230]); // the fold down its middle
       }
-      box(VX - 3.75, VY - 2.85, 4.1, VX + 3.75, VY + 2.85, 4.6, BR, 7);
-      box(VX - 3.55, VY - 2.65, 4.6, VX + 3.55, VY + 2.65, 4.66, BR2);
-      // the entrance doors at the middle of the front
-      api.emissive(() => box(VX - .6, VY + 1.72, 0, VX + .6, VY + 1.78, 1.0, [236, 220, 180]));
+      // the entrance, lit, on the right face
+      api.emissive(() => box(VX + 2.02, VY - .6, 0, VX + 2.08, VY + .6, 1.1, [236, 220, 180]));
       // trees along the street in front
-      for (const x of [-3.2, -1.6, 1.8, 3.4]) {
+      for (const x of [-3.0, -1.6, -.2]) {
         box(x - .04, 5.6, 0, x + .04, 5.68, .8, C.WOOD);
         e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 1.6 + x) * .08), 5.64, 1.2, .45, C.GREEN, 'rough'));
       }
       e.moving((e, t) => birds(e, t, 0, -2.5, 4.5, 14));
       boxShadow(e, -2.2, CY - 1.6, 2.7, CY + 1.6, TOP);
       boxShadow(e, MX0 - .4, -4.4, MX1, 1.6, 5.2);
-      boxShadow(e, VX - 3.7, VY - 2.8, VX + 3.7, VY + 2.8, 4.5);
+      boxShadow(e, VX - 3.4, VY - 2.6, VX + 3.4, VY + 2.6, 4.4);
     },
   },
   // Lincoln Memorial: a Doric temple of white marble on a stepped base, columns all round
