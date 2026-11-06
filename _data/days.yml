@@ -6,7 +6,7 @@
 # Required: date ("YYYY-MM-DD", in quotes), scene (a model in assets/js/scenes.js SCENES), name,
 #   zh (Chinese name; write no_zh: true to leave it out), place, did.
 # Optional: with (a name, or a list), extra (one short sentence), coords ([latitude, longitude], shown on a
-#   note's share card when the note is from this day),
+#   note's share card when the note is from this day, and how an out check-in within 150 m finds this place),
 #   map (search text for Google Maps), country (default "Japan").
 
 # USA, January 2019 (dates from the photos; on a day with several, in the order the photos were taken)
