@@ -2,6 +2,9 @@
 # scripts/checkin/update.js writes location.json, which goes to the `checkin`
 # branch as its only commit (overwritten each time, so no history piles up).
 # The homepage reads it from raw.githubusercontent.com. See README 3.5.
+# An out check-in can also name a building (README 3.6): a place that already
+# has a model gets today's day in _data/days.yml (scripts/checkin/day.js,
+# committed to main); "new" opens an issue for Claude to make the model.
 name: Check in
 
 on:
@@ -16,9 +19,22 @@ on:
         description: 'Optional words, e.g. "at a café in Daan" (no coordinates)'
         required: false
         default: ""
+      scene:
+        description: 'Out only: a building that has a model (e.g. nanshan), "new" for a new place, or "none"'
+        required: false
+        default: ""
+      did:
+        description: 'With scene: what Yen did there, e.g. "hosted a developer meetup"'
+        required: false
+        default: ""
+      note:
+        description: 'With scene "new": the place and what it looks like (a photo description)'
+        required: false
+        default: ""
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: checkin
@@ -36,10 +52,44 @@ jobs:
           else
             echo '{}' > "$RUNNER_TEMP/last.json"
           fi
+      # a place with a model: today's building becomes it (days.yml on main)
+      - name: Add today to days.yml
+        id: day
+        if: inputs.place == 'out' && inputs.scene != '' && inputs.scene != 'none' && inputs.scene != 'new'
+        continue-on-error: true # an unknown scene must not stop the check-in itself
+        env:
+          SCENE: ${{ inputs.scene }}
+          DID: ${{ inputs.did }}
+        run: |
+          name=$(node scripts/checkin/day.js _data/days.yml)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          if ! git diff --quiet -- _data/days.yml; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Today at $name (check-in)" -- _data/days.yml
+            git push origin HEAD:main
+          fi
+      # a new place: an issue, which Claude's nightly task picks up (README 3.6)
+      - name: Open an issue for a new building
+        if: inputs.place == 'out' && inputs.scene == 'new'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LABEL: ${{ inputs.label }}
+          DID: ${{ inputs.did }}
+          NOTE: ${{ inputs.note }}
+        run: |
+          day=$(TZ=Asia/Taipei date +%F)
+          title="新建築：${LABEL:-${NOTE:-外出}}（$day）"
+          printf '%s\n' \
+            "外出打卡時選了「新地點」，這個地方還沒有建築模型。" "" \
+            "- 日期（台北）：$day" \
+            "- 地點：${LABEL:-（沒填）}" \
+            "- 做了什麼：${DID:-（沒填）}" \
+            "- 描述：${NOTE:-（沒填）}" "" \
+            "做法見 README 3.6 和 CLAUDE.md「新建築模型」。做完、合併後關掉這個 issue。" > "$RUNNER_TEMP/issue.md"
+          gh issue create --title "${title:0:120}" --body-file "$RUNNER_TEMP/issue.md"
       - name: Write location.json
         env:
           PLACE: ${{ inputs.place }}
-          LABEL: ${{ inputs.label }}
+          LABEL: ${{ inputs.label != '' && inputs.label || (steps.day.outputs.name != '' && format('at {0}', steps.day.outputs.name) || '') }}
         run: node scripts/checkin/update.js "$RUNNER_TEMP/last.json" > "$RUNNER_TEMP/location.json" && cat "$RUNNER_TEMP/location.json"
       - name: Replace the checkin branch with one commit
         run: |
