@@ -1239,17 +1239,33 @@ function syncSlider() {
   whenCard.setAttribute('aria-valuetext', AT.min == null ? `${hm(state.minute)}, now` : `${hm(AT.min)}${AT.mark ? ', ' + AT.mark : ''}`);
 }
 
-/* the sun's path, under the card: 144 columns of 10 minutes, drawn at whole pixels and shown 2x (like the buildings) */
-const DL = { W: 144, H: 17, HY: 12, BAND: 15 }; // the horizon's row, and the sky band's first row (two rows)
+/* the sun's path: a strip of sky glass across the middle of the building, where the finger is, just above it (a thumb
+   hides what is under it, never what is above). 144 columns of 10 minutes, at whole pixels like the building (2x on a
+   phone, 3x wide). Over it, the time shown, riding with the sun. */
+const DL = { W: 144, H: 17, HY: 12, BAND: 15, LIFT: 44 }; // the horizon's row, the sky band's first row (two rows), px above the finger
 const dayline = document.createElement('div');
 dayline.className = 'dayline'; dayline.setAttribute('aria-hidden', 'true');
-dayline.innerHTML = `<canvas width="${DL.W}" height="${DL.H}"></canvas>`;
-document.querySelector('.top').append(dayline);
+dayline.innerHTML = `<span class="dl-now"></span><canvas width="${DL.W}" height="${DL.H}"></canvas>`;
+stage.append(dayline);
+const dlCanvas = dayline.querySelector('canvas');
+// where the strip goes: centred across the building; from a finger on the building, its bottom LIFT px above the
+// finger (or under it, when the finger is near the top); otherwise (the time, the keyboard, a trackpad) in the middle
+function placeDayline(clientY) {
+  const w = stage.offsetWidth, h0 = stage.offsetHeight, k = stage.getBoundingClientRect().height / h0 || 1; // the stage shrinks as the page scrolls
+  dlCanvas.style.width = DL.W * cl(Math.floor((Math.min(w, 600) - 56) / DL.W), 2, 3) + 'px';
+  const h = dayline.offsetHeight;
+  let top = (h0 - h) / 2;
+  if (clientY != null) {
+    const y = (clientY - stage.getBoundingClientRect().top) / k;
+    top = y - DL.LIFT - h >= 4 ? y - DL.LIFT - h : y + DL.LIFT;
+  }
+  dayline.style.top = cl(top, 4, Math.max(4, h0 - h - 4)) + 'px';
+}
 const rgbOf = v => { const h = getComputedStyle(document.documentElement).getPropertyValue(v).trim().replace('#', ''); return [0, 2, 4].map(k => parseInt(h.slice(k, k + 2), 16) || 0); };
 // the sun's row for its height: the horizon's row just above it, the day's highest at the top (row 1)
 const sunRow = (alt, top) => DL.HY - 1 - Math.round(Math.max(0, alt) / Math.max(20, top) * (DL.HY - 2));
 function paintDayline() {
-  const S = sunDay(), g = dayline.firstChild.getContext('2d'), img = g.createImageData(DL.W, DL.H), px = img.data;
+  const S = sunDay(), g = dlCanvas.getContext('2d'), img = g.createImageData(DL.W, DL.H), px = img.data;
   const ink = rgbOf('--ink'), soft = rgbOf('--ink-soft'), acc = rgbOf('--accent'), bg = rgbOf('--bg');
   const put = (x, y, c, a) => { if (x < 0 || y < 0 || x >= DL.W || y >= DL.H) return; const i = (y * DL.W + x) * 4; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; px[i + 3] = Math.round(a * 255); };
   const now = state.minute, shown = shownMin();
@@ -1281,14 +1297,24 @@ function paintDayline() {
     for (const k of S.list) {
       if (k.name !== 'sunrise' && k.name !== 'sunset') continue;
       const t = document.createElement('span');
-      t.className = 'dl-t'; t.style.left = (Math.floor(k.m / 10) + .5) / DL.W * 100 + '%'; t.textContent = hm(k.m);
+      t.className = 'dl-t'; t.dataset.x = (Math.floor(k.m / 10) + .5) / DL.W; t.textContent = hm(k.m);
       dayline.append(t);
     }
   }
+  // the time shown, over the sun (kept inside the strip)
+  const now_ = dayline.firstChild, cw = dlCanvas.offsetWidth, pad = (dayline.offsetWidth - cw) / 2, at = (sx + .5) / DL.W * cw;
+  now_.textContent = AT.min == null ? hm(state.minute) : hm(AT.min) + (AT.mark ? ' · ' + AT.mark : '');
+  const lw = now_.offsetWidth;
+  now_.style.left = cl(pad + at, lw / 2 + 4, pad * 2 + cw - lw / 2 - 4) + 'px';
+  dayline.querySelectorAll('.dl-t').forEach(t => { t.style.left = pad + +t.dataset.x * cw + 'px'; });
 }
 let daylineOff = 0;
 // while it is open the page's colour keeps up with the time (body.rewinding: day.css), instead of its slow 1.2s fade
-function openDayline() { clearTimeout(daylineOff); paintDayline(); dayline.classList.add('on'); document.body.classList.add('rewinding'); }
+function openDayline(clientY) {
+  clearTimeout(daylineOff);
+  if (!dayline.classList.contains('on')) placeDayline(clientY);
+  paintDayline(); dayline.classList.add('on'); document.body.classList.add('rewinding');
+}
 function closeDayline(ms = 700) { clearTimeout(daylineOff); daylineOff = setTimeout(() => { dayline.classList.remove('on'); document.body.classList.remove('rewinding'); }, ms); }
 
 /* the minute shown */
@@ -1390,7 +1416,7 @@ try { if (!localStorage.getItem('rewound')) whenCard.classList.add('hint'); } ca
 function rwStart(ev) {
   AT.user = true; AT.teasing = false; clearTimeout(AT.teaseT);
   if (!canRewind() || ev.button > 0) { AT.drag = null; return; }
-  AT.drag = { x: ev.clientX, last: ev.clientX, t: ev.timeStamp, id: ev.pointerId, m: shownMin(), v: 0, moved: false, hold: null, pull: 0, left: null, glidingFrom: !!AT.anim };
+  AT.drag = { x: ev.clientX, y: ev.clientY, last: ev.clientX, t: ev.timeStamp, id: ev.pointerId, m: shownMin(), v: 0, moved: false, hold: null, pull: 0, left: null, glidingFrom: !!AT.anim };
   if (AT.anim) { stopMotion(); AT.drag.m = shownMin(); } // a touch stops a glide where it is
 }
 function rwMove(ev, el, slop) {
@@ -1400,7 +1426,7 @@ function rwMove(ev, el, slop) {
   const dt = Math.max(1, ev.timeStamp - d.t);
   if (!d.moved) {
     if (Math.abs(ev.clientX - d.x) < slop) return;
-    d.moved = true; el.setPointerCapture(ev.pointerId); openDayline();
+    d.moved = true; el.setPointerCapture(ev.pointerId); openDayline(el === stage ? d.y : null);
     dx = ev.clientX - d.x;
   }
   d.last = ev.clientX; d.t = ev.timeStamp;
