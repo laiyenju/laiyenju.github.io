@@ -1144,11 +1144,24 @@ addEventListener('scroll', onScroll, { passive: true });
 /* the building: tap = timeline. Sideways: on today's page the time (the rewind: the sun moves over the building and its
    shadow turns under the finger); on a past day's page, other years (left = newer). Up and down is left to the page. */
 let drag = null;
-stage.addEventListener('pointerdown', ev => { drag = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, mode: null }; rwStart(ev); });
+// A long press (HOLD ms, still) on today's building shows the sun's path at once, with a small buzz: then slide.
+// Let go without sliding and it goes away again (not a tap: the timeline stays shut).
+const HOLD = 350;
+stage.addEventListener('pointerdown', ev => {
+  drag = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, mode: null };
+  rwStart(ev);
+  if (AT.drag) drag.holdT = setTimeout(() => {
+    if (!drag || drag.mode || !AT.drag) return;
+    drag.mode = 'time'; drag.held = true; openDayline(drag.y);
+    if (navigator.vibrate) try { navigator.vibrate(10); } catch (e) {}
+  }, HOLD);
+});
+stage.addEventListener('contextmenu', ev => { if (canRewind()) ev.preventDefault(); }); // a long press is the rewind's, not the menu's
 stage.addEventListener('pointermove', ev => {
   if (!drag || ev.pointerId !== drag.id) return;
   const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
   if (!drag.mode && Math.hypot(dx, dy) > 8) {
+    clearTimeout(drag.holdT);
     drag.mode = Math.abs(dx) > Math.abs(dy) ? (AT.drag ? 'time' : 'h') : 'v';
     if (drag.mode === 'h') stage.setPointerCapture(ev.pointerId);
     if (drag.mode === 'v') AT.drag = null;
@@ -1158,7 +1171,9 @@ stage.addEventListener('pointermove', ev => {
 });
 function endDrag(ev) {
   if (!drag || ev.pointerId !== drag.id) return;
+  clearTimeout(drag.holdT);
   if (rwEnd(ev)) { drag = null; return; }
+  if (drag.held) { closeDayline(400); drag = null; return; }
   const dx = ev.clientX - drag.x;
   if (drag.mode === 'h') { disp.style.transform = ''; if (Math.abs(dx) > 50) go(state.index + (dx < 0 ? 1 : -1)); }
   if (!drag.mode && ev.type === 'pointerup') openTimeline();
