@@ -28,4 +28,5 @@
 ## 其他
 
 - `assets/js/pixel-engine.js` 是產生的，不要直接改；改 `assets/vendor/pixel-plays/engine.js` 或 `scripts/pixel-engine/build.js` 後重新產生（見 README 3.3）。
+- 改了 `assets/js/sky.js` 的 `BG_STOPS`、`TEXT` 或 `colours` 時，執行 `node scripts/sky/draw.js` 重畫 README 2.5.1 的天色圖，和 `sky.js` 一起 commit。
 - 新增根目錄的檔案時，確認它要不要加進 `_config.yml` 的 `exclude`，否則 Jekyll 會把它發布成網頁。

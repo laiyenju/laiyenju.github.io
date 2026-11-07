@@ -26,6 +26,9 @@ function lightFor(ms) {
     alt, n, warm,
     kr: mix(1, .56, n) * (1 + .07 * warm), kg: mix(1, .6, n) * (1 + .01 * warm), kb: mix(1, .84, n) * (1 - .09 * warm),
     lit: cl((3 - alt) / 8, 0, 1),
+    // after dark: the outline facing the sky turns light (the engine darkens it, which is lost on a dark sky),
+    // and colours keep their saturation instead of greying as the light drops
+    rim: cl((-2 - alt) / 6, 0, 1) * .5, sat: 1 + .3 * n,
     sx: Math.round(sx * 20) / 20, sy: Math.round(sy * 20) / 20,
     bg: bgFor(alt),
   };
@@ -1005,6 +1008,13 @@ function getWorld(scene, opts, rot = 0, keep = true) {
     if (emk[k] === 'floors' && e.hash(3, Math.floor((em[k] / e.W) / 6.5)) < .22) continue;
     lit.push(em[k]);
   }
+  // the building's outline: its pixels next to sky or ground (lit light after dark, see lightFor)
+  const rim = [], open = j => e.bakedZ[j] === e.groundZ[j];
+  for (let iy = 1; iy < e.H - 1; iy++) for (let ix = 1; ix < e.W - 1; ix++) {
+    const i = iy * e.W + ix;
+    if (open(i) || !(e.bakedPix[i] >>> 24)) continue;
+    if (open(i - 1) || open(i + 1) || open(i - e.W) || open(i + e.W)) rim.push(i);
+  }
   // crop around the building itself (not its shadow), centred on it, so it stays in the middle at any hour
   let x0 = e.W, y0 = e.H, x1 = 0, y1 = 0;
   for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
@@ -1029,7 +1039,7 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   }
   const pad = [y0 - sy0, sx1 - x1, sy1 - y1, x0 - sx0];
   const view = document.createElement('canvas'); view.width = sx1 - sx0 + 1; view.height = sy1 - sy0 + 1;
-  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), flood: Int32Array.from(flood), movers, MARK, bare, pure };
+  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), flood: Int32Array.from(flood), rim: Int32Array.from(rim), movers, MARK, bare, pure };
   if (!keep) return w;
   worlds.set(key, w);
   while (worlds.size > 6) worlds.delete(worlds.keys().next().value);
@@ -1055,6 +1065,7 @@ function cleanShadow(e, MARK) {
     }
   }
 }
+const MOON = [184, 192, 226]; // the light outline after dark
 function drawWorld(w, t) {
   const e = w.e, pix = e.pix;
   pix.set(e.bakedPix); e.zb.set(e.bakedZ);
@@ -1076,10 +1087,19 @@ function drawWorld(w, t) {
   }
   const L = LIGHT;
   if (L.kr !== 1 || L.kg !== 1 || L.kb !== 1) {
+    const s = L.sat;
     for (let i = 0; i < pix.length; i++) {
       const p = pix[i], a = p >>> 24;
       if (!a) continue;
-      pix[i] = ((a << 24) | (Math.min(255, (p >> 16 & 255) * L.kb) << 16) | (Math.min(255, (p >> 8 & 255) * L.kg) << 8) | Math.min(255, (p & 255) * L.kr)) >>> 0;
+      const r = (p & 255) * L.kr, g = (p >> 8 & 255) * L.kg, b = (p >> 16 & 255) * L.kb, m = (r + g + b) / 3;
+      pix[i] = ((a << 24) | (cl(m + (b - m) * s, 0, 255) << 16) | (cl(m + (g - m) * s, 0, 255) << 8) | cl(m + (r - m) * s, 0, 255)) >>> 0;
+    }
+  }
+  if (L.rim > 0) {
+    for (const i of w.rim) {
+      if (e.zb[i] !== e.bakedZ[i]) continue; // something moving is in front
+      const p = pix[i];
+      pix[i] = e.rgb(mix(p & 255, MOON[0], L.rim), mix(p >> 8 & 255, MOON[1], L.rim), mix(p >> 16 & 255, MOON[2], L.rim));
     }
   }
   if (L.lit > 0) {
