@@ -17,7 +17,7 @@
   }
 
   // page colour by the sun's height (degrees): night blue, dusk violet, sunrise warm, day near white
-  var BG_STOPS = [[-18, [21, 25, 38]], [-9, [40, 46, 74]], [-4, [128, 120, 154]], [0, [222, 200, 190]], [5, [244, 230, 212]], [14, [247, 243, 234]], [28, [248, 248, 245]]];
+  var BG_STOPS = [[-18, [21, 25, 38]], [-9, [40, 46, 74]], [-4, [62, 53, 96]], [0, [222, 200, 190]], [5, [244, 230, 212]], [14, [247, 243, 234]], [28, [248, 248, 245]]];
   function mix(a, b, t) { return a + (b - a) * t; }
   function bgFor(alt) {
     if (alt <= BG_STOPS[0][0]) return BG_STOPS[0][1];
