@@ -1141,20 +1141,24 @@ function onScroll() {
 }
 addEventListener('scroll', onScroll, { passive: true });
 
-/* the building: swipe left/right = other years (left = newer), tap = timeline */
+/* the building: tap = timeline. Sideways: on today's page the time (the rewind: the sun moves over the building and its
+   shadow turns under the finger); on a past day's page, other years (left = newer). Up and down is left to the page. */
 let drag = null;
-stage.addEventListener('pointerdown', ev => { drag = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, mode: null }; });
+stage.addEventListener('pointerdown', ev => { drag = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, mode: null }; rwStart(ev); });
 stage.addEventListener('pointermove', ev => {
   if (!drag || ev.pointerId !== drag.id) return;
   const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
   if (!drag.mode && Math.hypot(dx, dy) > 8) {
-    drag.mode = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+    drag.mode = Math.abs(dx) > Math.abs(dy) ? (AT.drag ? 'time' : 'h') : 'v';
     if (drag.mode === 'h') stage.setPointerCapture(ev.pointerId);
+    if (drag.mode === 'v') AT.drag = null;
   }
+  if (drag.mode === 'time') rwMove(ev, stage, 0);
   if (drag.mode === 'h') disp.style.transform = `translateX(${dx * .35}px) scale(${1 - Math.min(.25, Math.abs(dx) / 900)})`;
 });
 function endDrag(ev) {
   if (!drag || ev.pointerId !== drag.id) return;
+  if (rwEnd(ev)) { drag = null; return; }
   const dx = ev.clientX - drag.x;
   if (drag.mode === 'h') { disp.style.transform = ''; if (Math.abs(dx) > 50) go(state.index + (dx < 0 ? 1 : -1)); }
   if (!drag.mode && ev.type === 'pointerup') openTimeline();
@@ -1210,7 +1214,12 @@ const IDLE_BACK = 60e3;  // left alone this long, the time rolls back to now
 const whenCard = $('whenCard');
 const canRewind = () => tl.hidden && reader.hidden && !state.pastDate && !!$('clockRoll');
 // a slider (focusable, the sideways cursor, the ‹ hint) on today's home page only
-function syncCardRole() { const on = canRewind(); whenCard.tabIndex = on ? 0 : -1; if (on) whenCard.setAttribute('role', 'slider'); else whenCard.removeAttribute('role'); }
+function syncCardRole() {
+  const on = canRewind(); whenCard.tabIndex = on ? 0 : -1;
+  if (on) whenCard.setAttribute('role', 'slider'); else whenCard.removeAttribute('role');
+  stage.setAttribute('aria-label', on ? "Today's building. Drag sideways to see it earlier today. Tap to open the timeline."
+    : 'The building. Swipe left or right for other years. Tap to open the timeline.');
+}
 const shownMin = () => AT.min == null ? state.minute : AT.min;
 const hm = m => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
 // today's sun, worked out once a day: its height each minute, and the marks (minute, name)
@@ -1376,20 +1385,22 @@ syncCardRole();
 whenCard.setAttribute('aria-label', 'Time of day. Drag sideways, or use the arrow keys, to see earlier today');
 whenCard.setAttribute('aria-valuemin', '0');
 try { if (!localStorage.getItem('rewound')) whenCard.classList.add('hint'); } catch (e) {}
-whenCard.addEventListener('pointerdown', ev => {
+// The same drag on two surfaces: the building (the big one, where the shadow is: the stage's handlers below hand a
+// sideways drag over to these) and the time itself.
+function rwStart(ev) {
   AT.user = true; AT.teasing = false; clearTimeout(AT.teaseT);
-  if (!canRewind() || ev.button > 0) return;
+  if (!canRewind() || ev.button > 0) { AT.drag = null; return; }
   AT.drag = { x: ev.clientX, last: ev.clientX, t: ev.timeStamp, id: ev.pointerId, m: shownMin(), v: 0, moved: false, hold: null, pull: 0, left: null, glidingFrom: !!AT.anim };
   if (AT.anim) { stopMotion(); AT.drag.m = shownMin(); } // a touch stops a glide where it is
-});
-whenCard.addEventListener('pointermove', ev => {
+}
+function rwMove(ev, el, slop) {
   const d = AT.drag;
   if (!d || ev.pointerId !== d.id) return;
   let dx = ev.clientX - d.last;
   const dt = Math.max(1, ev.timeStamp - d.t);
   if (!d.moved) {
-    if (Math.abs(ev.clientX - d.x) < 4) return;
-    d.moved = true; whenCard.setPointerCapture(ev.pointerId); openDayline();
+    if (Math.abs(ev.clientX - d.x) < slop) return;
+    d.moved = true; el.setPointerCapture(ev.pointerId); openDayline();
     dx = ev.clientX - d.x;
   }
   d.last = ev.clientX; d.t = ev.timeStamp;
@@ -1404,19 +1415,23 @@ whenCard.addEventListener('pointermove', ev => {
   if (!k) d.left = null;
   else if (k.m !== d.left && speed < 1) { d.hold = k.m; d.m = k.m; d.pull = 0; d.v = 0; }
   queueAt(d.m);
-});
-function endCardDrag(ev) {
+}
+// true when the touch was the rewind's (a drag, or a tap that caught a glide): then it is not a tap on the building
+function rwEnd(ev) {
   const d = AT.drag;
-  if (!d || ev.pointerId !== d.id) return;
+  if (!d || ev.pointerId !== d.id) return false;
   AT.drag = null;
-  if (!d.moved) { if (d.glidingFrom) settle(); return; }
+  if (!d.moved) { if (d.glidingFrom) settle(); return d.glidingFrom; }
   // still moving when the finger lifts (and not resting on a detent): it glides on
   if (ev.type === 'pointerup' && d.hold == null && ev.timeStamp - d.t < 60 && Math.abs(d.v) > .05 && !still()) fling(d.m, d.v);
   else settle();
+  return true;
 }
-whenCard.addEventListener('pointerup', endCardDrag); whenCard.addEventListener('pointercancel', endCardDrag);
+whenCard.addEventListener('pointerdown', rwStart);
+whenCard.addEventListener('pointermove', ev => rwMove(ev, whenCard, 4));
+whenCard.addEventListener('pointerup', rwEnd); whenCard.addEventListener('pointercancel', rwEnd);
 // a trackpad's sideways swipe (fingers to the left: earlier, like dragging); the page's own swipe between years stays off it
-whenCard.addEventListener('wheel', ev => {
+function rwWheel(ev) {
   if (!canRewind() || Math.abs(ev.deltaX) <= Math.abs(ev.deltaY)) return;
   ev.preventDefault(); ev.stopPropagation();
   stopMotion(); openDayline();
@@ -1424,7 +1439,8 @@ whenCard.addEventListener('wheel', ev => {
   const k = markNear(AT.wm, 3);
   queueAt(k ? k.m : AT.wm);
   clearTimeout(AT.wheelT); AT.wheelT = setTimeout(() => { AT.wm = null; settle(); }, 260);
-}, { passive: false });
+}
+for (const el of [whenCard, stage]) el.addEventListener('wheel', rwWheel, { passive: false });
 // keyboard: ← → a quarter of an hour (with Shift an hour), Home midnight, End now
 whenCard.addEventListener('keydown', ev => {
   if (!canRewind()) return;
