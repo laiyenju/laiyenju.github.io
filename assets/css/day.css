@@ -105,6 +105,31 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .roll .rs span, .roll > span { height: 1.35em; line-height: 1.35em; }
 .roll .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .roll .rs { transition: none !important; } }
+/* the rewind (day.js "rewind"): on today's home page the time can be dragged back through today. A pointer gets the
+   sideways cursor; until the first rewind a faint ‹ beside the time says it moves. Rewound, the time is in the accent,
+   as a past day is in the timeline. Under the card while it moves: a strip of today's own sky (00:00 → 24:00, the hours
+   still to come veiled), the cursor in the accent, ticks at dawn, sunrise, sunset and dusk, the times of sunrise and sunset */
+.when { position: relative; }
+.when[tabindex="0"] { cursor: ew-resize; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.when[tabindex="0"]:focus-visible { outline-offset: 4px; border-radius: 0; }
+.when.hint[tabindex="0"]:not(.is-rewound)::before { content: '‹'; position: absolute; left: -16px; top: 0; font: 500 var(--card-title)/1.35 var(--mono); color: var(--ink-soft); opacity: .7; }
+.when.is-rewound b, .when.is-rewound .txt > span { color: var(--accent); }
+body.rewinding { transition-duration: .12s; }
+.dayline { position: absolute; z-index: 3; left: 50%; top: 40%; padding: 26px 28px 20px; pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  /* no box: the glass fades out at its edges into the sky and the building */
+  -webkit-mask: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent), linear-gradient(transparent, #000 10px, #000 calc(100% - 8px), transparent);
+  -webkit-mask-composite: source-in;
+  mask: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent), linear-gradient(transparent, #000 10px, #000 calc(100% - 8px), transparent);
+  mask-composite: intersect;
+  transform: translate(-50%, 6px); opacity: 0; visibility: hidden;
+  transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s; }
+.dayline.on { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .16s ease, transform .16s ease; }
+.stage .dayline canvas { display: block; height: auto; aspect-ratio: 144 / 17; image-rendering: pixelated; transition: none; }
+.dayline .dl-now { position: absolute; top: 6px; transform: translateX(-50%); font: 600 13px/1.2 var(--mono);
+  letter-spacing: .02em; color: var(--accent); white-space: nowrap; }
+.dayline .dl-t { position: absolute; bottom: 5px; transform: translateX(-50%); font: 500 10px/1 var(--mono); letter-spacing: .02em; color: var(--ink-soft); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .dayline, .dayline.on { transition: none; } }
 
 .group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 
