@@ -89,7 +89,8 @@
   // The live time in the date card, HH:MM:SS in the city, each digit on a strip 0–9 that rolls to its number
   // (home page and notes alike; styles .roll in day.css and site.css). Each strip ends in a second 0, so 9 → 0
   // keeps rolling forward instead of running back through every digit; it then snaps to the first 0 unseen.
-  function rollClock(el, ms) {
+  // back (the home page's rewind, day.js): the digits roll the other way, and 0 → 9 jumps to the last 0 unseen first.
+  function rollClock(el, ms, back) {
     var d = new Date((ms == null ? Date.now() : ms) + CITY.tz * 3600e3);
     var two = function (n) { return (n < 10 ? '0' : '') + n; };
     var text = two(d.getUTCHours()) + ':' + two(d.getUTCMinutes()) + ':' + two(d.getUTCSeconds());
@@ -108,7 +109,11 @@
       if (to === from) { if (strip._snap == null) strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; return; }
       clearTimeout(strip._snap);
       strip.style.transition = '';
-      if (to < from) { // wrapped: roll on to the last 0, then jump back to the first
+      if (back && to > from) { // wrapped backwards: from the last 0 (looks the same as the first), roll back to the digit
+        strip.style.transition = 'none'; strip.style.transform = 'translateY(' + -10 * 1.35 + 'em)';
+        void strip.offsetHeight; strip.style.transition = '';
+        strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null;
+      } else if (!back && to < from) { // wrapped: roll on to the last 0, then jump back to the first
         strip.style.transform = 'translateY(' + -10 * 1.35 + 'em)';
         strip._snap = setTimeout(function () { strip.style.transition = 'none'; strip.style.transform = 'translateY(0)'; strip._snap = null; }, 450);
       } else { strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null; }

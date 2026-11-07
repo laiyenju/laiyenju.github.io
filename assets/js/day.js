@@ -62,6 +62,8 @@ const LITTLE = (SITE.little || []).map(l => { const [y, m, d] = String(l.date).s
 
 /* ================= day ================= */
 const state = { ang: 0, day: REAL_DAY, minute: REAL.h * 60 + REAL.min, followNow: true, items: [], index: 0 };
+// the rewind (drag the time in the date card): min is the minute shown when it is not now (null = now). state.minute stays the real time.
+const AT = { min: null, drag: null, marks: null, idle: 0, raf: 0, back: 0, bake: 0, mark: null };
 function isRestDay(dd) { const md = pad(dd.m) + '-' + pad(dd.d); return { rest: dd.wd === 0 || dd.wd === 6 || !!HOLIDAYS[md], holiday: HOLIDAYS[md] }; }
 // left → right: oldest year → today
 function buildItems() {
@@ -301,7 +303,7 @@ function nearestFrame(it, a) {
 }
 function renderText() {
   const it = state.items[state.index];
-  if (document.getElementById('tl').hidden) dialTo(todayISO(), todayWd(), true);
+  if (document.getElementById('tl').hidden) dialTo(todayISO(), cardSub(), true);
   $('capName').textContent = it.name;
   $('capMeta').innerHTML = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
@@ -386,10 +388,11 @@ function renderPast(date) {
 // past day's), Timeline in the timeline. Pressing it: on today's page it opens the timeline; anywhere else it goes back to today.
 // On a work or a note: ← Work / ← Notes on the card's left goes back to the list, Home on its right.
 function ctaFor(word) {
+  if (word === 'Today' && AT.min != null && !state.pastDate) word = 'Now'; // rewound: the button brings the time back
   const back = word === 'Work' || word === 'Notes';
   $('backBtn').hidden = !back; $('homeBtn').hidden = !back; $('tlBtn').hidden = back;
   if (back) { $('backText').textContent = word; $('backBtn').setAttribute('aria-label', word === 'Work' ? 'Back to all work' : 'Back to all notes'); }
-  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', `${word}. ${word === 'Today' && !state.pastDate ? 'Open the timeline' : 'Back to today'}`); }
+  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', word === 'Now' ? 'Now. Back to the time now' : `${word}. ${word === 'Today' && !state.pastDate ? 'Open the timeline' : 'Back to today'}`); }
 }
 function exitPast() {
   if (!state.pastDate) return;
@@ -732,6 +735,7 @@ function pureImage(x) {
 function dialTo(iso, sub, live = false, past = false) {
   const el = $('date'), text = iso.replace(/-/g, '.');
   $('whenCard').classList.toggle('is-past-day', past);
+  $('whenCard').tabIndex = live && tl.hidden && !state.pastDate ? 0 : -1; // the rewind's slider, on today's home page only
   if (!$('clockRoll')) {
     el.innerHTML = '<span class="face on"><span class="roll" id="clockRoll"></span></span><span class="face" id="dayFace" aria-hidden="true"></span>';
     siteSky.rollClock($('clockRoll'));
@@ -1074,7 +1078,7 @@ function leaveTl(setup, hash) {
     updateMore();
   }, MOVE);
 }
-function headerNow() { dialTo(todayISO(), todayWd(), true); }
+function headerNow() { dialTo(todayISO(), cardSub(), true); }
 function homeToday() { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } ctaFor('Today'); }
 function tapTl() {
   const x = TL.list[TL.idx];
@@ -1094,6 +1098,7 @@ function leaveToToday() { leaveTl(() => { homeToday(); renderText(); }); }
 function route() {
   const h = location.hash;
   let m;
+  if (h && h !== '#') resetAt(); // the rewind is for today's home page only
   if ((m = h.match(/^#work-(.+)$/))) openWork(m[1]);
   else if ((m = h.match(/^#note-(.+)$/))) openNote(decodeURIComponent(m[1]));
   else if (h === '#timeline') { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(todayISO()); else showTlDay(TL.list.length - 1); }
@@ -1175,15 +1180,167 @@ addEventListener('keydown', ev => {
   if (ev.key === 'ArrowLeft') go(state.index - 1);
 });
 $('tlBtn').addEventListener('click', () => {
-  if (!tl.hidden) leaveToToday();
+  if (AT.min != null && canRewind()) backToNow();
+  else if (!tl.hidden) leaveToToday();
   else if (state.pastDate) closeOverlays();
   else openTimeline();
 });
 $('backBtn').addEventListener('click', backToList);
 $('homeBtn').addEventListener('click', () => { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); });
 
+/* ================= rewind: drag the time in the date card back through today (README 2.5.3 "日期卡片") =================
+   Today's home page only, from 00:00 to now: what has not happened yet cannot be seen. Everything that follows the sun
+   (the sky, the text colours, the building's light and shadow) is worked out from the minute shown (minuteMs), so the
+   rewind only moves that minute. While the finger moves only the colours change (each frame draws them); the shadow
+   is baked again once it rests. Under the card a thin strip of today's own sky shows where in the day you are;
+   dawn, sunrise, sunset and dusk hold the drag for a moment (SNAP), since dusk's violet lasts only some 20 minutes. */
+const SUN_MARKS = [['dawn', -4, 1], ['sunrise', 0, 1], ['sunset', 0, -1], ['dusk', -4, -1]];
+const SNAP = 9; // minutes either side of a mark that snap to it
+const IDLE_BACK = 60e3; // left alone this long, the time rolls back to now
+const whenCard = $('whenCard');
+const canRewind = () => tl.hidden && reader.hidden && !state.pastDate && !!$('clockRoll');
+const shownMin = () => AT.min == null ? state.minute : AT.min;
+// today's sun: the marks (minute and name) and the sky's colour every 5 minutes
+function sunDay() {
+  if (AT.marks && AT.marks.day === state.day) return AT.marks;
+  const t0 = state.day - CITY.tz * 3600e3, alt = [];
+  for (let m = 0; m <= 1440; m++) alt.push(siteSky.sunAt(t0 + m * 60e3).alt);
+  const list = [];
+  for (let m = 1; m <= 1440; m++) for (const [name, at, dir] of SUN_MARKS) if (dir > 0 ? alt[m - 1] < at && alt[m] >= at : alt[m - 1] >= at && alt[m] < at) list.push({ m, name });
+  const sky = [];
+  for (let m = 0; m < 1440; m += 5) sky.push(siteSky.colours(siteSky.bgFor(alt[m])).bg);
+  return (AT.marks = { day: state.day, list, sky });
+}
+const cardSub = () => AT.min == null || !AT.mark ? todayWd() : `${todayWd()} · ${AT.mark}`;
+const hm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+function syncSlider() {
+  whenCard.setAttribute('aria-valuemax', state.minute);
+  whenCard.setAttribute('aria-valuenow', shownMin());
+  whenCard.setAttribute('aria-valuetext', AT.min == null ? `${hm(state.minute)}, now` : `${hm(AT.min)}${AT.mark ? ', ' + AT.mark : ''}`);
+}
+// the strip under the card
+const dayline = document.createElement('div');
+dayline.className = 'dayline'; dayline.setAttribute('aria-hidden', 'true');
+dayline.innerHTML = '<div class="dl-sky"><canvas width="288" height="1"></canvas><span class="dl-future"></span></div><span class="dl-cur"></span>';
+document.querySelector('.top').append(dayline);
+function paintDayline() {
+  const D = sunDay(), g = dayline.querySelector('canvas').getContext('2d');
+  D.sky.forEach((c, k) => { g.fillStyle = c; g.fillRect(k, 0, 1, 1); });
+  dayline.querySelector('.dl-future').style.left = state.minute / 14.4 + '%';
+  dayline.querySelectorAll('.dl-mark, .dl-t').forEach(n => n.remove());
+  for (const k of D.list) {
+    const n = document.createElement('span');
+    n.className = 'dl-mark' + (k.m > state.minute ? ' later' : '');
+    n.style.left = k.m / 14.4 + '%';
+    dayline.append(n);
+    if (k.name !== 'sunrise' && k.name !== 'sunset') continue;
+    const t = document.createElement('span');
+    t.className = 'dl-t'; t.style.left = n.style.left; t.textContent = hm(k.m);
+    dayline.append(t);
+  }
+  dayline.querySelector('.dl-cur').style.left = shownMin() / 14.4 + '%';
+}
+let daylineOff = 0;
+// while it is open the page's colour keeps up with the time (body.rewinding: day.css), instead of its slow 1.2s fade
+function openDayline() { clearTimeout(daylineOff); paintDayline(); dayline.classList.add('on'); document.body.classList.add('rewinding'); }
+function closeDayline(ms = 700) { clearTimeout(daylineOff); daylineOff = setTimeout(() => { dayline.classList.remove('on'); document.body.classList.remove('rewinding'); }, ms); }
+// show the day at minute min (0 … now; now or later is the live time again)
+function showAt(min) {
+  min = Math.round(cl(min, 0, state.minute));
+  const next = min >= state.minute ? null : min, prev = shownMin();
+  if (next === AT.min) return;
+  AT.min = next;
+  const mark = next == null ? null : (sunDay().list.find(k => k.m === next) || {}).name || null;
+  if (mark && mark !== AT.mark && navigator.vibrate) try { navigator.vibrate(8); } catch (e) {}
+  AT.mark = mark;
+  siteSky.rollClock($('clockRoll'), next == null ? Date.now() : minuteMs(), shownMin() < prev);
+  whenCard.classList.toggle('is-rewound', next != null);
+  if (next != null) try { localStorage.setItem('rewound', '1'); whenCard.classList.remove('hint'); } catch (e) {}
+  ctaFor('Today');
+  dialTo(todayISO(), cardSub(), true);
+  dayline.querySelector('.dl-cur').style.left = shownMin() / 14.4 + '%';
+  syncSlider();
+  // the colours now (the shadow stays as baked: LIGHT keeps its sx, sy), the shadow once the time rests
+  LIGHT = Object.assign(lightFor(minuteMs()), { sx: LIGHT.sx, sy: LIGHT.sy });
+  applyTheme(LIGHT); placePlate();
+  clearTimeout(AT.bake);
+  AT.bake = setTimeout(() => refreshLight(true), AT.drag ? 160 : 40);
+  clearTimeout(AT.idle);
+  if (next != null && !AT.drag) AT.idle = setTimeout(backToNow, IDLE_BACK);
+}
+function queueAt(m) { AT.want = m; if (!AT.raf) AT.raf = requestAnimationFrame(() => { AT.raf = 0; showAt(AT.want); }); }
+// back to now: the digits roll forward to the time now (Now, or left alone for a minute)
+function backToNow() {
+  cancelAnimationFrame(AT.back); clearTimeout(AT.idle);
+  if (AT.min == null) return;
+  const from = AT.min, to = state.minute, ms = still() ? 0 : cl((to - from) * 1.2, 300, 900), t0 = performance.now();
+  if (ms) openDayline();
+  const step = now => {
+    const p = ms ? cl((now - t0) / ms, 0, 1) : 1, e = 1 - Math.pow(1 - p, 3);
+    showAt(p < 1 ? from + (to - from) * e : to);
+    if (p < 1) AT.back = requestAnimationFrame(step); else closeDayline(400);
+  };
+  AT.back = requestAnimationFrame(step);
+}
+// leaving today's home page: back to now at once, without the roll
+function resetAt() {
+  cancelAnimationFrame(AT.back); clearTimeout(AT.idle); clearTimeout(AT.bake);
+  AT.drag = null;
+  dayline.classList.remove('on'); document.body.classList.remove('rewinding');
+  if (AT.min == null) return;
+  AT.min = null; AT.mark = null;
+  whenCard.classList.remove('is-rewound');
+  if ($('clockRoll')) siteSky.rollClock($('clockRoll'));
+  refreshLight(true); syncSlider();
+}
+whenCard.setAttribute('role', 'slider');
+whenCard.setAttribute('aria-label', 'Time of day. Drag sideways, or use the arrow keys, to see earlier today');
+whenCard.setAttribute('aria-valuemin', '0');
+try { if (!localStorage.getItem('rewound')) whenCard.classList.add('hint'); } catch (e) {}
+whenCard.addEventListener('pointerdown', ev => {
+  if (!canRewind() || ev.button > 0) return;
+  AT.drag = { x: ev.clientX, id: ev.pointerId, from: shownMin(), moved: false };
+});
+whenCard.addEventListener('pointermove', ev => {
+  const d = AT.drag;
+  if (!d || ev.pointerId !== d.id) return;
+  const dx = ev.clientX - d.x;
+  if (!d.moved) {
+    if (Math.abs(dx) < 4) return;
+    d.moved = true; whenCard.setPointerCapture(ev.pointerId);
+    cancelAnimationFrame(AT.back); clearTimeout(AT.idle); openDayline();
+  }
+  // the cursor on the strip follows the finger: the strip's width is the whole day
+  let m = d.from + dx * 1440 / Math.max(160, dayline.offsetWidth);
+  const near = sunDay().list.find(k => Math.abs(k.m - m) <= SNAP && k.m <= state.minute);
+  if (near) m = near.m;
+  queueAt(m);
+});
+function endCardDrag(ev) {
+  const d = AT.drag;
+  if (!d || ev.pointerId !== d.id) return;
+  AT.drag = null;
+  if (!d.moved) return;
+  closeDayline();
+  clearTimeout(AT.bake); AT.bake = setTimeout(() => refreshLight(true), 40);
+  if (AT.min != null) AT.idle = setTimeout(backToNow, IDLE_BACK);
+}
+whenCard.addEventListener('pointerup', endCardDrag); whenCard.addEventListener('pointercancel', endCardDrag);
+// keyboard: ← → a quarter of an hour (with Shift an hour), Home midnight, End now
+whenCard.addEventListener('keydown', ev => {
+  if (!canRewind()) return;
+  const step = ev.shiftKey ? 60 : 15, cur = shownMin();
+  const m = ev.key === 'ArrowLeft' ? Math.ceil(cur / step) * step - step : ev.key === 'ArrowRight' ? Math.floor(cur / step) * step + step
+    : ev.key === 'Home' ? 0 : ev.key === 'End' ? state.minute : null;
+  if (m == null) return;
+  ev.preventDefault(); ev.stopPropagation();
+  cancelAnimationFrame(AT.back);
+  openDayline(); showAt(m); closeDayline(1200);
+});
+syncSlider();
+
 /* light: follows the sun over the city at the real time */
-function minuteMs() { return state.day - CITY.tz * 3600e3 + state.minute * 60e3; }
+function minuteMs() { return state.day - CITY.tz * 3600e3 + (AT.min == null ? state.minute : AT.min) * 60e3; }
 function refreshLight(rebake) {
   const L = lightFor(minuteMs()), shadowChanged = L.sx !== LIGHT.sx || L.sy !== LIGHT.sy;
   LIGHT = L; applyTheme(L);
@@ -1203,7 +1360,7 @@ function openView() {
 /* the seconds in the date card, on the second */
 function secondTick() {
   const r = $('clockRoll');
-  if (r && !document.hidden) siteSky.rollClock(r);
+  if (r && !document.hidden && AT.min == null) siteSky.rollClock(r); // rewound: the card holds the minute shown
   setTimeout(secondTick, 1000 - Date.now() % 1000 + 15);
 }
 secondTick();
@@ -1219,7 +1376,8 @@ function frame(now) {
 setInterval(() => {
   const r = taipeiParts(Date.now()), day = dayMs(r.y, r.m, r.d);
   state.minute = r.h * 60 + r.min;
-  if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; refreshLight(true); renderDay(); } else { refreshLight(true); refreshToday(); }
+  if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; AT.min = null; AT.marks = null; refreshLight(true); renderDay(); ctaFor('Today'); } else { refreshLight(true); refreshToday(); }
+  syncSlider();
   if (r.min % 10 === 0) loadCheckin(); // a page left open hears of new check-ins
 }, 60e3);
 addEventListener('resize', () => { sizeStage(); if (mainWorld) fitCanvas(mainWorld); if (!tl.hidden && $('tlc') && TL.cur) { fitTl($('tlc')); layoutRow(); } onScroll(); });

@@ -266,6 +266,7 @@ flowchart LR
 | 網頁字型 | Quattro：`assets/fonts/quattro/`（文章頁在 `site.css`、首頁在 `day.css` 開頭載入）。JetBrains Mono、Noto Sans TC：Google Fonts（文章頁 `_includes/head.html`、首頁 `_layouts/home.html`） | 一般文字（首頁說明、Timeline、作品頁、文章）：iA Writer Quattro → Noto Sans TC。terminal、日期、按鈕：JetBrains Mono → Noto Sans TC。中文一律用 Noto Sans TC。Quattro 只有 400、700，所以 Noto Sans TC 也只載入 400、700，中英文才一樣粗。中英文之間的小空隙用 `text-autospace`（支援的瀏覽器才有） |
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題和說明都是 21px（行高 1.5），標題只是粗體，兩者之間多 10px |
 | 日期卡片 | 首頁 `_layouts/home.html` 的 `.top-row`、`day.css` 的 `.top`；文章頁 `_layouts/default.html` 的 `.post-row`、`site.css` 的 `.post-top` | 見下面「日期卡片」。`--card-top`、`--card-title`、`--card-sub` 在 `day.css` 和 `site.css` 各有一份，要一起改 |
+| 倒轉今天 | `assets/js/day.js` 的 rewind 區段（`SUN_MARKS`、`SNAP`、`IDLE_BACK`、`showAt`、`backToNow`）；樣式在 `day.css` 的 `.when.is-rewound`、`.dayline`；倒著翻的數字在 `sky.js` 的 `rollClock`（`back`） | 吸附：黎明、日出、日落、黃昏（太陽 −4°、0°），前後 9 分鐘；放著 60 秒自動回到現在。見下面「倒轉今天」 |
 | 按鈕 | `assets/css/day.css` 的 `.top-btn, .cmdbar button`、`--press-soft`；文章頁 `site.css` 的 `.post-btn` | 見下面「按鈕」 |
 | 轉場 | `day.js` 的 `lightRow`、`reveal`、`openTl`／`leaveTl`（`tl-in`）；文章在 `_layouts/default.html` 的開頭和 `site.css` 的 `post-rise` | 見下面「轉場」 |
 | Timeline 的動畫 | `assets/js/day.js` 的 `buildUp`（一磚一磚，磚塊 4×3 像素）、`dissolve`、`MOVE` | 蓋起來 0.9 秒、溶解 0.2 秒、首頁和 Timeline 之間移動 0.48 秒。「減少動態效果」時直接跳到結果 |
@@ -273,12 +274,22 @@ flowchart LR
 
 **日期卡片**：
 
-- 頂部一行，像 terminal 的標題列，置中、最寬 440px（手機上左右各留 20px，和內文對齊）。左邊回清單（`← Work`／`← Notes`，只在作品和文章），中間是時間（沒有框，只是字），右邊的按鈕寫現在所在的畫面：今天的首頁是 Today（點了打開 Timeline）、Timeline 裡是 Timeline（點了回到今天）、過去某天是 Today（點了回到今天）、作品和文章是 Home（只有圖示）。切換在 `day.js` 的 `ctaFor`。
+- 頂部一行，像 terminal 的標題列，置中、最寬 440px（手機上左右各留 20px，和內文對齊）。左邊回清單（`← Work`／`← Notes`，只在作品和文章），中間是時間（沒有框，只是字），右邊的按鈕寫現在所在的畫面：今天的首頁是 Today（點了打開 Timeline）、Timeline 裡是 Timeline（點了回到今天）、過去某天是 Today（點了回到今天）、倒轉今天時是 Now（點了回到現在）、作品和文章是 Home（只有圖示）。切換在 `day.js` 的 `ctaFor`。
 - 底下是一條天色的帶子、往下淡出，捲動時內容不會撞到字。
 - 離頂端 `--card-top`：手機 12px；寬螢幕（≥ 900px）是畫面高度的 9%（28–96px）。字級：上面一行 `--card-title`（15px）、下面一行 `--card-sub`（12px），每一頁都一樣。
 - 上面是現在的時間，到秒（`HH:MM:SS`），下面是所在城市今天的星期（`Fri`；首頁 `day.js` 的 `todayWd`，文章頁 `post.js` 的 `tick`）。每個數字像翻牌一樣往上捲到下一個（`sky.js` 的 `rollClock`，首頁由 `day.js` 的 `secondTick`、文章頁由 `post.js` 的 `tick` 每秒呼叫；樣式在 `day.css`、`site.css` 的 `.roll`）。
 - Timeline 裡上面一行是那天的日期（數字像轉盤一樣轉到那天），下面是「幾年前」（`Seven years ago`；今年稍早寫 `This year`，今天寫 `Today`）。進出 Timeline 時，時間和日期疊在同一個位置交叉淡入淡出（淡出的稍微變模糊；淡入的日期直接停在那天）；換一天時下面一行同樣交叉淡入淡出（`day.js` 的 `dialTo`、`day.css` 的 `.when .face`）。停在過去某一天時用強調色（`.when.is-past-day`）。
 - 「減少動態效果」時直接換數字。
+
+**倒轉今天**（只在今天的首頁）：
+
+- 在時間上左右拖（手機用手指滑），往左是更早。範圍是今天 00:00 到現在，未來不能看。天色、文字色、建築的光和影子都跟著那個時刻變（`minuteMs` 改用拖到的分鐘；真正的時間 `state.minute` 不變，Where's Yen 還是說現在）。
+- 拖的時候：時間每個數字往回翻（`rollClock` 的 `back`），時間和下面一行用強調色（`.is-rewound`），下面一行在吸附點時加上名稱（`Sat · dusk`）。卡片下方出現一條今天的天色帶（每 5 分鐘一格，現在之後的部分蓋淡），強調色的游標跟著手指，帶子的寬度就是一整天；標出黎明、日出、日落、黃昏，日出和日落寫時間。放開後帶子淡出。
+- 拖到黎明、日出、日落、黃昏前後 9 分鐘內會停在那一刻（`SNAP`）；手機會輕震一下。黃昏的紫色只有約 20 分鐘，所以要幫訪客停住。
+- 拖動時只換顏色，手停下來（約 0.16 秒）才重畫影子。頁面底色平常 1.2 秒淡入，拖的時候縮短成 0.12 秒（`body.rewinding`），跟得上手指。
+- 回到現在：點右邊的 Now，或放著 60 秒（`IDLE_BACK`），數字往前翻回現在。離開首頁（Timeline、往年今日、作品、文章）時直接回到現在，不翻。
+- 滑鼠指到時游標是左右箭頭。還沒倒轉過的訪客，時間左邊有一個淡淡的 `‹`，第一次倒轉後就不再出現（記在瀏覽器的 `localStorage`）。
+- 鍵盤：Tab 移到時間上，`←` `→` 每次 15 分鐘（加 Shift 是 1 小時），Home 到 00:00，End 回到現在。螢幕閱讀器把它讀成滑桿（`role="slider"`）。
 
 **按鈕**：全站只有一種，從 terminal 清單的選取（`.ls .lit`）來，只用文字色和天色，所以不用為不同時間另外調。
 
