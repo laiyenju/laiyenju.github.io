@@ -115,17 +115,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .when.hint[tabindex="0"]:not(.is-rewound)::before { content: '‹'; position: absolute; left: -16px; top: 0; font: 500 var(--card-title)/1.35 var(--mono); color: var(--ink-soft); opacity: .7; }
 .when.is-rewound b, .when.is-rewound .txt > span { color: var(--accent); }
 body.rewinding { transition-duration: .12s; }
-.dayline { position: absolute; left: 50%; top: calc(var(--card-top) + 52px); width: min(300px, calc(100vw - 72px)); height: 24px;
+.dayline { position: absolute; left: 50%; top: calc(var(--card-top) + 50px); width: min(288px, calc(100vw - 40px));
   transform: translate(-50%, -4px); opacity: 0; visibility: hidden; pointer-events: none;
-  transition: opacity .25s ease, transform .25s ease, visibility 0s linear .25s; }
+  transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s; }
 .dayline.on { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .18s ease, transform .18s ease; }
-.dayline .dl-sky { position: relative; height: 6px; box-shadow: 0 0 0 1px var(--rule); overflow: hidden; }
-.dayline canvas { display: block; width: 100%; height: 100%; }
-.dayline .dl-future { position: absolute; top: 0; bottom: 0; right: 0; background: var(--bg); opacity: .75; }
-.dayline .dl-cur { position: absolute; top: -4px; width: 2px; height: 14px; margin-left: -1px; background: var(--accent); }
-.dayline .dl-mark { position: absolute; top: 8px; width: 1px; height: 3px; margin-left: -.5px; background: var(--ink-soft); }
-.dayline .dl-mark.later { opacity: .4; }
-.dayline .dl-t { position: absolute; top: 13px; transform: translateX(-50%); font: 500 10px/1 var(--mono); color: var(--ink-soft); white-space: nowrap; }
+.dayline canvas { display: block; width: 100%; aspect-ratio: 144 / 17; image-rendering: pixelated; }
+.dayline .dl-t { position: absolute; top: calc(100% + 3px); transform: translateX(-50%); font: 500 10px/1 var(--mono); letter-spacing: .02em; color: var(--ink-soft); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .dayline, .dayline.on { transition: none; } }
 
 .group { display: flex; flex-direction: column; align-items: center; gap: 4px; }

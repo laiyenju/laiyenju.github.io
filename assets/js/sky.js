@@ -113,9 +113,13 @@
         strip.style.transition = 'none'; strip.style.transform = 'translateY(' + -10 * 1.35 + 'em)';
         void strip.offsetHeight; strip.style.transition = '';
         strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null;
-      } else if (!back && to < from) { // wrapped: roll on to the last 0, then jump back to the first
+      } else if (!back && to < from) { // wrapped: roll on to the last 0, jump back to the first, and on to the digit
+        // (a ticking clock lands on 0; the rewind can jump, 7 → 2)
         strip.style.transform = 'translateY(' + -10 * 1.35 + 'em)';
-        strip._snap = setTimeout(function () { strip.style.transition = 'none'; strip.style.transform = 'translateY(0)'; strip._snap = null; }, 450);
+        strip._snap = setTimeout(function () {
+          strip.style.transition = 'none'; strip.style.transform = 'translateY(0)'; strip._snap = null;
+          if (to) { void strip.offsetHeight; strip.style.transition = ''; strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; }
+        }, 450);
       } else { strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null; }
     });
   }

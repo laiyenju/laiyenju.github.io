@@ -266,7 +266,7 @@ flowchart LR
 | 網頁字型 | Quattro：`assets/fonts/quattro/`（文章頁在 `site.css`、首頁在 `day.css` 開頭載入）。JetBrains Mono、Noto Sans TC：Google Fonts（文章頁 `_includes/head.html`、首頁 `_layouts/home.html`） | 一般文字（首頁說明、Timeline、作品頁、文章）：iA Writer Quattro → Noto Sans TC。terminal、日期、按鈕：JetBrains Mono → Noto Sans TC。中文一律用 Noto Sans TC。Quattro 只有 400、700，所以 Noto Sans TC 也只載入 400、700，中英文才一樣粗。中英文之間的小空隙用 `text-autospace`（支援的瀏覽器才有） |
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題和說明都是 21px（行高 1.5），標題只是粗體，兩者之間多 10px |
 | 日期卡片 | 首頁 `_layouts/home.html` 的 `.top-row`、`day.css` 的 `.top`；文章頁 `_layouts/default.html` 的 `.post-row`、`site.css` 的 `.post-top` | 見下面「日期卡片」。`--card-top`、`--card-title`、`--card-sub` 在 `day.css` 和 `site.css` 各有一份，要一起改 |
-| 倒轉今天 | `assets/js/day.js` 的 rewind 區段（`SUN_MARKS`、`SNAP`、`IDLE_BACK`、`showAt`、`backToNow`）；樣式在 `day.css` 的 `.when.is-rewound`、`.dayline`；倒著翻的數字在 `sky.js` 的 `rollClock`（`back`） | 吸附：黎明、日出、日落、黃昏（太陽 −4°、0°），前後 9 分鐘；放著 60 秒自動回到現在。見下面「倒轉今天」 |
+| 倒轉今天 | `assets/js/day.js` 的 rewind 區段（`SUN_MARKS`、`SNAP`、`PULL`、`GAIN_MAX`、`FLING_MAX`、`IDLE_BACK`、`DL`、`paintDayline`）；樣式在 `day.css` 的 `.when.is-rewound`、`.when.hint`、`.dayline`；倒著翻的數字在 `sky.js` 的 `rollClock`（`back`） | 吸附：黎明、日出、日落、黃昏，前後 8 分鐘，多拉 10 px 才離開；拖動 1–8 分鐘／px；放著 60 秒回到現在。見下面「倒轉今天」 |
 | 按鈕 | `assets/css/day.css` 的 `.top-btn, .cmdbar button`、`--press-soft`；文章頁 `site.css` 的 `.post-btn` | 見下面「按鈕」 |
 | 轉場 | `day.js` 的 `lightRow`、`reveal`、`openTl`／`leaveTl`（`tl-in`）；文章在 `_layouts/default.html` 的開頭和 `site.css` 的 `post-rise` | 見下面「轉場」 |
 | Timeline 的動畫 | `assets/js/day.js` 的 `buildUp`（一磚一磚，磚塊 4×3 像素）、`dissolve`、`MOVE` | 蓋起來 0.9 秒、溶解 0.2 秒、首頁和 Timeline 之間移動 0.48 秒。「減少動態效果」時直接跳到結果 |
@@ -283,13 +283,16 @@ flowchart LR
 
 **倒轉今天**（只在今天的首頁）：
 
-- 在時間上左右拖（手機用手指滑），往左是更早。範圍是今天 00:00 到現在，未來不能看。天色、文字色、建築的光和影子都跟著那個時刻變（`minuteMs` 改用拖到的分鐘；真正的時間 `state.minute` 不變，Where's Yen 還是說現在）。
-- 拖的時候：時間每個數字往回翻（`rollClock` 的 `back`），時間和下面一行用強調色（`.is-rewound`），下面一行在吸附點時加上名稱（`Sat · dusk`）。卡片下方出現一條今天的天色帶（每 5 分鐘一格，現在之後的部分蓋淡），強調色的游標跟著手指，帶子的寬度就是一整天；標出黎明、日出、日落、黃昏，日出和日落寫時間。放開後帶子淡出。
-- 拖到黎明、日出、日落、黃昏前後 9 分鐘內會停在那一刻（`SNAP`）；手機會輕震一下。黃昏的紫色只有約 20 分鐘，所以要幫訪客停住。
-- 拖動時只換顏色，手停下來（約 0.16 秒）才重畫影子。頁面底色平常 1.2 秒淡入，拖的時候縮短成 0.12 秒（`body.rewinding`），跟得上手指。
-- 回到現在：點右邊的 Now，或放著 60 秒（`IDLE_BACK`），數字往前翻回現在。離開首頁（Timeline、往年今日、作品、文章）時直接回到現在，不翻。
-- 滑鼠指到時游標是左右箭頭。還沒倒轉過的訪客，時間左邊有一個淡淡的 `‹`，第一次倒轉後就不再出現（記在瀏覽器的 `localStorage`）。
-- 鍵盤：Tab 移到時間上，`←` `→` 每次 15 分鐘（加 Shift 是 1 小時），Home 到 00:00，End 回到現在。螢幕閱讀器把它讀成滑桿（`role="slider"`）。
+- 在時間上左右拖（手機用手指滑；觸控板用兩指左右滑），往左是更早。範圍是今天 00:00 到現在，未來不能看。天色、文字色、建築的光和影子都跟著那個時刻變（`minuteMs` 改用拖到的分鐘；真正的時間 `state.minute` 不變，Where's Yen 還是說現在）。
+- 拖的時候：時間每個數字往回翻（`rollClock` 的 `back`），時間和下面一行用強調色（`.is-rewound`），停在吸附點時下面一行加上名稱（`Sat · dusk`）。
+- **太陽的軌跡**（`paintDayline`）：卡片下方出現一張和建築一樣的 2 倍像素圖：地平線、今天太陽走過的弧線（現在之後的部分是虛線）、強調色的太陽和一條往下的細線；晚上太陽在地平線下，只剩一小段暗的短線。最下面一條是那一刻的天色（`BG_STOPS` 原本的顏色，看得到黃昏的紫色），現在之後的部分蓋淡。日出、日落寫時間。放開後淡出。
+- **日晷**：建築的影子跟著太陽轉。拖動時顏色每一格畫面都換；影子重畫一次約 80ms，所以最多每 0.18 秒重畫一次（`swing`）。
+- **手感**：慢慢拖是 1 px 1 分鐘，拖得越快每 px 越多分鐘，最多 8 分鐘（`GAIN_MAX`）。黎明、日出、日落、黃昏（太陽 −4°、0°）前後 8 分鐘（`SNAP`）會停住，要多拉 10 px（`PULL`）才離開；手機會輕震一下。黃昏的紫色只有約 20 分鐘，所以要幫訪客停住。放開時還在動，時間會繼續滑、慢慢停下來，經過吸附點附近時被吸住（`fling`）。
+- 頁面底色平常 1.2 秒淡入，拖的時候縮短成 0.12 秒（`body.rewinding`），跟得上手指。
+- **回到現在**：點右邊的 Now，或放著 60 秒（`IDLE_BACK`），數字往前翻回現在。離開首頁（Timeline、往年今日、作品、文章）時直接回到現在，不翻。
+- **讓人發現**：第一次來的訪客，在頁面停好約 2.4 秒後，時間自己往回翻 40 分鐘、太陽軌跡出現，再翻回現在，只播一次（記在 `localStorage` 的 `teased`；訪客先動了、設定減少動態效果、或瀏覽器不能記錄時都不播）。滑鼠指到時游標是左右箭頭。還沒倒轉過的訪客，時間左邊有一個淡淡的 `‹`，第一次倒轉後就不再出現（`rewound`）。
+- **鍵盤**：Tab 移到時間上，`←` `→` 每次 15 分鐘（加 Shift 是 1 小時），Home 到 00:00，End 回到現在。只有在今天的首頁，時間才是滑桿（`role="slider"`，`syncCardRole`），其他畫面不能 Tab 到它。
+- 「減少動態效果」時：不播第一次的提示、放開時不會繼續滑、回到現在不翻，直接到。
 
 **按鈕**：全站只有一種，從 terminal 清單的選取（`.ls .lit`）來，只用文字色和天色，所以不用為不同時間另外調。
 

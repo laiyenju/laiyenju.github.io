@@ -63,7 +63,7 @@ const LITTLE = (SITE.little || []).map(l => { const [y, m, d] = String(l.date).s
 /* ================= day ================= */
 const state = { ang: 0, day: REAL_DAY, minute: REAL.h * 60 + REAL.min, followNow: true, items: [], index: 0 };
 // the rewind (drag the time in the date card): min is the minute shown when it is not now (null = now). state.minute stays the real time.
-const AT = { min: null, drag: null, marks: null, idle: 0, raf: 0, back: 0, bake: 0, mark: null };
+const AT = { min: null, mark: null, drag: null, marks: null, anim: 0, raf: 0, want: 0, idle: 0, bake: 0, swingT: 0, wm: null, wheelT: 0, keyT: 0, teaseT: 0, user: false, teasing: false };
 function isRestDay(dd) { const md = pad(dd.m) + '-' + pad(dd.d); return { rest: dd.wd === 0 || dd.wd === 6 || !!HOLIDAYS[md], holiday: HOLIDAYS[md] }; }
 // left → right: oldest year → today
 function buildItems() {
@@ -735,7 +735,7 @@ function pureImage(x) {
 function dialTo(iso, sub, live = false, past = false) {
   const el = $('date'), text = iso.replace(/-/g, '.');
   $('whenCard').classList.toggle('is-past-day', past);
-  $('whenCard').tabIndex = live && tl.hidden && !state.pastDate ? 0 : -1; // the rewind's slider, on today's home page only
+  syncCardRole();
   if (!$('clockRoll')) {
     el.innerHTML = '<span class="face on"><span class="roll" id="clockRoll"></span></span><span class="face" id="dayFace" aria-hidden="true"></span>';
     siteSky.rollClock($('clockRoll'));
@@ -1112,6 +1112,7 @@ function route() {
   }
 }
 addEventListener('hashchange', route);
+addEventListener('hashchange', () => setTimeout(syncCardRole, 0)); // after the view has changed
 addEventListener('popstate', route);
 for (const o of [reader, tl]) {
   o.addEventListener('scroll', () => updateMore(), { passive: true });
@@ -1188,63 +1189,100 @@ $('tlBtn').addEventListener('click', () => {
 $('backBtn').addEventListener('click', backToList);
 $('homeBtn').addEventListener('click', () => { closeOverlays(); scrollTo({ top: 0, behavior: still() ? 'auto' : 'smooth' }); });
 
-/* ================= rewind: drag the time in the date card back through today (README 2.5.3 "日期卡片") =================
+/* ================= rewind: drag the time in the date card back through today (README 2.5.3 "倒轉今天") =================
    Today's home page only, from 00:00 to now: what has not happened yet cannot be seen. Everything that follows the sun
    (the sky, the text colours, the building's light and shadow) is worked out from the minute shown (minuteMs), so the
-   rewind only moves that minute. While the finger moves only the colours change (each frame draws them); the shadow
-   is baked again once it rests. Under the card a thin strip of today's own sky shows where in the day you are;
-   dawn, sunrise, sunset and dusk hold the drag for a moment (SNAP), since dusk's violet lasts only some 20 minutes. */
+   rewind only moves that minute; the real time (state.minute) stays as it is.
+   - Under the card, the sun's path through today in the site's own pixels (paintDayline): the sun on its arc, the
+     horizon, and along the bottom the colour of the sky at each moment (BG_STOPS as designed, dusk's violet included).
+   - The building is a sundial: its shadow follows the sun while the time moves, redrawn as often as a bake allows
+     (swing); the colours change every frame.
+   - Slow fingers move a minute at a time, fast ones up to GAIN_MAX minutes a pixel. Dawn, sunrise, sunset and dusk are
+     detents: the time stops there until the finger pulls on PULL px. Let go while moving and it glides on, slows down,
+     and a detent nearby catches it.
+   - A first-time visitor sees it once (tease): the time rolls back a little and returns. */
 const SUN_MARKS = [['dawn', -4, 1], ['sunrise', 0, 1], ['sunset', 0, -1], ['dusk', -4, -1]];
-const SNAP = 9; // minutes either side of a mark that snap to it
-const IDLE_BACK = 60e3; // left alone this long, the time rolls back to now
+const SNAP = 8;          // minutes either side of a mark that catch the time
+const PULL = 10;         // px a finger pulls past a detent to leave it
+const GAIN_MAX = 8;      // minutes a pixel for the fastest drag (the slowest: 1)
+const FLING_MAX = .9;    // minutes a millisecond, the fastest glide after letting go
+const IDLE_BACK = 60e3;  // left alone this long, the time rolls back to now
 const whenCard = $('whenCard');
 const canRewind = () => tl.hidden && reader.hidden && !state.pastDate && !!$('clockRoll');
+// a slider (focusable, the sideways cursor, the ‹ hint) on today's home page only
+function syncCardRole() { const on = canRewind(); whenCard.tabIndex = on ? 0 : -1; if (on) whenCard.setAttribute('role', 'slider'); else whenCard.removeAttribute('role'); }
 const shownMin = () => AT.min == null ? state.minute : AT.min;
-// today's sun: the marks (minute and name) and the sky's colour every 5 minutes
+const hm = m => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+// today's sun, worked out once a day: its height each minute, and the marks (minute, name)
 function sunDay() {
   if (AT.marks && AT.marks.day === state.day) return AT.marks;
   const t0 = state.day - CITY.tz * 3600e3, alt = [];
   for (let m = 0; m <= 1440; m++) alt.push(siteSky.sunAt(t0 + m * 60e3).alt);
   const list = [];
   for (let m = 1; m <= 1440; m++) for (const [name, at, dir] of SUN_MARKS) if (dir > 0 ? alt[m - 1] < at && alt[m] >= at : alt[m - 1] >= at && alt[m] < at) list.push({ m, name });
-  const sky = [];
-  for (let m = 0; m < 1440; m += 5) sky.push(siteSky.colours(siteSky.bgFor(alt[m])).bg);
-  return (AT.marks = { day: state.day, list, sky });
+  return (AT.marks = { day: state.day, alt, list, top: Math.max(...alt) });
 }
+const markNear = (m, r) => sunDay().list.find(k => Math.abs(k.m - m) <= r && k.m <= state.minute) || null;
 const cardSub = () => AT.min == null || !AT.mark ? todayWd() : `${todayWd()} · ${AT.mark}`;
-const hm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 function syncSlider() {
   whenCard.setAttribute('aria-valuemax', state.minute);
   whenCard.setAttribute('aria-valuenow', shownMin());
   whenCard.setAttribute('aria-valuetext', AT.min == null ? `${hm(state.minute)}, now` : `${hm(AT.min)}${AT.mark ? ', ' + AT.mark : ''}`);
 }
-// the strip under the card
+
+/* the sun's path, under the card: 144 columns of 10 minutes, drawn at whole pixels and shown 2x (like the buildings) */
+const DL = { W: 144, H: 17, HY: 12, BAND: 15 }; // the horizon's row, and the sky band's first row (two rows)
 const dayline = document.createElement('div');
 dayline.className = 'dayline'; dayline.setAttribute('aria-hidden', 'true');
-dayline.innerHTML = '<div class="dl-sky"><canvas width="288" height="1"></canvas><span class="dl-future"></span></div><span class="dl-cur"></span>';
+dayline.innerHTML = `<canvas width="${DL.W}" height="${DL.H}"></canvas>`;
 document.querySelector('.top').append(dayline);
+const rgbOf = v => { const h = getComputedStyle(document.documentElement).getPropertyValue(v).trim().replace('#', ''); return [0, 2, 4].map(k => parseInt(h.slice(k, k + 2), 16) || 0); };
+// the sun's row for its height: the horizon's row just above it, the day's highest at the top (row 1)
+const sunRow = (alt, top) => DL.HY - 1 - Math.round(Math.max(0, alt) / Math.max(20, top) * (DL.HY - 2));
 function paintDayline() {
-  const D = sunDay(), g = dayline.querySelector('canvas').getContext('2d');
-  D.sky.forEach((c, k) => { g.fillStyle = c; g.fillRect(k, 0, 1, 1); });
-  dayline.querySelector('.dl-future').style.left = state.minute / 14.4 + '%';
-  dayline.querySelectorAll('.dl-mark, .dl-t').forEach(n => n.remove());
-  for (const k of D.list) {
-    const n = document.createElement('span');
-    n.className = 'dl-mark' + (k.m > state.minute ? ' later' : '');
-    n.style.left = k.m / 14.4 + '%';
-    dayline.append(n);
-    if (k.name !== 'sunrise' && k.name !== 'sunset') continue;
-    const t = document.createElement('span');
-    t.className = 'dl-t'; t.style.left = n.style.left; t.textContent = hm(k.m);
-    dayline.append(t);
+  const S = sunDay(), g = dayline.firstChild.getContext('2d'), img = g.createImageData(DL.W, DL.H), px = img.data;
+  const ink = rgbOf('--ink'), soft = rgbOf('--ink-soft'), acc = rgbOf('--accent'), bg = rgbOf('--bg');
+  const put = (x, y, c, a) => { if (x < 0 || y < 0 || x >= DL.W || y >= DL.H) return; const i = (y * DL.W + x) * 4; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; px[i + 3] = Math.round(a * 255); };
+  const now = state.minute, shown = shownMin();
+  for (let x = 0; x < DL.W; x++) {
+    const m = x * 10 + 5, alt = S.alt[m], later = m > now;
+    // the horizon, faint; the hours still to come only as dots
+    if (!later || x % 2 === 0) put(x, DL.HY, ink, later ? .1 : .22);
+    // the sun's path while it is up (later today, every other column); at night only the horizon
+    if (alt >= 0 && (!later || x % 2 === 0)) put(x, sunRow(alt, S.top), soft, later ? .25 : .85);
+    // the sky band: the colour of the sky at that moment (as designed), veiled where it is still to come
+    const c = siteSky.bgFor(alt).map((v, j) => later ? v + (bg[j] - v) * .72 : v);
+    put(x, DL.BAND, c, 1); put(x, DL.BAND + 1, c, 1);
   }
-  dayline.querySelector('.dl-cur').style.left = shownMin() / 14.4 + '%';
+  // the marks: a tick under the band
+  for (const k of S.list) put(Math.floor(k.m / 10), DL.BAND - 1, soft, k.m > now ? .3 : .7);
+  // the sun and a thread down to the band; at night, under the horizon, only a dim dash where it is
+  const sx = Math.floor(shown / 10), up = S.alt[shown] >= 0;
+  if (up) {
+    const sy = sunRow(S.alt[shown], S.top);
+    for (let y = sy + 2; y < DL.BAND; y++) if (y !== DL.HY) put(sx, y, acc, .35);
+    for (const [dx, dy] of [[0, -1], [-1, 0], [0, 0], [1, 0], [0, 1]]) put(sx + dx, sy + dy, acc, 1);
+    for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) put(sx + dx, sy + dy, acc, .45);
+  } else for (const dx of [-1, 0, 1]) put(sx + dx, DL.HY + 1, acc, dx ? .4 : .75);
+  g.putImageData(img, 0, 0);
+  // sunrise and sunset, their times under the band (once a day; their place does not move)
+  if (dayline._day !== state.day) {
+    dayline._day = state.day;
+    dayline.querySelectorAll('.dl-t').forEach(n => n.remove());
+    for (const k of S.list) {
+      if (k.name !== 'sunrise' && k.name !== 'sunset') continue;
+      const t = document.createElement('span');
+      t.className = 'dl-t'; t.style.left = (Math.floor(k.m / 10) + .5) / DL.W * 100 + '%'; t.textContent = hm(k.m);
+      dayline.append(t);
+    }
+  }
 }
 let daylineOff = 0;
 // while it is open the page's colour keeps up with the time (body.rewinding: day.css), instead of its slow 1.2s fade
 function openDayline() { clearTimeout(daylineOff); paintDayline(); dayline.classList.add('on'); document.body.classList.add('rewinding'); }
 function closeDayline(ms = 700) { clearTimeout(daylineOff); daylineOff = setTimeout(() => { dayline.classList.remove('on'); document.body.classList.remove('rewinding'); }, ms); }
-// show the day at minute min (0 … now; now or later is the live time again)
+
+/* the minute shown */
 function showAt(min) {
   min = Math.round(cl(min, 0, state.minute));
   const next = min >= state.minute ? null : min, prev = shownMin();
@@ -1255,36 +1293,75 @@ function showAt(min) {
   AT.mark = mark;
   siteSky.rollClock($('clockRoll'), next == null ? Date.now() : minuteMs(), shownMin() < prev);
   whenCard.classList.toggle('is-rewound', next != null);
-  if (next != null) try { localStorage.setItem('rewound', '1'); whenCard.classList.remove('hint'); } catch (e) {}
+  if (next != null && !AT.teasing) try { localStorage.setItem('rewound', '1'); whenCard.classList.remove('hint'); } catch (e) {}
   ctaFor('Today');
   dialTo(todayISO(), cardSub(), true);
-  dayline.querySelector('.dl-cur').style.left = shownMin() / 14.4 + '%';
   syncSlider();
-  // the colours now (the shadow stays as baked: LIGHT keeps its sx, sy), the shadow once the time rests
+  // the colours at once (the shadow as it is: LIGHT keeps its sx, sy); the shadow as soon as it can be drawn
   LIGHT = Object.assign(lightFor(minuteMs()), { sx: LIGHT.sx, sy: LIGHT.sy });
   applyTheme(LIGHT); placePlate();
-  clearTimeout(AT.bake);
-  AT.bake = setTimeout(() => refreshLight(true), AT.drag ? 160 : 40);
+  if (dayline.classList.contains('on')) paintDayline();
+  swing();
   clearTimeout(AT.idle);
-  if (next != null && !AT.drag) AT.idle = setTimeout(backToNow, IDLE_BACK);
 }
 function queueAt(m) { AT.want = m; if (!AT.raf) AT.raf = requestAnimationFrame(() => { AT.raf = 0; showAt(AT.want); }); }
-// back to now: the digits roll forward to the time now (Now, or left alone for a minute)
-function backToNow() {
-  cancelAnimationFrame(AT.back); clearTimeout(AT.idle);
-  if (AT.min == null) return;
-  const from = AT.min, to = state.minute, ms = still() ? 0 : cl((to - from) * 1.2, 300, 900), t0 = performance.now();
-  if (ms) openDayline();
+// the sundial: the shadow follows the sun while the time moves. A bake takes some 80ms, so at most one every 180ms
+function swing() {
+  if (AT.swingT) return;
+  AT.swingT = setTimeout(() => {
+    AT.swingT = 0;
+    if (!canRewind()) return;
+    const L = lightFor(minuteMs());
+    if (L.sx === LIGHT.sx && L.sy === LIGHT.sy) return;
+    LIGHT = L; mount(false); placePlate();
+  }, 180);
+}
+// the time comes to rest: the thumbnails and the words catch up, the strip goes, and in a minute it rolls back to now
+function settle() {
+  closeDayline();
+  clearTimeout(AT.bake); AT.bake = setTimeout(() => refreshLight(true), 60);
+  clearTimeout(AT.idle);
+  if (AT.min != null) AT.idle = setTimeout(backToNow, IDLE_BACK);
+}
+function stopMotion() { cancelAnimationFrame(AT.anim); AT.anim = 0; clearTimeout(AT.idle); AT.teasing = false; }
+// from one minute to another, easing out (Now, a detent catching a glide, the first-visit tease)
+function glide(from, to, ms, done) {
+  stopMotion();
+  if (still()) ms = 0;
+  const t0 = performance.now();
   const step = now => {
     const p = ms ? cl((now - t0) / ms, 0, 1) : 1, e = 1 - Math.pow(1 - p, 3);
-    showAt(p < 1 ? from + (to - from) * e : to);
-    if (p < 1) AT.back = requestAnimationFrame(step); else closeDayline(400);
+    showAt(from + (to - from) * e);
+    if (p < 1) AT.anim = requestAnimationFrame(step); else { AT.anim = 0; (done || settle)(); }
   };
-  AT.back = requestAnimationFrame(step);
+  AT.anim = requestAnimationFrame(step);
+}
+// let go while moving: the time glides on and slows; near a mark, the detent catches it
+function fling(m, v) {
+  stopMotion();
+  v = cl(v, -FLING_MAX, FLING_MAX);
+  let last = performance.now();
+  const step = now => {
+    const dt = Math.min(48, now - last); last = now;
+    m += v * dt; v *= Math.pow(.93, dt / 16);
+    if (m <= 0 || m >= state.minute) { showAt(m); settle(); return; }
+    const k = Math.abs(v) < .2 && markNear(m, SNAP * 1.5);
+    if (k) { glide(m, k.m, 260); return; }
+    showAt(m);
+    if (Math.abs(v) < .004) { AT.anim = 0; settle(); return; }
+    AT.anim = requestAnimationFrame(step);
+  };
+  AT.anim = requestAnimationFrame(step);
+}
+// back to now: the digits roll forward to the time now (Now, or left alone for a minute)
+function backToNow() {
+  if (AT.min == null) return;
+  openDayline();
+  glide(AT.min, state.minute, cl((state.minute - AT.min) * 1.2, 300, 900));
 }
 // leaving today's home page: back to now at once, without the roll
 function resetAt() {
-  cancelAnimationFrame(AT.back); clearTimeout(AT.idle); clearTimeout(AT.bake);
+  stopMotion(); clearTimeout(AT.bake); clearTimeout(AT.swingT); AT.swingT = 0;
   AT.drag = null;
   dayline.classList.remove('on'); document.body.classList.remove('rewinding');
   if (AT.min == null) return;
@@ -1293,39 +1370,61 @@ function resetAt() {
   if ($('clockRoll')) siteSky.rollClock($('clockRoll'));
   refreshLight(true); syncSlider();
 }
-whenCard.setAttribute('role', 'slider');
+
+/* by hand: drag (mouse, finger, pen), a sideways swipe on a trackpad, the keyboard */
+syncCardRole();
 whenCard.setAttribute('aria-label', 'Time of day. Drag sideways, or use the arrow keys, to see earlier today');
 whenCard.setAttribute('aria-valuemin', '0');
 try { if (!localStorage.getItem('rewound')) whenCard.classList.add('hint'); } catch (e) {}
 whenCard.addEventListener('pointerdown', ev => {
+  AT.user = true; AT.teasing = false; clearTimeout(AT.teaseT);
   if (!canRewind() || ev.button > 0) return;
-  AT.drag = { x: ev.clientX, id: ev.pointerId, from: shownMin(), moved: false };
+  AT.drag = { x: ev.clientX, last: ev.clientX, t: ev.timeStamp, id: ev.pointerId, m: shownMin(), v: 0, moved: false, hold: null, pull: 0, left: null, glidingFrom: !!AT.anim };
+  if (AT.anim) { stopMotion(); AT.drag.m = shownMin(); } // a touch stops a glide where it is
 });
 whenCard.addEventListener('pointermove', ev => {
   const d = AT.drag;
   if (!d || ev.pointerId !== d.id) return;
-  const dx = ev.clientX - d.x;
+  let dx = ev.clientX - d.last;
+  const dt = Math.max(1, ev.timeStamp - d.t);
   if (!d.moved) {
-    if (Math.abs(dx) < 4) return;
-    d.moved = true; whenCard.setPointerCapture(ev.pointerId);
-    cancelAnimationFrame(AT.back); clearTimeout(AT.idle); openDayline();
+    if (Math.abs(ev.clientX - d.x) < 4) return;
+    d.moved = true; whenCard.setPointerCapture(ev.pointerId); openDayline();
+    dx = ev.clientX - d.x;
   }
-  // the cursor on the strip follows the finger: the strip's width is the whole day
-  let m = d.from + dx * 1440 / Math.max(160, dayline.offsetWidth);
-  const near = sunDay().list.find(k => Math.abs(k.m - m) <= SNAP && k.m <= state.minute);
-  if (near) m = near.m;
-  queueAt(m);
+  d.last = ev.clientX; d.t = ev.timeStamp;
+  const speed = Math.abs(dx) / dt, gain = 1 + (GAIN_MAX - 1) * cl((speed - .15) / 1.1, 0, 1);
+  if (d.hold != null) { // held by a detent until pulled on far enough
+    d.pull += dx;
+    if (Math.abs(d.pull) < PULL) return;
+    d.left = d.hold; d.m = d.hold + Math.sign(d.pull); d.hold = null; d.pull = 0;
+  } else d.m = cl(d.m + dx * gain, 0, state.minute);
+  d.v = d.v * .6 + (dx * gain / dt) * .4;
+  const k = markNear(d.m, SNAP);
+  if (!k) d.left = null;
+  else if (k.m !== d.left && speed < 1) { d.hold = k.m; d.m = k.m; d.pull = 0; d.v = 0; }
+  queueAt(d.m);
 });
 function endCardDrag(ev) {
   const d = AT.drag;
   if (!d || ev.pointerId !== d.id) return;
   AT.drag = null;
-  if (!d.moved) return;
-  closeDayline();
-  clearTimeout(AT.bake); AT.bake = setTimeout(() => refreshLight(true), 40);
-  if (AT.min != null) AT.idle = setTimeout(backToNow, IDLE_BACK);
+  if (!d.moved) { if (d.glidingFrom) settle(); return; }
+  // still moving when the finger lifts (and not resting on a detent): it glides on
+  if (ev.type === 'pointerup' && d.hold == null && ev.timeStamp - d.t < 60 && Math.abs(d.v) > .05 && !still()) fling(d.m, d.v);
+  else settle();
 }
 whenCard.addEventListener('pointerup', endCardDrag); whenCard.addEventListener('pointercancel', endCardDrag);
+// a trackpad's sideways swipe (fingers to the left: earlier, like dragging); the page's own swipe between years stays off it
+whenCard.addEventListener('wheel', ev => {
+  if (!canRewind() || Math.abs(ev.deltaX) <= Math.abs(ev.deltaY)) return;
+  ev.preventDefault(); ev.stopPropagation();
+  stopMotion(); openDayline();
+  AT.wm = cl((AT.wm == null ? shownMin() : AT.wm) - ev.deltaX * .6, 0, state.minute);
+  const k = markNear(AT.wm, 3);
+  queueAt(k ? k.m : AT.wm);
+  clearTimeout(AT.wheelT); AT.wheelT = setTimeout(() => { AT.wm = null; settle(); }, 260);
+}, { passive: false });
 // keyboard: ← → a quarter of an hour (with Shift an hour), Home midnight, End now
 whenCard.addEventListener('keydown', ev => {
   if (!canRewind()) return;
@@ -1333,10 +1432,25 @@ whenCard.addEventListener('keydown', ev => {
   const m = ev.key === 'ArrowLeft' ? Math.ceil(cur / step) * step - step : ev.key === 'ArrowRight' ? Math.floor(cur / step) * step + step
     : ev.key === 'Home' ? 0 : ev.key === 'End' ? state.minute : null;
   if (m == null) return;
-  ev.preventDefault(); ev.stopPropagation();
-  cancelAnimationFrame(AT.back);
-  openDayline(); showAt(m); closeDayline(1200);
+  ev.preventDefault(); ev.stopPropagation(); AT.user = true;
+  stopMotion(); openDayline(); showAt(m);
+  clearTimeout(AT.keyT); AT.keyT = setTimeout(settle, 900);
 });
+// first visit: once, a little after the page settles, the time rolls back 40 minutes and returns, so it reads as something
+// that moves. Not if the visitor has already done anything, or asks for less motion, or the browser keeps no memory
+// (then it would play on every visit).
+for (const t of ['scroll', 'keydown', 'pointerdown']) addEventListener(t, () => { AT.user = true; }, { once: true, passive: true });
+setTimeout(() => {
+  if (AT.user || still() || !canRewind() || AT.min != null || document.hidden) return;
+  try { if (localStorage.getItem('rewound') || localStorage.getItem('teased')) return; localStorage.setItem('teased', '1'); } catch (e) { return; }
+  const from = state.minute;
+  openDayline();
+  glide(from, Math.max(0, from - 40), 700, () => { AT.teasing = true; AT.teaseT = setTimeout(() => {
+    if (!AT.teasing || AT.min == null || AT.drag) return; // the visitor took over
+    glide(AT.min, state.minute, 600, () => { AT.teasing = false; settle(); }); AT.teasing = true;
+  }, 500); });
+  AT.teasing = true;
+}, 2400);
 syncSlider();
 
 /* light: follows the sun over the city at the real time */
