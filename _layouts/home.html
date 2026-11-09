@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{{ '/assets/css/day.css' | relative_url }}?v={{ site.time | date: '%s' }}">
 {% comment %}The sky's colours before the first paint, so the page never flashes its default ground and then fades.{% endcomment %}
 <script src="{{ '/assets/js/sky.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
-<script>if (window.siteSky) siteSky.paintHome(siteSky.bgFor(siteSky.sunAt(Date.now()).alt));</script>
+<script>if (window.siteSky) { var sun0 = siteSky.sunAt(Date.now()); siteSky.paintHome(siteSky.bgFor(sun0.alt)); siteSky.paintSky(sun0); }</script>
 </head>
 <body>
 {% comment %}Being in published/ is the publish signal (see README). Notes, works, places and small things
@@ -40,6 +40,8 @@
   </div>
 </header>
 <section class="hero" id="top">
+  {% comment %}The sky behind the building, down to the horizon at its base (day.js placeSky, sky.js paintSky).{% endcomment %}
+  <div class="sky" id="sky" aria-hidden="true"><canvas class="stars" id="stars"></canvas></div>
   <div class="hero-inner wrap">
     <main class="group" id="group">
       <div class="stage" id="stage" role="button" tabindex="0" aria-label="Today's building. Drag sideways to see it earlier today. Tap to open the timeline."></div>
@@ -48,6 +50,7 @@
       </div>
       <div class="caption" aria-live="polite">
         <span class="past-tag" id="capTag" hidden></span>
+        <span class="geo-tag" id="capGeo" hidden></span>
         <div class="name" id="capName">—</div>
         <div class="meta" id="capMeta"></div>
         <div class="note" id="capNote"></div>

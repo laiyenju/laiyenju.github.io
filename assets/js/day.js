@@ -211,7 +211,7 @@ function plateFor(w) {
 }
 function placePlate(w = mainWorld, f) {
   const P = w && w.bare && !w.pure ? plateFor(w) : null;
-  if (!P || P.none) { plate.hidden = true; return; }
+  if (!P || P.none) { plate.hidden = true; placeSky(); return; }
   if (f == null) f = parseFloat(disp.style.width) / disp.width;
   if (plate.width !== P.cv.width || plate.height !== P.cv.height) { plate.width = P.cv.width; plate.height = P.cv.height; }
   const g = plate.getContext('2d'); g.clearRect(0, 0, plate.width, plate.height); g.drawImage(P.cv, 0, 0);
@@ -222,6 +222,35 @@ function placePlate(w = mainWorld, f) {
   plate.style.top = disp.offsetTop + (P.by0 - cy0) * f + 'px';
   plate.style.transformOrigin = `${P.cx * f}px ${P.cy * f}px`;
   plate.hidden = false;
+  placeSky();
+}
+/* The sky (day.css .sky) reaches down to the horizon: the back corner of the platform, a little inside it, so the
+   building stands on the ground and the sky is behind it; with no platform (home has its own ground), 85% down the
+   building's picture. From the layout, not the screen: the stage shrinks as the page scrolls (--p), towards its
+   bottom, so its bottom edge is where it always is. The stars fill the sky in whole pixels, the same every night. */
+const skyEl = $('sky'), starsEl = $('stars');
+let HORIZON = 0;
+function placeSky() {
+  if (!skyEl) return;
+  const st = stage.getBoundingClientRect(), k = st.height / (stage.offsetHeight || 1) || 1;
+  const hero = document.querySelector('.hero').getBoundingClientRect();
+  const on = plate.hidden ? disp : plate, r = on.getBoundingClientRect();
+  const y = on === plate ? r.top + r.height * .12 : r.top + r.height * .85;
+  const h = Math.round(st.bottom - hero.top - (st.bottom - y) / k) + 36;
+  if (h === HORIZON || !(h > 36)) return;
+  HORIZON = h; skyEl.style.setProperty('--horizon', h + 'px');
+  const W = Math.ceil(skyEl.clientWidth), H = h - 36;
+  if (starsEl.width !== W || starsEl.height !== H) {
+    starsEl.width = W; starsEl.height = H; starsEl.style.width = W + 'px'; starsEl.style.height = H + 'px';
+    const g = starsEl.getContext('2d'); let q = 20261109;
+    const rnd = () => (q = q * 16807 % 2147483647) / 2147483647;
+    // about one star per 9000 px², fainter towards the horizon, one in seven a 2px one
+    for (let n = Math.round(W * H / 9000); n--;) {
+      const x = Math.floor(rnd() * W), sy = rnd() * H * .85, a = (.25 + rnd() * .55) * (1 - sy / H), z = rnd() < .15 ? 2 : 1;
+      g.fillStyle = `rgba(236,231,221,${a.toFixed(2)})`; g.fillRect(x, Math.floor(sy), z, z);
+    }
+  }
+  updateMore();
 }
 // into the timeline: the platform is drawn into the building's middle, faster and faster, like dust into a vacuum.
 // It goes as a ghost above the timeline as it comes in (the home page goes under it), and stays away until we are back.
@@ -308,6 +337,16 @@ function renderText() {
   $('capMeta').innerHTML = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
+  geoLine();
+}
+/* Above today's title: the city the sky is worked out for (CITY, sky.js) and its point, to 0.01° (about a
+   kilometre: the city, never an address). A past day says nothing here: its place is the link under its name. */
+const deg = (v, pos, neg) => `${Math.abs(v).toFixed(2)}°\u00a0${v < 0 ? neg : pos}`;
+function geoLine() {
+  const it = state.items[state.index], el = $('capGeo');
+  if (!it || !el) return;
+  el.hidden = !!it.pastView;
+  el.textContent = `${CITY.name}  ${deg(CITY.lat, 'N', 'S')}  ${deg(CITY.lon, 'E', 'W')}`;
 }
 function renderThumbs() {
   thumbsEl.innerHTML = '';
@@ -1130,6 +1169,9 @@ function updateMore() {
   // on the home page the bar sits at the bottom instead of the hint; overlays have their own bottom (ruler) and hide the bar
   $('more').classList.toggle('off', !more || !o);
   $('cmdbar').classList.toggle('off', !!o);
+  // the date card is on the sky until the ground scrolls under it, or something opens over the page
+  const card = document.querySelector('.top');
+  card.classList.toggle('on-ground', !!o || !HORIZON || scrollY + card.offsetHeight > HORIZON - 36);
 }
 function onScroll() {
   const p = cl(scrollY / (STAGE.h * .9), 0, 1);

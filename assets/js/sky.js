@@ -27,6 +27,27 @@
     }
     return BG_STOPS[BG_STOPS.length - 1][1];
   }
+  // The sky over the home page's building: two colours for each height of the sun, the zenith (top of the page) and
+  // the horizon (behind the building's base); under the horizon the ground is the page colour above (bgFor).
+  // Morning and afternoon have their own colours (the sun in the east or the west), so 09:30 and 14:30, at the same
+  // height, are not the same sky. Under the horizon both are one night (README 2.5.1).
+  var SKY_LOW = [[-18, [9, 12, 22], [26, 32, 56]], [-9, [18, 22, 51], [52, 53, 95]], [-4, [27, 30, 68], [143, 95, 130]]];
+  var SKY_STOPS = {
+    am: SKY_LOW.concat([[0, [143, 164, 207], [242, 201, 176]], [10, [178, 200, 224], [243, 228, 214]], [25, [184, 209, 230], [245, 242, 234]], [50, [169, 200, 230], [248, 248, 243]]]),
+    pm: SKY_LOW.concat([[0, [138, 143, 191], [240, 179, 148]], [10, [170, 184, 214], [246, 218, 182]], [25, [191, 207, 223], [246, 238, 221]], [50, [169, 200, 230], [248, 248, 243]]]),
+  };
+  // the sun's az is from the north, clockwise: under 180° it is still rising
+  function skyFor(alt, az) {
+    var S = SKY_STOPS[az < Math.PI ? 'am' : 'pm'], last = S[S.length - 1];
+    if (alt <= S[0][0]) return { top: S[0][1], horizon: S[0][2] };
+    for (var k = 1; k < S.length; k++) {
+      if (alt <= S[k][0]) {
+        var t = (alt - S[k - 1][0]) / (S[k][0] - S[k - 1][0]);
+        return { top: S[k - 1][1].map(function (v, j) { return mix(v, S[k][1][j], t); }), horizon: S[k - 1][2].map(function (v, j) { return mix(v, S[k][2][j], t); }) };
+      }
+    }
+    return { top: last[1], horizon: last[2] };
+  }
   function hex(c) { return '#' + c.map(function (v) { var h = Math.round(Math.max(0, Math.min(255, v))).toString(16); return h.length < 2 ? '0' + h : h; }).join(''); }
 
   // contrast between two colours, as WCAG measures it (4.5 is the floor for body-size text)
@@ -86,6 +107,18 @@
     root.setProperty('--sheet', c.sheet);
     root.colorScheme = dark ? 'dark' : 'light';
   }
+  // the home page's sky (sun: sunAt): the horizon as designed, the zenith made readable the way the ground is
+  // (colours), since the date card sits on it; the card's words take their colours from the zenith (--sky-*, day.css)
+  function paintSky(sun) {
+    var s = skyFor(sun.alt, sun.az), c = colours(s.top), root = document.documentElement.style;
+    root.setProperty('--sky-top', c.bg);
+    root.setProperty('--sky-horizon', hex(s.horizon));
+    root.setProperty('--sky-ink', c.ink);
+    root.setProperty('--sky-faint', c.faint);
+    root.setProperty('--sky-accent', c.accent);
+    // the stars come out between −6° and −12°
+    root.setProperty('--stars', Math.max(0, Math.min(1, (-6 - sun.alt) / 6)).toFixed(3));
+  }
   // The live time in the date card, HH:MM:SS in the city, each digit on a strip 0–9 that rolls to its number
   // (home page and notes alike; styles .roll in day.css and site.css). Each strip ends in a second 0, so 9 → 0
   // keeps rolling forward instead of running back through every digit; it then snaps to the first 0 unseen.
@@ -123,5 +156,5 @@
       } else { strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null; }
     });
   }
-  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, contrast: contrast, rollClock: rollClock };
+  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, skyFor: skyFor, paintSky: paintSky, SKY_STOPS: SKY_STOPS, contrast: contrast, rollClock: rollClock };
 })();
