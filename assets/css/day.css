@@ -311,7 +311,7 @@ body.term-busy .input-row, body.term-busy .cmdbar { opacity: 0; visibility: hidd
 /* the homepage as it was on a past day: same look, that day's building is the main one */
 /* which day it is: a line of text in the accent colour above the title, not a box */
 .past-tag { display: block; margin: 0 0 6px; font: 500 13px/1.5 var(--mono); letter-spacing: .02em; color: var(--accent); }
-/* the city and where the sun is, in the same place and size as .past-tag, quieter (day.js geoLine) */
+/* the city, in the same place and size as .past-tag, quieter (day.js geoLine) */
 .geo-tag { display: block; margin: 0 0 6px; font: 500 13px/1.5 var(--mono); letter-spacing: .02em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 
 /* timeline mode: the building, its name and place, and a time ruler. Nothing else. */

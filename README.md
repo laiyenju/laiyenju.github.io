@@ -288,7 +288,7 @@ flowchart LR
 |---|---|---|
 | 網頁字型 | Quattro：`assets/fonts/quattro/`（文章頁在 `site.css`、首頁在 `day.css` 開頭載入）。JetBrains Mono、Noto Sans TC：Google Fonts（文章頁 `_includes/head.html`、首頁 `_layouts/home.html`） | 一般文字（首頁說明、Timeline、作品頁、文章）：iA Writer Quattro → Noto Sans TC。terminal、日期、按鈕：JetBrains Mono → Noto Sans TC。中文一律用 Noto Sans TC。Quattro 只有 400、700，所以 Noto Sans TC 也只載入 400、700，中英文才一樣粗。中英文之間的小空隙用 `text-autospace`（支援的瀏覽器才有） |
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題和說明都是 21px（行高 1.5），標題只是粗體，兩者之間多 10px |
-| 標題上方的城市和太陽 | `assets/js/day.js` 的 `geoLine`；樣式在 `day.css` 的 `.geo-tag` | 只在今天的首頁：`Taipei  25.03° N 121.56° E · sun 37° SE`，城市名稱和座標來自 `sky.js` 的 `CITY`（座標到小數點後 2 位，約 1 公里，不公開住址），後面是太陽的高度和方位，倒轉今天時跟著變。往年今日不顯示（地點在名稱下面的連結）。和 `.past-tag` 同樣大小，淡色 |
+| 標題上方的城市 | `assets/js/day.js` 的 `geoLine`；樣式在 `day.css` 的 `.geo-tag` | 只在今天的首頁：`Taipei  25.03° N 121.56° E`，城市名稱和座標來自 `sky.js` 的 `CITY`（座標到小數點後 2 位，約 1 公里，不公開住址）。往年今日不顯示（地點在名稱下面的連結）。和 `.past-tag` 同樣大小，淡色 |
 | 日期卡片 | 首頁 `_layouts/home.html` 的 `.top-row`、`day.css` 的 `.top`；文章頁 `_layouts/default.html` 的 `.post-row`、`site.css` 的 `.post-top` | 見下面「日期卡片」。`--card-top`、`--card-title`、`--card-sub` 在 `day.css` 和 `site.css` 各有一份，要一起改 |
 | 倒轉今天 | `assets/js/day.js` 的 rewind 區段和建築的手勢（`stage` 的 `pointer*`、`rwStart`、`rwMove`、`rwEnd`；`SUN_MARKS`、`SNAP`、`PULL`、`GAIN_MAX`、`FLING_MAX`、`IDLE_BACK`、`DL`、`paintDayline`）；樣式在 `day.css` 的 `.when.is-rewound`、`.when.hint`、`.dayline`；倒著翻的數字在 `sky.js` 的 `rollClock`（`back`） | 吸附：黎明、日出、日落、黃昏，前後 8 分鐘，多拉 10 px 才離開；拖動 1–8 分鐘／px；放著 60 秒回到現在。見下面「倒轉今天」 |
 | 按鈕 | `assets/css/day.css` 的 `.top-btn, .cmdbar button`、`--press-soft`；文章頁 `site.css` 的 `.post-btn` | 見下面「按鈕」 |

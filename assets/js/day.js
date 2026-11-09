@@ -339,18 +339,14 @@ function renderText() {
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
   geoLine();
 }
-/* Above today's title: the city the sky is worked out for (CITY, sky.js) with its point to 0.01° (about a
-   kilometre: the city, never an address), and where the sun is now, or at the minute the rewind shows. Those are the
-   two things the sky and the shadow come from. A past day says nothing here: its place is the link under its name. */
+/* Above today's title: the city the sky is worked out for (CITY, sky.js) and its point, to 0.01° (about a
+   kilometre: the city, never an address). A past day says nothing here: its place is the link under its name. */
 const deg = (v, pos, neg) => `${Math.abs(v).toFixed(2)}°\u00a0${v < 0 ? neg : pos}`;
-const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
 function geoLine() {
   const it = state.items[state.index], el = $('capGeo');
   if (!it || !el) return;
-  if (it.pastView) { el.hidden = true; return; }
-  const s = siteSky.sunAt(minuteMs()), a = Math.round(s.alt);
-  const text = `${CITY.name}  ${deg(CITY.lat, 'N', 'S')}  ${deg(CITY.lon, 'E', 'W')} · sun ${a < 0 ? '\u2212' + -a : a}°\u00a0${COMPASS[Math.round(s.az * 180 / Math.PI / 22.5) % 16]}`;
-  el.hidden = false; if (el.textContent !== text) el.textContent = text;
+  el.hidden = !!it.pastView;
+  el.textContent = `${CITY.name}  ${deg(CITY.lat, 'N', 'S')}  ${deg(CITY.lon, 'E', 'W')}`;
 }
 function renderThumbs() {
   thumbsEl.innerHTML = '';
@@ -1395,7 +1391,7 @@ function showAt(min) {
   syncSlider();
   // the colours at once (the shadow as it is: LIGHT keeps its sx, sy); the shadow as soon as it can be drawn
   LIGHT = Object.assign(lightFor(minuteMs()), { sx: LIGHT.sx, sy: LIGHT.sy });
-  applyTheme(LIGHT); placePlate(); geoLine();
+  applyTheme(LIGHT); placePlate();
   if (dayline.classList.contains('on')) paintDayline();
   swing();
   clearTimeout(AT.idle);
