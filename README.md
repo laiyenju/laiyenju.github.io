@@ -103,7 +103,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 ### 2.3.1 去過的地方：`_data/days.yml`
 
-一筆是一天、一棟建築。建築底下每件事只說一次：上面一行強調色的「幾年前・日期」（從 `date` 算，`day.js` 的 `whenTag`）、一行淡色的經緯度（`coords`，沒有就不顯示；`geoLine`）、名稱、地點（Google Maps 連結，`placeFor`），最後一句是 `Yen {did}[ with {with}].[ {extra}]`（`sentenceFor`）。所以 `did` 只寫發生了什麼，不寫時間、地點，也不要再寫一次建築名稱。
+一筆是一天、一棟建築。建築底下每件事只說一次：上面一行強調色的「幾年前・日期」（從 `date` 算，`day.js` 的 `whenTag`）、名稱、地點（Google Maps 連結，`placeFor`），最後一句是 `Yen {did}[ with {with}].[ {extra}]`（`sentenceFor`）。所以 `did` 只寫發生了什麼，不寫時間、地點，也不要再寫一次建築名稱。
 
 | 欄位 | 必填 | 說明 |
 |---|---|---|
@@ -117,7 +117,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `extra` | 否 | 補充一句 |
 | `map` | 否 | Google Maps 搜尋文字，預設 `name, place` |
 | `country` | 否 | 預設 `Japan`。Timeline 的國家數由它算 |
-| `coords` | 否 | `[緯度, 經度]`，例如 `[40.7527, -73.9772]`。那天的筆記，首頁標題上方和分享卡片上會印出來（照寫的位數，最多 4 位）；外出打卡也靠它認出這個地點（150 m 內，3.6），沒有 `coords` 的地點認不出來 |
+| `coords` | 否 | `[緯度, 經度]`，例如 `[40.7527, -73.9772]`。那天的筆記，分享卡片上會印出來；外出打卡也靠它認出這個地點（150 m 內，3.6），沒有 `coords` 的地點認不出來 |
 
 缺必填欄位、沒有中文名、或模型不存在時，那一筆不會出現，瀏覽器的 console 會列出缺了什麼。
 
@@ -138,7 +138,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 瀏覽器分頁標題 | `index.md` 的 `title` | `hey, I'm Yen` | |
 | 自我介紹 | `assets/js/day.js` 的 `BIO` | `Yen decides what gets built, then builds some of it. Writes about how those decisions get made.` | 今天的建築底下用它；`whoami` 把開頭的 Yen 換成「Yen Lai, product manager,」。一起改：首頁分享卡片文字（`scripts/og/build.js`，第一人稱「I decide…」）、`_config.yml` 的 `description`、`_includes/seo.html` 的 `jobTitle` |
 | 社群連結 | `assets/js/day.js` 的 `whoami` | github、linkedin、x | 首頁不直接放連結，執行 `whoami` 才看得到。一起改：`_includes/seo.html` 的 `sameAs`、`_config.yml` 的 `author.twitter` |
-| 所在城市 | `assets/js/sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、天色、影子方向。出國時只要改這裡 |
+| 所在城市 | `assets/js/sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 決定頂部時間、天色、影子方向，和今天標題上方的城市名稱、座標。出國時只要改這裡 |
 | 今天的建築 | `assets/js/day.js` 的 `todayPlace`、`todayScene`、`OFFICE_HOURS`；假日在 `assets/js/scenes.js` 的 `HOLIDAYS` | 依序判斷，見下面「今天的建築」 | 分享卡片不看打卡，只照週末和 `HOLIDAYS` |
 | 「Where is Yen now」的作息 | `assets/js/day.js` 的 `WEEKDAY`、`RESTDAY`、`CHECKIN_FRESH`、`TRANSIT_FRESH` | 見下面「Where is Yen now」 | |
 | terminal | `assets/js/day.js` 的 `CHIPS`、`COMMANDS`、`placeBar`、`run`；樣式在 `assets/css/day.css` 的 `.cmdbar`、`.term` | 按鈕：`❯`、About Yen、Notes、Work、Where's Yen、Clear | 見下面「terminal」 |
@@ -288,7 +288,7 @@ flowchart LR
 |---|---|---|
 | 網頁字型 | Quattro：`assets/fonts/quattro/`（文章頁在 `site.css`、首頁在 `day.css` 開頭載入）。JetBrains Mono、Noto Sans TC：Google Fonts（文章頁 `_includes/head.html`、首頁 `_layouts/home.html`） | 一般文字（首頁說明、Timeline、作品頁、文章）：iA Writer Quattro → Noto Sans TC。terminal、日期、按鈕：JetBrains Mono → Noto Sans TC。中文一律用 Noto Sans TC。Quattro 只有 400、700，所以 Noto Sans TC 也只載入 400、700，中英文才一樣粗。中英文之間的小空隙用 `text-autospace`（支援的瀏覽器才有） |
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題和說明都是 21px（行高 1.5），標題只是粗體，兩者之間多 10px |
-| 標題上方的經緯度 | `assets/js/day.js` 的 `geoLine`；樣式在 `day.css` 的 `.geo-tag` | 今天：`25.03° N 121.56° E · sun 37° SE`（太陽的高度和方位，倒轉今天時跟著變）。家和辦公室只顯示 `CITY` 的座標到小數點後 2 位（約 1 公里），不公開住址；`days.yml` 有 `coords` 的地點照寫的位數。往年今日只有座標，沒有太陽（頁面的天空和影子是今天的）。和 `.past-tag` 同樣大小，淡色 |
+| 標題上方的城市和太陽 | `assets/js/day.js` 的 `geoLine`；樣式在 `day.css` 的 `.geo-tag` | 只在今天的首頁：`Taipei  25.03° N 121.56° E · sun 37° SE`，城市名稱和座標來自 `sky.js` 的 `CITY`（座標到小數點後 2 位，約 1 公里，不公開住址），後面是太陽的高度和方位，倒轉今天時跟著變。往年今日不顯示（地點在名稱下面的連結）。和 `.past-tag` 同樣大小，淡色 |
 | 日期卡片 | 首頁 `_layouts/home.html` 的 `.top-row`、`day.css` 的 `.top`；文章頁 `_layouts/default.html` 的 `.post-row`、`site.css` 的 `.post-top` | 見下面「日期卡片」。`--card-top`、`--card-title`、`--card-sub` 在 `day.css` 和 `site.css` 各有一份，要一起改 |
 | 倒轉今天 | `assets/js/day.js` 的 rewind 區段和建築的手勢（`stage` 的 `pointer*`、`rwStart`、`rwMove`、`rwEnd`；`SUN_MARKS`、`SNAP`、`PULL`、`GAIN_MAX`、`FLING_MAX`、`IDLE_BACK`、`DL`、`paintDayline`）；樣式在 `day.css` 的 `.when.is-rewound`、`.when.hint`、`.dayline`；倒著翻的數字在 `sky.js` 的 `rollClock`（`back`） | 吸附：黎明、日出、日落、黃昏，前後 8 分鐘，多拉 10 px 才離開；拖動 1–8 分鐘／px；放著 60 秒回到現在。見下面「倒轉今天」 |
 | 按鈕 | `assets/css/day.css` 的 `.top-btn, .cmdbar button`、`--press-soft`；文章頁 `site.css` 的 `.post-btn` | 見下面「按鈕」 |

@@ -31,7 +31,7 @@ const REAL_MD = pad(REAL.m) + '-' + pad(REAL.d);
    Required: date, scene, name, zh (Chinese name; no_zh: true leaves it out), place, did.
    Optional: with, extra, map, country (default "Japan"). */
 const MEMORIES = (SITE.days || []).map(d => ({ date: String(d.date), scene: d.scene, name: d.name, zh: d.zh, noZh: !!d.no_zh,
-  place: d.place, did: d.did, with: d.with, extra: d.extra, map: d.map, country: d.country, coords: d.coords }));
+  place: d.place, did: d.did, with: d.with, extra: d.extra, map: d.map, country: d.country }));
 // a day can have more than one building: the first keeps the date as its id, the next ones get date-2, date-3 …
 { const seen = {}; for (const m of MEMORIES) { seen[m.date] = (seen[m.date] || 0) + 1; m.id = seen[m.date] > 1 ? `${m.date}-${seen[m.date]}` : m.date; } }
 const byDate = (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
@@ -74,10 +74,10 @@ function buildItems() {
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
     .sort(byDate).map(m => {
       const year = +m.date.slice(0, 4);
-      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), pastView: true, coords: m.coords, tag: whenTag(m.date, dd.y), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: placeFor(m), html: sentenceFor(m) };
+      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), pastView: true, tag: whenTag(m.date, dd.y), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: placeFor(m), html: sentenceFor(m) };
     });
   // a place in days.yml dated today is today's building, in place of home or the office
-  if (here) items.push({ scene: here.scene, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(), coords: here.coords,
+  if (here) items.push({ scene: here.scene, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
     name: here.zh && !here.noZh ? `${here.name}\u00a0· ${here.zh}` : here.name, meta: placeFor(here), html: sentenceFor(here) + (extra ? ' ' + escHtml(extra) : '') });
   else items.push({
     scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
@@ -339,25 +339,18 @@ function renderText() {
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
   geoLine();
 }
-/* Above today's title: where the building stands and where the sun is now (or at the minute the rewind shows), the
-   two things the sky and the shadow come from. Home and the office give only the city's own point, to 0.01° (about
-   a kilometre), never the address. A place in days.yml gives its coords as written; a past day only its coords
-   (the sky and the shadow on the page are today's, not that day's). Nothing when there is nothing to say. */
-const deg = (v, pos, neg, dp) => `${Math.abs(v).toFixed(dp)}°\u00a0${v < 0 ? neg : pos}`;
+/* Above today's title: the city the sky is worked out for (CITY, sky.js) with its point to 0.01° (about a
+   kilometre: the city, never an address), and where the sun is now, or at the minute the rewind shows. Those are the
+   two things the sky and the shadow come from. A past day says nothing here: its place is the link under its name. */
+const deg = (v, pos, neg) => `${Math.abs(v).toFixed(2)}°\u00a0${v < 0 ? neg : pos}`;
 const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
 function geoLine() {
   const it = state.items[state.index], el = $('capGeo');
   if (!it || !el) return;
-  const c = it.coords && it.coords.length === 2 ? it.coords.map(Number) : null;
-  const dp = c ? Math.min(4, Math.max(...it.coords.map(v => (String(v).split('.')[1] || '').length))) : 2;
-  const where = c ? `${deg(c[0], 'N', 'S', dp)}  ${deg(c[1], 'E', 'W', dp)}` : it.pastView ? '' : `${deg(CITY.lat, 'N', 'S', 2)}  ${deg(CITY.lon, 'E', 'W', 2)}`;
-  let sun = '';
-  if (!it.pastView) {
-    const s = siteSky.sunAt(minuteMs()), a = Math.round(s.alt);
-    sun = `sun ${a < 0 ? '\u2212' + -a : a}°\u00a0${COMPASS[Math.round(s.az * 180 / Math.PI / 22.5) % 16]}`;
-  }
-  const text = [where, sun].filter(Boolean).join(' · ');
-  el.hidden = !text; if (el.textContent !== text) el.textContent = text;
+  if (it.pastView) { el.hidden = true; return; }
+  const s = siteSky.sunAt(minuteMs()), a = Math.round(s.alt);
+  const text = `${CITY.name}  ${deg(CITY.lat, 'N', 'S')}  ${deg(CITY.lon, 'E', 'W')} · sun ${a < 0 ? '\u2212' + -a : a}°\u00a0${COMPASS[Math.round(s.az * 180 / Math.PI / 22.5) % 16]}`;
+  el.hidden = false; if (el.textContent !== text) el.textContent = text;
 }
 function renderThumbs() {
   thumbsEl.innerHTML = '';
@@ -425,7 +418,7 @@ function renderPast(date) {
   const same = MEMORIES.filter(o => o.date.slice(5) === md && o.date <= date && checkMemory(o)).sort(byDate);
   state.items = same.map(o => {
     const y = +o.date.slice(0, 4), main = o.id === id;
-    return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: true, coords: o.coords,
+    return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: true,
       tag: whenTag(o.date, now),
       name: o.zh && !o.noZh ? `${o.name}\u00a0· ${o.zh}` : o.name, meta: placeFor(o), html: sentenceFor(o) };
   });
