@@ -6,7 +6,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 - 三個自動流程：**GitHub Pages 建置網站**、**GitHub Action 畫分享卡片**（3.2）、**GitHub Action 記錄打卡**（3.5）。
 - 兩個手動步驟：
   - 改了 pixel 引擎（`assets/vendor/pixel-plays/engine.js`）或 `scripts/pixel-engine/build.js`，要重新產生 `assets/js/pixel-engine.js`（3.3）。
-  - 改了天色（`assets/js/sky.js` 的 `BG_STOPS`、`TEXT`、`colours`），要重畫 README 的天色圖：`node scripts/sky/draw.js`（2.5.1）。
+  - 改了天色（`assets/js/sky.js` 的 `BG_STOPS`、`SKY_STOPS`、`TEXT`、`colours`），要重畫 README 的天色圖：`node scripts/sky/draw.js`（2.5.1）。
 
 | 章節 | 內容 |
 |---|---|
@@ -29,7 +29,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `_data/days.yml` | 去過的地方：首頁的往年今日、Timeline 的每一天（2.3.1） |
 | `_data/little.yml` | 小事，在今天的建築旁出現一週（2.3.2） |
 | `_config.yml` | 網站資訊、哪些檔案要建置（2.1） |
-| `assets/js/sky.js` | 首頁和文章頁共用：所在城市、太陽位置、天色和文字顏色（2.5.1）、頂部翻牌時鐘 |
+| `assets/js/sky.js` | 首頁和文章頁共用：所在城市、太陽位置、天色和文字顏色、首頁的天空（2.5.1）、頂部翻牌時鐘 |
 | `assets/js/day.js`、`assets/css/day.css` | 首頁：Timeline、terminal、版面 |
 | `assets/js/scenes.js` | 建築模型 `SCENES`、光線、影子和窗燈。分享卡片也用它 |
 | `assets/js/pixel-engine.js` | 產生的檔案（3.3） |
@@ -103,7 +103,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 ### 2.3.1 去過的地方：`_data/days.yml`
 
-一筆是一天、一棟建築。建築底下每件事只說一次：上面一行強調色的「幾年前・日期」（從 `date` 算，`day.js` 的 `whenTag`）、名稱、地點（Google Maps 連結，`placeFor`），最後一句是 `Yen {did}[ with {with}].[ {extra}]`（`sentenceFor`）。所以 `did` 只寫發生了什麼，不寫時間、地點，也不要再寫一次建築名稱。
+一筆是一天、一棟建築。建築底下每件事只說一次：上面一行強調色的「幾年前・日期」（從 `date` 算，`day.js` 的 `whenTag`）、一行淡色的經緯度（`coords`，沒有就不顯示；`geoLine`）、名稱、地點（Google Maps 連結，`placeFor`），最後一句是 `Yen {did}[ with {with}].[ {extra}]`（`sentenceFor`）。所以 `did` 只寫發生了什麼，不寫時間、地點，也不要再寫一次建築名稱。
 
 | 欄位 | 必填 | 說明 |
 |---|---|---|
@@ -117,7 +117,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `extra` | 否 | 補充一句 |
 | `map` | 否 | Google Maps 搜尋文字，預設 `name, place` |
 | `country` | 否 | 預設 `Japan`。Timeline 的國家數由它算 |
-| `coords` | 否 | `[緯度, 經度]`，例如 `[40.7527, -73.9772]`。那天的筆記，分享卡片上會印出來；外出打卡也靠它認出這個地點（150 m 內，3.6），沒有 `coords` 的地點認不出來 |
+| `coords` | 否 | `[緯度, 經度]`，例如 `[40.7527, -73.9772]`。那天的筆記，首頁標題上方和分享卡片上會印出來（照寫的位數，最多 4 位）；外出打卡也靠它認出這個地點（150 m 內，3.6），沒有 `coords` 的地點認不出來 |
 
 缺必填欄位、沒有中文名、或模型不存在時，那一筆不會出現，瀏覽器的 console 會列出缺了什麼。
 
@@ -181,7 +181,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 #### 2.5.1 天色：整個網站只有一條顏色規則
 
-網站沒有日夜切換，也沒有不同時段的版本。**只有一個輸入：所在城市（`CITY`）現在的太陽高度。** 其他顏色都從它算出來，分三層：
+網站沒有日夜切換，也沒有不同時段的版本。**只有一個輸入：所在城市（`CITY`）現在的太陽位置（高度，首頁的天空另外看在東邊還是西邊）。** 其他顏色都從它算出來，分四層：
 
 ```mermaid
 flowchart LR
@@ -189,11 +189,13 @@ flowchart LR
   B --> T["文字顏色<br/>TEXT → colours / fit"]
   S --> L["建築的光<br/>scenes.js lightFor"]
   B --> P["地磚、按鈕、程式碼底色<br/>都用文字色和天色調出來"]
+  S --> K["首頁的天空<br/>SKY_STOPS → skyFor"]
+  K --> T
 ```
 
 ![天色跟著太陽高度變](scripts/sky/sky.svg)
 
-上面的圖由 `node scripts/sky/draw.js` 從 `sky.js` 畫出來。改了 `BG_STOPS`、`TEXT` 或 `colours` 後要重畫，和 `sky.js` 一起 commit。
+上面的圖由 `node scripts/sky/draw.js` 從 `sky.js` 畫出來。改了 `BG_STOPS`、`SKY_STOPS`、`TEXT` 或 `colours` 後要重畫，和 `sky.js` 一起 commit。
 
 **第一層：天色**（`assets/js/sky.js` 的 `BG_STOPS`）。七個顏色點，兩點之間依太陽高度連續漸變：
 
@@ -217,7 +219,28 @@ flowchart LR
 - 其他顏色都從文字色和天色調出來，所以任何時間都讀得清楚、不用另外調：卡片和按鈕的底色（`sheet`）、按鈕（2.5.3）、地磚（2.5.2）、程式碼區塊的底色（`site.css` 的 `--washi`：天色加 7% 文字色）。
 - 文章頁：`head.html`、`theme-boot.html` 在第一個畫面前套上，`theme.js` 每分鐘更新。`site.css` 裡的 `#fafaf7`、`#0d0f12` 只在 `sky.js` 沒載入時用。固定不變的只有 `_includes/seo.html` 的 `theme-color`（瀏覽器網址列，跟著系統設定用 `#fafaf7`／`#0d0f12`）和分享卡片（`#fafaf7`）。
 
-**第三層：建築的光**（`assets/js/scenes.js` 的 `lightFor`）。每棟建築只有一套白天的顏色，晚上的樣子全部由光算出來：
+**第三層：首頁的天空**（`sky.js` 的 `SKY_STOPS`、`skyFor`、`paintSky`；`day.js` 的 `placeSky`；`day.css` 的 `.sky`）。只在首頁（今天、往年今日）；Timeline、作品頁、文章頁還是單色，讀的時候安靜。
+
+- 建築後面是一片天空：頁面最上面是天頂，往下漸變到建築底部的地平線，再用 36px 融進地面。地面就是第一層的天色，所以說明文字的顏色和對比規則不變。
+- 地平線的位置：地磚的後角往內一點（地磚高度的 12%）；沒有地磚的 `home` 在建築圖的 85% 高。跟著頁面捲動，不固定在畫面上。
+- 每個太陽高度有兩個顏色：天頂、地平線。**早上（太陽在東邊）和下午（西邊）各一組**（`SKY_STOPS.am`、`.pm`），同樣高度的 09:30 和 14:30 天空不一樣；太陽在地平線下兩組相同：
+
+| 太陽高度 | 早上：天頂 → 地平線 | 下午：天頂 → 地平線 |
+|---|---|---|
+| −18° 以下 | `#090c16` → `#1a2038`（深夜） | 同左 |
+| −9° | `#121633` → `#34355f` | 同左 |
+| −4° | `#1b1e44` → `#8f5f82`（黃昏的玫瑰色） | 同左 |
+| 0° | `#8fa4cf` → `#f2c9b0` | `#8a8fbf` → `#f0b394` |
+| 10° | `#b2c8e0` → `#f3e4d6` | `#aab8d6` → `#f6dab6`（轉金） |
+| 25° | `#b8d1e6` → `#f5f2ea` | `#bfcfdf` → `#f6eedd` |
+| 50° 以上 | `#a9c8e6` → `#f8f8f3`（藍天） | 同左 |
+
+- 天頂也經過 `colours`（偏暗的壓暗、偏亮的提亮），因為日期卡片的字放在它上面；卡片的字用天頂算出來的顏色（`--sky-ink`、`--sky-faint`、`--sky-accent`）。往下捲到地面、或打開 Timeline、作品、文章時，卡片換回一般的樣子和底下的帶子（`day.js` 的 `updateMore`、`day.css` 的 `.top.on-ground`）。
+- 星星：太陽 −6° 開始淡入、−12° 全亮（`--stars`）。1–2px 的方點，越接近地平線越淡，用固定的亂數種子，每晚位置都一樣，不閃爍。
+- 倒轉今天時天空跟著那個時刻變，淡入時間和頁面底色一樣（平常 1.2 秒、拖的時候 0.12 秒；`@property --sky-top`、`--sky-horizon`）。
+- 新的顏色點：天頂要選夠亮或夠暗的（和第一層一樣），太陽 0° 附近的天頂要能放深色字。
+
+**第四層：建築的光**（`assets/js/scenes.js` 的 `lightFor`）。每棟建築只有一套白天的顏色，晚上的樣子全部由光算出來：
 
 | 光 | 什麼時候 | 做法 |
 |---|---|---|
@@ -265,6 +288,7 @@ flowchart LR
 |---|---|---|
 | 網頁字型 | Quattro：`assets/fonts/quattro/`（文章頁在 `site.css`、首頁在 `day.css` 開頭載入）。JetBrains Mono、Noto Sans TC：Google Fonts（文章頁 `_includes/head.html`、首頁 `_layouts/home.html`） | 一般文字（首頁說明、Timeline、作品頁、文章）：iA Writer Quattro → Noto Sans TC。terminal、日期、按鈕：JetBrains Mono → Noto Sans TC。中文一律用 Noto Sans TC。Quattro 只有 400、700，所以 Noto Sans TC 也只載入 400、700，中英文才一樣粗。中英文之間的小空隙用 `text-autospace`（支援的瀏覽器才有） |
 | 首頁字級 | `assets/css/day.css` 的 `.caption .name`、`.caption .note`、`.when b` | 今天的標題和說明都是 21px（行高 1.5），標題只是粗體，兩者之間多 10px |
+| 標題上方的經緯度 | `assets/js/day.js` 的 `geoLine`；樣式在 `day.css` 的 `.geo-tag` | 今天：`25.03° N 121.56° E · sun 37° SE`（太陽的高度和方位，倒轉今天時跟著變）。家和辦公室只顯示 `CITY` 的座標到小數點後 2 位（約 1 公里），不公開住址；`days.yml` 有 `coords` 的地點照寫的位數。往年今日只有座標，沒有太陽（頁面的天空和影子是今天的）。和 `.past-tag` 同樣大小，淡色 |
 | 日期卡片 | 首頁 `_layouts/home.html` 的 `.top-row`、`day.css` 的 `.top`；文章頁 `_layouts/default.html` 的 `.post-row`、`site.css` 的 `.post-top` | 見下面「日期卡片」。`--card-top`、`--card-title`、`--card-sub` 在 `day.css` 和 `site.css` 各有一份，要一起改 |
 | 倒轉今天 | `assets/js/day.js` 的 rewind 區段和建築的手勢（`stage` 的 `pointer*`、`rwStart`、`rwMove`、`rwEnd`；`SUN_MARKS`、`SNAP`、`PULL`、`GAIN_MAX`、`FLING_MAX`、`IDLE_BACK`、`DL`、`paintDayline`）；樣式在 `day.css` 的 `.when.is-rewound`、`.when.hint`、`.dayline`；倒著翻的數字在 `sky.js` 的 `rollClock`（`back`） | 吸附：黎明、日出、日落、黃昏，前後 8 分鐘，多拉 10 px 才離開；拖動 1–8 分鐘／px；放著 60 秒回到現在。見下面「倒轉今天」 |
 | 按鈕 | `assets/css/day.css` 的 `.top-btn, .cmdbar button`、`--press-soft`；文章頁 `site.css` 的 `.post-btn` | 見下面「按鈕」 |
@@ -275,7 +299,7 @@ flowchart LR
 **日期卡片**：
 
 - 頂部一行，像 terminal 的標題列，置中、最寬 440px（手機上左右各留 20px，和內文對齊）。左邊回清單（`← Work`／`← Notes`，只在作品和文章），中間是時間（沒有框，只是字），右邊的按鈕寫現在所在的畫面：今天的首頁是 Today（點了打開 Timeline）、Timeline 裡是 Timeline（點了回到今天）、過去某天是 Today（點了回到今天）、倒轉今天時是 Now（點了回到現在）、作品和文章是 Home（只有圖示）。切換在 `day.js` 的 `ctaFor`。
-- 底下是一條天色的帶子、往下淡出，捲動時內容不會撞到字。
+- 底下是一條天色的帶子、往下淡出，捲動時內容不會撞到字。首頁最上面卡片放在天空上，沒有帶子，字用天頂的顏色；捲到地面才出現（2.5.1 第三層）。
 - 離頂端 `--card-top`：手機 12px；寬螢幕（≥ 900px）是畫面高度的 9%（28–96px）。字級：上面一行 `--card-title`（15px）、下面一行 `--card-sub`（12px），每一頁都一樣。
 - 上面是現在的時間，到秒（`HH:MM:SS`），下面是所在城市今天的星期（`Fri`；首頁 `day.js` 的 `todayWd`，文章頁 `post.js` 的 `tick`）。每個數字像翻牌一樣往上捲到下一個（`sky.js` 的 `rollClock`，首頁由 `day.js` 的 `secondTick`、文章頁由 `post.js` 的 `tick` 每秒呼叫；樣式在 `day.css`、`site.css` 的 `.roll`）。
 - Timeline 裡上面一行是那天的日期（數字像轉盤一樣轉到那天），下面是「幾年前」（`Seven years ago`；今年稍早寫 `This year`，今天寫 `Today`）。進出 Timeline 時，時間和日期疊在同一個位置交叉淡入淡出（淡出的稍微變模糊；淡入的日期直接停在那天）；換一天時下面一行同樣交叉淡入淡出（`day.js` 的 `dialTo`、`day.css` 的 `.when .face`）。停在過去某一天時用強調色（`.when.is-past-day`）。

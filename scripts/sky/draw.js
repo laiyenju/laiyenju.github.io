@@ -1,5 +1,5 @@
 // Draws scripts/sky/sky.svg, the picture of the sky colours in README 2.5, from assets/js/sky.js.
-// Run after changing BG_STOPS, TEXT or colours in sky.js: node scripts/sky/draw.js
+// Run after changing BG_STOPS, SKY_STOPS, TEXT or colours in sky.js: node scripts/sky/draw.js
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..', '..');
 const ctx = { window: {}, document: { documentElement: { style: {} } } };
@@ -59,6 +59,26 @@ for (const [label, md] of [['夏至', [5, 21]], ['春分', [2, 20]], ['冬至', 
   strip(L + 56, y + 8, PW - 56, 28, x => shown(sky.sunAt(t0 + (x + .5) / (PW - 56) * 864e5).alt).bg);
   out.push(`<rect x="${L + 56}" y="${y + 8}" width="${PW - 56}" height="28" fill="none" stroke="#00000022"/>`);
   y += 34;
+}
+for (let h = 0; h <= 24; h += 3) text(L + 56 + h / 24 * (PW - 56), y + 16, String(h).padStart(2, '0') + ':00', { anchor: 'middle', mono: true, size: 11 });
+y += 30;
+
+// 3. the home page's sky through the same days: the zenith (top of the page, as shown, after colours()), the horizon
+// behind the building, and the ground (the page colour above). Morning and afternoon have their own stops (SKY_STOPS).
+y += 14;
+text(L, y, '首頁的天空（SKY_STOPS）：天頂、地平線、地面', { size: 14, bold: true });
+y += 18;
+text(L, y, '同樣高度的太陽，早上（東）和下午（西）用不同的顏色。天頂用 colours() 調過，日期卡片的字放在它上面也讀得清楚。');
+y += 8;
+for (const [label, md] of [['夏至', [5, 21]], ['春分', [2, 20]], ['冬至', [11, 21]]]) {
+  const t0 = Date.UTC(2026, md[0], md[1]) - CITY.tz * 3600e3, at = x => sky.sunAt(t0 + (x + .5) / (PW - 56) * 864e5);
+  const sk = x => { const s = at(x); return sky.skyFor(s.alt, s.az); };
+  text(L, y + 33, label, { size: 11, mono: true });
+  strip(L + 56, y + 8, PW - 56, 14, x => sky.colours(sk(x).top).bg);
+  strip(L + 56, y + 22, PW - 56, 14, x => sky.hex(sk(x).horizon));
+  strip(L + 56, y + 36, PW - 56, 14, x => shown(at(x).alt).bg);
+  out.push(`<rect x="${L + 56}" y="${y + 8}" width="${PW - 56}" height="42" fill="none" stroke="#00000022"/>`);
+  y += 48;
 }
 for (let h = 0; h <= 24; h += 3) text(L + 56 + h / 24 * (PW - 56), y + 16, String(h).padStart(2, '0') + ':00', { anchor: 'middle', mono: true, size: 11 });
 y += 30;

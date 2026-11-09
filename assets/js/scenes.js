@@ -23,7 +23,7 @@ function lightFor(ms) {
     sx = -Math.sin(s.az) * len; sy = Math.cos(s.az) * len;
   }
   return {
-    alt, n, warm,
+    alt, az: s.az, n, warm,
     kr: mix(1, .56, n) * (1 + .07 * warm), kg: mix(1, .6, n) * (1 + .01 * warm), kb: mix(1, .84, n) * (1 - .09 * warm),
     lit: cl((3 - alt) / 8, 0, 1),
     // after dark: the outline facing the sky turns light (the engine darkens it, which is lost on a dark sky),
@@ -33,7 +33,8 @@ function lightFor(ms) {
     bg: bgFor(alt),
   };
 }
-function applyTheme(L) { siteSky.paintHome(L.bg); } // page and text colours for this sky (sky.js)
+// page and text colours for this sky, and the home page's sky behind the building (sky.js)
+function applyTheme(L) { siteSky.paintHome(L.bg); if (siteSky.paintSky && L.az != null) siteSky.paintSky(L); }
 
 /* ================= scenes ================= */
 const C = {

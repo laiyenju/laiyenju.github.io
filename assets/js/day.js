@@ -31,7 +31,7 @@ const REAL_MD = pad(REAL.m) + '-' + pad(REAL.d);
    Required: date, scene, name, zh (Chinese name; no_zh: true leaves it out), place, did.
    Optional: with, extra, map, country (default "Japan"). */
 const MEMORIES = (SITE.days || []).map(d => ({ date: String(d.date), scene: d.scene, name: d.name, zh: d.zh, noZh: !!d.no_zh,
-  place: d.place, did: d.did, with: d.with, extra: d.extra, map: d.map, country: d.country }));
+  place: d.place, did: d.did, with: d.with, extra: d.extra, map: d.map, country: d.country, coords: d.coords }));
 // a day can have more than one building: the first keeps the date as its id, the next ones get date-2, date-3 …
 { const seen = {}; for (const m of MEMORIES) { seen[m.date] = (seen[m.date] || 0) + 1; m.id = seen[m.date] > 1 ? `${m.date}-${seen[m.date]}` : m.date; } }
 const byDate = (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
@@ -74,10 +74,10 @@ function buildItems() {
   const items = MEMORIES.filter(m => m.date.slice(5) === md && +m.date.slice(0, 4) < dd.y && checkMemory(m))
     .sort(byDate).map(m => {
       const year = +m.date.slice(0, 4);
-      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), pastView: true, tag: whenTag(m.date, dd.y), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: placeFor(m), html: sentenceFor(m) };
+      return { date: m.date, id: m.id, scene: m.scene, opts: {}, label: String(year), pastView: true, coords: m.coords, tag: whenTag(m.date, dd.y), name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, meta: placeFor(m), html: sentenceFor(m) };
     });
   // a place in days.yml dated today is today's building, in place of home or the office
-  if (here) items.push({ scene: here.scene, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
+  if (here) items.push({ scene: here.scene, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(), coords: here.coords,
     name: here.zh && !here.noZh ? `${here.name}\u00a0· ${here.zh}` : here.name, meta: placeFor(here), html: sentenceFor(here) + (extra ? ' ' + escHtml(extra) : '') });
   else items.push({
     scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
@@ -211,7 +211,7 @@ function plateFor(w) {
 }
 function placePlate(w = mainWorld, f) {
   const P = w && w.bare && !w.pure ? plateFor(w) : null;
-  if (!P || P.none) { plate.hidden = true; return; }
+  if (!P || P.none) { plate.hidden = true; placeSky(); return; }
   if (f == null) f = parseFloat(disp.style.width) / disp.width;
   if (plate.width !== P.cv.width || plate.height !== P.cv.height) { plate.width = P.cv.width; plate.height = P.cv.height; }
   const g = plate.getContext('2d'); g.clearRect(0, 0, plate.width, plate.height); g.drawImage(P.cv, 0, 0);
@@ -222,6 +222,35 @@ function placePlate(w = mainWorld, f) {
   plate.style.top = disp.offsetTop + (P.by0 - cy0) * f + 'px';
   plate.style.transformOrigin = `${P.cx * f}px ${P.cy * f}px`;
   plate.hidden = false;
+  placeSky();
+}
+/* The sky (day.css .sky) reaches down to the horizon: the back corner of the platform, a little inside it, so the
+   building stands on the ground and the sky is behind it; with no platform (home has its own ground), 85% down the
+   building's picture. From the layout, not the screen: the stage shrinks as the page scrolls (--p), towards its
+   bottom, so its bottom edge is where it always is. The stars fill the sky in whole pixels, the same every night. */
+const skyEl = $('sky'), starsEl = $('stars');
+let HORIZON = 0;
+function placeSky() {
+  if (!skyEl) return;
+  const st = stage.getBoundingClientRect(), k = st.height / (stage.offsetHeight || 1) || 1;
+  const hero = document.querySelector('.hero').getBoundingClientRect();
+  const on = plate.hidden ? disp : plate, r = on.getBoundingClientRect();
+  const y = on === plate ? r.top + r.height * .12 : r.top + r.height * .85;
+  const h = Math.round(st.bottom - hero.top - (st.bottom - y) / k) + 36;
+  if (h === HORIZON || !(h > 36)) return;
+  HORIZON = h; skyEl.style.setProperty('--horizon', h + 'px');
+  const W = Math.ceil(skyEl.clientWidth), H = h - 36;
+  if (starsEl.width !== W || starsEl.height !== H) {
+    starsEl.width = W; starsEl.height = H; starsEl.style.width = W + 'px'; starsEl.style.height = H + 'px';
+    const g = starsEl.getContext('2d'); let q = 20261109;
+    const rnd = () => (q = q * 16807 % 2147483647) / 2147483647;
+    // about one star per 9000 px², fainter towards the horizon, one in seven a 2px one
+    for (let n = Math.round(W * H / 9000); n--;) {
+      const x = Math.floor(rnd() * W), sy = rnd() * H * .85, a = (.25 + rnd() * .55) * (1 - sy / H), z = rnd() < .15 ? 2 : 1;
+      g.fillStyle = `rgba(236,231,221,${a.toFixed(2)})`; g.fillRect(x, Math.floor(sy), z, z);
+    }
+  }
+  updateMore();
 }
 // into the timeline: the platform is drawn into the building's middle, faster and faster, like dust into a vacuum.
 // It goes as a ghost above the timeline as it comes in (the home page goes under it), and stays away until we are back.
@@ -308,6 +337,27 @@ function renderText() {
   $('capMeta').innerHTML = it.meta; $('capMeta').hidden = !it.meta;
   if (it.html) $('capNote').innerHTML = it.html; else $('capNote').textContent = it.note;
   $('capTag').hidden = !it.pastView; if (it.pastView) $('capTag').textContent = it.tag;
+  geoLine();
+}
+/* Above today's title: where the building stands and where the sun is now (or at the minute the rewind shows), the
+   two things the sky and the shadow come from. Home and the office give only the city's own point, to 0.01° (about
+   a kilometre), never the address. A place in days.yml gives its coords as written; a past day only its coords
+   (the sky and the shadow on the page are today's, not that day's). Nothing when there is nothing to say. */
+const deg = (v, pos, neg, dp) => `${Math.abs(v).toFixed(dp)}°\u00a0${v < 0 ? neg : pos}`;
+const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+function geoLine() {
+  const it = state.items[state.index], el = $('capGeo');
+  if (!it || !el) return;
+  const c = it.coords && it.coords.length === 2 ? it.coords.map(Number) : null;
+  const dp = c ? Math.min(4, Math.max(...it.coords.map(v => (String(v).split('.')[1] || '').length))) : 2;
+  const where = c ? `${deg(c[0], 'N', 'S', dp)}  ${deg(c[1], 'E', 'W', dp)}` : it.pastView ? '' : `${deg(CITY.lat, 'N', 'S', 2)}  ${deg(CITY.lon, 'E', 'W', 2)}`;
+  let sun = '';
+  if (!it.pastView) {
+    const s = siteSky.sunAt(minuteMs()), a = Math.round(s.alt);
+    sun = `sun ${a < 0 ? '\u2212' + -a : a}°\u00a0${COMPASS[Math.round(s.az * 180 / Math.PI / 22.5) % 16]}`;
+  }
+  const text = [where, sun].filter(Boolean).join(' · ');
+  el.hidden = !text; if (el.textContent !== text) el.textContent = text;
 }
 function renderThumbs() {
   thumbsEl.innerHTML = '';
@@ -375,7 +425,7 @@ function renderPast(date) {
   const same = MEMORIES.filter(o => o.date.slice(5) === md && o.date <= date && checkMemory(o)).sort(byDate);
   state.items = same.map(o => {
     const y = +o.date.slice(0, 4), main = o.id === id;
-    return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: true,
+    return { date: o.date, id: o.id, scene: o.scene, opts: {}, label: o.date === date ? 'That day' : String(y), main, pastView: true, coords: o.coords,
       tag: whenTag(o.date, now),
       name: o.zh && !o.noZh ? `${o.name}\u00a0· ${o.zh}` : o.name, meta: placeFor(o), html: sentenceFor(o) };
   });
@@ -1130,6 +1180,9 @@ function updateMore() {
   // on the home page the bar sits at the bottom instead of the hint; overlays have their own bottom (ruler) and hide the bar
   $('more').classList.toggle('off', !more || !o);
   $('cmdbar').classList.toggle('off', !!o);
+  // the date card is on the sky until the ground scrolls under it, or something opens over the page
+  const card = document.querySelector('.top');
+  card.classList.toggle('on-ground', !!o || !HORIZON || scrollY + card.offsetHeight > HORIZON - 36);
 }
 function onScroll() {
   const p = cl(scrollY / (STAGE.h * .9), 0, 1);
@@ -1349,7 +1402,7 @@ function showAt(min) {
   syncSlider();
   // the colours at once (the shadow as it is: LIGHT keeps its sx, sy); the shadow as soon as it can be drawn
   LIGHT = Object.assign(lightFor(minuteMs()), { sx: LIGHT.sx, sy: LIGHT.sy });
-  applyTheme(LIGHT); placePlate();
+  applyTheme(LIGHT); placePlate(); geoLine();
   if (dayline.classList.contains('on')) paintDayline();
   swing();
   clearTimeout(AT.idle);

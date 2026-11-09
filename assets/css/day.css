@@ -55,7 +55,25 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   position: fixed; z-index: 7; top: 0; left: 0; right: 0;
   padding-top: var(--card-top); padding-bottom: 18px;
   background: linear-gradient(var(--bg) calc(100% - 18px), color-mix(in srgb, var(--bg) 0%, transparent));
+  transition: background .3s ease;
 }
+/* Over the sky (the top of the home page) the card is on the zenith: no band (nothing has scrolled under it yet) and
+   the words in the zenith's colours (sky.js paintSky). Scrolled down to the ground, or with the timeline, a work or a
+   note open, it is the page's own card again (day.js updateMore: .on-ground). */
+.top:not(.on-ground) { --ink: var(--sky-ink); --ink-soft: var(--sky-faint); --accent: var(--sky-accent); background: none; color: var(--ink); }
+/* The sky: from the zenith at the top of the page to the horizon behind the building's base, then 36px into the
+   ground (the page colour). Placed by day.js placeSky; the stars come out after dusk (--stars, sky.js). */
+.sky { position: absolute; z-index: 0; top: 0; left: 0; right: 0; height: var(--horizon, 60svh); pointer-events: none;
+  background: linear-gradient(var(--sky-top) 0, var(--sky-top) 4%, var(--sky-horizon) calc(100% - 36px), var(--bg));
+ }
+/* a gradient does not fade by itself: its colours do (registered, so they can move), as fast as the page's own */
+@property --sky-top { syntax: '<color>'; inherits: true; initial-value: #b1cde6; }
+@property --sky-horizon { syntax: '<color>'; inherits: true; initial-value: #f6f5ee; }
+:root { transition: --sky-top 1.2s ease, --sky-horizon 1.2s ease; }
+:root:has(body.rewinding) { transition-duration: .12s; }
+.sky .stars { position: absolute; left: 0; top: 0; opacity: var(--stars, 0); transition: opacity 1.2s ease; image-rendering: pixelated; }
+.hero { position: relative; }
+.hero-inner { position: relative; z-index: 1; }
 .soft { color: var(--ink-soft); }
 :root { --card-w: min(360px, calc(100vw - 32px)); --card-top: calc(12px + env(safe-area-inset-top, 0px));
   --card-title: 15px; --card-sub: 12px; }
@@ -293,6 +311,8 @@ body.term-busy .input-row, body.term-busy .cmdbar { opacity: 0; visibility: hidd
 /* the homepage as it was on a past day: same look, that day's building is the main one */
 /* which day it is: a line of text in the accent colour above the title, not a box */
 .past-tag { display: block; margin: 0 0 6px; font: 500 13px/1.5 var(--mono); letter-spacing: .02em; color: var(--accent); }
+/* where the building stands and where the sun is, in the same place and size, quieter (day.js geoLine) */
+.geo-tag { display: block; margin: 0 0 6px; font: 500 13px/1.5 var(--mono); letter-spacing: .02em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 
 /* timeline mode: the building, its name and place, and a time ruler. Nothing else. */
 /* The building's box in the timeline: the home page's own box (--stage-top, -w, -h: day.js sizeStage), made a little
