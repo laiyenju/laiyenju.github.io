@@ -17,9 +17,10 @@
   }
 
   // page colour by the sun's height (degrees): night blue, dusk violet, plum, sunrise warm, day near white.
-  // The plum (−1.2°) is the ground under a rose horizon: without it the violet runs straight into the warm
-  // sunrise colour, through greys that colours() then darkens to a dull brown.
-  var BG_STOPS = [[-18, [21, 25, 38]], [-9, [40, 46, 74]], [-4, [62, 53, 96]], [-1.2, [104, 66, 86]], [0, [222, 200, 190]], [5, [244, 230, 212]], [14, [247, 243, 234]], [28, [248, 248, 245]]];
+  // The plum (−0.6°) is the ground under a rose horizon, and the page turns light just above it (−0.4°), in a
+  // step: a slow run from violet to the warm sunrise colour goes through greys, which colours() then darkens to a
+  // dull brown.
+  var BG_STOPS = [[-18, [21, 25, 38]], [-9, [40, 46, 74]], [-4, [62, 53, 96]], [-0.6, [110, 62, 84]], [-0.4, [226, 202, 192]], [0, [222, 200, 190]], [5, [244, 230, 212]], [14, [247, 243, 234]], [28, [248, 248, 245]]];
   function mix(a, b, t) { return a + (b - a) * t; }
   function bgFor(alt) {
     if (alt <= BG_STOPS[0][0]) return BG_STOPS[0][1];
@@ -49,6 +50,24 @@
       }
     }
     return { top: last[1], horizon: last[2] };
+  }
+  // Halfway between two colours without the grey: a straight mix of a blue zenith and a peach horizon is a dull
+  // mauve, so the mix (in Oklab) gets back the colourfulness its two ends have on average. Its hue is the mix's own.
+  function toLab(c) {
+    var r = lin(c[0]), g = lin(c[1]), b = lin(c[2]);
+    var l = Math.cbrt(.4122214708 * r + .5363325363 * g + .0514459929 * b), m = Math.cbrt(.2119034982 * r + .6806995451 * g + .1073969566 * b), s = Math.cbrt(.0883024619 * r + .2817188376 * g + .6299787005 * b);
+    return [.2104542553 * l + .793617785 * m - .0040720468 * s, 1.9779984951 * l - 2.428592205 * m + .4505937099 * s, .0259040371 * l + .7827717662 * m - .808675766 * s];
+  }
+  function fromLab(L) {
+    var l = Math.pow(L[0] + .3963377774 * L[1] + .2158037573 * L[2], 3), m = Math.pow(L[0] - .1055613458 * L[1] - .0638541728 * L[2], 3), s = Math.pow(L[0] - .0894841775 * L[1] - 1.291485548 * L[2], 3);
+    return [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s, -.0041960863 * l - .7034186147 * m + 1.707614701 * s]
+      .map(function (v) { v = Math.max(0, Math.min(1, v)); return 255 * (v <= .0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - .055); });
+  }
+  function between(a, b) {
+    var A = toLab(a), B = toLab(b), M = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2];
+    var want = (Math.hypot(A[1], A[2]) + Math.hypot(B[1], B[2])) / 2, has = Math.hypot(M[1], M[2]);
+    var k = has > .004 ? Math.min(want / has, 3) : 1;
+    return fromLab([M[0], M[1] * k, M[2] * k]);
   }
   function hex(c) { return '#' + c.map(function (v) { var h = Math.round(Math.max(0, Math.min(255, v))).toString(16); return h.length < 2 ? '0' + h : h; }).join(''); }
 
@@ -130,6 +149,11 @@
     var s = skyFor(sun.alt, sun.az), c = colours(s.top), root = document.documentElement.style;
     root.setProperty('--sky-top', c.bg);
     root.setProperty('--sky-horizon', hex(s.horizon));
+    // the middle of the sky, and the middle of the glow under the horizon (down to the ground, the page colour)
+    var top = [1, 3, 5].map(function (k) { return parseInt(c.bg.slice(k, k + 2), 16); });
+    var ground = colours(bgFor(sun.alt)).bg, g = [1, 3, 5].map(function (k) { return parseInt(ground.slice(k, k + 2), 16); });
+    root.setProperty('--sky-mid', hex(between(top, s.horizon)));
+    root.setProperty('--sky-low', hex(between(s.horizon, g)));
     root.setProperty('--sky-ink', c.ink);
     root.setProperty('--sky-faint', c.faint);
     root.setProperty('--sky-accent', c.accent);

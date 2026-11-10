@@ -64,15 +64,19 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* The sky: from the zenith at the top of the page to the horizon behind the building's base, then --sky-fade into the
    ground (the page colour), eased so the horizon glows into the ground and leaves no line (day.js SKY_FADE). Placed by day.js placeSky; the stars come out after dusk (--stars, sky.js). */
 .sky { position: absolute; z-index: 0; top: 0; left: 0; right: 0; height: var(--horizon, 60svh); pointer-events: none;
-  background: linear-gradient(var(--sky-top) 0, var(--sky-top) 4%, var(--sky-horizon) calc(100% - var(--sky-fade, 128px)),
-    color-mix(in srgb, var(--sky-horizon) 68%, var(--bg)) calc(100% - var(--sky-fade, 128px) * .68),
-    color-mix(in srgb, var(--sky-horizon) 32%, var(--bg)) calc(100% - var(--sky-fade, 128px) * .36),
-    color-mix(in srgb, var(--sky-horizon) 9%, var(--bg)) calc(100% - var(--sky-fade, 128px) * .12), var(--bg));
+  background: linear-gradient(var(--sky-top) 0, var(--sky-top) 4%,
+    var(--sky-mid) calc((100% - var(--sky-fade, 128px)) * .55), var(--sky-horizon) calc(100% - var(--sky-fade, 128px)),
+    color-mix(in oklab, var(--sky-horizon), var(--sky-low)) calc(100% - var(--sky-fade, 128px) * .78),
+    var(--sky-low) calc(100% - var(--sky-fade, 128px) * .52),
+    color-mix(in oklab, var(--sky-low) 38%, var(--bg)) calc(100% - var(--sky-fade, 128px) * .24), var(--bg));
  }
 /* a gradient does not fade by itself: its colours do (registered, so they can move), as fast as the page's own */
 @property --sky-top { syntax: '<color>'; inherits: true; initial-value: #b1cde6; }
 @property --sky-horizon { syntax: '<color>'; inherits: true; initial-value: #f6f5ee; }
-:root { transition: --sky-top 1.2s ease, --sky-horizon 1.2s ease; }
+/* between them, kept as colourful as its two ends (sky.js between): the middle of the sky, and of the glow under the horizon */
+@property --sky-mid { syntax: '<color>'; inherits: true; initial-value: #d3e1ea; }
+@property --sky-low { syntax: '<color>'; inherits: true; initial-value: #f7f6f0; }
+:root { transition: --sky-top 1.2s ease, --sky-horizon 1.2s ease, --sky-mid 1.2s ease, --sky-low 1.2s ease; }
 :root:has(body.rewinding) { transition-duration: .12s; }
 .sky .stars { position: absolute; left: 0; top: 0; opacity: var(--stars, 0); transition: opacity 1.2s ease; image-rendering: pixelated; }
 .hero { position: relative; }
