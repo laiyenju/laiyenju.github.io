@@ -1,5 +1,5 @@
 /* The sky over the city, shared by the home page (day.js) and the notes (theme-boot.html, theme.js):
-   where the sun is, and the colour of the page that goes with it. Loaded in <head>, before first paint.
+   where the sun is, the moment it shows (now, or the home page's rewind), and the colour of the page that goes with it. Loaded in <head>, before first paint.
    City: change CITY here when travelling (README 2.4). */
 (function () {
   'use strict';
@@ -87,10 +87,25 @@
     };
   }
 
+  // The moment the whole site's sky shows: now, or the minute today's home page was rewound to (day.js showAt), so the
+  // notes, the timeline and the works keep the sky the visitor chose. Only the home page can rewind; it is kept for
+  // this tab (sessionStorage, shared with the notes framed in the home page) until the home page comes back to now,
+  // and only for the day it was set on (the rewind is through today).
+  var AT_KEY = 'skyAt';
+  function cityDay(ms) { return Math.floor((ms + CITY.tz * 3600e3) / 864e5); }
+  function shownMs() {
+    var now = Date.now(), ms = 0;
+    try { ms = +sessionStorage.getItem(AT_KEY) || 0; } catch (e) {}
+    return ms && ms <= now && cityDay(ms) === cityDay(now) ? ms : now;
+  }
+  function keepAt(ms) {
+    try { if (ms == null) sessionStorage.removeItem(AT_KEY); else sessionStorage.setItem(AT_KEY, String(Math.round(ms))); } catch (e) {}
+  }
+
   // the notes: the ground (--sky, --sky-sheet) and its text colours (--t-*) on <html>; true when the sky is dark
   var NOTE_VARS = ['--sky', '--sky-sheet', '--t-ink', '--t-soft', '--t-faint', '--t-accent'];
   function paintNotes(ms) {
-    var c = colours(bgFor(sunAt(ms == null ? Date.now() : ms).alt)), root = document.documentElement.style;
+    var c = colours(bgFor(sunAt(ms == null ? shownMs() : ms).alt)), root = document.documentElement.style;
     [c.bg, c.sheet, c.ink, c.soft, c.faint, c.accent].forEach(function (v, k) { root.setProperty(NOTE_VARS[k], v); });
     return c.dark;
   }
@@ -156,5 +171,5 @@
       } else { strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null; }
     });
   }
-  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, skyFor: skyFor, paintSky: paintSky, SKY_STOPS: SKY_STOPS, contrast: contrast, rollClock: rollClock };
+  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, skyFor: skyFor, paintSky: paintSky, shownMs: shownMs, keepAt: keepAt, SKY_STOPS: SKY_STOPS, contrast: contrast, rollClock: rollClock };
 })();

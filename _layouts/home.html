@@ -9,9 +9,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ '/assets/css/day.css' | relative_url }}?v={{ site.time | date: '%s' }}">
-{% comment %}The sky's colours before the first paint, so the page never flashes its default ground and then fades.{% endcomment %}
+{% comment %}The sky's colours before the first paint, so the page never flashes its default ground and then fades
+  (at the minute it was rewound to, when it was: sky.js shownMs).{% endcomment %}
 <script src="{{ '/assets/js/sky.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
-<script>if (window.siteSky) { var sun0 = siteSky.sunAt(Date.now()); siteSky.paintHome(siteSky.bgFor(sun0.alt)); siteSky.paintSky(sun0); }</script>
+<script>if (window.siteSky) { var sun0 = siteSky.sunAt(siteSky.shownMs()); siteSky.paintHome(siteSky.bgFor(sun0.alt)); siteSky.paintSky(sun0); }</script>
 </head>
 <body>
 {% comment %}Being in published/ is the publish signal (see README). Notes, works, places and small things

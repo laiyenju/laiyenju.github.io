@@ -64,6 +64,8 @@ const LITTLE = (SITE.little || []).map(l => { const [y, m, d] = String(l.date).s
 const state = { ang: 0, day: REAL_DAY, minute: REAL.h * 60 + REAL.min, followNow: true, items: [], index: 0 };
 // the rewind (drag the time in the date card): min is the minute shown when it is not now (null = now). state.minute stays the real time.
 const AT = { min: null, mark: null, drag: null, marks: null, anim: 0, raf: 0, want: 0, idle: 0, bake: 0, swingT: 0, wm: null, wheelT: 0, keyT: 0, teaseT: 0, user: false, teasing: false };
+// rewound earlier in this tab (here, or before going to a note: sky.js shownMs): the sky starts at that minute
+{ const m = Math.floor((siteSky.shownMs() - (state.day - CITY.tz * 3600e3)) / 60e3); if (m >= 0 && m < state.minute) { AT.min = m; LIGHT = lightFor(minuteMs()); } }
 function isRestDay(dd) { const md = pad(dd.m) + '-' + pad(dd.d); return { rest: dd.wd === 0 || dd.wd === 6 || !!HOLIDAYS[md], holiday: HOLIDAYS[md] }; }
 // left → right: oldest year → today
 function buildItems() {
@@ -686,7 +688,7 @@ function closeOverlays(keep) {
   unrollPlate(420);
   if (state.pastDate) exitPast(); else renderText();
   if (location.hash) { try { history.pushState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
-  updateMore();
+  updateMore(); resumeAt();
 }
 // what the reader shows: a work (works) or a note (notes), and whether it was opened from a list in the terminal
 const READ = { kind: 'works', slug: '', fromList: false };
@@ -1101,7 +1103,7 @@ function leaveTl(setup, hash) {
   setup();
   scrollTo(0, 0);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; document.body.classList.remove('tl-in'); renderText(); updateMore(); unrollPlate(420); return; }
+  if (!img || !from || still) { tl.hidden = true; document.body.style.overflow = ''; document.body.classList.remove('tl-in'); renderText(); updateMore(); unrollPlate(420); resumeAt(); return; }
   const at = dispInner(), to = rectLike(img, at.img, at.rect), g = ghostOf(img, to);
   const fromRect = rectLike(img, cv, from);
   disp.style.opacity = '0';
@@ -1114,7 +1116,7 @@ function leaveTl(setup, hash) {
     disp.style.transition = 'opacity .25s ease'; disp.style.opacity = '1';
     unrollPlate(420);
     setTimeout(() => { g.remove(); disp.style.transition = ''; }, 260);
-    updateMore();
+    updateMore(); resumeAt();
   }, MOVE);
 }
 function headerNow() { dialTo(todayISO(), cardSub(), true); }
@@ -1137,7 +1139,7 @@ function leaveToToday() { leaveTl(() => { homeToday(); renderText(); }); }
 function route() {
   const h = location.hash;
   let m;
-  if (h && h !== '#') resetAt(); // the rewind is for today's home page only
+  if (h && h !== '#') resetAt(); // the rewind's controls are for today's home page only (the sky stays)
   if ((m = h.match(/^#work-(.+)$/))) openWork(m[1]);
   else if ((m = h.match(/^#note-(.+)$/))) openNote(decodeURIComponent(m[1]));
   else if (h === '#timeline') { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(todayISO()); else showTlDay(TL.list.length - 1); }
@@ -1147,7 +1149,7 @@ function route() {
     if (openOverlay() || state.pastDate) { if (reader.hidden || !READ.fromList) clearTerm(); }
     if (openOverlay()) { reader.hidden = true; tl.hidden = true; endNote(); document.body.style.overflow = ''; ctaFor('Today'); unrollPlate(420); }
     if (state.pastDate) exitPast(); else renderText();
-    updateMore();
+    updateMore(); resumeAt();
   }
 }
 addEventListener('hashchange', route);
@@ -1380,6 +1382,8 @@ function showAt(min) {
   const next = min >= state.minute ? null : min, prev = shownMin();
   if (next === AT.min) return;
   AT.min = next;
+  // the whole site's sky follows (sky.js keepAt): the notes, the timeline and the works keep this minute
+  if (next == null) siteSky.keepAt(null); else if (!AT.teasing) siteSky.keepAt(minuteMs());
   const mark = next == null ? null : (sunDay().list.find(k => k.m === next) || {}).name || null;
   if (mark && mark !== AT.mark && navigator.vibrate) try { navigator.vibrate(8); } catch (e) {}
   AT.mark = mark;
@@ -1451,16 +1455,27 @@ function backToNow() {
   openDayline();
   glide(AT.min, state.minute, cl((state.minute - AT.min) * 1.2, 300, 900));
 }
-// leaving today's home page: back to now at once, without the roll
+// leaving today's home page (the timeline, a past day, a work, a note): the rewind's controls go, the time in the card
+// is the real one again, but the sky stays at the minute shown (sky.js keepAt). Back on today's page, resumeAt.
 function resetAt() {
   stopMotion(); clearTimeout(AT.bake); clearTimeout(AT.swingT); AT.swingT = 0;
   AT.drag = null;
   dayline.classList.remove('on'); document.body.classList.remove('rewinding');
   if (AT.min == null) return;
-  AT.min = null; AT.mark = null;
   whenCard.classList.remove('is-rewound');
   if ($('clockRoll')) siteSky.rollClock($('clockRoll'));
   refreshLight(true); syncSlider();
+}
+// back on today's home page with the sky still rewound: the card shows that minute again, Now brings it back, and
+// left alone it rolls back to now (IDLE_BACK)
+function resumeAt() {
+  if (AT.min == null || !canRewind()) return;
+  if (!whenCard.classList.contains('is-rewound')) {
+    whenCard.classList.add('is-rewound');
+    if ($('clockRoll')) siteSky.rollClock($('clockRoll'), minuteMs(), true);
+    ctaFor('Today'); headerNow(); syncSlider();
+  }
+  clearTimeout(AT.idle); AT.idle = setTimeout(backToNow, IDLE_BACK);
 }
 
 /* by hand: drag (mouse, finger, pen), a sideways swipe on a trackpad, the keyboard */
@@ -1550,7 +1565,7 @@ setTimeout(() => {
   }, 500); });
   AT.teasing = true;
 }, 2400);
-syncSlider();
+syncSlider(); resumeAt(); // a rewind kept from earlier in this tab
 
 /* light: follows the sun over the city at the real time */
 function minuteMs() { return state.day - CITY.tz * 3600e3 + (AT.min == null ? state.minute : AT.min) * 60e3; }
@@ -1573,7 +1588,7 @@ function openView() {
 /* the seconds in the date card, on the second */
 function secondTick() {
   const r = $('clockRoll');
-  if (r && !document.hidden && AT.min == null) siteSky.rollClock(r); // rewound: the card holds the minute shown
+  if (r && !document.hidden && (AT.min == null || !canRewind())) siteSky.rollClock(r); // rewound: today's card holds the minute shown
   setTimeout(secondTick, 1000 - Date.now() % 1000 + 15);
 }
 secondTick();
@@ -1589,7 +1604,7 @@ function frame(now) {
 setInterval(() => {
   const r = taipeiParts(Date.now()), day = dayMs(r.y, r.m, r.d);
   state.minute = r.h * 60 + r.min;
-  if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; AT.min = null; AT.marks = null; refreshLight(true); renderDay(); ctaFor('Today'); } else { refreshLight(true); refreshToday(); }
+  if (day !== state.day && tl.hidden && !state.pastDate) { state.day = day; AT.min = null; AT.marks = null; siteSky.keepAt(null); refreshLight(true); renderDay(); ctaFor('Today'); } else { refreshLight(true); refreshToday(); }
   syncSlider();
   if (r.min % 10 === 0) loadCheckin(); // a page left open hears of new check-ins
 }, 60e3);
