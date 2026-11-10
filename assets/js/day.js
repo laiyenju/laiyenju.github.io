@@ -427,7 +427,7 @@ function ctaFor(word) {
   const back = word === 'Work' || word === 'Notes';
   $('backBtn').hidden = !back; $('homeBtn').hidden = !back; $('tlBtn').hidden = back;
   if (back) { $('backText').textContent = word; $('backBtn').setAttribute('aria-label', word === 'Work' ? 'Back to all work' : 'Back to all notes'); }
-  else { $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', word === 'Now' ? 'Now. Back to the time now' : `${word}. ${word === 'Today' && !state.pastDate ? 'Open the timeline' : 'Back to today'}`); }
+  else { $('tlBtn').classList.toggle('now', word === 'Now'); $('tlText').textContent = word; $('tlBtn').setAttribute('aria-label', word === 'Now' ? 'Now. Back to the time now' : `${word}. ${word === 'Today' && !state.pastDate ? 'Open the timeline' : 'Back to today'}`); }
 }
 function exitPast() {
   if (!state.pastDate) return;
@@ -1182,7 +1182,7 @@ addEventListener('scroll', onScroll, { passive: true });
 /* the building: tap = timeline. Sideways: on today's page the time (the rewind: the sun moves over the building and its
    shadow turns under the finger); on a past day's page, other years (left = newer). Up and down is left to the page. */
 let drag = null;
-// A long press (HOLD ms, still) on today's building shows the sun's path at once, with a small buzz: then slide.
+// A long press (HOLD ms, still) on today's building opens the day's track under the date card at once, with a small buzz: then slide.
 // Let go without sliding and it goes away again (not a tap: the timeline stays shut).
 const HOLD = 350;
 stage.addEventListener('pointerdown', ev => {
@@ -1190,7 +1190,7 @@ stage.addEventListener('pointerdown', ev => {
   rwStart(ev);
   if (AT.drag) drag.holdT = setTimeout(() => {
     if (!drag || drag.mode || !AT.drag) return;
-    drag.mode = 'time'; drag.held = true; openDayline(drag.y);
+    drag.mode = 'time'; drag.held = true; openDayline();
     if (navigator.vibrate) try { navigator.vibrate(10); } catch (e) {}
   }, HOLD);
 });
@@ -1292,34 +1292,30 @@ function syncSlider() {
   whenCard.setAttribute('aria-valuetext', AT.min == null ? `${hm(state.minute)}, now` : `${hm(AT.min)}${AT.mark ? ', ' + AT.mark : ''}`);
 }
 
-/* the sun's path: a strip of sky glass across the middle of the building, where the finger is, just above it (a thumb
-   hides what is under it, never what is above). 144 columns of 10 minutes, at whole pixels like the building (2x on a
-   phone, 3x wide). Over it, the time shown, riding with the sun. */
-const DL = { W: 144, H: 17, HY: 12, BAND: 15, LIFT: 44 }; // the horizon's row, the sky band's first row (two rows), px above the finger
+/* the day's track: under the date card, today from 00:00 to 24:00 at the site's own pixels (144 columns of 10 minutes,
+   2x on a phone, 3x wide): the horizon, the sun's arc, along the bottom the colour of the sky at each moment, and a
+   cursor at the minute shown. It is the time's own axis, off the building, so nothing covers what the rewind changes:
+   - drag along it, or tap it: the place is the time (the whole day in one stroke; the building's drag is the fine one);
+   - under it the day's four moments (dawn, sunrise, sunset, dusk): a tap goes there. Those still to come are off;
+   - the time itself is said once, in the card above (and the moment's name beside the weekday).
+   Open (.on) while the time moves. Left rewound, it folds to its last rows (.mini: the sky band and the cursor), the
+   trace that the page is not at now; pointing at it or tapping it opens it again. */
+const DL = { W: 144, H: 17, HY: 12, BAND: 15, MINI: 4 }; // the horizon's row, the sky band's first row (two rows), the rows left when folded
 const dayline = document.createElement('div');
-dayline.className = 'dayline'; dayline.setAttribute('aria-hidden', 'true');
-dayline.innerHTML = `<span class="dl-now"></span><canvas width="${DL.W}" height="${DL.H}"></canvas>`;
-stage.append(dayline);
-const dlCanvas = dayline.querySelector('canvas');
-// where the strip goes: centred across the building; from a finger on the building, its bottom LIFT px above the
-// finger (or under it, when the finger is near the top); otherwise (the time, the keyboard, a trackpad) in the middle
-function placeDayline(clientY) {
-  const w = stage.offsetWidth, h0 = stage.offsetHeight, k = stage.getBoundingClientRect().height / h0 || 1; // the stage shrinks as the page scrolls
-  dlCanvas.style.width = DL.W * cl(Math.floor((Math.min(w, 600) - 56) / DL.W), 2, 3) + 'px';
-  const h = dayline.offsetHeight;
-  let top = (h0 - h) / 2;
-  if (clientY != null) {
-    const y = (clientY - stage.getBoundingClientRect().top) / k;
-    top = y - DL.LIFT - h >= 4 ? y - DL.LIFT - h : y + DL.LIFT;
-  }
-  dayline.style.top = cl(top, 4, Math.max(4, h0 - h - 4)) + 'px';
-}
-const rgbOf = v => { const h = getComputedStyle(document.documentElement).getPropertyValue(v).trim().replace('#', ''); return [0, 2, 4].map(k => parseInt(h.slice(k, k + 2), 16) || 0); };
+dayline.className = 'dayline';
+dayline.innerHTML = `<div class="dl-track"><div class="dl-clip"><canvas width="${DL.W}" height="${DL.H}" aria-hidden="true"></canvas></div></div><div class="dl-marks"></div>`;
+dayline.style.setProperty('--dl-h', DL.H); dayline.style.setProperty('--dl-mini', DL.MINI);
+document.querySelector('.top').append(dayline);
+const dlTrack = dayline.firstChild, dlCanvas = dayline.querySelector('canvas'), dlMarks = dayline.lastChild;
+// one of its pixels on the screen: 2px on a phone, 3px where there is room
+function placeDayline() { dayline.style.setProperty('--dl', cl(Math.floor((Math.min(innerWidth, 600) - 56) / DL.W), 2, 3) + 'px'); }
+// the card's own colours (over the sky they are the zenith's: day.css .top)
+const rgbOf = v => { const h = getComputedStyle(dayline).getPropertyValue(v).trim().replace('#', ''); return [0, 2, 4].map(k => parseInt(h.slice(k, k + 2), 16) || 0); };
 // the sun's row for its height: the horizon's row just above it, the day's highest at the top (row 1)
 const sunRow = (alt, top) => DL.HY - 1 - Math.round(Math.max(0, alt) / Math.max(20, top) * (DL.HY - 2));
 function paintDayline() {
   const S = sunDay(), g = dlCanvas.getContext('2d'), img = g.createImageData(DL.W, DL.H), px = img.data;
-  const ink = rgbOf('--ink'), soft = rgbOf('--ink-soft'), acc = rgbOf('--accent'), bg = rgbOf('--bg');
+  const ink = rgbOf('--ink'), soft = rgbOf('--ink-soft'), acc = rgbOf('--accent'), bg = rgbOf(document.querySelector('.top').classList.contains('on-ground') ? '--bg' : '--sky-top');
   const put = (x, y, c, a) => { if (x < 0 || y < 0 || x >= DL.W || y >= DL.H) return; const i = (y * DL.W + x) * 4; px[i] = c[0]; px[i + 1] = c[1]; px[i + 2] = c[2]; px[i + 3] = Math.round(a * 255); };
   const now = state.minute, shown = shownMin();
   for (let x = 0; x < DL.W; x++) {
@@ -1334,41 +1330,69 @@ function paintDayline() {
   }
   // the marks: a tick under the band
   for (const k of S.list) put(Math.floor(k.m / 10), DL.BAND - 1, soft, k.m > now ? .3 : .7);
-  // the sun and a thread down to the band; at night, under the horizon, only a dim dash where it is
-  const sx = Math.floor(shown / 10), up = S.alt[shown] >= 0;
-  if (up) {
-    const sy = sunRow(S.alt[shown], S.top);
-    for (let y = sy + 2; y < DL.BAND; y++) if (y !== DL.HY) put(sx, y, acc, .35);
-    for (const [dx, dy] of [[0, -1], [-1, 0], [0, 0], [1, 0], [0, 1]]) put(sx + dx, sy + dy, acc, 1);
-    for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) put(sx + dx, sy + dy, acc, .45);
-  } else for (const dx of [-1, 0, 1]) put(sx + dx, DL.HY + 1, acc, dx ? .4 : .75);
+  // the cursor: a line down the track at the minute shown, with a small head over the band (the folded strip shows
+  // the head and the band only)
+  const sx = Math.min(DL.W - 1, Math.floor(shown / 10)), head = DL.H - DL.MINI;
+  for (let y = 0; y < DL.H; y++) put(sx, y, acc, y < head ? .5 : 1);
+  put(sx - 1, head, acc, 1); put(sx + 1, head, acc, 1);
   g.putImageData(img, 0, 0);
-  // sunrise and sunset, their times under the band (once a day; their place does not move)
+  // the day's moments under the track, in the order they come (made once a day); the ones still to come are off
   if (dayline._day !== state.day) {
     dayline._day = state.day;
-    dayline.querySelectorAll('.dl-t').forEach(n => n.remove());
-    for (const k of S.list) {
-      if (k.name !== 'sunrise' && k.name !== 'sunset') continue;
-      const t = document.createElement('span');
-      t.className = 'dl-t'; t.dataset.x = (Math.floor(k.m / 10) + .5) / DL.W; t.textContent = hm(k.m);
-      dayline.append(t);
-    }
+    dlMarks.innerHTML = S.list.map(k => `<button type="button" class="dl-m" data-m="${k.m}" title="${hm(k.m)}" aria-label="${k.name}, ${hm(k.m)}">${k.name}</button>`).join('');
   }
-  // the time shown, over the sun (kept inside the strip)
-  const now_ = dayline.firstChild, cw = dlCanvas.offsetWidth, pad = (dayline.offsetWidth - cw) / 2, at = (sx + .5) / DL.W * cw;
-  now_.textContent = AT.min == null ? hm(state.minute) : hm(AT.min) + (AT.mark ? ' · ' + AT.mark : '');
-  const lw = now_.offsetWidth;
-  now_.style.left = cl(pad + at, lw / 2 + 4, pad * 2 + cw - lw / 2 - 4) + 'px';
-  dayline.querySelectorAll('.dl-t').forEach(t => { t.style.left = pad + +t.dataset.x * cw + 'px'; });
+  for (const b of dlMarks.children) { b.disabled = +b.dataset.m > now; b.classList.toggle('at', +b.dataset.m === AT.min); }
 }
 let daylineOff = 0;
 // while it is open the page's colour keeps up with the time (body.rewinding: day.css), instead of its slow 1.2s fade
-function openDayline(clientY) {
+function openDayline() {
   clearTimeout(daylineOff);
-  if (!dayline.classList.contains('on')) placeDayline(clientY);
-  paintDayline(); dayline.classList.add('on'); document.body.classList.add('rewinding');
+  placeDayline(); dayline.classList.remove('mini'); dayline.classList.add('on');
+  paintDayline(); document.body.classList.add('rewinding');
 }
-function closeDayline(ms = 700) { clearTimeout(daylineOff); daylineOff = setTimeout(() => { dayline.classList.remove('on'); document.body.classList.remove('rewinding'); }, ms); }
+// it goes a moment after the time comes to rest: folded to its trace when the page is left rewound, away at now
+function closeDayline(ms = 1600) {
+  clearTimeout(daylineOff);
+  daylineOff = setTimeout(() => {
+    if (scrub || dayline.matches(':hover')) return closeDayline(900); // still in hand
+    dayline.classList.remove('on'); dayline.classList.toggle('mini', AT.min != null && canRewind());
+    document.body.classList.remove('rewinding');
+  }, ms);
+}
+// on the track: the place is the time. A tap or a drag goes there, and a moment close by catches it. On the folded
+// strip a tap only opens it (a drag still moves the time).
+let scrub = null;
+function scrubTo(ev) {
+  const r = dlCanvas.getBoundingClientRect(), m = cl((ev.clientX - r.left) / r.width * 1440, 0, state.minute);
+  const k = markNear(m, 1440 / r.width * 3);
+  queueAt(k ? k.m : m);
+}
+dlTrack.addEventListener('pointerdown', ev => {
+  if (!canRewind() || ev.button > 0) return;
+  ev.preventDefault(); AT.user = true; AT.teasing = false; clearTimeout(AT.teaseT); stopMotion();
+  scrub = { id: ev.pointerId, x: ev.clientX, armed: !dayline.classList.contains('mini') };
+  dlTrack.setPointerCapture(ev.pointerId); openDayline();
+  if (scrub.armed) scrubTo(ev);
+});
+dlTrack.addEventListener('pointermove', ev => {
+  if (!scrub || ev.pointerId !== scrub.id) return;
+  if (!scrub.armed && Math.abs(ev.clientX - scrub.x) > 4) scrub.armed = true;
+  if (scrub.armed) scrubTo(ev);
+});
+function scrubEnd(ev) {
+  if (!scrub || ev.pointerId !== scrub.id) return;
+  const opened = !scrub.armed; scrub = null;
+  settle(); if (opened) closeDayline(4000);
+}
+dlTrack.addEventListener('pointerup', scrubEnd); dlTrack.addEventListener('pointercancel', scrubEnd);
+dayline.addEventListener('pointerenter', ev => { if (ev.pointerType === 'mouse' && dayline.classList.contains('mini') && canRewind()) { openDayline(); closeDayline(); } });
+dlMarks.addEventListener('click', ev => {
+  const b = ev.target.closest('.dl-m');
+  if (!b || b.disabled || !canRewind()) return;
+  AT.user = true; AT.teasing = false; clearTimeout(AT.teaseT);
+  const from = shownMin(), to = +b.dataset.m;
+  openDayline(); glide(from, to, cl(Math.abs(from - to) * 1.2, 300, 800));
+});
 
 /* the minute shown */
 function showAt(min) {
@@ -1390,7 +1414,7 @@ function showAt(min) {
   // the colours at once (the shadow as it is: LIGHT keeps its sx, sy); the shadow as soon as it can be drawn
   LIGHT = Object.assign(lightFor(minuteMs()), { sx: LIGHT.sx, sy: LIGHT.sy });
   applyTheme(LIGHT); placePlate();
-  if (dayline.classList.contains('on')) paintDayline();
+  if (dayline.classList.contains('on') || dayline.classList.contains('mini')) paintDayline();
   swing();
   clearTimeout(AT.idle);
 }
@@ -1454,7 +1478,7 @@ function backToNow() {
 function resetAt() {
   stopMotion(); clearTimeout(AT.bake); clearTimeout(AT.swingT); AT.swingT = 0;
   AT.drag = null;
-  dayline.classList.remove('on'); document.body.classList.remove('rewinding');
+  clearTimeout(daylineOff); dayline.classList.remove('on', 'mini'); document.body.classList.remove('rewinding');
   if (AT.min == null) return;
   whenCard.classList.remove('is-rewound');
   if ($('clockRoll')) siteSky.rollClock($('clockRoll'));
@@ -1469,6 +1493,7 @@ function resumeAt() {
     if ($('clockRoll')) siteSky.rollClock($('clockRoll'), minuteMs(), true);
     ctaFor('Today'); headerNow(); syncSlider();
   }
+  if (!dayline.classList.contains('on')) { placeDayline(); paintDayline(); dayline.classList.add('mini'); } // the trace
   clearTimeout(AT.idle); AT.idle = setTimeout(backToNow, IDLE_BACK);
 }
 
@@ -1492,7 +1517,7 @@ function rwMove(ev, el, slop) {
   const dt = Math.max(1, ev.timeStamp - d.t);
   if (!d.moved) {
     if (Math.abs(ev.clientX - d.x) < slop) return;
-    d.moved = true; el.setPointerCapture(ev.pointerId); openDayline(el === stage ? d.y : null);
+    d.moved = true; el.setPointerCapture(ev.pointerId); openDayline();
     dx = ev.clientX - d.x;
   }
   d.last = ev.clientX; d.t = ev.timeStamp;
