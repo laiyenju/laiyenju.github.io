@@ -61,10 +61,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
    the words in the zenith's colours (sky.js paintSky). Scrolled down to the ground, or with the timeline, a work or a
    note open, it is the page's own card again (day.js updateMore: .on-ground). */
 .top:not(.on-ground) { --ink: var(--sky-ink); --ink-soft: var(--sky-faint); --accent: var(--sky-accent); background: none; color: var(--ink); }
-/* The sky: from the zenith at the top of the page to the horizon behind the building's base, then 36px into the
-   ground (the page colour). Placed by day.js placeSky; the stars come out after dusk (--stars, sky.js). */
+/* The sky: from the zenith at the top of the page to the horizon behind the building's base, then --sky-fade into the
+   ground (the page colour), eased so the horizon glows into the ground and leaves no line (day.js SKY_FADE). Placed by day.js placeSky; the stars come out after dusk (--stars, sky.js). */
 .sky { position: absolute; z-index: 0; top: 0; left: 0; right: 0; height: var(--horizon, 60svh); pointer-events: none;
-  background: linear-gradient(var(--sky-top) 0, var(--sky-top) 4%, var(--sky-horizon) calc(100% - 36px), var(--bg));
+  background: linear-gradient(var(--sky-top) 0, var(--sky-top) 4%, var(--sky-horizon) calc(100% - var(--sky-fade, 128px)),
+    color-mix(in srgb, var(--sky-horizon) 68%, var(--bg)) calc(100% - var(--sky-fade, 128px) * .68),
+    color-mix(in srgb, var(--sky-horizon) 32%, var(--bg)) calc(100% - var(--sky-fade, 128px) * .36),
+    color-mix(in srgb, var(--sky-horizon) 9%, var(--bg)) calc(100% - var(--sky-fade, 128px) * .12), var(--bg));
  }
 /* a gradient does not fade by itself: its colours do (registered, so they can move), as fast as the page's own */
 @property --sky-top { syntax: '<color>'; inherits: true; initial-value: #b1cde6; }

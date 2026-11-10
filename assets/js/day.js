@@ -153,7 +153,10 @@ function fitCanvas(w) {
    building's footprint (where it touches the ground, plateFor). Then .6 unit of margin
    around it, whole tiles of about 1 unit, and a thin edge facing us. Its colour is the page's ink, very faint, so it
    follows the sky. The shadow is in the building's picture, above it, so it falls on the slab. */
-const PLATE = { margin: .6, tile: 1, depth: .3, top: .06, line: .12, right: .17, left: .11 };
+const PLATE = { margin: .6, tile: 1, depth: .3,
+  night: { top: .06, line: .12, right: .17, left: .11 }, // light ink on a dark ground
+  day: { top: .1, line: .17, right: .27, left: .19 },    // dark ink on a light ground: a little more, or the slab is lost and the building floats
+};
 function inkRGB() {
   const g = document.createElement('canvas').getContext('2d');
   g.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
@@ -161,22 +164,11 @@ function inkRGB() {
   return h[0] === '#' ? [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)) : [34, 34, 34];
 }
 function plateFor(w) {
-  const e = w.e, ink = inkRGB(), key = ink.join(',');
+  const e = w.e, ink = inkRGB(), key = ink.join(','), A = ink[0] + ink[1] + ink[2] < 384 ? PLATE.day : PLATE.night;
   if (w._plate && w._plate.key === key) return w._plate;
-  // the footprint, in ground units: the building's pixels that touch the ground, taken back to it. A pixel shows a
-  // point at some height; only near the ground is its depth the ground's own depth there (an arch's underside, a roof
-  // edge or a flag would land far behind the building)
-  const lift = e.project(0, 0, .25), under = e.unproject(lift.sx, lift.sy);
-  const near = Math.abs(lift.d - e.project(under.x, under.y, 0).d) || 1e-6;
-  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
-    const i = iy * e.W + ix, p = e.bakedPix[i];
-    if (!(p >>> 24) || p === w.MARK || !e.ground[i] || e.bakedZ[i] === e.groundZ[i]) continue;
-    if (Math.abs(e.bakedZ[i] - e.groundZ[i]) > near) continue;
-    const g = e.unproject(ix + .5, iy + .5);
-    x0 = Math.min(x0, g.x); x1 = Math.max(x1, g.x); y0 = Math.min(y0, g.y); y1 = Math.max(y1, g.y);
-  }
-  if (x0 > x1) return (w._plate = { key, none: true });
+  // around the footprint, in ground units (scenes.js getWorld: foot)
+  if (!w.foot) return (w._plate = { key, none: true });
+  const [x0, y0, x1, y1] = w.foot;
   const m = PLATE.margin, D = PLATE.depth;
   const X0 = x0 - m, X1 = x1 + m, Y0 = y0 - m, Y1 = y1 + m;
   // whole tiles each way, about 1 unit each (a little more or less, so the slab ends on a joint)
@@ -198,13 +190,13 @@ function plateFor(w) {
     const q = e.unproject(sx, sy);
     if (q.x >= X0 && q.x <= X1 && q.y >= Y0 && q.y <= Y1) {
       const u = (q.x - X0) / TX, v = (q.y - Y0) / TY, onLine = u % 1 < lw || v % 1 < lw || u > (X1 - X0) / TX - lw || v > (Y1 - Y0) / TY - lw;
-      put(k, onLine ? PLATE.line : PLATE.top);
+      put(k, onLine ? A.line : A.top);
       continue;
     }
     const y = (sx - fx.sx) / dyx; // on the right face?
-    if (y >= Y0 && y <= Y1) { const z = (sy - e.project(X1, y, 0).sy) / kz; if (z <= 0 && z >= -D) { put(k, PLATE.right); continue; } }
+    if (y >= Y0 && y <= Y1) { const z = (sy - e.project(X1, y, 0).sy) / kz; if (z <= 0 && z >= -D) { put(k, A.right); continue; } }
     const x = (sx - fy.sx) / dxy; // on the left face?
-    if (x >= X0 && x <= X1) { const z = (sy - e.project(x, Y1, 0).sy) / kz; if (z <= 0 && z >= -D) put(k, PLATE.left); }
+    if (x >= X0 && x <= X1) { const z = (sy - e.project(x, Y1, 0).sy) / kz; if (z <= 0 && z >= -D) put(k, A.left); }
   }
   g.putImageData(img, 0, 0);
   // where it is drawn from, and its middle (the footprint's centre, on the ground) for the timeline's way in and out
@@ -232,16 +224,18 @@ function placePlate(w = mainWorld, f) {
    bottom, so its bottom edge is where it always is. The stars fill the sky in whole pixels, the same every night. */
 const skyEl = $('sky'), starsEl = $('stars');
 let HORIZON = 0;
+const SKY_FADE = 128; // px under the horizon over which the sky melts into the ground (day.css --sky-fade)
+document.documentElement.style.setProperty('--sky-fade', SKY_FADE + 'px');
 function placeSky() {
   if (!skyEl) return;
   const st = stage.getBoundingClientRect(), k = st.height / (stage.offsetHeight || 1) || 1;
   const hero = document.querySelector('.hero').getBoundingClientRect();
   const on = plate.hidden ? disp : plate, r = on.getBoundingClientRect();
   const y = on === plate ? r.top + r.height * .12 : r.top + r.height * .85;
-  const h = Math.round(st.bottom - hero.top - (st.bottom - y) / k) + 36;
-  if (h === HORIZON || !(h > 36)) return;
+  const h = Math.round(st.bottom - hero.top - (st.bottom - y) / k) + SKY_FADE;
+  if (h === HORIZON || !(h > SKY_FADE)) return;
   HORIZON = h; skyEl.style.setProperty('--horizon', h + 'px');
-  const W = Math.ceil(skyEl.clientWidth), H = h - 36;
+  const W = Math.ceil(skyEl.clientWidth), H = h - SKY_FADE;
   if (starsEl.width !== W || starsEl.height !== H) {
     starsEl.width = W; starsEl.height = H; starsEl.style.width = W + 'px'; starsEl.style.height = H + 'px';
     const g = starsEl.getContext('2d'); let q = 20261109;
@@ -1173,7 +1167,7 @@ function updateMore() {
   $('cmdbar').classList.toggle('off', !!o);
   // the date card is on the sky until the ground scrolls under it, or something opens over the page
   const card = document.querySelector('.top');
-  card.classList.toggle('on-ground', !!o || !HORIZON || scrollY + card.offsetHeight > HORIZON - 36);
+  card.classList.toggle('on-ground', !!o || !HORIZON || scrollY + card.offsetHeight > HORIZON - SKY_FADE);
 }
 function onScroll() {
   const p = cl(scrollY / (STAGE.h * .9), 0, 1);

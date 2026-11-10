@@ -16,8 +16,10 @@
     return { alt: alt / rad, az: az };
   }
 
-  // page colour by the sun's height (degrees): night blue, dusk violet, sunrise warm, day near white
-  var BG_STOPS = [[-18, [21, 25, 38]], [-9, [40, 46, 74]], [-4, [62, 53, 96]], [0, [222, 200, 190]], [5, [244, 230, 212]], [14, [247, 243, 234]], [28, [248, 248, 245]]];
+  // page colour by the sun's height (degrees): night blue, dusk violet, plum, sunrise warm, day near white.
+  // The plum (−1.2°) is the ground under a rose horizon: without it the violet runs straight into the warm
+  // sunrise colour, through greys that colours() then darkens to a dull brown.
+  var BG_STOPS = [[-18, [21, 25, 38]], [-9, [40, 46, 74]], [-4, [62, 53, 96]], [-1.2, [104, 66, 86]], [0, [222, 200, 190]], [5, [244, 230, 212]], [14, [247, 243, 234]], [28, [248, 248, 245]]];
   function mix(a, b, t) { return a + (b - a) * t; }
   function bgFor(alt) {
     if (alt <= BG_STOPS[0][0]) return BG_STOPS[0][1];
