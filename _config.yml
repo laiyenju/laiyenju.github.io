@@ -24,6 +24,7 @@ exclude:
   - "*.draft.md"
   - assets/vendor
   - scripts
+  - docs
   - assets/og/manifest.json
 
 defaults:
