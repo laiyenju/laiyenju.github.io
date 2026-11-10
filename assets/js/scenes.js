@@ -960,6 +960,11 @@ const SCENES = {
 
 /* ================= worlds ================= */
 let LIGHT = lightFor(Date.now());
+/* Shadows on the ground. A low sun would throw a tower's shadow further than the building is wide, and the shadow,
+   not the building, would lead the picture: so a shadow reaches at most `reach` ground units from what casts it
+   (short ones keep their true length, tall ones are drawn in), and it fades with the distance from the building's
+   foot, to `far` of its strength at `reach` (bare scenes, whose shadow lies on the page). */
+const SHADOW = { reach: 6, far: .3 };
 const worlds = new Map();
 const ANG = 16; // turntable steps (22.5° each)
 function getWorld(scene, opts, rot = 0, keep = true) {
@@ -971,6 +976,10 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   const e0 = createPixelEngine(canvas, { W: 420, H: 420, S: sc.S, originY: sc.origin, cx: sc.cx, cy: sc.cy, rot: rot * 2 * Math.PI / ANG, shadowX: LIGHT.sx, shadowY: LIGHT.sy });
   // a "pure" world draws the building only: shadows, people, animals and trees are switched off
   const e = pure ? Object.assign({}, e0, { castShadow() {}, growTree() {}, figure() { return [0, 0, 0]; } }) : e0;
+  if (!pure) {
+    const len = Math.hypot(LIGHT.sx, LIGHT.sy) || 1, k = SHADOW.reach / len, cast = e0.castShadow;
+    e.castShadow = (x, y, z, ...rest) => cast(x, y, k * Math.tanh(z / k), ...rest);
+  }
   e.zb.fill(-1e9); e.pix.fill(0);
   const MARK = e.rgb(255, 255, 255);
   for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
@@ -1016,6 +1025,33 @@ function getWorld(scene, opts, rot = 0, keep = true) {
     if (open(i) || !(e.bakedPix[i] >>> 24)) continue;
     if (open(i - 1) || open(i + 1) || open(i - e.W) || open(i + e.W)) rim.push(i);
   }
+  // bare scenes: the footprint in ground units, [x0, y0, x1, y1] (the building's pixels that touch the ground, taken
+  // back to it: a pixel shows a point at some height, and only near the ground is its depth the ground's own depth
+  // there; an arch's underside, a roof edge or a flag would land far behind the building). The platform is laid
+  // around it (day.js plateFor), and the shadow fades with the distance from it (fade: 0–255 for each ground pixel).
+  let foot = null, fade = null;
+  if (bare && !pure) {
+    const lift = e.project(0, 0, .25), under = e.unproject(lift.sx, lift.sy);
+    const near = Math.abs(lift.d - e.project(under.x, under.y, 0).d) || 1e-6;
+    let fx0 = 1e9, fy0 = 1e9, fx1 = -1e9, fy1 = -1e9;
+    for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
+      const i = iy * e.W + ix, p = e.bakedPix[i];
+      if (!(p >>> 24) || p === MARK || !e.ground[i] || e.bakedZ[i] === e.groundZ[i]) continue;
+      if (Math.abs(e.bakedZ[i] - e.groundZ[i]) > near) continue;
+      const g = e.unproject(ix + .5, iy + .5);
+      fx0 = Math.min(fx0, g.x); fx1 = Math.max(fx1, g.x); fy0 = Math.min(fy0, g.y); fy1 = Math.max(fy1, g.y);
+    }
+    if (fx0 <= fx1) {
+      foot = [fx0, fy0, fx1, fy1]; fade = new Uint8Array(e.W * e.H).fill(255);
+      for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
+        const i = iy * e.W + ix;
+        if (!e.ground[i]) continue;
+        const g = e.unproject(ix + .5, iy + .5);
+        const d = cl(Math.hypot(Math.max(fx0 - g.x, 0, g.x - fx1), Math.max(fy0 - g.y, 0, g.y - fy1)) / SHADOW.reach, 0, 1);
+        fade[i] = Math.round(255 * mix(1, SHADOW.far, d * d * (3 - 2 * d)));
+      }
+    }
+  }
   // crop around the building itself (not its shadow), centred on it, so it stays in the middle at any hour
   let x0 = e.W, y0 = e.H, x1 = 0, y1 = 0;
   for (let iy = 0; iy < e.H; iy++) for (let ix = 0; ix < e.W; ix++) {
@@ -1040,7 +1076,7 @@ function getWorld(scene, opts, rot = 0, keep = true) {
   }
   const pad = [y0 - sy0, sx1 - x1, sy1 - y1, x0 - sx0];
   const view = document.createElement('canvas'); view.width = sx1 - sx0 + 1; view.height = sy1 - sy0 + 1;
-  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), flood: Int32Array.from(flood), rim: Int32Array.from(rim), movers, MARK, bare, pure };
+  const w = { key, scene, sc, e, canvas, view, crop: [sx0, sy0, view.width, view.height], pad, opts, em: Int32Array.from(lit), flood: Int32Array.from(flood), rim: Int32Array.from(rim), movers, MARK, bare, pure, foot, fade };
   if (!keep) return w;
   worlds.set(key, w);
   while (worlds.size > 6) worlds.delete(worlds.keys().next().value);
@@ -1082,7 +1118,7 @@ function drawWorld(w, t) {
       if (!e.ground[i] || e.zb[i] !== e.groundZ[i]) continue;
       const p = pix[i];
       if (p === w.MARK) { pix[i] = 0; continue; }
-      const a = Math.round(cl((255 - (p & 255)) / 255 * .62, 0, .5) * 255);
+      const a = Math.round(cl((255 - (p & 255)) / 255 * .62, 0, .5) * (w.fade ? w.fade[i] : 255));
       pix[i] = ((a << 24) | (62 << 16) | (30 << 8) | 34) >>> 0;
     }
   }
