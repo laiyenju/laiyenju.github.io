@@ -81,6 +81,7 @@ function cards() {
   const dir = path.join(ROOT, "published");
   for (const name of fs.readdirSync(dir).filter((f) => f.endsWith(".md")).sort()) {
     const { data, body } = frontMatter(path.join(dir, name));
+    if (data.sitemap === "false") continue; // left out of the public index, so no card either
     const parts = name.split("-");
     const file = parts.length > 3 && parts[0].length === 4 ? parts.slice(3).join("-") : name;
     const text = plain(body);

@@ -2,8 +2,8 @@
 layout: null
 ---
 <?xml version="1.0" encoding="UTF-8"?>
-{% comment %}Home and the published notes; /notes/ and /works/ only redirect home, so they stay out.{% endcomment %}
-{% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
+{% comment %}Home and the published notes; /notes/ and /works/ only redirect home, so they stay out. Pages with `sitemap: false` are left out too.{% endcomment %}
+{% assign notes = site.pages | where_exp: "p", "p.path contains 'published/' and p.sitemap != false" | sort: "date" | reverse %}
 {% assign last_note = notes | first %}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>

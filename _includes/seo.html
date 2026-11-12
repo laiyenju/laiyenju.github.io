@@ -13,7 +13,8 @@
 <meta name="description" content="{{ seo_desc | escape }}">
 <meta name="author" content="{{ site.author.name }}">
 <link rel="canonical" href="{{ seo_url }}">
-<meta property="og:site_name" content="{{ site.title | escape }}">
+{% if page.sitemap == false %}<meta name="robots" content="noindex">
+{% endif %}<meta property="og:site_name" content="{{ site.title | escape }}">
 <meta property="og:locale" content="{% if page.lang == 'en' %}en_US{% else %}zh_TW{% endif %}">
 <meta property="og:title" content="{{ seo_title | escape }}">
 <meta property="og:description" content="{{ seo_desc | escape }}">

@@ -85,6 +85,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 打卡會寫進 `main` | 外出打卡選「當成今天的建築」時，Action 直接 commit「Today at …（check-in）」到 `main`。本機改東西前先 `git pull` |
 | 草稿 | 放根目錄，檔名結尾 `.draft.md`，不會上線 |
 | 不會上線的檔案 | `_config.yml` 的 `exclude`：`*.draft.md`、`README.md`、`CLAUDE.md`、`docs/`、`scripts/`、`assets/vendor/`、`assets/og/manifest.json`。新增根目錄的檔案時，確認要不要加進去 |
+| 樣式測試頁 | `published/2026-10-29-markdown-styles.md`（和 `assets/images/markdown-sample*.svg`）：`sitemap: false`，不在清單和 sitemap，網址 `/published/2026-10-29-markdown-styles.html` 可直接打開，改 Markdown 樣式（2.5.4）時用 |
 | 文章網址 | `published/2026-10-29-題目.md` → `/published/2026-10-29-題目.html`。改檔名會讓舊連結失效 |
 
 ### 首頁網址
@@ -97,7 +98,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `#day-YYYY-MM-DD` | Timeline 停在那天。同一天第二棟以後加 `-2`、`-3` |
 | `#past-YYYY-MM-DD` | 首頁換成那天的建築 |
 | `#work-<slug>` | 一件作品 |
-| `#note-<檔名>` | 一篇文章，例如 `#note-2026-10-29-markdown-styles` |
+| `#note-<檔名>` | 一篇文章，例如 `#note-2026-11-05-題目`（`sitemap: false` 的文章不在清單裡，只能用文章頁網址打開） |
 | `?view=notes`、`?view=works` | 首頁打開 terminal 並執行 `ls notes`／`ls works` |
 
 ---
@@ -127,12 +128,13 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `date` | 是 | — | `YYYY-MM-DD`。決定排序和顯示的日期（不看檔名的日期） |
 | `description` | 否 | 內文前 120 字 | 搜尋摘要、分享卡片的摘要 |
 | `lang` | 否 | `zh-Hant` | 英文文章填 `en`。結構化資料的語言固定是 `zh-Hant`（`_includes/seo.html`） |
+| `sitemap` | 否 | 無（公開） | 填 `false`：不列進 `ls notes`、`sitemap.xml`，不畫分享卡片，頁面加 `noindex`。檔案還在，網址仍可直接打開（測試頁用） |
 
 ### 2.3 資料：`_data/`
 
 #### 2.3.1 作品集：`works.yml`
 
-一件作品一筆。`ls works` 依檔案順序列出，點了打開 `#work-<slug>`。全部用英文寫。
+一件作品一筆。`ls works` 依檔案順序列出，檔案裡由新到舊排（看 `year`，範圍以結束年為準，例如 `"2024–25"` 算 2025；同年份的照原本順序）。新作品插在對應年份的最前面。點了打開 `#work-<slug>`。全部用英文寫。
 
 ```yaml
 - slug: design-lint          # 網址用，英文小寫和 -
@@ -625,5 +627,4 @@ flowchart LR
 
 | # | 項目 | 狀況 | 建議 |
 |---|------|------|------|
-| 1 | `published/2026-03-08-hello.md` | 範例文章，已公開上線、在 sitemap 裡 | 第一篇正式文章上線後刪除 |
-| 2 | `published/2026-10-29-markdown-styles.md` + `assets/images/markdown-sample*.svg`（三張） | 樣式測試頁，也公開上線 | 想保留當測試頁，可移到根目錄改成 `.draft.md`（但本機預覽就看不到）；或加 front matter `sitemap: false`，並在 `sitemap.xml`、首頁 notes 清單加條件排除 |
+| 1 | `published/2026-03-08-hello.md` | 範例文章。已加 `sitemap: false`（不在清單、sitemap，有 `noindex`），網址仍可直接打開 | 第一篇正式文章上線後刪除 |
