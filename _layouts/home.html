@@ -15,9 +15,9 @@
 <script>if (window.siteSky) { var sun0 = siteSky.sunAt(siteSky.shownMs()); siteSky.paintHome(siteSky.bgFor(sun0.alt)); siteSky.paintSky(sun0); }</script>
 </head>
 <body>
-{% comment %}Being in published/ is the publish signal (see README). Notes, works, places and small things
-  go to the page as JSON; assets/js/day.js draws everything from it.{% endcomment %}
-{% assign notes = site.pages | where_exp: "p", "p.path contains 'published/'" | sort: "date" | reverse %}
+{% comment %}Being in published/ is the publish signal (see README); `sitemap: false` keeps a page out of the list.
+  Notes, works, places and small things go to the page as JSON; assets/js/day.js draws everything from it.{% endcomment %}
+{% assign notes = site.pages | where_exp: "p", "p.path contains 'published/' and p.sitemap != false" | sort: "date" | reverse %}
 <script type="application/json" id="site-data">
 {
   "notes": [{% for n in notes %}{ "date": {{ n.date | date: "%Y-%m-%d" | jsonify }}, "title": {{ n.title | jsonify }}, "sub": {{ n.subtitle | default: n.description | default: "" | jsonify }}, "lang": {{ n.lang | default: site.lang | jsonify }}, "url": {{ n.url | relative_url | jsonify }} }{% unless forloop.last %},{% endunless %}{% endfor %}],
