@@ -139,6 +139,11 @@ function krFlag(e, x, y, h, z0 = 0) {
   e.box(x - .03, y - .03, z0, x + .03, y + .03, z0 + h, POLE);
   e.moving((e, t) => cloth(e, x + .03, y, z0 + h - .05, .56, .38, (u, v) => Math.hypot((u - .5) * .56, (v - .5) * .38) < .1 ? (v < .5 ? KR_RED : KR_BLUE) : KR_WHITE, t, x + y));
 }
+const ROC_RED = [206, 44, 48], ROC_BLUE = [36, 56, 140];
+function rocFlag(e, x, y, h, z0 = 0) {
+  e.box(x - .03, y - .03, z0, x + .03, y + .03, z0 + h, POLE);
+  e.moving((e, t) => cloth(e, x + .03, y, z0 + h - .05, .56, .38, (u, v) => u < .5 && v < .5 ? ROC_BLUE : ROC_RED, t, x + y * 1.3));
+}
 // a few birds circling the building, wings up and down; hidden while they pass behind it
 const BIRD = [[[-2, -1], [-1, 0], [0, 0], [1, 0], [2, -1]], [[-2, 1], [-1, 0], [0, 0], [1, 0], [2, 1]]];
 function birds(e, t, cx, cy, r, z, n = 3) {
@@ -930,6 +935,100 @@ const SCENES = {
       boxShadow(e, -2.5, -1.8, 2.5, 1.8, TOP);
       boxShadow(e, -10.8, -3.6, -3.0, 3.4, 7.4);
       boxShadow(e, X0, -2.6, X1 + 2, 2.6, 5.4);
+    },
+  },
+  // Houli District Household Registration Office (Gong'an Rd 90, Taichung): three floors of red-brown tile divided by
+  // white piers, under a white roof band that stands taller and further forward over the entrance; a stone canopy
+  // with gold lettering, a red LED ticker over glass doors, two flags, leopard cat cut-outs and cypresses by the steps.
+  houli: {
+    bare: true, S: 20, origin: 40, cx: 0, cy: 1.5, R: 5.5, zmax: 5.4,
+    build(e, api) {
+      // written with the front toward +x, then turned a quarter so it faces +y, the side the light falls on (photo left = −x)
+      const box = (x0, y0, z0, x1, y1, z1, c, seed) => e.box(y0, x0, z0, y1, x1, z1, c, seed);
+      const TILE = [166, 74, 54], LINE = [146, 62, 46], WH = [238, 236, 230], STONE = [206, 204, 196], FRAME = [58, 56, 56], DECK = [176, 174, 170];
+      const GRILLE = [150, 198, 188], DRAPE = [220, 206, 184], DIM = [92, 104, 108], GOLD = [204, 162, 62];
+      const X0 = -1.7, X1 = 1.5, HALF = 4.2, MID = 1.2, F = 1.25, TOP = 3 * F;
+      box(X0, -HALF, 0, X1, HALF, TOP, TILE, 1);
+      // windows: ground floor behind bars, first floor white grilles over green blinds, second floor dark frames and cream curtains
+      const win = (face, at, c, w, floor) => {
+        const z0 = floor * F + .32, z1 = z0 + .68, [fr, gl] = floor === 0 ? [FRAME, DIM] : floor === 1 ? [WH, GRILLE] : [FRAME, DRAPE];
+        if (face === 'x') { box(X1, c - w / 2 - .04, z0 - .04, X1 + .03, c + w / 2 + .04, z1 + .04, fr); api.emissive(() => box(X1, c - w / 2, z0, X1 + .05, c + w / 2, z1, gl)); }
+        else { box(c - w / 2 - .04, at, z0 - .04, c + w / 2 + .04, at + .03, z1 + .04, fr); api.emissive(() => box(c - w / 2, at, z0, c + w / 2, at + .05, z1, gl)); }
+      };
+      for (let f = 0; f < 3; f++) {
+        for (let k = 0; k < 3; k++) for (const s of [-1, 1]) win('x', X1, s * (MID + .5 + k), .62, f);
+        if (f) for (const s of [-1, 1]) win('x', X1, s * (MID - .42), .4, f);
+        for (const x of [X0 + .8, X1 - .8]) win('y', HALF, x, .62, f);
+      }
+      // white piers between the bays; the two beside the entrance are heavier
+      for (let k = 0; k <= 3; k++) for (const s of [-1, 1]) {
+        const y = s * (MID + k), w = k ? .07 : .1;
+        box(X1, y - w, 0, X1 + (k ? .08 : .14), y + w, TOP, WH);
+      }
+      for (const x of [X0 + .07, (X0 + X1) / 2, X1 - .07]) box(x - .07, HALF, 0, x + .07, HALF + .08, TOP, WH);
+      // the roof band: white tile with one thin red-brown line, eaves all round
+      const band = (x0, y0, x1, y1, h) => {
+        const ring = (z0, z1, c) => { box(x0, y0, z0, x0 + .14, y1, z1, c); box(x1 - .14, y0, z0, x1, y1, z1, c); box(x0, y0, z0, x1, y0 + .14, z1, c); box(x0, y1 - .14, z0, x1, y1, z1, c); };
+        box(x0, y0, TOP, x1, y1, TOP + h * .38, WH); box(x0 + .1, y0 + .1, TOP + h * .38, x1 - .1, y1 - .1, TOP + h - .12, DECK);
+        ring(TOP + h * .38, TOP + h * .38 + .06, LINE); ring(TOP + h * .38 + .06, TOP + h, WH);
+      };
+      band(X0 - .12, -HALF - .12, X1 + .16, HALF + .12, .6);
+      band(X1 - .7, -MID - .12, X1 + .6, MID + .12, 1.0);
+      box(X0 + .4, -3.2, TOP + .48, X0 + 1.0, -2.6, TOP + 1.15, C.ALU); // the water tank
+      // the entrance: stone cheeks, a canopy with gold lettering, three air conditioners sitting on it
+      const XE = X1 + .5;
+      for (const s of [-1, 1]) box(X1, s * 1.05 - .1, 0, XE, s * 1.05 + .1, 1.2, STONE);
+      box(X1, -1.5, 1.2, XE + .12, 1.5, 1.52, STONE, 3);
+      for (let y = -1.2; y <= 1.21; y += .2) box(XE + .12, y - .06, 1.29, XE + .14, y + .06, 1.44, GOLD);
+      for (const y of [-.25, .3, .85]) { box(X1 + .05, y - .17, 1.52, X1 + .32, y + .17, 1.8, [226, 226, 222]); box(X1 + .32, y - .1, 1.58, X1 + .34, y + .1, 1.76, [150, 154, 158]); }
+      // steps, glass doors, and the LED ticker above them
+      box(X1, -1.7, 0, X1 + 1.5, 1.7, .1, [198, 196, 190]); box(X1, -1.5, .1, X1 + 1.2, 1.5, .2, [206, 204, 198]);
+      api.emissive(() => box(X1, -.82, .2, X1 + .12, .82, .9, [118, 146, 154]), 'lobby');
+      for (const y of [-.82, -.41, 0, .41, .82]) box(X1 + .12, y - .02, .2, X1 + .14, y + .02, .9, C.ALU);
+      box(X1 + .1, -.95, .92, XE - .02, .95, 1.2, [44, 22, 22]);
+      const LED = e.rgb(255, 64, 48), LED2 = e.rgb(214, 40, 34);
+      e.moving((e, t) => {
+        const shift = t == null ? 0 : Math.floor(t * 8);
+        for (let k = -18; k <= 18; k++) for (let r = 0; r < 4; r++) {
+          const col = k + shift; // the words run toward the left of the door
+          if (col % 6 === 0 || e.hash(col, r + 40) < .42) continue; // gaps between the characters
+          e.plot(k * .05, XE - .01, 1.0 + r * .045, r % 2 ? LED : LED2);
+        }
+      });
+      // the forecourt: brick paving, a planter on each side of the steps
+      box(X1, -HALF - .3, 0, X1 + 3.4, HALF + .3, .04, [204, 158, 136]);
+      for (const [y0, y1] of [[-3.3, -1.8], [1.8, 3.3]]) box(X1 + .15, y0, 0, X1 + 1.0, y1, .22, STONE);
+      // cypresses: two small ones on the left of the door, the tall ones on the right
+      for (const [y, h, r] of [[-2.2, 2.3, .34], [-2.9, 1.8, .3], [2.2, 3.5, .5], [2.95, 2.7, .42]]) {
+        box(X1 + .52, y - .05, .22, X1 + .62, y + .05, .6, C.WOOD);
+        e.moving((e, t) => {
+          const sway = t == null ? 0 : Math.sin(t * 1.4 + y) * .07;
+          e.capsule([y, X1 + .57, .45 + r], [y + sway, X1 + .57, h], r, .07, () => [56, 96, 62], 'rough');
+        });
+      }
+      // by the door: a yellow banner, the flags, and the cut-out mascots (leopard cats and a horse)
+      box(XE + .2, -1.52, .2, XE + .24, -1.48, 1.25, POLE); box(XE + .2, -1.5, .5, XE + .23, -1.22, 1.2, [238, 198, 72]);
+      for (const y of [-.98, .98]) rocFlag(e, y, X1 + .95, 1.35, .2);
+      const cutout = (y, h, body, face) => {
+        box(X1 + 1.0, y - .1, .2, X1 + 1.04, y + .1, .2 + h * .6, body); box(X1 + 1.0, y - .13, .2 + h * .6, X1 + 1.04, y + .13, .2 + h, body);
+        box(X1 + 1.04, y - .07, .2 + h * .66, X1 + 1.05, y + .07, .2 + h * .9, face);
+      };
+      cutout(-.72, .62, [226, 164, 92], [248, 240, 226]); cutout(-.46, .8, [132, 120, 110], [236, 230, 220]);
+      cutout(.5, .7, [206, 160, 104], [248, 240, 226]); cutout(.76, .56, [222, 176, 120], [248, 240, 226]);
+      // people: two crossing the forecourt, one going up the steps to the door
+      const PEOPLE = [[-3.8, 3.6, X1 + 2.4, .5, [52, 72, 120], 0], [-3.2, 3.9, X1 + 2.9, .38, [196, 88, 64], 2.6]];
+      e.moving((e, t) => {
+        const man = (x, y, z, col, ph) => {
+          const bob = e.STILL || t == null ? 0 : Math.abs(Math.sin((t + ph) * 7)) * .05;
+          e.capsule([y, x, z + .2 + bob], [y, x, z + .72 + bob], .19, .16, () => col);
+          e.sphere(y, x, z + .98 + bob, .15, [224, 190, 160]);
+        };
+        PEOPLE.forEach(([y0, y1, x, v, col, ph]) => man(x, pacer(e, (t || 0) + ph * 3, y0, y1, v).x, .04, col, ph));
+        const p = pacer(e, (t || 0) + 4, X1 + .45, X1 + 3.1, .4).x;
+        man(p, .2, p < X1 + 1.2 ? .2 : p < X1 + 1.5 ? .1 : .04, [226, 222, 214], 1.3);
+      });
+      e.moving((e, t) => birds(e, t, 0, 0, 4.6, 6.2));
+      boxShadow(e, -HALF, X0, HALF, X1, TOP + .6);
     },
   },
   // Lincoln Memorial: a Doric temple of white marble on a stepped base, columns all round
