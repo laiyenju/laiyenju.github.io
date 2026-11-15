@@ -187,7 +187,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 分頁標題 | `index.md` 的 `title` | `hey, I'm Yen` | |
 | 自我介紹 | `day.js` 的 `BIO` | `Yen decides what gets built, then builds some of it. Writes about how those decisions get made.` | `scripts/og/build.js`（首頁卡片，第一人稱）、`_config.yml` 的 `description`、`seo.html` 的 `jobTitle` |
 | 社群連結 | `day.js` 的 `COMMANDS.whoami` | github、linkedin、x | `seo.html` 的 `sameAs`、`_config.yml` 的 `author.twitter` |
-| 所在城市 | `sky.js` 的 `CITY` | 台北（緯度、經度、時區 +8） | 出國時只改這裡。決定時間、天色、影子、標題上方的城市和座標 |
+| 所在城市 | `sky.js` 的 `HOME`、`TRIPS` | `HOME`：台北（緯度、經度、時區 +8）。`TRIPS`：新加坡，2026-11-15 到 11-22 | 出國時只在 `TRIPS` 加一列：`from`、`to`（第一天和最後一天，當地日期）、`name`、`short`、`lat`、`lon`、`tz`。那幾天的時間、天色、影子、標題上方的城市和座標用那個城市，隔天自動回 `HOME`。分享卡片和天色圖一律用 `HOME` |
 | 假日 | `scenes.js` 的 `HOLIDAYS` | 元旦、228、兒童節、勞動節、教師節、國慶、光復節、行憲紀念日 | 分享卡片也用它 |
 | 上班時間 | `day.js` 的 `OFFICE_HOURS` | 09:00–18:30 | 「打卡：在家嗎」的 10:30 要在這個範圍裡 |
 | 作息表 | `day.js` 的 `WEEKDAY`、`RESTDAY` | 見「Where's Yen」 | |
@@ -206,6 +206,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | 3 | 平日的上班時間打過「家」 | 家（請假、在家工作） |
 | 4 | 其他平日 | 辦公室 |
 
+- 出國（`sky.js` 的 `TRIPS`）而且 `days.yml` 沒有今天：建築照上表（家或辦公室），標題改成 `Yen is in Singapore today.`。要換成當地的建築：外出打卡選「當成今天的建築」（3.5、3.6）。
 - 農曆假日、請假、補班不用改程式：平日 10:30 的自動化看到手機在家，就打一次「家」。所以休假日在 10:30 前先顯示辦公室。
 - 分享卡片不看打卡，只照週末和 `HOLIDAYS`。
 
@@ -215,7 +216,8 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 |---|---|---|
 | 1 | 6 小時內有打卡 | `Yen is {label}, Taipei. Checked in at HH:MM.` |
 | 2 | 打卡是「離開家／離開辦公室」 | 只算 90 分鐘。今天是辦公室日時，離開家說 `on the way to the office` |
-| 3 | 沒有有效的打卡 | 作息表 |
+| 3 | 沒有有效的打卡，人在 `TRIPS` 的城市 | `It's HH:MM in Singapore. Yen is away from Taipei until 22 Nov.` |
+| 4 | 其他 | 作息表 |
 
 作息表（平日）：00–07 asleep · 07–09 on the way to the office · 09–12 at the office · 12–13:30 lunch · 13:30–18:30 at the office · 18:30–19:30 on the way home · 之後 at home。今天是家的日子用 `RESTDAY`。
 
@@ -245,7 +247,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 
 #### 2.5.1 天色：整個網站只有一條顏色規則
 
-沒有日夜切換。**唯一的輸入是所在城市（`CITY`）現在的太陽位置**，其他顏色都從它算出來。
+沒有日夜切換。**唯一的輸入是所在城市（`sky.js` 的 `CITY`：`HOME`，或今天在 `TRIPS` 裡的城市）現在的太陽位置**，其他顏色都從它算出來。
 
 ```mermaid
 flowchart LR

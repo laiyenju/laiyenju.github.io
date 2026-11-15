@@ -1,9 +1,24 @@
 /* The sky over the city, shared by the home page (day.js) and the notes (theme-boot.html, theme.js):
    where the sun is, the moment it shows (now, or the home page's rewind), and the colour of the page that goes with it. Loaded in <head>, before first paint.
-   City: change CITY here when travelling (README 2.4). */
+   City: HOME is where Yen lives; add a line to TRIPS when travelling (README 2.4). */
 (function () {
   'use strict';
-  var CITY = { name: 'Taipei', short: 'taipei', lat: 25.033, lon: 121.565, tz: 8 };
+  var HOME = { name: 'Taipei', short: 'taipei', lat: 25.033, lon: 121.565, tz: 8 };
+  // Away from HOME: from and to are the first and last day there (that city's own dates). The page is in that
+  // city on those days and back in HOME the day after, with nothing to change back.
+  var TRIPS = [
+    { from: '2026-11-15', to: '2026-11-22', name: 'Singapore', short: 'singapore', lat: 1.29, lon: 103.85, tz: 8 }
+  ];
+  function cityAt(ms) {
+    for (var k = 0; k < TRIPS.length; k++) {
+      var day = new Date(ms + TRIPS[k].tz * 3600e3).toISOString().slice(0, 10);
+      if (day >= TRIPS[k].from && day <= TRIPS[k].to) return TRIPS[k];
+    }
+    return HOME;
+  }
+  // where Yen is now; the page keeps it until it is loaded again. The share cards and the README's picture
+  // (scripts/og/card.html, scripts/sky/draw.js) set SKY_HOME: they are drawn for HOME, whenever they are drawn.
+  var CITY = window.SKY_HOME ? HOME : cityAt(Date.now());
 
   function sunAt(ms) {
     var d = new Date(ms), n = (ms - Date.UTC(d.getUTCFullYear(), 0, 0)) / 864e5;
@@ -197,5 +212,5 @@
       } else { strip.style.transform = 'translateY(' + -to * 1.35 + 'em)'; strip._snap = null; }
     });
   }
-  window.siteSky = { CITY: CITY, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, skyFor: skyFor, paintSky: paintSky, shownMs: shownMs, keepAt: keepAt, SKY_STOPS: SKY_STOPS, contrast: contrast, rollClock: rollClock };
+  window.siteSky = { CITY: CITY, HOME: HOME, sunAt: sunAt, bgFor: bgFor, colours: colours, hex: hex, paintNotes: paintNotes, paintHome: paintHome, skyFor: skyFor, paintSky: paintSky, shownMs: shownMs, keepAt: keepAt, SKY_STOPS: SKY_STOPS, contrast: contrast, rollClock: rollClock };
 })();

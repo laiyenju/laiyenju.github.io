@@ -2,7 +2,8 @@
 // Run after changing BG_STOPS, SKY_STOPS, TEXT or colours in sky.js: node scripts/sky/draw.js
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..', '..');
-const ctx = { window: {}, document: { documentElement: { style: {} } } };
+const ctx = { window: { SKY_HOME: true }, // Taipei, also during a trip (sky.js TRIPS)
+  document: { documentElement: { style: {} } } };
 vm.runInNewContext(fs.readFileSync(path.join(root, 'assets/js/sky.js'), 'utf8'), ctx);
 const sky = ctx.window.siteSky;
 const stops = vm.runInNewContext(fs.readFileSync(path.join(root, 'assets/js/sky.js'), 'utf8').match(/BG_STOPS = (\[.*?\]);/)[1]);
