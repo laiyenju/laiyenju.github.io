@@ -72,6 +72,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `assets/og/`、`scripts/og/`、`.github/workflows/og.yml` | 分享卡片（3.2） |
 | `.github/workflows/checkin.yml`、`scripts/checkin/`、`checkin` 分支 | 打卡（3.5）、外出那天的建築（3.6） |
 | `scripts/sky/` | `draw.js` 從 `sky.js` 畫出天色圖 `sky.svg`（2.5.1） |
+| `scripts/check-days/` | `check.js` 檢查 `days.yml` 的一天在每個畫面都對（3.6） |
 | `docs/checkin-setup.md` | iPhone 打卡捷徑的設定步驟（只做一次） |
 | `CLAUDE.md` | 給 Claude 的工作規則 |
 
@@ -613,6 +614,17 @@ flowchart LR
 - 做法和檢查規則在 `CLAUDE.md` 的「新建築模型」。
 - 新模型在 `days.yml` 的那筆一定要有 `coords`，下次在那裡打卡才認得出來。
 - 模型加進 `SCENES` 後，更新 2.3.2 的模型清單。
+
+**檢查**（改了 `days.yml` 或 `day.js` 後做一次）：在那一天和隔天，首頁今天的建築、Timeline 裡同一天的每一筆（名稱、國家）、點每一格打開的頁面都要對。需要 Playwright（`npm install playwright`）：
+
+```bash
+jekyll build
+node scripts/check-days/check.js                         # days.yml 最新的一天
+node scripts/check-days/check.js 2026-11-16 2026-11-17   # 指定的日子
+node scripts/check-days/check.js --all                   # 每一天，約 6 分鐘
+```
+
+最後一行是 `All views are right.` 就沒問題；有問題時列出哪一天、哪個畫面不對。
 
 **測試**（改了 `checkin.yml` 或 `scripts/checkin/day.js` 後做一次）：GitHub → Actions → Check in → Run workflow。分支選要測的分支（不要選 `main`），`place` 選 `out`。
 
