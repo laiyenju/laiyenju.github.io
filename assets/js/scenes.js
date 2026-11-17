@@ -1227,6 +1227,170 @@ const SCENES = {
       for (const [y0, y1] of TOWERS) boxShadow(e, -2.3, y0, .9, y1, H);
     },
   },
+  // Gardens by the Bay, seen from the garden side: the Supertree Grove (Grant Associates, 2012) in front, steel
+  // trunks covered in plants that open into wide wiry crowns, with the yellow skyway hung between them; behind it
+  // the Flower Dome (WilkinsonEyre), a long low glass shell under a row of white steel arches.
+  gardensbay: {
+    bare: true, S: 12, origin: 36, cx: -.4, cy: .5, R: 8, zmax: 5,
+    build(e, api) {
+      const { box } = e, LAWN = [122, 162, 94], PATH = [216, 208, 192], GLASS = [150, 200, 204], RIB = [244, 244, 240], STEEL = [170, 84, 126], WH = [238, 238, 232];
+      box(-7.4, -6, 0, 6.4, 7, .05, LAWN, 1);
+      box(-7.4, .7, 0, 6.4, 1.4, .07, PATH, 2); box(1.6, 1.4, 0, 2.8, 7, .07, PATH, 3);
+      // the Flower Dome: ribs first, a little outside the glass, then the glass shell, which glows from inside after dark
+      const DX = -1.4, DY = -2.7, A = 5.6, BB = 2.9, HH = 2.7, glass = e.rampOf(GLASS), rib = e.rgb(...RIB);
+      const shell = (k, at) => {
+        for (let v = 0; v <= 1.571; v += .008) for (let u = 0, du = .006 / Math.max(.12, Math.cos(v)); u < 6.2832; u += du) {
+          const cu = Math.cos(u), su = Math.sin(u), cv = Math.cos(v), sv = Math.sin(v);
+          at(DX + A * k * cv * cu, DY + BB * k * cv * su, HH * k * sv, cu, su, cv, sv, u, v);
+        }
+      };
+      shell(1.03, (x, y, z, cu, su, cv, sv) => {
+        const f = ((x - DX) / .8 % 1 + 1) % 1;
+        if (f < .07 || (Math.abs(su) < .012 && cv > .05)) e.plot(x, y, z, rib);
+      });
+      api.emissive(() => shell(1, (x, y, z, cu, su, cv, sv, u, v) => {
+        const nx = cv * cu / A, ny = cv * su / BB, nz = sv / HH, n = Math.hypot(nx, ny, nz) || 1;
+        const grid = ((u * 28 + v * 40) % 1 < .14) || ((u * 28 - v * 40 + 100) % 1 < .14);
+        e.plot(x, y, z, glass[cl(Math.round(.9 + 2.7 * nz / n + 1.1 * Math.max(0, ny / n) - .5 * Math.max(0, nx / n) - (grid ? .8 : 0)), 0, 4)]);
+      }));
+      box(DX - A - .1, DY - BB - .1, 0, DX + A + .1, DY + BB + .1, .12, [206, 206, 200]);
+      // the entrance at the end of the dome: a low white canopy over glass
+      api.emissive(() => box(4.3, -3.5, 0, 5.4, -1.9, .55, C.GLASS), 'lobby');
+      box(4.1, -3.7, .55, 5.7, -1.7, .68, WH);
+      boxShadow(e, DX - 4.2, DY - 1.6, DX + 4.2, DY + 1.6, 1.6);
+      // the Supertrees: the tallest in the middle, six around it
+      const GX = 2.2, GY = 3.5, RING = 2.7, TREES = [[GX, GY, 4.5, 1.25]];
+      for (let k = 0; k < 6; k++) { const a = k * 1.0472 + .35; TREES.push([GX + Math.cos(a) * RING, GY + Math.sin(a) * RING, 2.8 + (k * 2 % 3) * .4, .95]); }
+      const trunk = z => e.hash(Math.round(z * 11), 7) < .55 ? [94, 132, 88] : [132, 98, 124];
+      TREES.forEach(([x, y, h, r]) => {
+        e.capsule([x, y, 0], [x, y, h * .7], .24, .13, trunk, 'rough');
+        api.emissive(() => {
+          const c = e.rgb(...STEEL);
+          for (let a = 0; a < 6.283; a += .5236) e.capsule([x, y, h * .68], [x + Math.cos(a) * r, y + Math.sin(a) * r, h], .04, .03, () => STEEL);
+          for (let a = 0; a < 6.283; a += .04) { e.plot(x + Math.cos(a) * r, y + Math.sin(a) * r, h, c); e.plot(x + Math.cos(a) * r * .55, y + Math.sin(a) * r * .55, h * .86, c); }
+        });
+        e.castShadow(x, y, h, r * .8, .8); e.castShadow(x, y, h * .4, .2);
+      });
+      // the skyway: a yellow walkway hung between the trees, part of the way round
+      const sky = a => [GX + Math.cos(a) * RING, GY + Math.sin(a) * RING];
+      for (let a = .35; a < 3.5; a += .03) { const [x, y] = sky(a); box(x - .08, y - .08, 1.9, x + .08, y + .08, 2.0, [238, 184, 62]); }
+      // shrubs on the lawn
+      for (const [x, y, r] of [[-6.4, 2.6, .5], [-4.6, 4.6, .6], [-2.6, 2.6, .45], [-2.0, 6.0, .55], [5.8, 2.0, .45], [5.4, -5.0, .5]]) {
+        e.moving((e, t) => { const s = t == null ? 0 : Math.sin(t * 1.4 + x) * .06; e.sphere(x + s, y, r * .8, r, [70, 122, 70], 'rough'); e.sphere(x + r * .6 - s, y + .1, r * .6, r * .7, [92, 142, 80], 'rough'); });
+      }
+      // people on the paths and on the skyway
+      e.moving((e, t) => {
+        [[-7, 6, 1.05, .45, [52, 72, 120], 0], [-5, 5.6, .95, .36, [196, 88, 64], 2.6], [-6.6, 1.6, 1.15, .5, [232, 200, 90], 5]].forEach(([x0, x1, y, v, col, ph]) => walker(e, t, pacer(e, (t || 0) + ph * 3, x0, x1, v).x, y, .07, col, ph));
+        walker(e, t, 2.2, pacer(e, (t || 0) + 2, 4.6, 6.8, .3).x, .07, [226, 222, 214], 1.3);
+        for (const ph of [0, 9]) { const [x, y] = sky(pacer(e, (t || 0) + ph, .45, 3.4, .12).x); walker(e, t, x, y, 2.0, ph ? [214, 104, 84] : [96, 150, 190], ph); }
+        // after dark the crowns change colour, one tree after another
+        if (t == null || LIGHT.lit < .5) return;
+        const SHOW = [[255, 120, 210], [120, 230, 255], [255, 226, 120], [170, 255, 170]];
+        TREES.forEach(([x, y, h, r], k) => {
+          const c = e.rgb(...SHOW[(Math.floor(t * 1.5) + k) % SHOW.length]);
+          for (let a = 0; a < 6.283; a += .05) { e.plot(x + Math.cos(a) * r * 1.03, y + Math.sin(a) * r * 1.03, h + .03, c); if (Math.round(a * 20) % 3 === 0) e.plot(x + Math.cos(a) * r * .6, y + Math.sin(a) * r * .6, h * .88 + .03, c); }
+        });
+      });
+      e.moving((e, t) => birds(e, t, 0, 0, 6, 4.4));
+    },
+  },
+  // The Coconut Club, 269 Beach Road: the corner unit of a whitewashed two-storey shophouse terrace. Upstairs, tall
+  // windows with sage-green frames and balustrades between cream louvred shutters; downstairs, the open front under a
+  // dark green awning with white lettering, high tables on red clay tiles, fiddle-leaf figs in white pots, and an
+  // arch in the side wall. The neighbour on the left has green shutters.
+  coconutclub: {
+    bare: true, S: 24, origin: 44, cx: -.8, cy: .9, R: 5, zmax: 4.6,
+    build(e, api) {
+      const { box } = e, WH = [242, 240, 232], TERRA = [190, 106, 74], SAGE = [138, 160, 120], CREAM = [220, 212, 186], LOUVRE = [152, 174, 142];
+      const AWN = [60, 76, 58], CLAY = [186, 98, 74], INSIDE = [200, 142, 118], TOPC = [180, 124, 106], FIG = [64, 120, 62];
+      const F = 1.2, B = -3, IN = F - .9, FL = 1.6, TOP = 3.35, X0 = -4.4, XM = -1.6, X1 = 2.4;
+      // red clay tiles in front of the shop, then the grey pavement
+      box(X0 - .2, F, 0, X1 + .9, 3.9, .04, C.PAVE, 1); box(X0 - .2, F, 0, X1 - .3, 3.1, .06, CLAY, 2);
+      // the terrace: ground floor set back behind piers, the upper floor over it, a cornice, a low clay roof
+      box(X0, B, 0, X1, IN, FL, WH, 1); box(X0, B, FL, X1, F, TOP, WH, 1);
+      box(X0, IN, 0, X1, F, .06, [206, 196, 180]);
+      box(X0 - .04, B, TOP, X1 + .06, F + .12, TOP + .12, WH); box(X0, F, FL - .05, X1 + .04, F + .07, FL + .09, WH);
+      for (let k = 0; k < 2; k++) box(X0, B + .2, TOP + .12 + k * .1, X1 - .1, F - .1 - k * .7, TOP + .12 + (k + 1) * .1, TERRA, 4);
+      for (const x of [X0, XM, X1 - .02]) { // pilasters with a capital, and the white downpipes beside them
+        box(x - .12, F, FL + .09, x + .12, F + .06, TOP - .12, WH); box(x - .16, F, TOP - .2, x + .16, F + .09, TOP - .08, WH);
+        box(x - .14, IN, 0, x + .14, F, FL, WH);
+      }
+      for (const x of [XM + .22, X0 + .22]) box(x - .04, F + .06, FL, x + .04, F + .12, TOP, [226, 226, 220]);
+      // upstairs: a tall window with a balustrade, a shutter folded open on each side
+      const win = (x, shut) => {
+        const z0 = FL + .38, z1 = TOP - .42;
+        box(x - .3, F, z0 - .05, x + .3, F + .03, z1 + .05, SAGE);
+        api.emissive(() => box(x - .24, F, z0, x + .24, F + .04, z1, C.GLASS));
+        box(x - .02, F, z0, x + .02, F + .05, z1, SAGE);
+        for (let b = -.24; b <= .241; b += .12) box(x + b - .015, F + .04, z0, x + b + .015, F + .07, z0 + .42, SAGE);
+        box(x - .26, F + .04, z0 + .42, x + .26, F + .08, z0 + .46, SAGE);
+        for (const s of [-1, 1]) box(x + s * .47 - .16, F, z0 - .03, x + s * .47 + .16, F + .05, z1 + .03, shut, 6);
+      };
+      for (const x of [-.65, 1.35]) win(x, CREAM);
+      for (const x of [-3.7, -2.35]) win(x, LOUVRE);
+      // the side wall on the corner: white shutters upstairs, an arch and a green awning below
+      for (const y of [-.2, -1.9]) { api.emissive(() => box(X1, y - .2, FL + .5, X1 + .03, y + .2, TOP - .5, C.GLASS)); box(X1, y + .2, FL + .45, X1 + .06, y + .5, TOP - .45, WH, 6); }
+      box(X1, .25, 0, X1 + .03, .95, 1.0, [214, 210, 200]); box(X1, .35, 1.0, X1 + .03, .85, 1.15, [214, 210, 200]);
+      for (let k = 0; k < 3; k++) box(X1, -2.6, FL - .12 - k * .08, X1 + .25 + k * .22, -.6, FL - .04 - k * .08, AWN);
+      // downstairs: the lit room with its terracotta-pink wall; the neighbour's shop window
+      api.emissive(() => box(XM + .14, IN, .06, X1 - .16, IN + .03, FL - .1, INSIDE), 'lobby');
+      box(XM + .14, IN, .06, -.5, IN + .1, .7, TOPC, 5);
+      api.emissive(() => box(X0 + .14, IN, .06, XM - .14, IN + .03, FL - .15, [92, 100, 104]), 'lobby');
+      // the awnings: dark green with a line of white lettering on the Coconut Club, a pale one next door
+      const awning = (x0, x1, c, text) => {
+        for (let k = 0; k < 4; k++) box(x0, F + .07 + k * .2, FL - .08 - k * .05, x1, F + .07 + (k + 1) * .2, FL - k * .05, c, 7);
+        box(x0, F + .84, FL - .5, x1, F + .87, FL - .2, c);
+        if (text) for (let x = x0 + .5; x < x1 - .5; x += .09) if (e.hash(Math.round(x * 40), 3) > .25) box(x, F + .87, FL - .42, x + .05, F + .885, FL - .29, [244, 242, 230]);
+      };
+      awning(XM + .1, X1, AWN, true); awning(X0, XM - .1, [214, 212, 198], false);
+      // the ceiling fan under the awning
+      e.moving((e, t) => {
+        const a = t == null ? .6 : t * 5, c = e.rgb(70, 66, 62);
+        for (let r = -.32; r <= .32; r += .03) e.plot(.3 + Math.cos(a) * r, F + .45 + Math.sin(a) * r, FL - .32, c);
+      });
+      // high tables on the tiles, people on stools
+      const SEATS = [[-.7, F + 1.2, [196, 88, 64], [52, 72, 120]], [1.0, F + 1.05, [232, 200, 90], [226, 222, 214]], [-3.1, F + 1.1, [96, 150, 190], [214, 104, 84]]];
+      for (const [x, y, a, b] of SEATS) {
+        box(x - .55, y - .16, .68, x + .55, y + .16, .74, TOPC);
+        for (const dx of [-.5, .5]) box(x + dx - .025, y - .025, .06, x + dx + .025, y + .025, .68, [60, 56, 54]);
+        [[x - .3, a], [x + .3, b]].forEach(([px, col], k) => {
+          box(px - .08, y + .26, .06, px + .08, y + .42, .42, [52, 50, 50]);
+          e.moving((e, t) => {
+            const nod = t == null ? 0 : Math.sin(t * 1.1 + px * 3) > .6 ? .04 : 0; // now and then someone leans in
+            e.capsule([px, y + .34, .52], [px, y + .34 - nod, .86], .13, .12, () => col);
+            e.sphere(px, y + .34 - nod * 2, 1.04, .11, [224, 190, 160]);
+          });
+        });
+      }
+      // fiddle-leaf figs in white pots, the menu board, a tree by the kerb
+      for (const [x, y, h] of [[X1 - .15, F + .35, 1.5], [-1.9, F + .3, 1.1]]) {
+        box(x - .13, y - .13, .04, x + .13, y + .13, .36, [236, 234, 228]);
+        e.moving((e, t) => {
+          const s = t == null ? 0 : Math.sin(t * 1.5 + x) * .04;
+          for (let k = 0; k < 4; k++) e.sphere(x + (k % 2 ? .12 : -.1) + s * (k + 1) * .4, y + (k % 2 ? -.05 : .08), .55 + k * (h - .5) / 3, .2 - k * .02, k % 2 ? FIG : [84, 142, 76], 'rough');
+        });
+      }
+      box(1.75, F + 1.95, .04, 2.15, F + 2.0, .75, [58, 46, 40]); box(1.8, F + 2.0, .2, 2.1, F + 2.01, .7, [206, 150, 96]);
+      const PX = -4.0, PY = 3.5, PH = 3.4;
+      e.capsule([PX, PY, 0], [PX + .25, PY, PH], .1, .07, () => [150, 128, 100]);
+      e.moving((e, t) => {
+        for (let k = 0; k < 7; k++) {
+          const a = k * .8976, s = t == null ? 0 : Math.sin(t * 1.5 + k * 1.3) * .08;
+          e.capsule([PX + .25, PY, PH], [PX + .25 + Math.cos(a) * .55, PY + Math.sin(a) * .55, PH + .12 + s * .5], .08, .07, () => [78, 132, 76], 'rough');
+          e.capsule([PX + .25 + Math.cos(a) * .55, PY + Math.sin(a) * .55, PH + .12 + s * .5], [PX + .25 + Math.cos(a) * 1.0, PY + Math.sin(a) * 1.0, PH - .3 + s], .07, .04, () => [96, 150, 84], 'rough');
+        }
+      });
+      e.castShadow(PX + .25, PY, PH, .7, .8);
+      // plants that have taken root along the roof edge
+      for (const x of [-1.0, .2, 1.3]) e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 2 + x) * .05), F - .1, TOP + .28, .13, [96, 140, 84], 'rough'));
+      // people walking past
+      e.moving((e, t) => {
+        [[-4.4, 3, 3.4, .5, [52, 72, 120], 0], [-3.6, 3.1, 3.7, .4, [196, 88, 64], 2.6]].forEach(([x0, x1, y, v, col, ph]) => walker(e, t, pacer(e, (t || 0) + ph * 3, x0, x1, v).x, y, .04, col, ph));
+      });
+      e.moving((e, t) => birds(e, t, -1, 0, 4.6, 4.8));
+      boxShadow(e, X0, B, X1, F, TOP);
+    },
+  },
 };
 
 /* ================= worlds ================= */
