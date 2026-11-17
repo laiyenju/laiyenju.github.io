@@ -87,7 +87,7 @@ const FONT3 = {
   A: '010101111101101', B: '110101110101110', C: '111100100100111', E: '111100110100111', G: '111100101101111', H: '101101111101101',
   I: '111010010010111', K: '101110100110101', L: '100100100100111', M: '1000111011101011000110001', N: '10011101101110011001', O: '111101101101111',
   R: '110101110101101', S: '111100111001111', T: '111010010010010', W: '1000110001101011010101010', Y: '101101010010010', D: '110101101101110',
-  Z: '111001010100111', U: '101101101101111', o: '000111101101111', g: '111101111001111', l: '010010010010010', e: '111101111100111', ' ': '000000000000000',
+  Z: '111001010100111', o: '000111101101111', g: '111101111001111', l: '010010010010010', e: '111101111100111', ' ': '000000000000000',
 };
 function signIso(e, text, { face = 'y', x, y, z, scale = 2, colors }) {
   const glyph = ch => FONT3[ch] || FONT3[ch.toUpperCase()] || FONT3[' '];
@@ -1294,65 +1294,84 @@ const SCENES = {
       e.moving((e, t) => birds(e, t, 0, 0, 6, 4.4));
     },
   },
-  // The Coconut Club, 269 Beach Road: a whitewashed three-storey shophouse in a terrace. The ground floor opens onto
-  // the five-foot way, with tables under the upper floors, a terracotta-tiled kitchen wall and a green marble bar;
-  // shuttered windows above, a clay tile roof between party walls, a coconut palm by the kerb.
+  // The Coconut Club, 269 Beach Road: the corner unit of a whitewashed two-storey shophouse terrace. Upstairs, tall
+  // windows with sage-green frames and balustrades between cream louvred shutters; downstairs, the open front under a
+  // dark green awning with white lettering, high tables on red clay tiles, fiddle-leaf figs in white pots, and an
+  // arch in the side wall. The neighbour on the left has green shutters.
   coconutclub: {
-    bare: true, S: 20, origin: 44, cx: 0, cy: .6, R: 5, zmax: 6,
+    bare: true, S: 24, origin: 44, cx: -.8, cy: .9, R: 5, zmax: 4.6,
     build(e, api) {
-      const { box } = e, WH = [240, 238, 230], TERRA = [190, 106, 74], TILE = [198, 122, 88], SHUT = [112, 140, 124], MARBLE = [128, 168, 148], INSIDE = [150, 124, 92];
-      const F = 1.2, B = -3, IN = F - 1.05, FL = 1.45;
-      box(-4.2, F, 0, 4.2, 2.7, .04, C.PAVE, 1);
-      const house = (x0, x1, wall, top, seed) => {
-        box(x0, B, 0, x1, IN, FL, wall, seed);
-        box(x0, B, FL, x1, F, top, wall, seed);
-        for (const x of [x0, x1 - .16]) box(x, IN, 0, x + .16, F, FL, wall);
-        box(x0, IN, 0, x1, F, .06, [200, 190, 172]); // the floor of the five-foot way
-        // two floors of tall windows with louvred shutters, a moulding under each row
-        for (let f = 1; f < 3; f++) {
-          const z0 = f * FL + .28, z1 = z0 + .85, n = Math.round((x1 - x0) / 1.3);
-          box(x0, F, f * FL - .04, x1, F + .05, f * FL + .08, wall);
-          for (let k = 0; k < n; k++) {
-            const x = x0 + (x1 - x0) * (k + .5) / n;
-            api.emissive(() => box(x - .17, F, z0, x + .17, F + .03, z1, C.GLASS));
-            for (const s of [-1, 1]) box(x + s * .27 - .1, F, z0, x + s * .27 + .1, F + .05, z1, SHUT);
-          }
-        }
-        // the roof: clay tiles sloping down to the street, between raised party walls
-        box(x0 - .03, B, top, x1 + .03, F + .1, top + .1, wall);
-        for (let k = 0; k < 6; k++) box(x0, B + .2, top + .1 + k * .14, x1, F - .05 - k * .33, top + .1 + (k + 1) * .14, TERRA, seed + 3);
-        for (const x of [x0, x1]) box(x - .06, B, top, x + .06, F, top + 1.0, WH);
+      const { box } = e, WH = [242, 240, 232], TERRA = [190, 106, 74], SAGE = [138, 160, 120], CREAM = [220, 212, 186], LOUVRE = [152, 174, 142];
+      const AWN = [60, 76, 58], CLAY = [186, 98, 74], INSIDE = [200, 142, 118], TOPC = [180, 124, 106], FIG = [64, 120, 62];
+      const F = 1.2, B = -3, IN = F - .9, FL = 1.6, TOP = 3.35, X0 = -4.4, XM = -1.6, X1 = 2.4;
+      // red clay tiles in front of the shop, then the grey pavement
+      box(X0 - .2, F, 0, X1 + .9, 3.9, .04, C.PAVE, 1); box(X0 - .2, F, 0, X1 - .3, 3.1, .06, CLAY, 2);
+      // the terrace: ground floor set back behind piers, the upper floor over it, a cornice, a low clay roof
+      box(X0, B, 0, X1, IN, FL, WH, 1); box(X0, B, FL, X1, F, TOP, WH, 1);
+      box(X0, IN, 0, X1, F, .06, [206, 196, 180]);
+      box(X0 - .04, B, TOP, X1 + .06, F + .12, TOP + .12, WH); box(X0, F, FL - .05, X1 + .04, F + .07, FL + .09, WH);
+      for (let k = 0; k < 2; k++) box(X0, B + .2, TOP + .12 + k * .1, X1 - .1, F - .1 - k * .7, TOP + .12 + (k + 1) * .1, TERRA, 4);
+      for (const x of [X0, XM, X1 - .02]) { // pilasters with a capital, and the white downpipes beside them
+        box(x - .12, F, FL + .09, x + .12, F + .06, TOP - .12, WH); box(x - .16, F, TOP - .2, x + .16, F + .09, TOP - .08, WH);
+        box(x - .14, IN, 0, x + .14, F, FL, WH);
+      }
+      for (const x of [XM + .22, X0 + .22]) box(x - .04, F + .06, FL, x + .04, F + .12, TOP, [226, 226, 220]);
+      // upstairs: a tall window with a balustrade, a shutter folded open on each side
+      const win = (x, shut) => {
+        const z0 = FL + .38, z1 = TOP - .42;
+        box(x - .3, F, z0 - .05, x + .3, F + .03, z1 + .05, SAGE);
+        api.emissive(() => box(x - .24, F, z0, x + .24, F + .04, z1, C.GLASS));
+        box(x - .02, F, z0, x + .02, F + .05, z1, SAGE);
+        for (let b = -.24; b <= .241; b += .12) box(x + b - .015, F + .04, z0, x + b + .015, F + .07, z0 + .42, SAGE);
+        box(x - .26, F + .04, z0 + .42, x + .26, F + .08, z0 + .46, SAGE);
+        for (const s of [-1, 1]) box(x + s * .47 - .16, F, z0 - .03, x + s * .47 + .16, F + .05, z1 + .03, shut, 6);
       };
-      house(-4, -2, [238, 224, 194], 3 * FL - .15, 2);
-      house(2, 4, [212, 224, 226], 3 * FL + .12, 3);
-      house(-2, 2, WH, 3 * FL, 1);
-      for (const [x0, x1] of [[-3.84, -2.16], [2.16, 3.84]]) api.emissive(() => box(x0, IN, .06, x1, IN + .03, FL - .15, [84, 92, 98]), 'lobby');
-      // the ground floor: the lit room, the terracotta kitchen wall on the left, the marble bar on the right
-      api.emissive(() => box(-1.84, IN, .06, 1.84, IN + .03, FL - .1, INSIDE), 'lobby');
-      box(-1.84, IN, .06, -.4, IN + .1, .8, TILE, 4);
-      box(.1, IN, .06, 1.84, IN + .16, .66, MARBLE, 5); box(.05, IN, .66, 1.84, IN + .2, .7, [226, 232, 226]);
-      // the name on the fascia
-      box(-2, F, FL - .02, 2, F + .06, FL + .3, WH);
-      signIso(e, 'COCONUT CLUB', { face: 'y', x: 0, y: F + .06, z: FL + .27, scale: 1, colors: [[52, 104, 78]] });
-      // tables and people sitting in the five-foot way
-      const SEATS = [[-1.25, [196, 88, 64], [52, 72, 120]], [-.1, [232, 200, 90], [226, 222, 214]], [1.05, [96, 150, 190], [214, 104, 84]]];
-      for (const [x, a, b] of SEATS) {
-        box(x - .2, F - .62, .06, x + .2, F - .3, .5, C.WOOD_L);
-        [[x - .38, a], [x + .38, b]].forEach(([px, col], k) => {
-          box(px - .1, F - .56, .06, px + .1, F - .36, .3, C.WOOD);
+      for (const x of [-.65, 1.35]) win(x, CREAM);
+      for (const x of [-3.7, -2.35]) win(x, LOUVRE);
+      // the side wall on the corner: white shutters upstairs, an arch and a green awning below
+      for (const y of [-.2, -1.9]) { api.emissive(() => box(X1, y - .2, FL + .5, X1 + .03, y + .2, TOP - .5, C.GLASS)); box(X1, y + .2, FL + .45, X1 + .06, y + .5, TOP - .45, WH, 6); }
+      box(X1, .25, 0, X1 + .03, .95, 1.0, [214, 210, 200]); box(X1, .35, 1.0, X1 + .03, .85, 1.15, [214, 210, 200]);
+      for (let k = 0; k < 3; k++) box(X1, -2.6, FL - .12 - k * .08, X1 + .25 + k * .22, -.6, FL - .04 - k * .08, AWN);
+      // downstairs: the lit room with its terracotta-pink wall; the neighbour's shop window
+      api.emissive(() => box(XM + .14, IN, .06, X1 - .16, IN + .03, FL - .1, INSIDE), 'lobby');
+      box(XM + .14, IN, .06, -.5, IN + .1, .7, TOPC, 5);
+      api.emissive(() => box(X0 + .14, IN, .06, XM - .14, IN + .03, FL - .15, [92, 100, 104]), 'lobby');
+      // the awnings: dark green with a line of white lettering on the Coconut Club, a pale one next door
+      const awning = (x0, x1, c, text) => {
+        for (let k = 0; k < 4; k++) box(x0, F + .07 + k * .2, FL - .08 - k * .05, x1, F + .07 + (k + 1) * .2, FL - k * .05, c, 7);
+        box(x0, F + .84, FL - .5, x1, F + .87, FL - .2, c);
+        if (text) for (let x = x0 + .5; x < x1 - .5; x += .09) if (e.hash(Math.round(x * 40), 3) > .25) box(x, F + .87, FL - .42, x + .05, F + .885, FL - .29, [244, 242, 230]);
+      };
+      awning(XM + .1, X1, AWN, true); awning(X0, XM - .1, [214, 212, 198], false);
+      // the ceiling fan under the awning
+      e.moving((e, t) => {
+        const a = t == null ? .6 : t * 5, c = e.rgb(70, 66, 62);
+        for (let r = -.32; r <= .32; r += .03) e.plot(.3 + Math.cos(a) * r, F + .45 + Math.sin(a) * r, FL - .32, c);
+      });
+      // high tables on the tiles, people on stools
+      const SEATS = [[-.7, F + 1.2, [196, 88, 64], [52, 72, 120]], [1.0, F + 1.05, [232, 200, 90], [226, 222, 214]], [-3.1, F + 1.1, [96, 150, 190], [214, 104, 84]]];
+      for (const [x, y, a, b] of SEATS) {
+        box(x - .55, y - .16, .68, x + .55, y + .16, .74, TOPC);
+        for (const dx of [-.5, .5]) box(x + dx - .025, y - .025, .06, x + dx + .025, y + .025, .68, [60, 56, 54]);
+        [[x - .3, a], [x + .3, b]].forEach(([px, col], k) => {
+          box(px - .08, y + .26, .06, px + .08, y + .42, .42, [52, 50, 50]);
           e.moving((e, t) => {
-            const nod = t == null ? 0 : Math.sin(t * 1.1 + px * 3) > .6 ? .03 : 0; // now and then someone leans in
-            e.capsule([px, F - .46, .4], [px + (k ? -nod : nod), F - .46, .72], .13, .12, () => col);
-            e.sphere(px + (k ? -nod : nod) * 2, F - .46, .9, .11, [224, 190, 160]);
+            const nod = t == null ? 0 : Math.sin(t * 1.1 + px * 3) > .6 ? .04 : 0; // now and then someone leans in
+            e.capsule([px, y + .34, .52], [px, y + .34 - nod, .86], .13, .12, () => col);
+            e.sphere(px, y + .34 - nod * 2, 1.04, .11, [224, 190, 160]);
           });
         });
       }
-      // ferns in pots by the piers, a coconut palm by the kerb
-      for (const x of [-1.72, 1.72]) {
-        box(x - .11, F + .06, .04, x + .11, F + .28, .3, C.POT);
-        e.moving((e, t) => { const s = t == null ? 0 : Math.sin(t * 1.6 + x) * .04; e.sphere(x + s, F + .17, .5, .22, C.GREEN, 'rough'); e.sphere(x - s, F + .2, .72, .15, [106, 150, 84], 'rough'); });
+      // fiddle-leaf figs in white pots, the menu board, a tree by the kerb
+      for (const [x, y, h] of [[X1 - .15, F + .35, 1.5], [-1.9, F + .3, 1.1]]) {
+        box(x - .13, y - .13, .04, x + .13, y + .13, .36, [236, 234, 228]);
+        e.moving((e, t) => {
+          const s = t == null ? 0 : Math.sin(t * 1.5 + x) * .04;
+          for (let k = 0; k < 4; k++) e.sphere(x + (k % 2 ? .12 : -.1) + s * (k + 1) * .4, y + (k % 2 ? -.05 : .08), .55 + k * (h - .5) / 3, .2 - k * .02, k % 2 ? FIG : [84, 142, 76], 'rough');
+        });
       }
-      const PX = -3.4, PY = 2.3, PH = 3.3;
+      box(1.75, F + 1.95, .04, 2.15, F + 2.0, .75, [58, 46, 40]); box(1.8, F + 2.0, .2, 2.1, F + 2.01, .7, [206, 150, 96]);
+      const PX = -4.0, PY = 3.5, PH = 3.4;
       e.capsule([PX, PY, 0], [PX + .25, PY, PH], .1, .07, () => [150, 128, 100]);
       e.moving((e, t) => {
         for (let k = 0; k < 7; k++) {
@@ -1360,15 +1379,16 @@ const SCENES = {
           e.capsule([PX + .25, PY, PH], [PX + .25 + Math.cos(a) * .55, PY + Math.sin(a) * .55, PH + .12 + s * .5], .08, .07, () => [78, 132, 76], 'rough');
           e.capsule([PX + .25 + Math.cos(a) * .55, PY + Math.sin(a) * .55, PH + .12 + s * .5], [PX + .25 + Math.cos(a) * 1.0, PY + Math.sin(a) * 1.0, PH - .3 + s], .07, .04, () => [96, 150, 84], 'rough');
         }
-        for (const [dx, dy] of [[.1, .08], [-.08, .1], [.04, -.1]]) e.sphere(PX + .25 + dx, PY + dy, PH - .12, .08, [112, 96, 60]);
       });
       e.castShadow(PX + .25, PY, PH, .7, .8);
+      // plants that have taken root along the roof edge
+      for (const x of [-1.0, .2, 1.3]) e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 2 + x) * .05), F - .1, TOP + .28, .13, [96, 140, 84], 'rough'));
       // people walking past
       e.moving((e, t) => {
-        [[-4, 4, 2.0, .5, [52, 72, 120], 0], [-3.6, 2.4, 2.35, .4, [196, 88, 64], 2.6]].forEach(([x0, x1, y, v, col, ph]) => walker(e, t, pacer(e, (t || 0) + ph * 3, x0, x1, v).x, y, .04, col, ph));
+        [[-4.4, 3, 3.4, .5, [52, 72, 120], 0], [-3.6, 3.1, 3.7, .4, [196, 88, 64], 2.6]].forEach(([x0, x1, y, v, col, ph]) => walker(e, t, pacer(e, (t || 0) + ph * 3, x0, x1, v).x, y, .04, col, ph));
       });
-      e.moving((e, t) => birds(e, t, 0, 0, 4.4, 6.2));
-      boxShadow(e, -4, B, 4, F, 3 * FL);
+      e.moving((e, t) => birds(e, t, -1, 0, 4.6, 4.8));
+      boxShadow(e, X0, B, X1, F, TOP);
     },
   },
 };
