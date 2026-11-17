@@ -144,6 +144,17 @@ function rocFlag(e, x, y, h, z0 = 0) {
   e.box(x - .03, y - .03, z0, x + .03, y + .03, z0 + h, POLE);
   e.moving((e, t) => cloth(e, x + .03, y, z0 + h - .05, .56, .38, (u, v) => u < .5 && v < .5 ? ROC_BLUE : ROC_RED, t, x + y * 1.3));
 }
+const SG_RED = [222, 46, 60], SG_WHITE = [244, 244, 240];
+function sgFlag(e, x, y, h, z0 = 0) {
+  e.box(x - .03, y - .03, z0, x + .03, y + .03, z0 + h, POLE);
+  e.moving((e, t) => cloth(e, x + .03, y, z0 + h - .05, .56, .38, (u, v) => v < .5 ? SG_RED : SG_WHITE, t, x + y * .9));
+}
+// a person standing at (x, y) on a surface at height z: a body and a head, bobbing as they walk
+function walker(e, t, x, y, z, col, ph = 0) {
+  const bob = e.STILL || t == null ? 0 : Math.abs(Math.sin((t + ph) * 7)) * .05;
+  e.capsule([x, y, z + .2 + bob], [x, y, z + .72 + bob], .19, .16, () => col);
+  e.sphere(x, y, z + .98 + bob, .15, [224, 190, 160]);
+}
 // a few birds circling the building, wings up and down; hidden while they pass behind it
 const BIRD = [[[-2, -1], [-1, 0], [0, 0], [1, 0], [2, -1]], [[-2, 1], [-1, 0], [0, 0], [1, 0], [2, 1]]];
 function birds(e, t, cx, cy, r, z, n = 3) {
@@ -1053,6 +1064,172 @@ const SCENES = {
       for (let k = 0; k < 4; k++) box(-2.4 + k * .1, 3.6 + (3 - k) * .35, 0, 2.4 - k * .1, 3.6 + (4 - k) * .35, (k + 1) * .25, MD);
       e.moving((e, t) => birds(e, t, 0, 0, 5.4, 5.6));
       boxShadow(e, -5.4, -3.0, 5.4, 3.0, 4.3);
+    },
+  },
+  // National Gallery Singapore, seen from the Padang (studioMilou with CPG, 2015): two pale stone monuments side by
+  // side. Left, the former Supreme Court (1939): a columned portico under a pediment, and a copper-green dome with a
+  // smaller one behind it. Right, the former City Hall (1929): a long colonnade above wide steps. Between them and
+  // over their roofs, the gold filigree "veil", which drapes down over the entrance on tree-like columns.
+  nationalgallery: {
+    bare: true, S: 12, origin: 30, cx: .3, cy: 1.0, R: 7, zmax: 5.8,
+    build(e, api) {
+      const { box } = e, ST = [228, 222, 208], SD = [208, 202, 188], DK = [72, 74, 80], COPPER = [112, 160, 140];
+      const GOLD = [206, 174, 106], GOLD_D = [166, 136, 78], F = 1.4, B = -2.4, TOP = 2.6;
+      // the pavement, St Andrew's Road and the edge of the Padang
+      box(-6.3, F, 0, 6.9, 2.7, .04, C.PAVE); box(-6.3, 2.7, 0, 6.9, 3.5, .03, [100, 102, 108]); box(-6.3, 3.5, 0, 6.9, 4.7, .05, [112, 152, 86], 4);
+      const windows = (x0, x1, rows, step = .5) => { for (const [z0, z1] of rows) for (let x = x0; x <= x1 + .001; x += step) api.emissive(() => box(x - .1, F, z0, x + .1, F + .03, z1, DK)); };
+      const colonnade = (x0, x1, n, y, z0, z1) => {
+        api.emissive(() => box(x0, y, z0, x1, y + .02, z1, DK));
+        api.emissive(() => { for (let k = 0; k < n; k++) { const x = x0 + .06 + (x1 - x0 - .12) * k / (n - 1); box(x - .05, y + .02, z0, x + .05, y + .16, z1, ST); } }, 'flood');
+      };
+      const block = (x0, x1) => {
+        api.emissive(() => box(x0, B, 0, x1, F, TOP, ST, 1), 'flood');
+        box(x0 - .1, B - .1, TOP, x1 + .1, F + .2, TOP + .22, ST); box(x0 + .1, B + .1, TOP + .22, x1 - .1, F + .05, TOP + .4, SD);
+        box(x0, F, .68, x1, F + .06, .76, SD);
+      };
+      // City Hall: 18 columns over two storeys, end bays with windows, the steps up to the door
+      block(.5, 6.5);
+      colonnade(1.3, 5.7, 18, F, .8, 2.12);
+      windows(.7, 1.1, [[.2, .52], [.95, 1.35], [1.6, 2.05]], .4); windows(5.9, 6.3, [[.2, .52], [.95, 1.35], [1.6, 2.05]], .4);
+      windows(1.5, 2.2, [[.2, .52]]); windows(4.8, 5.5, [[.2, .52]]);
+      for (const [z0, z1] of [[.2, .52], [.95, 1.35], [1.6, 2.05]]) for (let y = B + .4; y < F - .2; y += .55) api.emissive(() => box(6.5, y, z0, 6.53, y + .22, z1, DK));
+      for (let k = 0; k < 4; k++) box(2.3, F + .16, 0, 4.7, F + .16 + (4 - k) * .2, (k + 1) * .2, SD);
+      api.emissive(() => box(3.3, F + .02, .8, 3.7, F + .05, 1.5, [120, 96, 70]));
+      sgFlag(e, 3.5, F - .3, 1.3, TOP + .4);
+      // the former Supreme Court: wings with columns, the portico and its pediment in the middle
+      block(-5.9, -.5);
+      colonnade(-5.6, -4.5, 4, F, .8, 2.12); colonnade(-1.9, -.8, 4, F, .8, 2.12);
+      windows(-5.5, -4.5, [[.2, .52]]); windows(-1.9, -.9, [[.2, .52]]);
+      const PX0 = -4.3, PX1 = -2.1, PY = F + .5;
+      box(PX0, F, 0, PX1, PY, .76, SD, 2);
+      for (let k = 0; k < 3; k++) box(-3.7, PY, 0, -2.7, PY + (3 - k) * .2, (k + 1) * .25, SD);
+      colonnade(PX0 + .05, PX1 - .05, 6, PY - .2, .76, 2.15);
+      api.emissive(() => {
+        box(PX0, F, 2.15, PX1, PY + .04, 2.45, ST);
+        for (let k = 0; k < 4; k++) box(PX0 + k * .27, F, 2.45 + k * .15, PX1 - k * .27, PY + .04, 2.45 + (k + 1) * .15, ST);
+      }, 'flood');
+      box(-3.8, PY + .04, 2.5, -2.6, PY + .06, 2.62, SD); box(-3.5, PY + .04, 2.62, -2.9, PY + .06, 2.78, SD); // the sculpture in the pediment
+      // the domes: the large one on a ring of columns, the small one over the old library behind it
+      const dome = (x, y, z, r) => {
+        api.emissive(() => {
+          e.capsule([x, y, z], [x, y, z + r * .85], r * .95, r * .95, () => ST);
+          for (let a = 0; a < 6.283; a += .45) box(x + Math.cos(a) * r - .05, y + Math.sin(a) * r - .05, z + .05, x + Math.cos(a) * r + .05, y + Math.sin(a) * r + .05, z + r * .8, SD);
+        }, 'flood');
+        e.sphere(x, y, z + r * .95, r, COPPER);
+        e.capsule([x, y, z + r * 1.9], [x, y, z + r * 2.3], r * .18, r * .13, () => COPPER);
+        e.sphere(x, y, z + r * 2.45, r * .09, COPPER);
+      };
+      box(-4.1, -1.3, TOP + .4, -2.3, .5, TOP + .7, SD, 3);
+      dome(-3.2, -.4, TOP + .7, .9); dome(-3.2, -1.9, TOP + .4, .48);
+      // the veil: gold slabs over the roofs, and between the two buildings a canopy that curves down over the entrance
+      box(1.4, -1.9, TOP + .4, 5.6, .5, TOP + .5, GOLD, 5); box(-5.5, -2.0, TOP + .4, -4.4, .5, TOP + .5, GOLD, 6); box(-2.0, -2.0, TOP + .4, -.9, .5, TOP + .5, GOLD, 7);
+      api.emissive(() => box(-.5, .4, 0, .5, .5, TOP, [150, 170, 176]), 'lobby');
+      box(-.7, B, TOP + .3, .7, .9, TOP + .4, GOLD, 8);
+      for (let k = 0; k < 7; k++) { const zt = TOP + .4 - k * k * .03; box(-.7, .9 + k * .2, zt - .1, .7, 1.1 + k * .2, zt, GOLD, 8); }
+      for (const x of [-.35, .35]) {
+        e.capsule([x, 1.7, 0], [x, 1.7, 1.2], .06, .05, () => GOLD_D);
+        for (const [dx, dy] of [[-.25, -.3], [.25, -.3], [-.2, .3], [.2, .3]]) e.capsule([x, 1.7, 1.2], [x + dx, 1.7 + dy, 1.75 - dy * .5], .04, .03, () => GOLD_D);
+      }
+      // rain trees along the Padang
+      for (const [x, h] of [[-5.2, 1.5], [-1.4, 1.3], [1.9, 1.4], [5.6, 1.5]]) {
+        box(x - .06, 4.1 - .06, 0, x + .06, 4.1 + .06, h * .6, C.WOOD);
+        e.moving((e, t) => {
+          const s = t == null ? 0 : Math.sin(t * 1.3 + x) * .07;
+          e.sphere(x + s, 4.1, h, .5, [72, 116, 66], 'rough'); e.sphere(x - .35 + s, 4.2, h - .15, .36, [86, 130, 72], 'rough'); e.sphere(x + .38 + s * 1.4, 4.0, h - .1, .38, [64, 106, 62], 'rough');
+        });
+      }
+      // people on the pavement and on the steps of City Hall, a bus on the road
+      e.moving((e, t) => {
+        [[-5.6, 1.8, 2.2, .45, [52, 72, 120], 0], [-2, 6.2, 2.45, .36, [196, 88, 64], 2.6], [.8, 5.8, 2.0, .5, [232, 200, 90], 5]].forEach(([x0, x1, y, v, col, ph]) => walker(e, t, pacer(e, (t || 0) + ph * 3, x0, x1, v).x, y, .04, col, ph));
+        const p = pacer(e, (t || 0) + 4, F + .3, 2.5, .3).x;
+        walker(e, t, 3.5, p, p < F + .96 ? Math.ceil((F + .96 - p) / .2) * .2 : .04, [226, 222, 214], 1.3);
+        const bx = e.STILL || t == null ? 2.4 : -6.2 + (t * .9) % 14.4;
+        if (bx < 5.4) { e.box(bx, 2.85, .12, bx + 1.3, 3.25, .62, [196, 58, 50]); e.box(bx + .1, 3.25, .34, bx + 1.2, 3.27, .54, [60, 70, 84]); }
+      });
+      e.moving((e, t) => birds(e, t, -1, 0, 5.4, 5.6));
+      boxShadow(e, -5.9, B, 6.5, F, TOP);
+    },
+  },
+  // Marina Bay Sands, seen from the bay (Safdie Architects, 2010): three hotel towers in a row, glass toward the bay,
+  // each standing on two legs that splay apart at the foot; the SkyPark lies across all three like a ship and runs
+  // 66.5 m past the north tower. In front: the low white roofs of the casino, theatres and convention halls, the
+  // promenade, the water, and the lotus-shaped ArtScience Museum. Behind the north end, a few Supertrees.
+  marinabay: {
+    bare: true, S: 11, origin: 62, cx: 1.9, cy: 0, R: 9, zmax: 10.6,
+    build(e, api) {
+      const { box } = e, GL = [124, 160, 186], END = [214, 216, 214], HULL = [234, 234, 228], POOL = [96, 198, 216], ROOF = [238, 238, 234];
+      const H = 9, LAYER = .3, TOWERS = [[-7.9, -5.1], [-2.9, -.1], [2.1, 4.9]], Y0 = -8.4, Y1 = 7.9;
+      box(-2.7, -8.6, 0, 4.4, 8.4, .04, C.PAVE, 1);
+      box(4.4, -8.6, 0, 6.5, 8.4, .03, C.WATER, 2);
+      // the towers, in layers: under about half height the bay side and the garden side stand apart
+      const legs = z => { const f = Math.pow(Math.max(0, 1 - z / 4.8), 1.6); return [-.6 - 1.7 * f, .6 + .3 * f]; };
+      TOWERS.forEach(([y0, y1], k) => {
+        for (let n = 0; n * LAYER < H - .01; n++) {
+          const z = n * LAYER, [xe, xw] = legs(z), xm = Math.max(xe + .75, xw - .75);
+          box(xe, y0, z, xe + .75, y1, z + LAYER, END, k);
+          api.emissive(() => box(xm, y0, z, xw, y1, z + LAYER, GL, k + 3), 'floors');
+          box(xm, y1, z, xw, y1 + .03, z + LAYER, END); box(xw, y0, z, xw + .02, y1, z + .05, [176, 200, 214]);
+        }
+        api.emissive(() => box(-1.9, y0 + .2, 0, .6, y1 + .02, 1.5, [150, 172, 182]), 'lobby'); // the atrium between the legs
+      });
+      for (const [a, b] of [[-5.1, -2.9], [-.1, 2.1]]) api.emissive(() => box(-1.5, a, 0, .5, b, 1.2, [150, 172, 182]), 'lobby');
+      // the SkyPark: a hull that narrows toward both ends, the pool along the bay side, palms, the deck at the north end
+      const wide = y => { const d = Math.min(y - Y0, Y1 - y); return d > 2.2 ? 1 : .5 + .5 * Math.sin(d / 2.2 * Math.PI / 2); };
+      for (let y = Y0; y < Y1 - .01; y += .25) {
+        const w = wide(y + .12);
+        box(.1 - .9 * w, y, H, .1 + .9 * w, y + .25, H + .22, HULL, 6);
+        box(.1 - 1.15 * w, y, H + .22, .1 + 1.15 * w, y + .25, H + .5, HULL, 7);
+        if (y > -6.8 && y < 3.4) api.emissive(() => box(.1 + .7 * w, y, H + .5, .1 + 1.08 * w, y + .25, H + .53, POOL));
+        if (y > 5.3) box(.1 - .9 * w, y, H + .5, .1 + .9 * w, y + .25, H + .53, C.DECK);
+      }
+      for (let k = 0; k < 11; k++) {
+        const y = -7.0 + k * 1.15, x = -.45 + (k % 2) * .35;
+        e.moving((e, t) => e.sphere(x + (t == null ? 0 : Math.sin(t * 1.6 + k) * .07), y, H + .78, .3, k % 3 ? [70, 122, 70] : [92, 140, 78], 'rough'));
+      }
+      e.moving((e, t) => beacon(e, t, .1, Y1 - .3, H + .7));
+      // in front of the towers: three halls with curved white roofs and glass toward the promenade
+      for (const [y0, y1] of [[-8.1, -5.5], [-5.1, -2.2], [-1.8, 1.4]]) {
+        box(1.7, y0, 0, 3.5, y1, .8, [224, 224, 218], 8);
+        for (let k = 0; k < 4; k++) box(1.7, y0 + k * .28, .8 + k * .11, 3.5, y1 - k * .28, .8 + (k + 1) * .11, ROOF, 9);
+        api.emissive(() => box(3.5, y0 + .15, .08, 3.53, y1 - .15, .68, C.GLASS), 'lobby');
+      }
+      // the ArtScience Museum: ten white petals of different heights, open like a lotus, on a round pool
+      const AX = 4.6, AY = 4.9;
+      box(AX - 1.3, AY - 1.3, 0, AX + 1.3, AY + 1.3, .08, [216, 216, 210]);
+      for (let k = 0; k < 10; k++) {
+        const a = k * .6283 + .3, h = 1.3 + e.hash(k, 77) * 1.0;
+        e.capsule([AX + Math.cos(a) * .2, AY + Math.sin(a) * .2, .3], [AX + Math.cos(a) * 1.05, AY + Math.sin(a) * 1.05, h], .38, .2, () => ROOF);
+      }
+      // Supertrees (Gardens by the Bay lies behind the hotel): a trunk that opens into a wide crown, lit after dark
+      for (const [x, y, h] of [[-1.9, 5.9, 2.4], [-2.2, 7.0, 1.9], [-1.3, 7.8, 2.2]]) {
+        e.capsule([x, y, 0], [x, y, h * .78], .16, .1, () => [112, 76, 96]);
+        api.emissive(() => { e.capsule([x, y, h * .78], [x, y, h], .12, .62, () => [168, 96, 150]); });
+      }
+      // palms and people on the promenade, a boat and ripples on the bay
+      for (let y = -7.6; y < 3.4; y += 1.8) {
+        box(4.0 - .04, y - .04, 0, 4.0 + .04, y + .04, .7, C.WOOD);
+        e.moving((e, t) => e.sphere(4.0 + (t == null ? 0 : Math.sin(t * 1.5 + y) * .06), y, .85, .28, [78, 128, 74], 'rough'));
+      }
+      e.moving((e, t) => {
+        [[-7.6, 2.6, 3.8, .5, [196, 88, 64], 0], [-6, 3, 4.2, .4, [52, 72, 120], 3], [-2, 7.4, 3.75, .45, [232, 200, 90], 6]].forEach(([y0, y1, x, v, col, ph]) => walker(e, t, x, pacer(e, (t || 0) + ph * 3, y0, y1, v).x, .04, col, ph));
+        const by = e.STILL || t == null ? -2 : 7 - (t * .6) % 14.6;
+        e.box(5.3, by, .03, 5.75, by + 1.1, .22, [150, 96, 64]); e.box(5.36, by + .25, .22, 5.69, by + .85, .4, [226, 70, 56]);
+        if (t == null) return;
+        const c = e.rgb(190, 222, 234);
+        for (let k = 0; k < 26; k++) {
+          const y = -8.4 + e.hash(k, 5) * 16.6, x = 4.6 + e.hash(k, 9) * 1.7, f = (t * .5 + e.hash(k, 3)) % 1;
+          if (f < .6) for (let u = -.2; u <= .2; u += .04) e.plot(x + f * .3, y + u, .04, c);
+        }
+        // after dark: the light show, beams from the SkyPark sweeping over the bay
+        if (LIGHT.lit < .6) return;
+        const beam = e.rgb(255, 255, 255);
+        TOWERS.forEach(([y0, y1], k) => {
+          const ym = (y0 + y1) / 2, ty = ym + Math.sin(t * .45 + k * 2.1) * 4.5;
+          for (let s = 0; s <= 1; s += .006) e.plot(1.3 + s * 4.9, ym + (ty - ym) * s, H + .4 - s * (H - .2), beam);
+        });
+      });
+      e.moving((e, t) => birds(e, t, 0, 0, 6, 10.4));
+      for (const [y0, y1] of TOWERS) boxShadow(e, -2.3, y0, .9, y1, H);
     },
   },
 };
