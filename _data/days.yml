@@ -146,6 +146,26 @@
   did: watched Gardens by the Bay light up after dark
   with: mom
   map: Marina Bay Sands, Singapore
+- date: "2026-11-17"
+  scene: gardensbay
+  coords: [1.2843, 103.8646]
+  name: Gardens by the Bay
+  zh: 濱海灣花園
+  place: Marina Bay, Singapore
+  country: Singapore
+  did: walked among the flowers in the cool air of the Flower Dome
+  with: mom
+  map: Flower Dome, Gardens by the Bay, Singapore
+- date: "2026-11-17"
+  scene: coconutclub
+  coords: [1.3010, 103.8607]
+  name: The Coconut Club
+  zh: 椰子俱樂部
+  place: Beach Road, Singapore
+  country: Singapore
+  did: had lunch, and the coconut shake and nyonya kueh were better than expected
+  with: mom
+  map: The Coconut Club Beach Road, Singapore
 
 # Taiwan
 - date: "2026-11-06"
