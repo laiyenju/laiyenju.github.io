@@ -748,11 +748,17 @@ const SHORT_DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const todayWd = () => SHORT_DAY[fromDayMs(state.day).wd];
 const parseDay = d => { const [y, m, dd] = d.split('-').map(Number); return fromDayMs(dayMs(y, m, dd)); };
 const todayISO = () => { const d = fromDayMs(state.day); return `${d.y}-${pad(d.m)}-${pad(d.d)}`; };
+// today's id in the timeline: today's place in days.yml (the last one when there are several, as on the home page),
+// else the date
+function todayId() { const h = todayPlace(); return h ? h.id : todayISO(); }
 function timelineEntries() {
-  const today = state.items[state.items.length - 1];
-  const past = MEMORIES.filter(m => m.date < todayISO() && checkMemory(m)).sort(byDate).reverse();
-  return [{ date: todayISO(), id: todayISO(), today: true, scene: today.scene, opts: today.opts, name: today.name, html: today.meta }]
-    .concat(past.map(m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, html: sentenceFor(m) })));
+  const today = state.items[state.items.length - 1], here = todayPlace();
+  // every place in days.yml up to today, newest first; today's building (the last of today's places) is the today entry,
+  // and today's earlier places stand before it like any other day's
+  const kept = MEMORIES.filter(m => m.date <= todayISO() && checkMemory(m) && m !== here).sort(byDate).reverse();
+  const entry = m => ({ date: m.date, id: m.id, m, scene: m.scene, opts: {}, name: m.zh && !m.noZh ? `${m.name}\u00a0· ${m.zh}` : m.name, html: sentenceFor(m) });
+  return [Object.assign(here ? entry(here) : { date: todayISO(), id: todayISO(), scene: today.scene, name: today.name, html: today.meta }, { today: true, opts: today.opts })]
+    .concat(kept.map(entry));
 }
 /* ---------- timeline mode ----------
    Days go left (oldest) to right (today), like the homepage. Changing day: the building
@@ -943,7 +949,7 @@ function layoutRow(first, at = TL.idx) {
   }
 }
 function placeLine(x) {
-  if (x.today) return 'Taiwan';
+  if (!x.m) return 'Taiwan';
   return (x.m.country || 'Japan') + (x.m.with ? ` · with ${listOf(x.m.with)}` : '');
 }
 const tlImages = new Map();
@@ -960,7 +966,7 @@ async function showTlDay(k, first, fromP = 0, instant = false) {
   markRuler();
   $('tlCap').classList.add('hide');
   // an earlier day this year has no "years ago": it says This year (only today's own entry says Today)
-  dialTo(x.date, x.today ? 'Today' : years > 0 ? ago(years) : 'This year', false, !x.today);
+  dialTo(x.date, x.date === todayISO() ? 'Today' : years > 0 ? ago(years) : 'This year', false, x.date !== todayISO());
   cv.classList.add('snapback'); cv.style.transform = '';
   const img = tlImage(x);
   // quick chained swipes shorten the animation instead of queueing it
@@ -969,7 +975,7 @@ async function showTlDay(k, first, fromP = 0, instant = false) {
   if (token !== TL.token) return;
   TL.cur = img;
   cv.width = img.width; cv.height = img.height; fitTl(cv);
-  $('tlName').textContent = x.today ? (x.scene === 'home' ? 'Home' : 'The office') : x.name;
+  $('tlName').textContent = x.m ? x.name : x.scene === 'home' ? 'Home' : 'The office';
   $('tlPlace').textContent = placeLine(x);
   $('tlCap').classList.remove('hide');
   await buildUp(cv, img, first || still ? 0 : (quick ? 520 : 900), token);
@@ -994,8 +1000,8 @@ function openTl(date) {
   showOverlay(tl);
   ctaFor('Timeline');
   renderRuler(); renderRow(k);
-  const pastOnly = TL.list.filter(x => !x.today);
-  const nPlaces = new Set(pastOnly.map(x => x.m.name)).size, nCountries = new Set(pastOnly.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
+  const kept = TL.list.filter(x => x.m);
+  const nPlaces = new Set(kept.map(x => x.m.name)).size, nCountries = new Set(kept.map(x => x.m.country || 'Japan').concat(['Taiwan'])).size;
   $('tlStats').textContent = `${new Set(TL.list.map(x => x.date)).size} days kept · ${nPlaces} places · ${nCountries} countries`;
   if (!fly) plate.style.visibility = 'hidden'; // under the timeline anyway; it comes back out when we leave
   showTlDay(k, true).then(() => {
@@ -1122,7 +1128,7 @@ function homeToday() { if (state.pastDate) { state.pastDate = null; document.bod
 function tapTl() {
   const x = TL.list[TL.idx];
   if (x.today) { leaveTl(() => { homeToday(); const k = state.items.length - 1; if (state.index !== k) { state.index = k; renderThumbs(); mount(false); } renderText(); }); return; }
-  if (x.date.slice(5) === todayISO().slice(5)) {
+  if (x.date < todayISO() && x.date.slice(5) === todayISO().slice(5)) {
     leaveTl(() => {
       homeToday();
       const k = state.items.findIndex(it => it.id === x.id);
@@ -1140,7 +1146,7 @@ function route() {
   if (h && h !== '#') resetAt(); // the rewind's controls are for today's home page only (the sky stays)
   if ((m = h.match(/^#work-(.+)$/))) openWork(m[1]);
   else if ((m = h.match(/^#note-(.+)$/))) openNote(decodeURIComponent(m[1]));
-  else if (h === '#timeline') { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(todayISO()); else showTlDay(TL.list.length - 1); }
+  else if (h === '#timeline') { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(todayId()); else showTlDay(TL.list.length - 1); }
   else if ((m = h.match(/^#day-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { if (state.pastDate) { state.pastDate = null; document.body.classList.remove('is-past'); renderDay(); } if (tl.hidden) openTl(m[1]); }
   else if ((m = h.match(/^#past-(\d{4}-\d{2}-\d{2}(?:-\d+)?)$/))) { reader.hidden = true; tl.hidden = true; document.body.style.overflow = ''; endNote(); renderPast(m[1]); updateMore(); }
   else {
@@ -1226,7 +1232,7 @@ stage.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === '
 function openTimeline() {
   const it = state.items[state.index];
   const b = dispInner();
-  TL.from = { rect: b.rect, img: b.img, id: it.id && !it.about ? it.id : todayISO() };
+  TL.from = { rect: b.rect, img: b.img, id: it.id && !it.about ? it.id : todayId() };
   go2('#day-' + TL.from.id);
 }
 let wheelT = 0;
