@@ -83,7 +83,8 @@ function buildItems() {
     name: here.zh && !here.noZh ? `${here.name}\u00a0· ${here.zh}` : here.name, meta: placeFor(here), html: sentenceFor(here) + (extra ? ' ' + escHtml(extra) : '') });
   else items.push({
     scene: base, opts: { shiba: little.some(l => l.kind === 'shiba'), notes: NOTES }, label: 'Today', about: true, id: todayISO(),
-    name: base === 'home' ? 'Yen is at home today.' : 'Yen is at the office today.',
+    // on a trip (sky.js TRIPS) with no place for today in days.yml, the building is still home or the office, the title is the city
+    name: CITY !== siteSky.HOME ? `Yen is in ${CITY.name} today.` : base === 'home' ? 'Yen is at home today.' : 'Yen is at the office today.',
     place: base === 'home' ? 'home' : 'the office',
     // the date card already says the weekday: only a holiday's name is news here
     meta: r.holiday ? escHtml(r.holiday) : '',
@@ -472,7 +473,8 @@ function loadCheckin() {
 /* ================= where is Yen now =================
    1. A check-in wins if it is less than 6 hours old; one on the way (left home, left the office) only for 90 minutes,
       so a missed arrival does not leave Yen "on the way home" all evening. Leaving home on an office day says where to.
-   2. Otherwise the page reads Yen's usual day from the clock, and says "usually" so nobody takes it as fact. */
+   2. On a trip (sky.js TRIPS) it says the city and the day Yen is back.
+   3. Otherwise the page reads Yen's usual day from the clock, and says "usually" so nobody takes it as fact. */
 const WEEKDAY = [[0, 'asleep'], [7 * 60, 'on the way to the office'], [9 * 60, 'at the office'], [12 * 60, 'out for lunch near the office'],
   [13 * 60 + 30, 'at the office'], [18 * 60 + 30, 'on the way home'], [19 * 60 + 30, 'at home']];
 const RESTDAY = [[0, 'asleep'], [9 * 60, 'having a slow morning at home'], [12 * 60, 'out somewhere in the city'], [19 * 60, 'at home']];
@@ -484,6 +486,8 @@ function whereNow() {
     const label = c.place === 'left_home' && c.label === 'heading out' && todayScene() === 'studio' ? 'on the way to the office' : c.label;
     return `Yen is ${label}, ${CITY.name}. Checked in at ${pad(t.h)}:${pad(t.min)}.`;
   }
+  // on a trip (sky.js TRIPS) the usual day at home says nothing true
+  if (CITY !== siteSky.HOME) { const [, m, d] = CITY.to.split('-'); return `It's ${hm} in ${CITY.name}. Yen is away from ${siteSky.HOME.name} until ${+d} ${MON[m - 1]}.`; }
   const rest = todayScene() === 'home', plan = rest ? RESTDAY : WEEKDAY;
   let now = plan[0][1];
   for (const [from, label] of plan) if (state.minute >= from) now = label;
