@@ -125,6 +125,28 @@
   did: walked through the giant gate of Hongmun Hall
   map: Hongik University, Seoul
 
+# Singapore, November 2026
+- date: "2026-11-16"
+  scene: nationalgallery
+  coords: [1.2903, 103.8516]
+  name: National Gallery Singapore
+  zh: 新加坡國家美術館
+  place: Civic District, Singapore
+  country: Singapore
+  did: walked through the galleries under the gold veil
+  with: mom
+  map: National Gallery Singapore
+- date: "2026-11-16"
+  scene: marinabay
+  coords: [1.2838, 103.8591]
+  name: Marina Bay Sands
+  zh: 濱海灣金沙
+  place: Marina Bay, Singapore
+  country: Singapore
+  did: watched Gardens by the Bay light up after dark
+  with: mom
+  map: Marina Bay Sands, Singapore
+
 # Taiwan
 - date: "2026-11-06"
   scene: nanshan
