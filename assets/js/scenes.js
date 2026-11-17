@@ -1153,7 +1153,7 @@ const SCENES = {
   // Marina Bay Sands, seen from the bay (Safdie Architects, 2010): three hotel towers in a row, glass toward the bay,
   // each standing on two legs that splay apart at the foot; the SkyPark lies across all three like a ship and runs
   // 66.5 m past the north tower. In front: the low white roofs of the casino, theatres and convention halls, the
-  // promenade, the water, and the lotus-shaped ArtScience Museum. Behind the north end, a few Supertrees.
+  // promenade, the water, and the lotus-shaped ArtScience Museum.
   marinabay: {
     bare: true, S: 11, origin: 62, cx: 1.9, cy: 0, R: 9, zmax: 10.6,
     build(e, api) {
@@ -1199,11 +1199,6 @@ const SCENES = {
       for (let k = 0; k < 10; k++) {
         const a = k * .6283 + .3, h = 1.3 + e.hash(k, 77) * 1.0;
         e.capsule([AX + Math.cos(a) * .2, AY + Math.sin(a) * .2, .3], [AX + Math.cos(a) * 1.05, AY + Math.sin(a) * 1.05, h], .38, .2, () => ROOF);
-      }
-      // Supertrees (Gardens by the Bay lies behind the hotel): a trunk that opens into a wide crown, lit after dark
-      for (const [x, y, h] of [[-1.9, 5.9, 2.4], [-2.2, 7.0, 1.9], [-1.3, 7.8, 2.2]]) {
-        e.capsule([x, y, 0], [x, y, h * .78], .16, .1, () => [112, 76, 96]);
-        api.emissive(() => { e.capsule([x, y, h * .78], [x, y, h], .12, .62, () => [168, 96, 150]); });
       }
       // palms and people on the promenade, a boat and ripples on the bay
       for (let y = -7.6; y < 3.4; y += 1.8) {
