@@ -87,7 +87,7 @@ const FONT3 = {
   A: '010101111101101', B: '110101110101110', C: '111100100100111', E: '111100110100111', G: '111100101101111', H: '101101111101101',
   I: '111010010010111', K: '101110100110101', L: '100100100100111', M: '1000111011101011000110001', N: '10011101101110011001', O: '111101101101111',
   R: '110101110101101', S: '111100111001111', T: '111010010010010', W: '1000110001101011010101010', Y: '101101010010010', D: '110101101101110',
-  Z: '111001010100111', o: '000111101101111', g: '111101111001111', l: '010010010010010', e: '111101111100111', ' ': '000000000000000',
+  Z: '111001010100111', U: '101101101101111', X: '101101010101101', F: '111100110100100', P: '110101110100100', o: '000111101101111', g: '111101111001111', l: '010010010010010', e: '111101111100111', ' ': '000000000000000',
 };
 function signIso(e, text, { face = 'y', x, y, z, scale = 2, colors }) {
   const glyph = ch => FONT3[ch] || FONT3[ch.toUpperCase()] || FONT3[' '];
@@ -1388,6 +1388,152 @@ const SCENES = {
         [[-4.4, 3, 3.4, .5, [52, 72, 120], 0], [-3.6, 3.1, 3.7, .4, [196, 88, 64], 2.6]].forEach(([x0, x1, y, v, col, ph]) => walker(e, t, pacer(e, (t || 0) + ph * 3, x0, x1, v).x, y, .04, col, ph));
       });
       e.moving((e, t) => birds(e, t, -1, 0, 4.6, 4.8));
+      boxShadow(e, X0, B, X1, F, TOP);
+    },
+  },
+  // Lucha Loco, 15 Duxton Hill: a pre-war corner shophouse, whitewashed. Upstairs, three tall windows with navy louvred
+  // shutters swung open (the right one under an arched fanlight) below a cornice of small brackets; downstairs, a navy
+  // band with the name over the five-foot way, rattan lanterns, and dark wood windows into a yellow room hung with
+  // papel picado, the purple mezcal bar at the back. On the corner side, the garden: a teak deck under string lights,
+  // a long table, concrete benches along the edge, banana palms in planters, and a cactus garden at the entrance.
+  luchaloco: {
+    bare: true, S: 22, origin: 40, cx: .4, cy: -.4, R: 6, zmax: 4.6,
+    build(e, api) {
+      const { box } = e, WH = [240, 238, 230], NAVY = [36, 46, 74], TERRA = [184, 104, 74], DARKW = [74, 54, 42];
+      const TEAK = [176, 128, 84], TEAK_D = [150, 106, 68], CONCB = [178, 176, 170], RATTAN = [226, 146, 90];
+      const MURAL = [232, 196, 92], MURAL_L = [206, 120, 64], NEON = [168, 70, 200], PAPEL = [[44, 150, 150], [204, 52, 52], [244, 242, 236], [72, 150, 80]];
+      const F = 1.0, B = -3, IN = F - .6, FL = 2.05, TOP = 3.75, X0 = -3.4, X1 = 1.6, DX = 4.6, DY0 = -2.6, DY1 = F + .5;
+      // the street in front, grey pavement
+      box(X0 - .2, F, 0, X1 + .2, 3.0, .04, C.PAVE, 1);
+      // the shophouse: ground floor set back behind piers, upper floor over the five-foot way, a cornice, a clay roof
+      box(X0, B, 0, X1, IN, FL, WH); box(X0, B, FL, X1, F, TOP, WH);
+      box(X0, IN, 0, X1, F, .06, [196, 150, 120], 3); // terracotta floor tiles under the five-foot way
+      box(X0 - .05, B, TOP, X1 + .07, F + .14, TOP + .14, WH); box(X0, F, FL - .05, X1 + .05, F + .08, FL + .1, WH);
+      for (let x = X0 + .15; x < X1 - .05; x += .28) box(x - .05, F, TOP - .16, x + .05, F + .1, TOP, [226, 224, 216]); // brackets
+      for (let k = 0; k < 2; k++) box(X0, B + .2, TOP + .14 + k * .1, X1 - .1, F - .1 - k * .7, TOP + .14 + (k + 1) * .1, TERRA, 4);
+      for (const x of [X0, X1 - .02]) { box(x - .13, IN, 0, x + .13, F, FL, WH); box(x - .12, F, FL + .1, x + .12, F + .06, TOP - .16, WH); }
+      box(X0 + .3, F + .06, 0, X0 + .38, F + .12, TOP, [228, 228, 222]); // the white downpipe
+      // upstairs: tall windows, navy louvred shutters swung out from the wall
+      const win = (x, arch) => {
+        const z0 = FL + .4, z1 = TOP - .5;
+        box(x - .3, F, z0 - .05, x + .3, F + .03, z1 + .05, DARKW);
+        api.emissive(() => box(x - .25, F, z0, x + .25, F + .04, z1, C.GLASS));
+        box(x - .02, F, z0, x + .02, F + .05, z1, DARKW); box(x - .25, F, z0 + .3, x + .25, F + .06, z0 + .34, DARKW);
+        for (const s of [-1, 1]) {
+          const xe = x + s * .3;
+          box(Math.min(xe, xe + s * .1), F, z0, Math.max(xe, xe + s * .1), F + .32, z1, NAVY);
+          for (let z = z0 + .1; z < z1 - .05; z += .1) box(Math.min(xe, xe + s * .12) , F + .06, z, Math.max(xe, xe + s * .12), F + .26, z + .03, [70, 82, 110]);
+        }
+        if (arch) for (let a = 0; a <= Math.PI + .01; a += Math.PI / 6) { // the fanlight's white rays
+          for (let r = 0; r < .26; r += .03) box(x + Math.cos(a) * r - .015, F, z1 + .06 + Math.sin(a) * r - .015, x + Math.cos(a) * r + .015, F + .05, z1 + .06 + Math.sin(a) * r + .015, WH);
+        }
+      };
+      win(-2.6, false); win(-1.2, false); win(.4, true);
+      // the corner side wall facing the garden: two shuttered windows upstairs
+      for (const y of [-.6, -2.0]) { api.emissive(() => box(X1, y - .22, FL + .4, X1 + .03, y + .22, TOP - .5, C.GLASS)); box(X1, y + .22, FL + .4, X1 + .3, y + .3, TOP - .5, NAVY); }
+      // the navy band over the five-foot way, with the name in white
+      box(X0 + .1, F + .08, FL - .42, X1 - .1, F + .12, FL - .04, NAVY);
+      signIso(e, 'LUCHA LOCO', { face: 'y', x: (X0 + X1) / 2 - .2, y: F + .13, z: FL - .14, scale: 1, colors: [[244, 242, 232]] });
+      // downstairs: the yellow room through dark wood windows, papel picado under the ceiling, the purple bar at the back
+      const room = (x0, x1, bar) => {
+        api.emissive(() => {
+          box(x0, IN, .4, x1, IN + .03, FL - .25, bar ? NEON : MURAL);
+          if (!bar) for (let x = x0 + .15; x < x1 - .1; x += .3) box(x, IN + .03, .55, x + .05, IN + .04, 1.15, MURAL_L);
+          for (let x = x0, k = 0; x < x1 - .05; x += .12, k++) box(x, IN + .03, FL - .52 - (k % 2) * .04, x + .09, IN + .045, FL - .3, PAPEL[k % 4]);
+        }, 'flood');
+        box(x0 - .06, IN, .35, x1 + .06, IN + .07, .4, DARKW); box(x0 - .06, IN, FL - .25, x1 + .06, IN + .07, FL - .2, DARKW);
+        for (const x of [x0 - .06, (x0 + x1) / 2 - .03, x1]) box(x, IN, .35, x + .06, IN + .07, FL - .2, DARKW);
+        box(x0, IN, .9, x1, IN + .06, .94, DARKW);
+      };
+      room(-2.3, -.6, false); room(.2, 1.15, false);
+      api.emissive(() => box(-.45, IN, .06, .05, IN + .02, 1.5, NEON), 'flood'); // the open door, the bar's light beyond
+      box(-.52, IN, .06, -.45, IN + .08, 1.55, DARKW); box(.05, IN, .06, .12, IN + .08, 1.55, DARKW); box(-.52, IN, 1.5, .12, IN + .08, 1.56, DARKW);
+      // rattan lanterns hanging under the five-foot way
+      for (const x of [-2.9, -1.0, .8]) {
+        box(x - .01, F - .31, FL - .56, x + .01, F - .29, FL, [60, 56, 54]);
+        api.emissive(() => { e.sphere(x, F - .3, FL - .7, .12, RATTAN); e.sphere(x, F - .3, FL - .84, .1, RATTAN); }, 'flood');
+      }
+      // the bamboo blind and the palms at the left end, a high table where a guest reads the menu
+      for (let z = .9; z < FL - .3; z += .07) box(X0 + .15, F - .1, z, X0 + 1.0, F - .05, z + .05, z % .14 < .07 ? [188, 120, 76] : [166, 102, 64]);
+      e.moving((e, t) => {
+        for (let k = 0; k < 5; k++) {
+          const s = t == null ? 0 : Math.sin(t * 1.4 + k * 1.7) * .05;
+          e.capsule([X0 + .2 + k * .16, F - .2, 0], [X0 + .25 + k * .16 + s, F - .15, .7 + (k % 3) * .2], .1, .06, () => [64, 118, 66], 'rough');
+        }
+      });
+      box(-2.0, F - .1, .9, -1.4, F + .2, .95, DARKW); box(-1.73, F + .02, .06, -1.67, F + .08, .9, DARKW);
+      e.moving((e, t) => {
+        const turn = t == null ? 0 : Math.floor(t / 4) % 2 ? .03 : 0; // turns a page now and then
+        e.capsule([-1.7, F + .35, .55], [-1.7, F + .35 - turn, .95], .14, .12, () => [236, 234, 228]);
+        e.sphere(-1.7, F + .3 - turn, 1.13, .11, [226, 188, 160]);
+      });
+      // a waiter walking the five-foot way
+      e.moving((e, t) => walker(e, t, pacer(e, t || 0, -2.8, 1.0, .45).x, F - .2, .06, [240, 240, 236]));
+      // the garden on the corner: a teak deck with concrete benches along its edge
+      box(X1, DY0, 0, DX, DY1, .14, TEAK, 2);
+      for (let y = DY0 + .1; y < DY1; y += .32) box(X1, y, .14, DX, y + .03, .145, TEAK_D);
+      box(DX - .4, DY0, .14, DX, DY1, .5, CONCB, 3); box(X1 + .1, DY0, .14, DX - .4, DY0 + .35, .5, CONCB, 3);
+      // posts at the corners, with string lights looping to the wall
+      const POSTS = [[DX - .2, DY1 - .2], [DX - .2, DY0 + .2]];
+      for (const [x, y] of POSTS) box(x - .05, y - .05, .5, x + .05, y + .05, 2.9, DARKW);
+      const BULBS = [];
+      const string = (ax, ay, az, bx, by, bz) => {
+        for (let k = 1; k < 12; k++) {
+          const f = k / 12, sag = Math.sin(f * Math.PI) * .35;
+          BULBS.push([ax + (bx - ax) * f, ay + (by - ay) * f, az + (bz - az) * f - sag]);
+        }
+      };
+      for (const [x, y] of POSTS) { string(X1, y > -1 ? -.3 : -1.7, 2.8, x, y, 2.85); }
+      string(POSTS[0][0], POSTS[0][1], 2.85, POSTS[1][0], POSTS[1][1], 2.85);
+      for (const [x, y, z] of BULBS) { box(x - .01, y - .01, z, x + .01, y + .01, z + .08, [60, 56, 54]); api.emissive(() => e.sphere(x, y, z - .02, .055, C.LAMP), 'flood'); }
+      // now and then a bulb flickers: a few go dim in turn
+      e.moving((e, t) => {
+        if (t == null) return;
+        BULBS.forEach(([x, y, z], k) => { if (e.hash(k, Math.floor(t * 2)) < .12) e.sphere(x + .02, y + .02, z, .05, [196, 170, 120]); });
+      });
+      // the long table, and the people around it (Yen and mom at the near end, tacos between them)
+      const TX = 3.0;
+      box(TX - .35, -2.0, .62, TX + .35, .6, .68, TEAK_D);
+      for (const y of [-1.8, .4]) for (const dx of [-.28, .28]) box(TX + dx - .03, y - .03, .14, TX + dx + .03, y + .03, .62, DARKW);
+      for (const dx of [-.62, .62]) box(TX + dx - .12, -2.0, .14, TX + dx + .12, .6, .4, TEAK);
+      const GUESTS = [[-.62, .25, [44, 62, 124]], [.62, .25, [236, 234, 228]], [-.62, -.75, [196, 88, 64]], [.62, -.75, [90, 120, 90]], [-.62, -1.6, [214, 164, 58]], [.62, -1.6, [60, 60, 64]]];
+      GUESTS.forEach(([dx, y, col], k) => e.moving((e, t) => {
+        const lean = t == null ? 0 : Math.sin(t * 1.2 + k * 1.9) > .55 ? .05 : 0; // leaning in to talk, or to take a bite
+        const x = TX + dx, ix = x - Math.sign(dx) * lean;
+        e.capsule([x, y, .5], [ix, y, .9], .14, .12, () => col);
+        e.sphere(ix - Math.sign(dx) * lean, y, 1.08, .11, [224, 190, 160]);
+      }));
+      for (const [y, c] of [[.25, [232, 200, 120]], [-.1, [214, 104, 84]], [-.75, [232, 200, 120]], [-1.6, [126, 170, 84]]]) box(TX - .12, y - .1, .68, TX + .12, y + .1, .72, c);
+      // banana palms in planters along the wall side, leaves moving in the breeze
+      for (const [x, y] of [[X1 + .35, DY1 - .3], [X1 + .35, -1.2], [X1 + .35, DY0 + .4]]) {
+        box(x - .2, y - .2, .14, x + .2, y + .2, .55, CONCB);
+        e.capsule([x, y, .55], [x, y, 1.6], .06, .05, () => [120, 140, 80]);
+        e.moving((e, t) => {
+          for (let k = 0; k < 5; k++) {
+            const a = k * 1.256 + x, s = t == null ? 0 : Math.sin(t * 1.6 + k * 1.1 + y) * .1;
+            e.capsule([x, y, 1.6], [x + Math.cos(a) * .55, y + Math.sin(a) * .55, 1.75 + s], .09, .05, () => k % 2 ? [74, 136, 64] : [98, 156, 76], 'rough');
+          }
+        });
+      }
+      // the cactus garden at the entrance, in front of the deck
+      box(X1 + .2, DY1, 0, DX, DY1 + .9, .08, [206, 186, 150], 2);
+      [[2.0, .5, 1.1], [2.6, .3, .7], [3.2, .6, 1.4], [3.8, .35, .8], [4.3, .55, .55]].forEach(([x, dy, h], k) => {
+        const y = DY1 + dy;
+        box(x - .17, y - .17, .08, x + .17, y + .17, .32, C.POT);
+        e.capsule([x, y, .3], [x, y, .3 + h], .1, .09, () => [92, 140, 96]);
+        if (h > .9) { e.capsule([x, y, .55 + k * .05], [x + .2, y, .65], .06, .06, () => [92, 140, 96]); e.capsule([x + .2, y, .65], [x + .2, y, .9], .06, .05, () => [92, 140, 96]); }
+        else e.sphere(x, y, .36 + h * .4, .16, [110, 156, 104], 'rough');
+      });
+      // the big tree behind, over the roof
+      e.capsule([X0 - .4, B + .3, 0], [X0 - .3, B + .3, 3.2], .14, .1, () => [110, 92, 74]);
+      e.moving((e, t) => {
+        const s = t == null ? 0 : Math.sin(t * .9) * .06;
+        for (let k = 0; k < 6; k++) e.sphere(X0 - .3 + Math.cos(k) * .6 + s, B + .4 + Math.sin(k * 1.7) * .5, 3.3 + (k % 3) * .25, .45, k % 2 ? [70, 112, 62] : [86, 130, 72], 'rough');
+      });
+      e.castShadow(X0 - .3, B + .4, 3.6, .9, .8);
+      // someone walking up Duxton Hill
+      e.moving((e, t) => walker(e, t, pacer(e, (t || 0) + 4, X0, X1 + .2, .5).x, 2.4, .04, [52, 72, 120], 1.3));
+      e.moving((e, t) => birds(e, t, 0, -.5, 4.6, 4.8));
       boxShadow(e, X0, B, X1, F, TOP);
     },
   },

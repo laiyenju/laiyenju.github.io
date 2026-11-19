@@ -168,7 +168,7 @@ Yen Lai 的個人網站：<https://laiyenju.github.io>
 | `country` | 否 | 預設 `Japan`。Timeline 用它算國家數 |
 | `coords` | 否 | `[緯度, 經度]`。分享卡片會印出來；外出打卡靠它認出地點（150 m 內，3.6） |
 
-- 目前的模型：`studio`（辦公室：富邦遼寧大樓）、`home`、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`google`、`highline`、`whitney`、`nyt`、`capitol`、`whitehouse`、`washington`、`lincoln`、`mbc`、`hongik`、`nanshan`（微風南山）、`houli`（后里區戶政事務所）、`nationalgallery`（新加坡國家美術館）、`marinabay`（濱海灣金沙）、`gardensbay`（濱海灣花園）、`coconutclub`（椰子俱樂部）。新模型見 3.6。
+- 目前的模型：`studio`（辦公室：富邦遼寧大樓）、`home`、`itsukushima`、`naoshima`、`grandcentral`、`unitednations`、`google`、`highline`、`whitney`、`nyt`、`capitol`、`whitehouse`、`washington`、`lincoln`、`mbc`、`hongik`、`nanshan`（微風南山）、`houli`（后里區戶政事務所）、`nationalgallery`（新加坡國家美術館）、`marinabay`（濱海灣金沙）、`gardensbay`（濱海灣花園）、`coconutclub`（椰子俱樂部）、`luchaloco`（Lucha Loco）。新模型見 3.6。
 - 缺必填欄位或模型不存在時，那一筆不會出現，瀏覽器的 console 會列出缺了什麼。
 
 #### 2.3.3 小事：`little.yml`

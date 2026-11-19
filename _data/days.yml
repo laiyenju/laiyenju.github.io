@@ -165,6 +165,16 @@
   country: Singapore
   did: had lunch with mom; the coconut shake and nyonya kueh were better than expected
   map: The Coconut Club Beach Road, Singapore
+- date: "2026-11-18"
+  scene: luchaloco
+  coords: [1.2788, 103.8427]
+  name: Lucha Loco
+  no_zh: true
+  place: Duxton Hill, Singapore
+  country: Singapore
+  did: had tacos for dinner at a table out in the garden
+  with: mom
+  map: Lucha Loco, 15 Duxton Hill, Singapore
 
 # Taiwan
 - date: "2026-11-06"
